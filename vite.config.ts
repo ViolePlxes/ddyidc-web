@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
@@ -81,8 +82,29 @@ function entryRewrite(): Plugin {
   };
 }
 
+function gitValue(args: string[], fallback: string): string {
+  try {
+    return execFileSync("git", args, { cwd: __dirname, encoding: "utf8" }).trim() || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function versionAsset(): Plugin {
+  const commit = process.env.DDYIDC_COMMIT || gitValue(["rev-parse", "HEAD"], "unknown");
+  const branch = process.env.DDYIDC_BRANCH || gitValue(["branch", "--show-current"], "unknown");
+  const version = process.env.DDYIDC_VERSION || "0.1.0";
+  const builtAt = process.env.DDYIDC_BUILD_TIME || new Date().toISOString();
+  return {
+    name: "ddyidc-version-asset",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, commit, branch, builtAt }, null, 2) });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [entryRewrite(), react(), tailwindcss()],
+  plugins: [entryRewrite(), versionAsset(), react(), tailwindcss()],
   server: {
     port: 3100,
     strictPort: true,
