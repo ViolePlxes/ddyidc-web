@@ -11,3 +11,12 @@ coverage/
 .idea/
 .vscode/
 *.swp
+
+# Payment credentials (backend local only; block accidental copies)
+alipay.json
+**/alipay.json
+secrets/
+**/secrets/
+*.private.pem
+*.pem
+*.key
