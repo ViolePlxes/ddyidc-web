@@ -1,0 +1,137 @@
+import { Banner, Button, LayerCard, Select } from "@cloudflare/kumo";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { consoleApi, type Order } from "../../../shared/api/console";
+import { getApiMessage } from "../../../shared/api/request";
+import { DefinitionList } from "../../../shared/components/DataTable";
+import { PageHeader } from "../../../shared/components/PageHeader";
+import { PageState } from "../../../shared/components/PageState";
+import { PaymentDialog } from "../../../shared/components/PaymentDialog";
+import { clearOrderDraft, loadOrderDraft } from "../../../shared/utils/orderDraft";
+
+export function OrderConfirm() {
+  const [draft] = useState(loadOrderDraft);
+  const [couponId, setCouponId] = useState("none");
+  const [createdOrder, setCreatedOrder] = useState<Order>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const coupons = useQuery({
+    queryKey: ["coupons", "usable", Math.round((draft?.totalYuan ?? 0) * 100)],
+    queryFn: () => consoleApi.usableCoupons(Math.round((draft?.totalYuan ?? 0) * 100)),
+    enabled: Boolean(draft),
+  });
+  const create = useMutation({
+    mutationFn: async () => {
+      if (!draft) throw new Error("订单配置已失效，请重新选择商品");
+      return consoleApi.createOrder({
+        productId: draft.productId,
+        specId: draft.selectedSpec?.id,
+        durationMonth: draft.durationMonth,
+        quantity: draft.quantity,
+        userCouponId: couponId === "none" ? undefined : couponId,
+        configOptions: Object.fromEntries(
+          draft.configOptions.map(({ id, ...option }) => [id, option]),
+        ),
+        hostname: draft.hostname,
+        password: draft.password,
+        billingCycle: draft.billingCycle,
+      });
+    },
+    onSuccess: async (order) => {
+      clearOrderDraft();
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setCreatedOrder(order);
+    },
+  });
+  const couponItems = useMemo(
+    () => ({
+      none: "不使用优惠券",
+      ...Object.fromEntries((coupons.data ?? []).map((coupon) => [coupon.id, `${coupon.name}（预计优惠 ¥${((coupon.previewDiscount ?? 0) / 100).toFixed(2)}）`])),
+    }),
+    [coupons.data],
+  );
+
+  if (createdOrder) {
+    return (
+      <>
+        <PageHeader title="订单已创建" description={`订单 ${createdOrder.orderNo} 正在等待支付。`} />
+        <LayerCard className="grid gap-5 p-5">
+          <Banner title="请完成在线支付" description="到账后系统会自动提交上游开通，并跳转至订单详情。" />
+          <div className="flex flex-wrap justify-end gap-3">
+            <Link to={`/console/orders/${createdOrder.id}`} viewTransition><Button variant="secondary">查看订单详情</Button></Link>
+            <PaymentDialog
+              businessType="order"
+              businessId={createdOrder.id}
+              amountCents={createdOrder.payAmount}
+              defaultOpen
+              onPaid={async () => {
+                await queryClient.invalidateQueries({ queryKey: ["orders"] });
+                navigate(`/console/orders/${createdOrder.id}`, { replace: true, viewTransition: true });
+              }}
+            />
+          </div>
+        </LayerCard>
+      </>
+    );
+  }
+
+  if (!draft) {
+    return (
+      <>
+        <PageHeader title="确认订单" description="订单配置仅在当前浏览器会话中保留。" />
+        <PageState empty emptyTitle="没有待确认的订单" emptyDescription="请返回商品页选择配置。">
+          <span />
+        </PageState>
+        <Link to="/console/products" viewTransition><Button variant="secondary">浏览商品</Button></Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
+      <PageState loading={coupons.isLoading} skeleton="detail" error={coupons.error ? getApiMessage(coupons.error) : null}>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <LayerCard className="p-5">
+          <DefinitionList
+            rows={[
+              { label: "商品", value: draft.productName },
+              ...(draft.selectedSpec ? [{ label: "实例规格", value: `${draft.selectedSpec.name}｜${draft.selectedSpec.vcpu} vCPU｜${draft.selectedSpec.memory} 内存` }] : []),
+              ...draft.configOptions.map((item) => ({ label: item.displayName, value: item.displayValue })),
+              ...(draft.hostname ? [{ label: "主机名", value: draft.hostname }] : []),
+              ...(draft.password
+                ? [{ label: "实例密码", value: "已生成，将加密写入订单快照" }]
+                : []),
+              { label: "购买周期", value: draft.cycleLabel },
+              { label: "数量", value: `${draft.quantity} 台` },
+            ]}
+          />
+        </LayerCard>
+        <LayerCard className="grid gap-5 p-5">
+          <Select
+            label="优惠券"
+            value={couponId}
+            onValueChange={(value) => value && setCouponId(value)}
+            items={couponItems}
+            disabled={coupons.isLoading || Boolean(coupons.error)}
+          />
+          <div className="border-t border-kumo-line pt-4">
+            <div className="flex justify-between">
+              <span>应付金额</span>
+              <strong className="text-2xl text-kumo-strong">¥{draft.totalYuan.toFixed(2)}</strong>
+            </div>
+          </div>
+          {create.error ? <Banner variant="error" title="创建订单失败" description={getApiMessage(create.error)} /> : null}
+          <Button
+            loading={create.isPending}
+            onClick={() => create.mutate()}
+          >
+            提交订单并去支付
+          </Button>
+        </LayerCard>
+      </div>
+      </PageState>
+    </>
+  );
+}
