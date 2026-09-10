@@ -364,7 +364,13 @@ export interface InstanceActionInput {
 export interface InstanceActionResult {
   status?: string;
   message: string;
-  remoteUrl?: string;
+  remote?: {
+    type: "novnc" | "kasmvnc" | "guacamole";
+    url: string;
+    token: string;
+    expiresAt: number;
+    extra?: Record<string, string>;
+  };
 }
 
 export class ApiBusinessError extends Error {}

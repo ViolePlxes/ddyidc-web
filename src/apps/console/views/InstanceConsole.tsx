@@ -183,7 +183,16 @@ export function InstanceConsole() {
   const action = useMutation({
     mutationFn: (input: InstanceActionInput) => consoleApi.instanceAction(instanceId, input),
     onSuccess: async (result) => {
-      if (result.remoteUrl) window.open(result.remoteUrl, "_blank", "noopener,noreferrer");
+      if (result.remote) {
+        const expectedPath = `/console/instance/${encodeURIComponent(instanceId)}/vnc`;
+        const target = new URL(result.remote.url, window.location.origin);
+        if (result.remote.url.startsWith("/") && !result.remote.url.startsWith("//") && target.origin === window.location.origin && target.pathname === expectedPath) {
+          window.open(`${target.pathname}${target.search}`, "_blank", "noopener,noreferrer");
+        } else {
+          setNotice("服务器返回了非本站远程会话地址，系统已阻止打开。");
+          return;
+        }
+      }
       setNotice(result.message || "操作已提交至上游");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["instances", instanceId] }),
