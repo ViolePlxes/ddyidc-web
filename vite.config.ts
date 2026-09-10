@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
@@ -93,7 +94,8 @@ function gitValue(args: string[], fallback: string): string {
 function versionAsset(): Plugin {
   const commit = process.env.DDYIDC_COMMIT || gitValue(["rev-parse", "HEAD"], "unknown");
   const branch = process.env.DDYIDC_BRANCH || gitValue(["branch", "--show-current"], "unknown");
-  const version = process.env.DDYIDC_VERSION || "0.1.0";
+  const packageVersion = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf8")) as { version?: string };
+  const version = process.env.DDYIDC_VERSION || packageVersion.version || "unknown";
   const builtAt = process.env.DDYIDC_BUILD_TIME || new Date().toISOString();
   return {
     name: "ddyidc-version-asset",
