@@ -111,7 +111,13 @@ export default defineConfig({
     port: 3100,
     strictPort: true,
     proxy: {
-      "/api": { target: "http://localhost:8080", changeOrigin: true },
+      "/api": { target: "http://localhost:8080", changeOrigin: true, ws: true },
+      "/admin/v1": { target: "http://localhost:8080", changeOrigin: true },
+    },
+  },
+  preview: {
+    proxy: {
+      "/api": { target: "http://localhost:8080", changeOrigin: true, ws: true },
       "/admin/v1": { target: "http://localhost:8080", changeOrigin: true },
     },
   },

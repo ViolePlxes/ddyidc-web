@@ -34,6 +34,7 @@ const Finance = lazy(() => routeModules.consoleFinance().then((module) => ({ def
 const ConsoleHome = lazy(() => routeModules.consoleHome().then((module) => ({ default: module.ConsoleHome })));
 const InstanceList = lazy(() => routeModules.consoleInstances().then((module) => ({ default: module.InstanceList })));
 const InstanceConsole = lazy(() => routeModules.consoleInstance().then((module) => ({ default: module.InstanceConsole })));
+const VncConsole = lazy(() => routeModules.consoleVnc().then((module) => ({ default: module.VncConsole })));
 const OrderConfirm = lazy(() => routeModules.consoleOrderConfirm().then((module) => ({ default: module.OrderConfirm })));
 const OrderDetail = lazy(() => routeModules.consoleOrderDetail().then((module) => ({ default: module.OrderDetail })));
 const OrderList = lazy(() => routeModules.consoleOrders().then((module) => ({ default: module.OrderList })));
@@ -136,6 +137,7 @@ export function ConsoleApp() {
     <Routes>
       <Route element={<UserSessionBoundary />}>
         <Route element={<UserGuard />}>
+          <Route path="/console/instance/:instanceId/vnc" element={<LazyRoute kind="detail"><VncConsole /></LazyRoute>} />
           <Route element={<PortalLayout />}>
             <Route path="/bind-mobile" element={<LazyRoute kind="form"><BindMobile /></LazyRoute>} />
           </Route>
