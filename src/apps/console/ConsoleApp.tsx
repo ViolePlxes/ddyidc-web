@@ -36,6 +36,7 @@ const InstanceList = lazy(() => routeModules.consoleInstances().then((module) =>
 const InstanceConsole = lazy(() => routeModules.consoleInstance().then((module) => ({ default: module.InstanceConsole })));
 const VncConsole = lazy(() => routeModules.consoleVnc().then((module) => ({ default: module.VncConsole })));
 const OrderConfirm = lazy(() => routeModules.consoleOrderConfirm().then((module) => ({ default: module.OrderConfirm })));
+const PaymentResult = lazy(() => routeModules.consolePaymentResult().then((module) => ({ default: module.PaymentResult })));
 const OrderDetail = lazy(() => routeModules.consoleOrderDetail().then((module) => ({ default: module.OrderDetail })));
 const OrderList = lazy(() => routeModules.consoleOrders().then((module) => ({ default: module.OrderList })));
 const ConsoleProductDetail = lazy(() => routeModules.consoleProductDetail().then((module) => ({ default: module.ConsoleProductDetail })));
@@ -152,6 +153,7 @@ export function ConsoleApp() {
             <Route path="/user/instance/:instanceId.htm" element={<LazyRoute kind="detail"><InstanceConsole /></LazyRoute>} />
             <Route path="/console/orders" element={<LazyRoute kind="table"><OrderList /></LazyRoute>} />
             <Route path="/console/orders/:id" element={<LazyRoute kind="detail"><OrderDetail /></LazyRoute>} />
+            <Route path="/console/payment/result" element={<LazyRoute kind="detail"><PaymentResult /></LazyRoute>} />
             <Route path="/console/profile" element={<LazyRoute kind="form"><Profile /></LazyRoute>} />
             <Route path="/console/promo" element={<LazyRoute kind="dashboard"><Promo /></LazyRoute>} />
             <Route path="/console/coupons" element={<LazyRoute kind="cards"><Coupons /></LazyRoute>} />

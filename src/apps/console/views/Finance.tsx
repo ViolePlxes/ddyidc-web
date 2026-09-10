@@ -1,4 +1,4 @@
-import { Banner, Button, Dialog, Input, LayerCard, Pagination, Select, Table } from "@cloudflare/kumo";
+import { Banner, Button, Dialog, Input, LayerCard, Pagination, Table } from "@cloudflare/kumo";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -14,12 +14,11 @@ import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
 export function Finance() {
   const [page, setPage] = useState(1);
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("alipay");
   const [created, setCreated] = useState<Recharge | null>(null);
   const query = useRecharges(page);
   const queryClient = useQueryClient();
   const create = useMutation({
-    mutationFn: () => consoleApi.createRecharge(Math.round(Number(amount) * 100), method),
+    mutationFn: () => consoleApi.createRecharge(Math.round(Number(amount) * 100), "alipay"),
     onSuccess: async (recharge) => {
       setCreated(recharge);
       setAmount("");
@@ -40,12 +39,12 @@ export function Finance() {
               <div className="flex justify-between">
                 <div>
                   <Dialog.Title className="text-xl font-semibold">创建充值单</Dialog.Title>
-                  <Dialog.Description className="text-kumo-subtle">创建待支付充值单后，可使用微信或支付宝完成在线充值。</Dialog.Description>
+                  <Dialog.Description className="text-kumo-subtle">创建待支付充值单后，使用支付宝完成在线充值。</Dialog.Description>
                 </div>
                 <Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} />
               </div>
               <Input label="充值金额（元）" type="number" min="1" max="1000000" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="请输入金额" />
-              <Select label="首选支付方式" value={method} onValueChange={(value) => value && setMethod(value)} items={{ alipay: "支付宝", wechat: "微信支付" }} />
+              <Banner title="支付方式：支付宝" description="电脑端与移动端会自动选择对应的支付宝网站收银台。" />
               {create.error ? <Banner variant="error" title="创建失败" description={getApiMessage(create.error)} /> : null}
               <div className="flex justify-end gap-2">
                 <Dialog.Close render={<Button variant="secondary">取消</Button>} />
