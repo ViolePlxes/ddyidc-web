@@ -11,6 +11,7 @@ import {
   PercentIcon,
   ReceiptIcon,
   ShieldCheckIcon,
+  ArrowsClockwiseIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
@@ -38,6 +39,7 @@ const AdminSales = lazy(() => routeModules.adminMarketing().then((module) => ({ 
 const AdminOrders = lazy(() => routeModules.adminOrders().then((module) => ({ default: module.AdminOrders })));
 const AdminProducts = lazy(() => routeModules.adminProducts().then((module) => ({ default: module.AdminProducts })));
 const AdminSystem = lazy(() => routeModules.adminSystem().then((module) => ({ default: module.AdminSystem })));
+const AdminUpdates = lazy(() => routeModules.adminUpdates().then((module) => ({ default: module.AdminUpdates })));
 const UpstreamOrders = lazy(() => routeModules.adminUpstreamOrders().then((module) => ({ default: module.UpstreamOrders })));
 const UpstreamProducts = lazy(() => routeModules.adminUpstreamProducts().then((module) => ({ default: module.UpstreamProducts })));
 const UpstreamSuppliers = lazy(() => routeModules.adminSuppliers().then((module) => ({ default: module.UpstreamSuppliers })));
@@ -60,7 +62,13 @@ const adminGroups: NavigationGroup[] = [
       { label: "商品管理", href: "/admin/products", icon: PackageIcon },
       { label: "订单管理", href: "/admin/orders", icon: ReceiptIcon },
       { label: "客户管理", href: "/admin/customers", icon: UsersIcon },
-      { label: "系统设置", href: "/admin/system", icon: GearIcon },
+    ],
+  },
+  {
+    label: "系统设置",
+    items: [
+      { label: "系统配置", href: "/admin/system", icon: GearIcon },
+      { label: "更新中心", href: "/admin/updates", icon: ArrowsClockwiseIcon },
     ],
   },
   {
@@ -158,6 +166,7 @@ export function AdminApp() {
             <Route path="/admin/orders" element={<LazyRoute kind="table"><AdminOrders /></LazyRoute>} />
             <Route path="/admin/customers" element={<LazyRoute kind="table"><AdminCustomers /></LazyRoute>} />
             <Route path="/admin/system" element={<LazyRoute kind="form"><AdminSystem /></LazyRoute>} />
+            <Route path="/admin/updates" element={<LazyRoute kind="dashboard"><AdminUpdates /></LazyRoute>} />
             <Route path="/admin/tickets" element={<LazyRoute kind="table"><AdminTicketList /></LazyRoute>} />
             <Route path="/admin/tickets/:id" element={<LazyRoute kind="detail"><AdminTicketDetail /></LazyRoute>} />
             <Route path="/admin/tickets/types" element={<LazyRoute kind="table"><TicketTypes /></LazyRoute>} />
