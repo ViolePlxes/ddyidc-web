@@ -18,4 +18,5 @@ alipay.json
 secrets/
 **/secrets/
 *.private.pem
+*.pem
 *.key
