@@ -10,14 +10,14 @@ if (!account || !password) {
   throw new Error("DDYIDC_QA_ACCOUNT and DDYIDC_QA_PASSWORD are required");
 }
 
-const edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+const browserExecutable = process.env.DDYIDC_BROWSER_EXECUTABLE ?? "/usr/bin/chromium";
 const outputDir = resolve("artifacts", "browser-evidence");
 const profileDir = await mkdtemp(join(tmpdir(), "ddyidc-evidence-"));
 const port = 9200 + Math.floor(Math.random() * 500);
 await mkdir(outputDir, { recursive: true });
 
 const browser = spawn(
-  edge,
+  browserExecutable,
   [
     "--headless=new",
     "--disable-gpu",
@@ -27,7 +27,7 @@ const browser = spawn(
     `--user-data-dir=${profileDir}`,
     "about:blank",
   ],
-  { stdio: "ignore", windowsHide: true },
+  { stdio: "ignore" },
 );
 
 const delay = (milliseconds) => scheduler.wait(milliseconds);
@@ -39,11 +39,11 @@ async function pageSocketUrl() {
       const page = targets.find((target) => target.type === "page");
       if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;
     } catch {
-      // Edge is still starting.
+      // Chromium is still starting.
     }
     await delay(100);
   }
-  throw new Error("Timed out waiting for Edge DevTools");
+  throw new Error("Timed out waiting for Chromium DevTools");
 }
 
 const socket = new WebSocket(await pageSocketUrl());
@@ -149,7 +149,7 @@ try {
   try {
     await rm(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   } catch {
-    // A Windows dictionary file can remain locked briefly after Edge exits.
+    // Chromium can keep profile files open briefly while exiting.
   }
 }
 

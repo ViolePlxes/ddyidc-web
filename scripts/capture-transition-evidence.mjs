@@ -9,13 +9,13 @@ const password = process.env.DDYIDC_QA_PASSWORD;
 const baseUrl = process.env.DDYIDC_QA_BASE_URL ?? "http://localhost:3100";
 if (!account || !password) throw new Error("DDYIDC_QA_ACCOUNT and DDYIDC_QA_PASSWORD are required");
 
-const edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+const browserExecutable = process.env.DDYIDC_BROWSER_EXECUTABLE ?? "/usr/bin/chromium";
 const outputDir = resolve("artifacts", "transition-evidence");
 const profileDir = await mkdtemp(join(tmpdir(), "ddyidc-transition-"));
 const port = 9800 + Math.floor(Math.random() * 100);
 await mkdir(outputDir, { recursive: true });
 
-const browser = spawn(edge, [
+const browser = spawn(browserExecutable, [
   "--headless=new",
   "--disable-gpu",
   "--no-first-run",
@@ -23,7 +23,7 @@ const browser = spawn(edge, [
   `--remote-debugging-port=${port}`,
   `--user-data-dir=${profileDir}`,
   "about:blank",
-], { stdio: "ignore", windowsHide: true });
+], { stdio: "ignore" });
 
 async function pageSocketUrl() {
   for (let attempt = 0; attempt < 50; attempt += 1) {
@@ -36,7 +36,7 @@ async function pageSocketUrl() {
     }
     await scheduler.wait(100);
   }
-  throw new Error("Timed out waiting for Edge DevTools");
+  throw new Error("Timed out waiting for Chromium DevTools");
 }
 
 const socket = new WebSocket(await pageSocketUrl());
@@ -186,6 +186,6 @@ try {
   try {
     await rm(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   } catch {
-    // Edge may keep a dictionary file locked briefly.
+    // Chromium can keep profile files open briefly while exiting.
   }
 }
