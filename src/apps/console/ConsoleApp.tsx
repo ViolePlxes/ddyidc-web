@@ -12,6 +12,10 @@ import {
   UsersThreeIcon,
   StorefrontIcon,
   CoinsIcon,
+  ShieldCheckIcon,
+  ArrowsClockwiseIcon,
+  CloudArrowDownIcon,
+  CloudCheckIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -167,6 +171,12 @@ const PointsOrders = lazy(() => routeModules.consolePoints().then((module)=>({de
 const CdnOverview = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnOverview})));
 const CdnPackages = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnPackages})));
 const CdnUsage = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnUsage})));
+const CdnDomains = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnDomains})));
+const CdnDomainPage = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnDomainPage})));
+const CdnCertificates = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnCertificates})));
+const CdnRefresh = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnRefresh})));
+const CdnLogs = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnLogs})));
+const CdnIPCheck = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnIPCheck})));
 
 const foreignSessions = ["/admin/v1/auth/me", "/admin/v1/sales/auth/me"];
 
@@ -265,7 +275,7 @@ function UserDashboard() {
       : group,
   );
   if(points.data&&points.data.enabled){groups=[...groups,{label:"积分中心",items:[{label:"积分账户",href:"/console/points",icon:CoinsIcon},...(points.data.showSignin?[{label:"签到中心",href:"/console/points/signin",icon:CoinsIcon}]:[]),...(points.data.showTasks?[{label:"任务中心",href:"/console/points/tasks",icon:GiftIcon}]:[]),...(points.data.showMall?[{label:"积分商城",href:"/console/points/mall",icon:StorefrontIcon},{label:"我的兑换",href:"/console/points/orders",icon:ReceiptIcon}]:[])]}]}
-  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 流量服务",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon}]}];
+  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 加速",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon},{label:"我的域名",href:"/console/cdnsell/domains",icon:StorefrontIcon},{label:"证书管理",href:"/console/cdnsell/certs",icon:ShieldCheckIcon},{label:"刷新预热",href:"/console/cdnsell/refresh",icon:ArrowsClockwiseIcon},{label:"日志下载",href:"/console/cdnsell/logs",icon:CloudArrowDownIcon},{label:"IP 诊断",href:"/console/cdnsell/ipcheck",icon:CloudCheckIcon}]}];
   return (
     <DashboardLayout
       user={user}
@@ -519,6 +529,12 @@ export function ConsoleApp() {
             <Route path="/console/cdnsell" element={<CdnsellGate scope="public"><LazyRoute kind="dashboard"><CdnOverview /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/packages" element={<CdnsellGate scope="public"><LazyRoute kind="products"><CdnPackages /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/usage" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnUsage /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/domains" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnDomains /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/domains/:id" element={<CdnsellGate scope="public"><LazyRoute kind="detail"><CdnDomainPage /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/certs" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnCertificates /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/refresh" element={<CdnsellGate scope="public"><LazyRoute kind="form"><CdnRefresh /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/logs" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnLogs /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/ipcheck" element={<CdnsellGate scope="public"><LazyRoute kind="form"><CdnIPCheck /></LazyRoute></CdnsellGate>} />
             <Route element={<RequireMobile />}>
               <Route
                 path="/console/finance"

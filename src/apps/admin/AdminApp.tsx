@@ -197,6 +197,8 @@ const CdnUpstream = lazy(() => routeModules.adminCdnsell().then((module)=>({defa
 const CdnCapabilities = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCapabilities})));
 const CdnProductsAdmin = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnProductsAdmin})));
 const CdnCustomers = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCustomers})));
+const AdminCdnDomains = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.AdminCdnDomains})));
+const AdminCdnConfigCenter = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.AdminCdnConfigCenter})));
 
 const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 
@@ -411,7 +413,7 @@ function AdminDashboard() {
       },
     ];
   if(points.data&&points.data.enabled) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:"/admin/points",icon:CoinsIcon},{label:"积分账户",href:"/admin/points/accounts",icon:UsersIcon},{label:"商品管理",href:"/admin/points/goods",icon:StorefrontIcon},{label:"兑换订单",href:"/admin/points/orders",icon:ReceiptIcon},{label:"插件配置",href:"/admin/points/plugin",icon:GearIcon}]}];
-  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 流量业务",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
+  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"域名管理",href:"/admin/cdnsell/domains",icon:StorefrontIcon},{label:"域名配置中心",href:"/admin/cdnsell/config-center",icon:GearIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
   return (
     <DashboardLayout
       user={user}
@@ -702,6 +704,8 @@ export function AdminApp() {
             <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCapabilities /></LazyRoute></CdnsellGate>} />
             <Route path="/admin/cdnsell/products" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
             <Route path="/admin/cdnsell/customers" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCustomers /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/domains" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><AdminCdnDomains /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/config-center" element={<CdnsellGate scope="admin"><LazyRoute kind="form"><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
           </Route>
         </Route>
         <Route path="*" element={<ForbiddenPage loginPath="/admin/login" />} />
