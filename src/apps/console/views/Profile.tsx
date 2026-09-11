@@ -10,7 +10,7 @@ export function Profile() {
       <Banner
         variant="alert"
         title="资料修改与换绑暂不可用"
-        description="后端未提供资料更新、手机号绑定或密码重置接口；通知服务当前也配置为 Mock 模式，因此不会展示假成功。"
+        description="后端尚未提供资料更新、手机号绑定或密码重置接口；页面保持只读并明确展示真实会话资料。"
       />
       <div className="grid gap-6 xl:grid-cols-2">
         <LayerCard className="grid gap-5 p-5">

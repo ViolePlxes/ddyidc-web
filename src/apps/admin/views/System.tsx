@@ -82,11 +82,10 @@ export function AdminSystem() {
 
 function BaseSettings() {
   return (
-    <LayerCard className="grid gap-4 p-5">
-      <Input label="站点名称" defaultValue="DDYIDC" />
-      <Input label="站点地址" defaultValue="https://idc.example.com" />
-      <Input label="客服邮箱" defaultValue="support@example.com" />
-      <Switch label="允许用户注册" defaultChecked />
+    <LayerCard className="grid gap-3 p-5">
+      <h2 className="font-medium text-kumo-strong">基础设置</h2>
+      <Banner variant="alert" title="尚无基础设置接口" description="当前后端未提供站点名称、客服邮箱与注册开关的读取或保存接口，因此本页不展示推测值，也不会提交无效配置。" />
+      <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前访问地址</span><strong className="text-kumo-strong">{window.location.origin}</strong></div>
     </LayerCard>
   );
 }
@@ -109,7 +108,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
     onSuccess: (next) => {
       setConfig(next);
       queryClient.setQueryData(["admin", "notify", "config"], next);
-      onSaved("通知通道配置已保存，Mock 状态已按凭据完整性自动更新。");
+      onSaved("通知通道配置已保存，通道状态已按凭据完整性自动更新。");
     },
   });
   const test = useMutation({
@@ -128,7 +127,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
       <LayerCard className="grid gap-4 p-5">
         <div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">邮件 SMTP</h2><p className="text-sm text-kumo-subtle">465 使用 SMTPS，其他端口（常用 587）自动协商 STARTTLS。</p></div>
-          <Badge variant={config.mail.mock ? "warning" : "success"}>{config.mail.mock ? "Mock" : "真实通道"}</Badge>
+          <Badge variant={config.mail.mock ? "warning" : "success"}>{config.mail.mock ? "待配置" : "真实通道"}</Badge>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="SMTP 主机" value={config.mail.host} onChange={(event) => updateMail("host", event.target.value)} />
@@ -142,7 +141,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
       <LayerCard className="grid gap-4 p-5">
         <div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">阿里云短信</h2><p className="text-sm text-kumo-subtle">SendSms 2017-05-25；TemplateCode 须在阿里云控制台审核通过。</p></div>
-          <Badge variant={config.sms.mock ? "warning" : "success"}>{config.sms.mock ? "Mock" : "真实通道"}</Badge>
+          <Badge variant={config.sms.mock ? "warning" : "success"}>{config.sms.mock ? "待配置" : "真实通道"}</Badge>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="AccessKey ID" value={config.sms.accessKey} onChange={(event) => updateSMS("accessKey", event.target.value)} />

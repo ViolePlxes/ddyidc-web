@@ -46,7 +46,7 @@ export function ConsoleHome() {
         ))}
       </section>
       {instances.error || notifications.error ? (
-        <Banner variant="alert" title="部分基础资源暂不可用" description="通知接口暂时不可用；实例数据仍来自真实接口，页面未使用占位数据。" />
+        <Banner variant="alert" title="部分基础资源暂不可用" description="通知接口暂时不可用；实例数据仍来自真实接口，页面未以静态记录补齐。" />
       ) : null}
       {paidTrend.length ? <TrendChart title="消费趋势（由订单列表聚合）" values={paidTrend} /> : null}
       <section className="grid gap-3">
