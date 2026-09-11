@@ -270,7 +270,7 @@ const adminGroups: NavigationGroup[] = [
     label: "营销中心",
     items: [
       {
-        label: "邀请码审核",
+        label: "优惠码审核",
         href: "/admin/marketing/invites",
         icon: IdentificationCardIcon,
       },

@@ -30,7 +30,7 @@ function ActivityCard({ activity }: { activity: GroupBuyActivity }) {
       </div>
       <div className="grid gap-1">
         <h2 className="text-lg font-semibold text-kumo-strong">{activity.productName}</h2>
-        <p className="text-kumo-subtle">{activity.slogan || activity.configDescription || "邀请好友一起购买，人数达到后自动开通。"}</p>
+        <p className="text-kumo-subtle">{activity.slogan || activity.configDescription || "分享给好友一起购买，人数达到后自动开通。"}</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
         {(Object.keys(groupLabels) as Array<keyof typeof groupLabels>).map((kind) => (
@@ -69,7 +69,7 @@ export function GroupBuyPublicShare() {
   return (
     <PageState loading={query.isLoading} skeleton="detail" error={query.error ? getApiMessage(query.error) : null}>
       {data ? <div className="mx-auto grid max-w-3xl gap-6">
-        <PageHeader title={`${data.activity.productName} 拼团邀请`} description={data.activity.slogan || "好友正在等你参团。"} />
+        <PageHeader title={`${data.activity.productName} 拼团分享`} description={data.activity.slogan || "好友正在等你参团。"} />
         <LayerCard className="grid gap-5 p-6">
           <div className="flex flex-wrap items-center gap-2"><Badge variant="success">还差 {Math.max(data.leader.needNum - data.members.length, 0)} 人</Badge><Badge variant="outline">{groupLabels[data.leader.groupType]}</Badge></div>
           <div><span className="text-sm text-kumo-subtle">团长</span><strong className="block text-lg text-kumo-strong">{data.members.find((item) => item.isLeader)?.memberName || "拼团用户"}</strong></div>

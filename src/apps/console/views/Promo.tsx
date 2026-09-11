@@ -28,7 +28,7 @@ export function Promo() {
   const inviteCode = invite.data?.invite?.code || data?.inviteCode;
   const link = data?.promoLinkPath ? `${window.location.origin}${data.promoLinkPath}` : "";
   const metrics = [
-    { label: "已邀请客户", value: String(data?.registrations ?? 0), hint: `一级 ${invite.data?.stats.level1 ?? 0} · 二级 ${invite.data?.stats.level2 ?? 0} · 三级 ${invite.data?.stats.level3 ?? 0}` },
+    { label: "已推广客户", value: String(data?.registrations ?? 0), hint: `一级 ${invite.data?.stats.level1 ?? 0} · 二级 ${invite.data?.stats.level2 ?? 0} · 三级 ${invite.data?.stats.level3 ?? 0}` },
     { label: "待结算收益", value: formatMoney(summary?.pending ?? 0), hint: "来自真实奖励记录" },
     { label: "累计收益", value: formatMoney(summary?.total ?? 0), hint: `已结算 ${formatMoney(summary?.settled ?? 0)}` },
     { label: "推广消费", value: formatMoney(data?.spendTotal ?? 0), hint: `推广充值 ${formatMoney(data?.rechargeTotal ?? 0)}` },
@@ -46,22 +46,22 @@ export function Promo() {
 
   return (
     <>
-      <PageHeader title="我的推广" description="邀请码、推广数据与收益均来自实时营销接口。" />
+      <PageHeader title="我的推广" description="优惠码、推广数据与收益均来自实时营销接口。" />
       <PageState loading={loading} skeleton="dashboard" error={error ? getApiMessage(error) : null}>
         <div className="grid gap-5">
           {inviteCode ? (
             <LayerCard className="flex flex-wrap items-center justify-between gap-4 p-5">
-              <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属邀请码</span><ClipboardText text={inviteCode} /></div>
-              <Button variant="secondary" icon={<CopyIcon />} disabled={!link} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制邀请链接"}</Button>
+              <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属优惠码</span><ClipboardText text={inviteCode} /></div>
+              <Button variant="secondary" icon={<CopyIcon />} disabled={!link} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制分享链接"}</Button>
             </LayerCard>
           ) : (
             <LayerCard className="grid gap-4 p-5">
-              <Input label="自定义邀请码（可选）" value={customCode} onChange={(event) => setCustomCode(event.target.value)} disabled={!config.data?.inviteEnabled} />
-              <Button className="justify-self-start" loading={create.isPending} disabled={!config.data?.inviteEnabled} onClick={() => create.mutate()}>生成邀请码</Button>
-              {!config.data?.inviteEnabled ? <Banner variant="alert" title="邀请码申请已关闭" description="营销公共配置当前未开放邀请码申请。" /> : null}
+              <Input label="自定义优惠码（可选）" value={customCode} onChange={(event) => setCustomCode(event.target.value)} disabled={!config.data?.inviteEnabled} />
+              <Button className="justify-self-start" loading={create.isPending} disabled={!config.data?.inviteEnabled} onClick={() => create.mutate()}>生成优惠码</Button>
+              {!config.data?.inviteEnabled ? <Banner variant="alert" title="优惠码申请已关闭" description="营销公共配置当前未开放优惠码申请。" /> : null}
             </LayerCard>
           )}
-          {create.error ? <Banner variant="error" title="邀请码生成失败" description={getApiMessage(create.error)} /> : null}
+          {create.error ? <Banner variant="error" title="优惠码生成失败" description={getApiMessage(create.error)} /> : null}
           <MetricGrid metrics={metrics} />
           <PageState empty={!records.isLoading && !records.error && rows.length === 0} emptyTitle="暂无收益记录">
             <DataTable rows={rows} primaryLabel="收益来源" secondaryLabel="关联单号" />

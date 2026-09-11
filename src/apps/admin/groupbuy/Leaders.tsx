@@ -59,7 +59,7 @@ export function GroupBuyAdminLeaders() {
             <Table.Header variant="compact">
               <Table.Row>
                 <Table.Head>团长</Table.Head>
-                <Table.Head>邀请码</Table.Head>
+                <Table.Head>优惠码</Table.Head>
                 <Table.Head>进度</Table.Head>
                 <Table.Head>实付（分）</Table.Head>
                 <Table.Head>状态</Table.Head>
