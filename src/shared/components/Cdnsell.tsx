@@ -1,0 +1,4 @@
+import { Badge } from "@cloudflare/kumo";
+
+export function formatTraffic(value:number){if(value>=1024**4)return `${(value/1024**4).toFixed(2)} TB`;if(value>=1024**3)return `${(value/1024**3).toFixed(2)} GB`;if(value>=1024**2)return `${(value/1024**2).toFixed(2)} MB`;return `${new Intl.NumberFormat("zh-CN").format(value)} B`}
+export function CdnStatus({value}:{value:string|boolean|null}){const active=value===true||value==="running"||value==="active"||value==="confirmed";const unknown=value===null;return <Badge variant={active?"success":unknown?"outline":"neutral"}>{unknown?"待实测":active?"正常":value===false?"未开放":String(value)}</Badge>}

@@ -11,6 +11,8 @@ export interface PageResult<T> {
 export interface ProductSummary {
   id: string;
   groupId: string;
+  parentGroupId: string;
+  groupName: string;
   name: string;
   moduleType: string;
   stock: number | null;
@@ -18,6 +20,15 @@ export interface ProductSummary {
   description: string;
   price: number;
   cycle: string;
+  sort: number;
+}
+
+export interface ProductGroupSummary {
+  id: string;
+  parentId: string;
+  name: string;
+  sort: number;
+  status: number;
 }
 
 export interface ProductSpec {
@@ -388,7 +399,7 @@ async function unwrap<T>(
 export const consoleApi = {
   products: (pageSize = 100) =>
     unwrap(
-      userRequest.get<ApiEnvelope<{ items: ProductSummary[]; total: number; page: number; pageSize: number }>>(
+      userRequest.get<ApiEnvelope<{ items: ProductSummary[]; groups: ProductGroupSummary[]; total: number; page: number; pageSize: number }>>(
         "/products",
         { params: { pageSize } },
       ),

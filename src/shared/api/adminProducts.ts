@@ -6,6 +6,8 @@ export interface AdminProduct {
   id: string;
   name: string;
   groupId: string;
+  parentGroupId: string;
+  groupName: string;
   status: number;
   hidden: boolean;
   sort: number;
@@ -23,7 +25,8 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 }
 
 export const adminProductsApi = {
-  list: () => unwrap(adminRequest.get<ApiEnvelope<{ items: AdminProduct[]; total: number }>>("/products", { params: { pageSize: 100 } })),
+  list: (groupId?: string) => unwrap(adminRequest.get<ApiEnvelope<{ items: AdminProduct[]; total: number }>>("/products", { params: { pageSize: 100, groupId: groupId || undefined } })),
+  sort: (groupId: string, ids: string[]) => unwrap(adminRequest.put<ApiEnvelope<{ sorted: boolean }>>("/products/sort", { groupId, ids })),
   specs: (productId: string) => unwrap(adminRequest.get<ApiEnvelope<{ items: ProductSpec[] }>>(`/products/${productId}/specs`)),
   saveSpecs: (productId: string, items: ProductSpecInput[]) => unwrap(adminRequest.put<ApiEnvelope<{ items: ProductSpec[] }>>(`/products/${productId}/specs`, { items })),
 };

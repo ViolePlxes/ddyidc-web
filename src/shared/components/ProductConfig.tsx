@@ -1,4 +1,5 @@
 import {
+  Badge,
   Banner,
   Button,
   Input,
@@ -10,6 +11,7 @@ import {
 } from "@cloudflare/kumo";
 import { ArrowsClockwiseIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import type {
   ConfigOption,
@@ -171,7 +173,17 @@ function SpecTable({ specs, selectedId, onSelect }: { specs: ProductSpec[]; sele
   );
 }
 
-export function ProductConfig({ product, orderPage }: { product: ProductDetail; orderPage?: OrderPage }) {
+export function ProductConfig({
+  product,
+  orderPage,
+  billTarget,
+  billLoading = false,
+}: {
+  product: ProductDetail;
+  orderPage?: OrderPage;
+  billTarget?: HTMLElement | null;
+  billLoading?: boolean;
+}) {
   const navigate = useNavigate();
   const options = useMemo(() => orderPage?.configOptions ?? product.configOptions ?? [], [orderPage, product.configOptions]);
   const cycles = useMemo(() => orderPage?.cycles?.length
@@ -253,6 +265,8 @@ export function ProductConfig({ product, orderPage }: { product: ProductDetail; 
   const periodBase = selectedSpec?.priceMode === "upstream" && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
   const unitPrice = periodBase + optionPrice * durationMonth + (selectedCycle?.setupFee ?? 0);
   const total = unitPrice * quantity;
+  const nextRenewal = (periodBase + optionPrice * durationMonth) * quantity;
+  const monthlyEquivalent = durationMonth > 0 ? nextRenewal / durationMonth : nextRenewal;
   const selectedRegion = dataCenterOption?.options.find((item) => item.id === selected.data_center)?.name ?? "默认地域";
   const outOfStock = selectedSpec?.stock !== null && selectedSpec?.stock !== undefined ? selectedSpec.stock <= 0 : product.stock !== null && product.stock <= 0;
   const specsUnavailable = product.specs.length === 0;
@@ -273,9 +287,39 @@ export function ProductConfig({ product, orderPage }: { product: ProductDetail; 
     password: options.length ? password : "",
   });
 
+  const externalBill = billTarget !== undefined;
+  const bill = (
+    <LayerCard
+      aria-busy={billLoading}
+      className={`${externalBill ? "grid gap-5 p-5" : "sticky top-20 grid gap-5 p-5"}${billLoading ? " pointer-events-none" : ""}`}
+    >
+      <div className="grid gap-1">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-kumo-subtle">当前应付</span>
+          {billLoading ? <Badge variant="secondary">正在更新</Badge> : null}
+        </div>
+        <strong className="text-3xl font-semibold text-kumo-strong">¥{total.toFixed(2)}</strong>
+        <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 ¥{unitPrice.toFixed(2)}</span>
+      </div>
+      <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
+        {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>实例规格：规格待配置</span>}
+        {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{item.displayValue}</span>)}
+        <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
+        <span>购买数量：{quantity} 台</span>
+        <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
+        <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
+      </div>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
+      <Button disabled={outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
+    </LayerCard>
+  );
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="grid gap-5">
+    <>
+      <div
+        aria-busy={billLoading}
+        className={`${externalBill ? "grid items-start gap-6" : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"}${billLoading ? " pointer-events-none" : ""}`}
+      >
+        <div className="grid gap-5">
         {dataCenterOption ? (
           <LayerCard className="grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">地域选择</h2><p className="text-sm text-kumo-subtle">建议选择距离业务更近的地域，以降低网络延时。</p></div>
@@ -325,18 +369,11 @@ export function ProductConfig({ product, orderPage }: { product: ProductDetail; 
 
         <Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
         <LayerCard className="grid gap-2 p-5"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按供应商实际退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
-      </div>
-
-      <LayerCard className="sticky top-20 grid gap-5 p-5">
-        <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前应付</span><strong className="text-3xl font-semibold text-kumo-strong">¥{total.toFixed(2)}</strong><span className="text-sm text-kumo-subtle">单台本周期 ¥{unitPrice.toFixed(2)}</span></div>
-        <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
-          {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>实例规格：规格待配置</span>}
-          {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{item.displayValue}</span>)}
-          <span>{selectedCycle?.label || cycleLabels[cycle] || cycle} · {quantity} 台</span>
         </div>
-        <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
-        <Button disabled={outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
-      </LayerCard>
-    </div>
+
+        {externalBill ? null : bill}
+      </div>
+      {billTarget ? createPortal(bill, billTarget) : null}
+    </>
   );
 }

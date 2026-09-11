@@ -3,6 +3,7 @@ import {
   ChatCenteredTextIcon,
   CloudArrowDownIcon,
   CloudCheckIcon,
+  CreditCardIcon,
   GearIcon,
   HouseIcon,
   IdentificationCardIcon,
@@ -11,8 +12,11 @@ import {
   PercentIcon,
   ReceiptIcon,
   ShieldCheckIcon,
+  UsersThreeIcon,
   ArrowsClockwiseIcon,
   UsersIcon,
+  StorefrontIcon,
+  CoinsIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
@@ -29,39 +33,187 @@ import {
 import { useAdminAuthStore } from "../../shared/stores/staffAuth";
 import { LazyRoute } from "../../shared/router/LazyRoute";
 import { routeModules } from "../../shared/router/routeModules";
+import {
+  GroupBuyGate,
+  useGroupBuyAvailability,
+} from "../../shared/router/GroupBuyGate";
+import {
+  MarketplaceGate,
+  useMarketplaceAvailability,
+} from "../../shared/router/MarketplaceGate";
+import { PointsGate, usePointsAvailability } from "../../shared/router/PointsGate";
+import { CdnsellGate, useCdnsellAvailability } from "../../shared/router/CdnsellGate";
 
-const AdminCustomers = lazy(() => routeModules.adminCustomers().then((module) => ({ default: module.AdminCustomers })));
-const AdminHome = lazy(() => routeModules.adminHome().then((module) => ({ default: module.AdminHome })));
-const AdminInvites = lazy(() => routeModules.adminMarketing().then((module) => ({ default: module.AdminInvites })));
-const AdminMarketingConfig = lazy(() => routeModules.adminMarketing().then((module) => ({ default: module.AdminMarketingConfig })));
-const AdminRewards = lazy(() => routeModules.adminMarketing().then((module) => ({ default: module.AdminRewards })));
-const AdminSales = lazy(() => routeModules.adminMarketing().then((module) => ({ default: module.AdminSales })));
-const AdminOrders = lazy(() => routeModules.adminOrders().then((module) => ({ default: module.AdminOrders })));
-const AdminProducts = lazy(() => routeModules.adminProducts().then((module) => ({ default: module.AdminProducts })));
-const AdminSystem = lazy(() => routeModules.adminSystem().then((module) => ({ default: module.AdminSystem })));
-const AdminUpdates = lazy(() => routeModules.adminUpdates().then((module) => ({ default: module.AdminUpdates })));
-const UpstreamOrders = lazy(() => routeModules.adminUpstreamOrders().then((module) => ({ default: module.UpstreamOrders })));
-const UpstreamProducts = lazy(() => routeModules.adminUpstreamProducts().then((module) => ({ default: module.UpstreamProducts })));
-const UpstreamSuppliers = lazy(() => routeModules.adminSuppliers().then((module) => ({ default: module.UpstreamSuppliers })));
-const AdminTicketList = lazy(() => routeModules.adminTickets().then((module) => ({ default: module.AdminTicketList })));
-const AdminTicketDetail = lazy(() => routeModules.adminTickets().then((module) => ({ default: module.AdminTicketDetail })));
-const TicketTypes = lazy(() => routeModules.adminTicketConfig().then((module) => ({ default: module.TicketTypes })));
-const TicketStatuses = lazy(() => routeModules.adminTicketConfig().then((module) => ({ default: module.TicketStatuses })));
-const TicketPrereplies = lazy(() => routeModules.adminTicketConfig().then((module) => ({ default: module.TicketPrereplies })));
+const AdminCustomers = lazy(() =>
+  routeModules
+    .adminCustomers()
+    .then((module) => ({ default: module.AdminCustomers })),
+);
+const AdminHome = lazy(() =>
+  routeModules.adminHome().then((module) => ({ default: module.AdminHome })),
+);
+const AdminInvites = lazy(() =>
+  routeModules
+    .adminMarketing()
+    .then((module) => ({ default: module.AdminInvites })),
+);
+const AdminMarketingConfig = lazy(() =>
+  routeModules
+    .adminMarketing()
+    .then((module) => ({ default: module.AdminMarketingConfig })),
+);
+const AdminRewards = lazy(() =>
+  routeModules
+    .adminMarketing()
+    .then((module) => ({ default: module.AdminRewards })),
+);
+const AdminSales = lazy(() =>
+  routeModules
+    .adminMarketing()
+    .then((module) => ({ default: module.AdminSales })),
+);
+const AdminOrders = lazy(() =>
+  routeModules
+    .adminOrders()
+    .then((module) => ({ default: module.AdminOrders })),
+);
+const AdminProducts = lazy(() =>
+  routeModules
+    .adminProducts()
+    .then((module) => ({ default: module.AdminProducts })),
+);
+const ProductGroups = lazy(() =>
+  routeModules
+    .adminProductGroups()
+    .then((module) => ({ default: module.ProductGroups })),
+);
+const AdminSystem = lazy(() =>
+  routeModules
+    .adminSystem()
+    .then((module) => ({ default: module.AdminSystem })),
+);
+const AdminUpdates = lazy(() =>
+  routeModules
+    .adminUpdates()
+    .then((module) => ({ default: module.AdminUpdates })),
+);
+const UpstreamOrders = lazy(() =>
+  routeModules
+    .adminUpstreamOrders()
+    .then((module) => ({ default: module.UpstreamOrders })),
+);
+const UpstreamProducts = lazy(() =>
+  routeModules
+    .adminUpstreamProducts()
+    .then((module) => ({ default: module.UpstreamProducts })),
+);
+const UpstreamSuppliers = lazy(() =>
+  routeModules
+    .adminSuppliers()
+    .then((module) => ({ default: module.UpstreamSuppliers })),
+);
+const AdminTicketList = lazy(() =>
+  routeModules
+    .adminTickets()
+    .then((module) => ({ default: module.AdminTicketList })),
+);
+const AdminTicketDetail = lazy(() =>
+  routeModules
+    .adminTickets()
+    .then((module) => ({ default: module.AdminTicketDetail })),
+);
+const TicketTypes = lazy(() =>
+  routeModules
+    .adminTicketConfig()
+    .then((module) => ({ default: module.TicketTypes })),
+);
+const TicketStatuses = lazy(() =>
+  routeModules
+    .adminTicketConfig()
+    .then((module) => ({ default: module.TicketStatuses })),
+);
+const TicketPrereplies = lazy(() =>
+  routeModules
+    .adminTicketConfig()
+    .then((module) => ({ default: module.TicketPrereplies })),
+);
+const GroupBuyAdminActivities = lazy(() =>
+  routeModules
+    .adminGroupBuy()
+    .then((module) => ({ default: module.GroupBuyAdminActivities })),
+);
+const GroupBuyAdminLeaders = lazy(() =>
+  routeModules
+    .adminGroupBuy()
+    .then((module) => ({ default: module.GroupBuyAdminLeaders })),
+);
+const GroupBuyAdminSettings = lazy(() =>
+  routeModules
+    .adminGroupBuy()
+    .then((module) => ({ default: module.GroupBuyAdminSettings })),
+);
+const MarketplaceAdminDashboard = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminDashboard })),
+);
+const MarketplaceAdminListings = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminListings })),
+);
+const MarketplaceAdminOrders = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminOrders })),
+);
+const MarketplaceAdminFlows = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminFlows })),
+);
+const MarketplaceAdminWithdrawals = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminWithdrawals })),
+);
+const MarketplaceAdminReports = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminReports })),
+);
+const MarketplaceAdminSettings = lazy(() =>
+  routeModules
+    .adminMarketplace()
+    .then((module) => ({ default: module.MarketplaceAdminSettings })),
+);
+const PointsDashboard = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsDashboard})));
+const PointsAccounts = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsAccounts})));
+const PointsGoodsAdmin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsGoodsAdmin})));
+const PointsOrdersAdmin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsOrdersAdmin})));
+const PointsPlugin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsPlugin})));
+const CdnAdminOverview = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnAdminOverview})));
+const CdnUpstream = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnUpstream})));
+const CdnCapabilities = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCapabilities})));
+const CdnProductsAdmin = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnProductsAdmin})));
+const CdnCustomers = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCustomers})));
 
-const foreignSessions = [
-  "/api/v1/auth/me",
-  "/admin/v1/sales/auth/me",
-];
+const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 
 const adminGroups: NavigationGroup[] = [
   {
     label: "概览",
     items: [
       { label: "经营概览", href: "/admin", icon: HouseIcon },
-      { label: "商品管理", href: "/admin/products", icon: PackageIcon },
       { label: "订单管理", href: "/admin/orders", icon: ReceiptIcon },
       { label: "客户管理", href: "/admin/customers", icon: UsersIcon },
+    ],
+  },
+  {
+    label: "商品管理",
+    items: [
+      { label: "商品列表", href: "/admin/products", icon: PackageIcon },
+      { label: "商品分组", href: "/admin/products/groups", icon: PackageIcon },
     ],
   },
   {
@@ -75,26 +227,66 @@ const adminGroups: NavigationGroup[] = [
     label: "客户服务",
     items: [
       { label: "工单管理", href: "/admin/tickets", icon: ChatCenteredTextIcon },
-      { label: "工单类型", href: "/admin/tickets/types", icon: ChatCenteredTextIcon },
-      { label: "工单状态", href: "/admin/tickets/statuses", icon: ChatCenteredTextIcon },
-      { label: "预设回复", href: "/admin/tickets/prereplies", icon: ChatCenteredTextIcon },
+      {
+        label: "工单类型",
+        href: "/admin/tickets/types",
+        icon: ChatCenteredTextIcon,
+      },
+      {
+        label: "工单状态",
+        href: "/admin/tickets/statuses",
+        icon: ChatCenteredTextIcon,
+      },
+      {
+        label: "预设回复",
+        href: "/admin/tickets/prereplies",
+        icon: ChatCenteredTextIcon,
+      },
     ],
   },
   {
     label: "上下游",
     items: [
-      { label: "供应商管理", href: "/admin/upstream/suppliers", icon: BuildingsIcon },
-      { label: "供应商映射", href: "/admin/upstream/products", icon: CloudArrowDownIcon },
-      { label: "上游订单", href: "/admin/upstream/orders", icon: CloudCheckIcon },
+      {
+        label: "供应商管理",
+        href: "/admin/upstream/suppliers",
+        icon: BuildingsIcon,
+      },
+      {
+        label: "供应商映射",
+        href: "/admin/upstream/products",
+        icon: CloudArrowDownIcon,
+      },
+      {
+        label: "上游订单",
+        href: "/admin/upstream/orders",
+        icon: CloudCheckIcon,
+      },
     ],
   },
   {
     label: "营销中心",
     items: [
-      { label: "邀请码审核", href: "/admin/marketing/invites", icon: IdentificationCardIcon },
-      { label: "分销结算", href: "/admin/marketing/rewards", icon: PercentIcon },
-      { label: "销售权限", href: "/admin/marketing/sales", icon: MegaphoneIcon },
-      { label: "营销配置", href: "/admin/marketing/config", icon: ShieldCheckIcon },
+      {
+        label: "邀请码审核",
+        href: "/admin/marketing/invites",
+        icon: IdentificationCardIcon,
+      },
+      {
+        label: "分销结算",
+        href: "/admin/marketing/rewards",
+        icon: PercentIcon,
+      },
+      {
+        label: "销售权限",
+        href: "/admin/marketing/sales",
+        icon: MegaphoneIcon,
+      },
+      {
+        label: "营销配置",
+        href: "/admin/marketing/config",
+        icon: ShieldCheckIcon,
+      },
     ],
   },
 ];
@@ -142,11 +334,88 @@ function AdminGuard() {
 function AdminDashboard() {
   const user = useAdminAuthStore((state) => state.user);
   const signOut = useAdminAuthStore((state) => state.signOut);
+  const groupBuy = useGroupBuyAvailability("admin");
+  const marketplace = useMarketplaceAvailability("admin");
+  const points = usePointsAvailability("admin");
+  const cdnsell = useCdnsellAvailability("admin");
   if (!user) return null;
+  let groups = groupBuy.data
+    ? adminGroups.map((group) =>
+        group.label === "营销中心"
+          ? {
+              ...group,
+              items: [
+                ...group.items,
+                {
+                  label: "拼团活动",
+                  href: "/admin/marketing/groupbuy/activities",
+                  icon: UsersThreeIcon,
+                },
+                {
+                  label: "拼团成员",
+                  href: "/admin/marketing/groupbuy/leaders",
+                  icon: UsersThreeIcon,
+                },
+                {
+                  label: "拼团设置",
+                  href: "/admin/marketing/groupbuy/settings",
+                  icon: UsersThreeIcon,
+                },
+              ],
+            }
+          : group,
+      )
+    : adminGroups;
+  if (marketplace.data)
+    groups = [
+      ...groups,
+      {
+        label: "交易市场",
+        items: [
+          {
+            label: "市场概览",
+            href: "/admin/marketplace/dashboard",
+            icon: StorefrontIcon,
+          },
+          {
+            label: "挂牌管理",
+            href: "/admin/marketplace/listings",
+            icon: StorefrontIcon,
+          },
+          {
+            label: "交易订单",
+            href: "/admin/marketplace/orders",
+            icon: ReceiptIcon,
+          },
+          {
+            label: "资金流水",
+            href: "/admin/marketplace/flows",
+            icon: CreditCardIcon,
+          },
+          {
+            label: "提现审核",
+            href: "/admin/marketplace/withdrawals",
+            icon: CreditCardIcon,
+          },
+          {
+            label: "举报处理",
+            href: "/admin/marketplace/reports",
+            icon: ShieldCheckIcon,
+          },
+          {
+            label: "市场设置",
+            href: "/admin/marketplace/settings",
+            icon: GearIcon,
+          },
+        ],
+      },
+    ];
+  if(points.data&&points.data.enabled) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:"/admin/points",icon:CoinsIcon},{label:"积分账户",href:"/admin/points/accounts",icon:UsersIcon},{label:"商品管理",href:"/admin/points/goods",icon:StorefrontIcon},{label:"兑换订单",href:"/admin/points/orders",icon:ReceiptIcon},{label:"插件配置",href:"/admin/points/plugin",icon:GearIcon}]}];
+  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 流量业务",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
   return (
     <DashboardLayout
       user={user}
-      groups={adminGroups}
+      groups={groups}
       signOut={signOut}
       loginPath="/admin/login"
       density="compact"
@@ -161,24 +430,278 @@ export function AdminApp() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<AdminGuard />}>
           <Route element={<AdminDashboard />}>
-            <Route path="/admin" element={<LazyRoute kind="dashboard"><AdminHome /></LazyRoute>} />
-            <Route path="/admin/products" element={<LazyRoute kind="table"><AdminProducts /></LazyRoute>} />
-            <Route path="/admin/orders" element={<LazyRoute kind="table"><AdminOrders /></LazyRoute>} />
-            <Route path="/admin/customers" element={<LazyRoute kind="table"><AdminCustomers /></LazyRoute>} />
-            <Route path="/admin/system" element={<LazyRoute kind="form"><AdminSystem /></LazyRoute>} />
-            <Route path="/admin/updates" element={<LazyRoute kind="dashboard"><AdminUpdates /></LazyRoute>} />
-            <Route path="/admin/tickets" element={<LazyRoute kind="table"><AdminTicketList /></LazyRoute>} />
-            <Route path="/admin/tickets/:id" element={<LazyRoute kind="detail"><AdminTicketDetail /></LazyRoute>} />
-            <Route path="/admin/tickets/types" element={<LazyRoute kind="table"><TicketTypes /></LazyRoute>} />
-            <Route path="/admin/tickets/statuses" element={<LazyRoute kind="table"><TicketStatuses /></LazyRoute>} />
-            <Route path="/admin/tickets/prereplies" element={<LazyRoute kind="table"><TicketPrereplies /></LazyRoute>} />
-            <Route path="/admin/upstream/suppliers" element={<LazyRoute kind="table"><UpstreamSuppliers /></LazyRoute>} />
-            <Route path="/admin/upstream/products" element={<LazyRoute kind="dashboard"><UpstreamProducts /></LazyRoute>} />
-            <Route path="/admin/upstream/orders" element={<LazyRoute kind="table"><UpstreamOrders /></LazyRoute>} />
-            <Route path="/admin/marketing/invites" element={<LazyRoute kind="table"><AdminInvites /></LazyRoute>} />
-            <Route path="/admin/marketing/rewards" element={<LazyRoute kind="table"><AdminRewards /></LazyRoute>} />
-            <Route path="/admin/marketing/sales" element={<LazyRoute kind="table"><AdminSales /></LazyRoute>} />
-            <Route path="/admin/marketing/config" element={<LazyRoute kind="form"><AdminMarketingConfig /></LazyRoute>} />
+            <Route
+              path="/admin"
+              element={
+                <LazyRoute kind="dashboard">
+                  <AdminHome />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <LazyRoute kind="table">
+                  <AdminProducts />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/products/groups"
+              element={
+                <LazyRoute kind="table">
+                  <ProductGroups />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <LazyRoute kind="table">
+                  <AdminOrders />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/customers"
+              element={
+                <LazyRoute kind="table">
+                  <AdminCustomers />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/system"
+              element={
+                <LazyRoute kind="form">
+                  <AdminSystem />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/updates"
+              element={
+                <LazyRoute kind="dashboard">
+                  <AdminUpdates />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets"
+              element={
+                <LazyRoute kind="table">
+                  <AdminTicketList />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets/:id"
+              element={
+                <LazyRoute kind="detail">
+                  <AdminTicketDetail />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets/types"
+              element={
+                <LazyRoute kind="table">
+                  <TicketTypes />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets/statuses"
+              element={
+                <LazyRoute kind="table">
+                  <TicketStatuses />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/tickets/prereplies"
+              element={
+                <LazyRoute kind="table">
+                  <TicketPrereplies />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/upstream/suppliers"
+              element={
+                <LazyRoute kind="table">
+                  <UpstreamSuppliers />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/upstream/products"
+              element={
+                <LazyRoute kind="dashboard">
+                  <UpstreamProducts />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/upstream/orders"
+              element={
+                <LazyRoute kind="table">
+                  <UpstreamOrders />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing/invites"
+              element={
+                <LazyRoute kind="table">
+                  <AdminInvites />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing/rewards"
+              element={
+                <LazyRoute kind="table">
+                  <AdminRewards />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing/sales"
+              element={
+                <LazyRoute kind="table">
+                  <AdminSales />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing/config"
+              element={
+                <LazyRoute kind="form">
+                  <AdminMarketingConfig />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing/groupbuy/activities"
+              element={
+                <GroupBuyGate scope="admin">
+                  <LazyRoute kind="table">
+                    <GroupBuyAdminActivities />
+                  </LazyRoute>
+                </GroupBuyGate>
+              }
+            />
+            <Route
+              path="/admin/marketing/groupbuy/leaders"
+              element={
+                <GroupBuyGate scope="admin">
+                  <LazyRoute kind="table">
+                    <GroupBuyAdminLeaders />
+                  </LazyRoute>
+                </GroupBuyGate>
+              }
+            />
+            <Route
+              path="/admin/marketing/groupbuy/settings"
+              element={
+                <GroupBuyGate scope="admin">
+                  <LazyRoute kind="form">
+                    <GroupBuyAdminSettings />
+                  </LazyRoute>
+                </GroupBuyGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="dashboard">
+                    <MarketplaceAdminDashboard />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/dashboard"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="dashboard">
+                    <MarketplaceAdminDashboard />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/listings"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="table">
+                    <MarketplaceAdminListings />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/orders"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="table">
+                    <MarketplaceAdminOrders />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/flows"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="table">
+                    <MarketplaceAdminFlows />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/withdrawals"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="table">
+                    <MarketplaceAdminWithdrawals />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/reports"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="table">
+                    <MarketplaceAdminReports />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route
+              path="/admin/marketplace/settings"
+              element={
+                <MarketplaceGate scope="admin">
+                  <LazyRoute kind="form">
+                    <MarketplaceAdminSettings />
+                  </LazyRoute>
+                </MarketplaceGate>
+              }
+            />
+            <Route path="/admin/points" element={<PointsGate scope="admin"><LazyRoute kind="dashboard"><PointsDashboard /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/accounts" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsAccounts /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/goods" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/orders" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/plugin" element={<PointsGate scope="admin"><LazyRoute kind="form"><PointsPlugin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/cdnsell" element={<CdnsellGate scope="admin"><LazyRoute kind="dashboard"><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/upstream" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnUpstream /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCapabilities /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/products" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/customers" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCustomers /></LazyRoute></CdnsellGate>} />
           </Route>
         </Route>
         <Route path="*" element={<ForbiddenPage loginPath="/admin/login" />} />

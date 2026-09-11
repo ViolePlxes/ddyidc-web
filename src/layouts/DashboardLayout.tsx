@@ -135,7 +135,7 @@ export function DashboardLayout({
             </DropdownMenu.Content>
           </DropdownMenu>
         </Surface>
-        <main className="min-h-0 flex-1 overflow-y-auto" data-dashboard-scroll>
+        <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
           <div
             className={`mx-auto w-full max-w-7xl ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
