@@ -3,7 +3,6 @@ import { Button, Input, LayerCard } from "@cloudflare/kumo";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { Link, useLocation } from "react-router-dom";
 import { checkAccount } from "../../../shared/api/auth";
@@ -150,10 +149,6 @@ export function LoginPage() {
             </form>
           )}
           <TermsAgreement checked={agreedToTerms} onCheckedChange={setAgreedToTerms} />
-          <div className="flex items-start gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
-            <ShieldCheckIcon className="mt-0.5 shrink-0" />
-            <span>登录凭据通过 httpOnly Cookie 与服务端会话保护。</span>
-          </div>
           <div className="text-center text-sm text-kumo-subtle">
             还没有客户账号？ <Link className="text-kumo-link hover:underline" to="/register">创建账号</Link>
           </div>
