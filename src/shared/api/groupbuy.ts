@@ -85,6 +85,12 @@ export interface GroupBuySettings {
 
 export interface PageData<T> { list: T[]; total: number; page: number; pageSize: number }
 
+type PagePayload<T> = Omit<PageData<T>, "list"> & { list: T[] | null };
+
+function normalizePage<T>(page: PagePayload<T>): PageData<T> {
+  return { ...page, list: page.list ?? [] };
+}
+
 async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Promise<T> {
   const envelope = (await response).data;
   if (envelope.code !== 0) throw new Error(envelope.message || "业务请求失败");
@@ -92,7 +98,7 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 }
 
 const activities = (client: AxiosInstance, path: string, params?: Record<string, unknown>) =>
-  unwrap(client.get<ApiEnvelope<PageData<GroupBuyActivity>>>(path, { params }));
+  unwrap(client.get<ApiEnvelope<PagePayload<GroupBuyActivity>>>(path, { params })).then(normalizePage);
 
 export const groupBuyApi = {
   publicActivities: (params?: Record<string, unknown>) => activities(userRequest, "/groupbuy/public/activities", params),
@@ -100,10 +106,10 @@ export const groupBuyApi = {
   publicShare: (code: string) => unwrap(userRequest.get<ApiEnvelope<GroupBuyDetail>>(`/groupbuy/public/share/${code}`)),
   activities: (params?: Record<string, unknown>) => activities(userRequest, "/groupbuy/activities", params),
   activity: (id: string) => unwrap(userRequest.get<ApiEnvelope<GroupBuyActivity>>(`/groupbuy/activities/${id}`)),
-  publicGroups: (activityId?: string) => unwrap(userRequest.get<ApiEnvelope<PageData<GroupBuyRecord>>>("/groupbuy/public-groups", { params: { activityId } })),
+  publicGroups: (activityId?: string) => unwrap(userRequest.get<ApiEnvelope<PagePayload<GroupBuyRecord>>>("/groupbuy/public-groups", { params: { activityId } })).then(normalizePage),
   start: (input: { activityId: string; groupType: GroupType; isPublic: boolean }) => unwrap(userRequest.post<ApiEnvelope<{ groupId: string; inviteCode: string; sharePath: string }>>("/groupbuy/groups", input)),
   join: (id: string) => unwrap(userRequest.post<ApiEnvelope<GroupBuyRecord>>(`/groupbuy/groups/${id}/join`, {})),
-  mine: (status?: number) => unwrap(userRequest.get<ApiEnvelope<PageData<GroupBuyRecord>>>("/groupbuy/my", { params: { status } })),
+  mine: (status?: number) => unwrap(userRequest.get<ApiEnvelope<PagePayload<GroupBuyRecord>>>("/groupbuy/my", { params: { status } })).then(normalizePage),
   myDetail: (id: string) => unwrap(userRequest.get<ApiEnvelope<GroupBuyDetail>>(`/groupbuy/my/${id}`)),
   refund: (id: string) => unwrap(userRequest.post<ApiEnvelope<{ refunded: boolean }>>(`/groupbuy/my/${id}/refund`, {})),
   togglePublic: (id: string, isPublic: boolean) => unwrap(userRequest.put<ApiEnvelope<{ updated: boolean }>>(`/groupbuy/my/${id}/toggle-public`, { isPublic })),
@@ -118,7 +124,7 @@ export const groupBuyAdminApi = {
     : unwrap(adminRequest.post<ApiEnvelope<GroupBuyActivity>>("/groupbuy/activities", value)),
   deleteActivity: (id: string) => unwrap(adminRequest.delete<ApiEnvelope<{ deleted: boolean }>>(`/groupbuy/activities/${id}`)),
   setStatus: (id: string, status: 0 | 1) => unwrap(adminRequest.put<ApiEnvelope<{ updated: boolean }>>(`/groupbuy/activities/${id}/status`, { status })),
-  leaders: (params?: Record<string, unknown>) => unwrap(adminRequest.get<ApiEnvelope<PageData<GroupBuyRecord>>>("/groupbuy/leaders", { params })),
+  leaders: (params?: Record<string, unknown>) => unwrap(adminRequest.get<ApiEnvelope<PagePayload<GroupBuyRecord>>>("/groupbuy/leaders", { params })).then(normalizePage),
   leader: (id: string) => unwrap(adminRequest.get<ApiEnvelope<GroupBuyDetail>>(`/groupbuy/leaders/${id}/detail`)),
   refund: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ refunded: boolean }>>(`/groupbuy/members/${id}/refund`, {})),
   forcePublic: (id: string, closed: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ updated: boolean }>>(`/groupbuy/leaders/${id}/force-public`, { closed })),
