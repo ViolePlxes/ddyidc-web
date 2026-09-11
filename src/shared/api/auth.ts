@@ -30,12 +30,28 @@ export async function register(input: {
   account: string;
   password: string;
   email?: string;
-  mobile?: string;
+  countryCode: string;
+  mobile: string;
+  smsCode: string;
+  agreedToTerms: boolean;
   inviteCode?: string;
   salesCode?: string;
 }): Promise<AuthPayload> {
   const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/register", input);
   if (response.data.code !== 0) throw new Error(response.data.message || "注册失败");
+  return response.data.data;
+}
+
+export async function sendRegistrationSMS(input: {
+  countryCode: string;
+  mobile: string;
+}): Promise<{ expiresIn: number }> {
+  const response = await userRequest.post<
+    ApiEnvelope<{ expiresIn: number; mock?: boolean }>
+  >("/auth/sms/send", { ...input, scene: "register" });
+  if (response.data.code !== 0) {
+    throw new Error(response.data.message || "验证码发送失败");
+  }
   return response.data.data;
 }
 

@@ -16,6 +16,11 @@ const RegisterPage = lazy(() =>
     .portalRegister()
     .then((module) => ({ default: module.RegisterPage })),
 );
+const AgreementPlaceholder = lazy(() =>
+  routeModules
+    .portalAgreement()
+    .then((module) => ({ default: module.AgreementPlaceholder })),
+);
 const PortalHome = lazy(() =>
   routeModules
     .portalPublic()
@@ -171,6 +176,14 @@ export function PortalApp() {
           element={
             <LazyRoute kind="form">
               <RegisterPage />
+            </LazyRoute>
+          }
+        />
+        <Route
+          path="/terms/:kind"
+          element={
+            <LazyRoute kind="form">
+              <AgreementPlaceholder />
             </LazyRoute>
           }
         />

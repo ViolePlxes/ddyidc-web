@@ -2,6 +2,7 @@ export const routeModules = {
   portalPublic: () => import("../../apps/portal/views/Public"),
   portalLogin: () => import("../../apps/portal/views/Login"),
   portalRegister: () => import("../../apps/portal/views/Register"),
+  portalAgreement: () => import("../../apps/portal/views/Agreement"),
   portalGroupBuy: () => import("../../apps/portal/groupbuy"),
   portalMarketplace: () => import("../../apps/portal/marketplace"),
   consoleHome: () => import("../../apps/console/views/Home"),
@@ -60,6 +61,7 @@ const routeLoaders: Array<
   ],
   [(path) => path === "/login", routeModules.portalLogin],
   [(path) => path === "/register", routeModules.portalRegister],
+  [(path) => path === "/terms/service" || path === "/terms/privacy", routeModules.portalAgreement],
   [
     (path) => path === "/groupbuy" || path.startsWith("/groupbuy/share/"),
     routeModules.portalGroupBuy,

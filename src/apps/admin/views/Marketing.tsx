@@ -7,12 +7,12 @@ import { ManagementPage } from "./ManagementPage";
 export function AdminInvites() {
   return (
     <ManagementPage
-      title="邀请码管理"
-      description="生成邀请码并处理申请审核。"
+      title="优惠码管理"
+      description="生成优惠码并处理申请审核。"
       rows={inviteRows}
-      primaryLabel="邀请码"
+      primaryLabel="优惠码"
       secondaryLabel="所属用户"
-      actionLabel="生成邀请码"
+      actionLabel="生成优惠码"
       showFilters
     />
   );
@@ -80,7 +80,7 @@ export function AdminSales() {
   );
 }
 export function AdminMarketingConfig() {
-  const toggles = ["邀请码功能", "分销功能", "奖励结算", "拉新活动"];
+  const toggles = ["优惠码功能", "分销功能", "奖励结算", "拉新活动"];
   return (
     <>
       <PageHeader

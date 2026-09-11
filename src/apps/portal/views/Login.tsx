@@ -10,6 +10,7 @@ import { checkAccount } from "../../../shared/api/auth";
 import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
+import { TermsAgreement } from "../components/TermsAgreement";
 
 type LoginStep = "account" | "password";
 
@@ -19,6 +20,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
   const signIn = useAuthStore((state) => state.signIn);
@@ -80,12 +82,6 @@ export function LoginPage() {
   return (
     <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
       <div className="grid w-full max-w-md gap-6">
-        <div className="flex items-center justify-center gap-3">
-          <span className="grid size-10 place-items-center bg-kumo-brand text-lg font-semibold text-kumo-badge-inverted">
-            D
-          </span>
-          <span className="text-xl font-semibold text-kumo-strong">DDYIDC</span>
-        </div>
         <LayerCard className="grid gap-6 p-6 md:p-8">
           <div className="grid gap-2">
             <h1 className="text-2xl font-semibold text-kumo-strong">
@@ -114,6 +110,7 @@ export function LoginPage() {
               <Button
                 type="submit"
                 loading={checking}
+                disabled={!agreedToTerms}
                 icon={<ArrowRightIcon />}
               >
                 下一步
@@ -146,12 +143,13 @@ export function LoginPage() {
                 >
                   返回
                 </Button>
-                <Button type="submit" loading={loading}>
+                <Button type="submit" loading={loading} disabled={!agreedToTerms}>
                   登录
                 </Button>
               </div>
             </form>
           )}
+          <TermsAgreement checked={agreedToTerms} onCheckedChange={setAgreedToTerms} />
           <div className="flex items-start gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
             <ShieldCheckIcon className="mt-0.5 shrink-0" />
             <span>登录凭据通过 httpOnly Cookie 与服务端会话保护。</span>
