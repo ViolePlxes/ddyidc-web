@@ -38,6 +38,8 @@ function entryScope(path: string): "portal" | "console" | "admin" | "sales" {
     path === "/cart" ||
     path === "/order/confirm" ||
     path === "/bind-mobile" ||
+    // Legacy user-center aliases are routes of ConsoleApp, not portal pages.
+    path.startsWith("/user/") ||
     path === "/console" ||
     path.startsWith("/console/")
   ) {

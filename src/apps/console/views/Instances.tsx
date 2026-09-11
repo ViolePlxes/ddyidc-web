@@ -1,5 +1,5 @@
 import { Button, Input, LayerCard, Pagination, Select, Table } from "@cloudflare/kumo";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { consoleApi } from "../../../shared/api/console";
@@ -8,6 +8,10 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
 import { cycleLabels } from "../../../shared/utils/format";
+
+const instancePageSize = 10;
+const instanceStaleTime = 5 * 60 * 1000;
+const instanceCacheTime = 30 * 60 * 1000;
 
 function instanceStatus(status: number): StatusCode {
   if (status === 3) return "running";
@@ -19,19 +23,25 @@ function instanceStatus(status: number): StatusCode {
 
 export function InstanceList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const queryKey = ["instances", "product-list", page, search, status] as const;
   const query = useQuery({
-    queryKey: ["instances", "product-list", page, search, status],
+    queryKey,
     queryFn: () => consoleApi.userInstances({
       page,
-      pageSize: 10,
+      pageSize: instancePageSize,
       search: search.trim() || undefined,
       status: status === "all" ? undefined : Number(status),
     }),
     retry: false,
     placeholderData: keepPreviousData,
+    initialData: () => queryClient.getQueryData<Awaited<ReturnType<typeof consoleApi.userInstances>>>(queryKey),
+    initialDataUpdatedAt: () => queryClient.getQueryState(queryKey)?.dataUpdatedAt,
+    staleTime: instanceStaleTime,
+    gcTime: instanceCacheTime,
   });
   const instances = query.data?.items ?? [];
 
@@ -99,9 +109,9 @@ export function InstanceList() {
               ))}
             </Table.Body>
           </Table>
-          {(query.data?.total ?? 0) > 10 ? (
+          {(query.data?.total ?? 0) > instancePageSize ? (
             <div className="p-4">
-              <Pagination page={page} setPage={setPage} perPage={10} totalCount={query.data?.total ?? 0} />
+              <Pagination page={page} setPage={setPage} perPage={instancePageSize} totalCount={query.data?.total ?? 0} />
             </div>
           ) : null}
         </LayerCard>

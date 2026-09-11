@@ -107,12 +107,15 @@ function versionAsset(): Plugin {
 
 export default defineConfig({
   plugins: [entryRewrite(), versionAsset(), react(), tailwindcss()],
+  optimizeDeps: {
+    esbuildOptions: { target: "esnext" },
+  },
   server: {
     port: 3100,
     strictPort: true,
     proxy: {
-      "/api": { target: "http://localhost:8080", changeOrigin: true, ws: true },
-      "/admin/v1": { target: "http://localhost:8080", changeOrigin: true },
+      "/api": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: true, ws: true },
+      "/admin/v1": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: true },
     },
   },
   preview: {

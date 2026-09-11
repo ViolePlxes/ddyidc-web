@@ -1,7 +1,8 @@
 import { Banner, Button, Dialog, Input, LayerCard, Select, Table } from "@cloudflare/kumo";
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { adminProductGroupsApi } from "../../../shared/api/adminProductGroups";
 import { adminProductsApi, type AdminProduct } from "../../../shared/api/adminProducts";
 import type { ProductSpec } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -108,18 +109,45 @@ function SpecsDialog({ product, onClose }: { product: AdminProduct; onClose: () 
 }
 
 export function AdminProducts() {
+  const queryClient = useQueryClient();
   const [activeProduct, setActiveProduct] = useState<AdminProduct | null>(null);
-  const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminProductsApi.list });
+  const [groupId, setGroupId] = useState("all");
+  const roots = useQuery({ queryKey: ["admin", "product-groups", "0"], queryFn: () => adminProductGroupsApi.list("0") });
+  const childQueries = useQueries({ queries: (roots.data?.list ?? []).map((root) => ({ queryKey: ["admin", "product-groups", root.id], queryFn: () => adminProductGroupsApi.list(root.id) })) });
+  const groupItems = useMemo(() => Object.fromEntries([
+    ["all", "全部二级分组"],
+    ...childQueries.flatMap((query, index) => (query.data?.list ?? []).map((group) => [group.id, `${roots.data?.list[index]?.name ?? "商品分组"} / ${group.name}`])),
+  ]), [childQueries, roots.data?.list]);
+  const products = useQuery({ queryKey: ["admin", "products", groupId], queryFn: () => adminProductsApi.list(groupId === "all" ? undefined : groupId) });
+  const sort = useMutation({
+    mutationFn: (ids: string[]) => adminProductsApi.sort(groupId, ids),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
+      ]);
+    },
+  });
+  const move = (index: number, offset: number) => {
+    const rows = products.data?.items ?? [];
+    const target = index + offset;
+    if (groupId === "all" || target < 0 || target >= rows.length) return;
+    const ordered = [...rows];
+    [ordered[index], ordered[target]] = [ordered[target]!, ordered[index]!];
+    sort.mutate(ordered.map((item) => item.id));
+  };
   return (
     <>
-      <PageHeader title="商品管理" description="维护商品状态与人工销售规格。" />
+      <PageHeader title="商品管理" description="维护商品分组顺序与人工销售规格。" />
+      <LayerCard className="p-4"><Select label="二级分组筛选" value={groupId} onValueChange={(value) => setGroupId(value ?? "all")} items={groupItems} /></LayerCard>
+      {sort.error ? <Banner variant="error" title="排序保存失败" description={getApiMessage(sort.error)} /> : null}
       <PageState loading={products.isLoading} error={products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && products.data?.items.length === 0} emptyTitle="暂无商品">
         <LayerCard className="overflow-hidden p-0">
           <Table>
-            <Table.Header variant="compact"><Table.Row><Table.Head>商品</Table.Head><Table.Head>售价</Table.Head><Table.Head>周期</Table.Head><Table.Head>规格行</Table.Head><Table.Head>状态</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
+            <Table.Header variant="compact"><Table.Row><Table.Head>商品</Table.Head><Table.Head>所属分组</Table.Head><Table.Head>售价</Table.Head><Table.Head>周期</Table.Head><Table.Head>规格行</Table.Head><Table.Head>状态</Table.Head><Table.Head>排序</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
             <Table.Body>
-              {(products.data?.items ?? []).map((product) => (
-                <Table.Row key={product.id}><Table.Cell><div className="grid"><strong className="text-kumo-strong">{product.name}</strong><span className="text-xs text-kumo-subtle">#{product.id}</span></div></Table.Cell><Table.Cell>¥{product.price.toFixed(2)}</Table.Cell><Table.Cell>{product.cycle || "—"}</Table.Cell><Table.Cell>{product.specCount} 行</Table.Cell><Table.Cell>{product.status === 1 && !product.hidden ? "销售中" : "未上架"}</Table.Cell><Table.Cell><Button variant="secondary" onClick={() => setActiveProduct(product)}>规格配置</Button></Table.Cell></Table.Row>
+              {(products.data?.items ?? []).map((product, index, rows) => (
+                <Table.Row key={product.id}><Table.Cell><div className="grid"><strong className="text-kumo-strong">{product.name}</strong><span className="text-xs text-kumo-subtle">#{product.id}</span></div></Table.Cell><Table.Cell>{product.groupName || "未分组"}</Table.Cell><Table.Cell>¥{product.price.toFixed(2)}</Table.Cell><Table.Cell>{product.cycle || "—"}</Table.Cell><Table.Cell>{product.specCount} 行</Table.Cell><Table.Cell>{product.status === 1 && !product.hidden ? "销售中" : "未上架"}</Table.Cell><Table.Cell>{product.sort}</Table.Cell><Table.Cell><div className="flex flex-wrap gap-2"><Button variant="secondary" shape="square" icon={<ArrowUpIcon />} aria-label="商品上移" disabled={groupId === "all" || index === 0 || sort.isPending} onClick={() => move(index, -1)} /><Button variant="secondary" shape="square" icon={<ArrowDownIcon />} aria-label="商品下移" disabled={groupId === "all" || index === rows.length - 1 || sort.isPending} onClick={() => move(index, 1)} /><Button variant="secondary" onClick={() => setActiveProduct(product)}>规格配置</Button></div></Table.Cell></Table.Row>
               ))}
             </Table.Body>
           </Table>

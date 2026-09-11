@@ -13,7 +13,7 @@ export function PageHeaderSkeleton() {
 
 export function TableSkeleton({
   columns = 5,
-  rows = 6,
+  rows = 10,
 }: {
   columns?: number;
   rows?: number;
