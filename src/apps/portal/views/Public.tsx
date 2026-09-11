@@ -98,7 +98,7 @@ export function BindMobile() {
         description="完成绑定后可使用财务与结算功能。"
       />
       <LayerCard className="grid gap-4 p-6">
-        <Banner variant="alert" title="手机号绑定暂不可用" description="验证码服务当前为 Mock 模式，且后端没有消费验证令牌的绑定接口。" />
+        <Banner variant="alert" title="手机号绑定暂不可用" description="短信验证码真实通道已经就绪，但后端尚未提供将验证码消费结果写入客户手机号的绑定接口。" />
         <Input label="手机号" placeholder="请输入手机号" disabled />
         <Input label="验证码" placeholder="6 位验证码" inputMode="numeric" disabled />
         <Button disabled>完成绑定</Button>

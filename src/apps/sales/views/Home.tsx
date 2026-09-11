@@ -1,56 +1,54 @@
-import { Button, Input, LayerCard, Switch } from "@cloudflare/kumo";
+import { Button, Input, LayerCard } from "@cloudflare/kumo";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { getApiMessage } from "../../../shared/api/request";
+import { salesApi } from "../../../shared/api/sales";
 import { DataTable } from "../../../shared/components/DataTable";
 import { MetricGrid } from "../../../shared/components/MetricGrid";
 import { PageHeader } from "../../../shared/components/PageHeader";
+import { PageState } from "../../../shared/components/PageState";
+import { formatDate, formatMoney } from "../../../shared/utils/format";
 
-const customerRows = [
-  {
-    id: "sc1",
-    primary: "e2ea074640",
-    secondary: "138****8021",
-    meta: "最近跟进：今天 09:20",
-    amount: "累计 ¥2,986",
-  },
-  {
-    id: "sc2",
-    primary: "cloud_user",
-    secondary: "186****6632",
-    meta: "最近跟进：昨天 16:40",
-    amount: "累计 ¥1,268",
-  },
-];
 export function SalesHome() {
+  const [page, setPage] = useState(1);
+  const [draftKeyword, setDraftKeyword] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const pageSize = 20;
+  const query = useQuery({
+    queryKey: ["sales", "customers", page, keyword],
+    queryFn: () => salesApi.customers({ page, pageSize, keyword: keyword || undefined }),
+  });
+  const customers = query.data?.list ?? [];
+  const pageOrders = customers.reduce((sum, customer) => sum + (customer.orderCount ?? 0), 0);
+  const pageSpend = customers.reduce((sum, customer) => sum + (customer.totalSpend ?? 0), 0);
   const metrics = [
-    { label: "我的客户", value: "126", hint: "本周新增 8" },
-    { label: "待跟进", value: "12", hint: "今日 5 项" },
-    { label: "本月成交", value: "¥42,860", hint: "共 38 笔" },
-    { label: "续费提醒", value: "7", hint: "未来 7 天到期" },
+    { label: "授权客户", value: String(query.data?.total ?? 0), hint: "服务端权限范围" },
+    { label: "当前页客户", value: String(customers.length), hint: `第 ${page} 页真实记录` },
+    { label: "当前页成交单", value: String(pageOrders), hint: "仅统计有权查看的订单" },
+    { label: "当前页成交额", value: formatMoney(pageSpend), hint: "仅统计有权查看的金额" },
   ];
+  const rows = customers.map((customer) => ({
+    id: customer.customerId,
+    primary: customer.username,
+    secondary: customer.mobile || "手机号不可见",
+    meta: customer.lastPayAt ? `最近成交 ${formatDate(customer.lastPayAt)}` : `注册于 ${formatDate(customer.createdAt)}`,
+    amount: customer.totalSpend === undefined ? "金额不可见" : formatMoney(customer.totalSpend),
+    status: customer.status === 1 ? "running" as const : "suspended" as const,
+  }));
+
   return (
     <>
-      <PageHeader
-        title="销售工作台"
-        description="仅展示已授权的客户字段与跟进信息。"
-        actions={<Button>新增跟进</Button>}
-      />
-      <MetricGrid metrics={metrics} />
-      <LayerCard className="grid gap-4 p-5">
-        <div className="flex flex-wrap items-end gap-3">
-          <Input
-            aria-label="搜索客户"
-            placeholder="搜索客户账号…"
-            className="max-w-md flex-1"
-          />
-          <Button variant="secondary">筛选</Button>
-        </div>
-        <Switch label="仅显示待跟进客户" />
+      <PageHeader title="销售工作台" description="仅展示当前销售账号获授权的真实客户字段。" />
+      <PageState loading={query.isLoading} skeleton="dashboard" error={query.error ? getApiMessage(query.error) : null}>
+        {query.data ? <MetricGrid metrics={metrics} /> : null}
+      </PageState>
+      <LayerCard className="flex flex-wrap items-end gap-3 p-5">
+        <Input className="max-w-md flex-1" label="搜索客户" placeholder="客户账号、邮箱或手机号…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
+        <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>
-      <DataTable
-        rows={customerRows}
-        primaryLabel="客户"
-        secondaryLabel="可见手机号"
-        withPagination
-      />
+      <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无授权客户">
+        <DataTable rows={rows} primaryLabel="客户" secondaryLabel="可见手机号" amountLabel="可见成交额" withPagination page={page} onPageChange={setPage} perPage={pageSize} totalCount={query.data?.total ?? 0} showActions={false} />
+      </PageState>
     </>
   );
 }
