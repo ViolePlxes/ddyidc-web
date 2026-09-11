@@ -19,15 +19,29 @@ export function DataTable({
   secondaryLabel = "编号",
   withPagination = false,
   selectable = false,
+  amountLabel = "金额",
+  page: controlledPage,
+  onPageChange,
+  perPage = 10,
+  totalCount,
+  showActions = true,
 }: {
   rows: DataRow[];
   primaryLabel?: string;
   secondaryLabel?: string;
   withPagination?: boolean;
   selectable?: boolean;
+  amountLabel?: string;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  perPage?: number;
+  totalCount?: number;
+  showActions?: boolean;
 }) {
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
+  const page = controlledPage ?? internalPage;
+  const setPage = onPageChange ?? setInternalPage;
   const allSelected = rows.length > 0 && selected.length === rows.length;
 
   const toggleRow = (id: string, checked: boolean) => {
@@ -56,10 +70,10 @@ export function DataTable({
               <Table.Head>{primaryLabel}</Table.Head>
               <Table.Head>{secondaryLabel}</Table.Head>
               <Table.Head>状态 / 信息</Table.Head>
-              <Table.Head className="text-right">金额</Table.Head>
-              <Table.Head className="w-16">
+              <Table.Head className="text-right">{amountLabel}</Table.Head>
+              {showActions ? <Table.Head className="w-16">
                 <span className="sr-only">操作</span>
-              </Table.Head>
+              </Table.Head> : null}
             </Table.Row>
           </Table.Header>
           <Table.Body data-animate-list>
@@ -93,7 +107,7 @@ export function DataTable({
                 <Table.Cell className="text-right font-medium">
                   {row.amount ?? "—"}
                 </Table.Cell>
-                <Table.Cell>
+                {showActions ? <Table.Cell>
                   <Button
                     variant="ghost"
                     shape="square"
@@ -101,7 +115,7 @@ export function DataTable({
                     icon={<DotsThreeIcon />}
                     aria-label={`打开 ${row.primary} 操作`}
                   />
-                </Table.Cell>
+                </Table.Cell> : null}
               </Table.Row>
             ))}
           </Table.Body>
@@ -111,8 +125,8 @@ export function DataTable({
         <Pagination
           page={page}
           setPage={setPage}
-          perPage={10}
-          totalCount={48}
+          perPage={perPage}
+          totalCount={totalCount ?? rows.length}
         />
       ) : null}
     </div>
