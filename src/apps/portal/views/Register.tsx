@@ -1,6 +1,6 @@
 import { Banner, Button, Input, InputGroup, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation } from "@tanstack/react-query";
-import { getCountries, getCountryCallingCode } from "libphonenumber-js";
+import { getCountries, getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { register, sendRegistrationSMS } from "../../../shared/api/auth";
@@ -13,6 +13,7 @@ import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
 type RegistrationForm = {
   account: string;
   password: string;
+  country: CountryCode;
   countryCode: string;
   mobile: string;
   smsCode: string;
@@ -23,6 +24,7 @@ type RegistrationForm = {
 };
 
 const mainlandMobilePattern = /^1[3-9]\d{9}$/;
+const regionNames = new Intl.DisplayNames(["zh-CN"], { type: "region" });
 
 export function RegisterPage() {
   const user = useAuthStore((state) => state.user);
@@ -30,6 +32,7 @@ export function RegisterPage() {
   const [form, setForm] = useState<RegistrationForm>({
     account: "",
     password: "",
+    country: "CN",
     countryCode: "+86",
     mobile: "",
     smsCode: "",
@@ -45,16 +48,21 @@ export function RegisterPage() {
   const [showAgreementDialog, setShowAgreementDialog] = useState(false);
   const countries = useMemo(
     () =>
-      Array.from(
-        new Set(getCountries().map((country) => `+${getCountryCallingCode(country)}`)),
-      )
-        .map((code) => ({ value: code, label: code }))
+      getCountries()
+        .map((country) => {
+          const callingCode = `+${getCountryCallingCode(country)}`;
+          return {
+            value: country,
+            label: `${regionNames.of(country) ?? country} ${callingCode}`,
+            callingCode,
+          };
+        })
         .sort((left, right) =>
-          left.value === "+86"
+          left.value === "CN"
             ? -1
-            : right.value === "+86"
+            : right.value === "CN"
               ? 1
-              : Number(left.label.slice(1)) - Number(right.label.slice(1)),
+              : left.label.localeCompare(right.label, "zh-CN"),
         ),
     [],
   );
@@ -161,19 +169,26 @@ export function RegisterPage() {
             error={mobileError ? { message: mobileError, match: true } : undefined}
           >
             <InputGroup.Addon className="border-r border-kumo-line pr-1">
-              <Select<string>
+              <Select<CountryCode>
                 aria-label="国家或地区区号"
                 size="base"
                 className="h-full w-20 rounded-none! border-0! bg-transparent! px-2 shadow-none! ring-0! hover:bg-transparent! focus:ring-0! focus-visible:ring-0! data-[state=open]:bg-transparent!"
                 items={countries}
-                value={form.countryCode}
-                renderValue={(code) => code}
-                onValueChange={(countryCode) => {
-                  if (!countryCode) return;
-                  setForm((current) => ({ ...current, countryCode }));
+                value={form.country}
+                renderValue={(country) =>
+                  countries.find((option) => option.value === country)?.callingCode ?? form.countryCode
+                }
+                onValueChange={(country) => {
+                  const option = countries.find((item) => item.value === country);
+                  if (!option) return;
+                  setForm((current) => ({
+                    ...current,
+                    country: option.value,
+                    countryCode: option.callingCode,
+                  }));
                   setMobileError("");
                   setSMSMessage("");
-                  setSMSError(countryCode === "+86" ? "" : "该地区暂不支持验证码，敬请期待");
+                  setSMSError(option.callingCode === "+86" ? "" : "该地区暂不支持验证码，敬请期待");
                 }}
               />
             </InputGroup.Addon>
