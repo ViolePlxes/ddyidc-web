@@ -50,7 +50,7 @@ export function AdminHome() {
           <TrendChart title="近 30 天收入" type="bar" values={trend} />
           <section className="grid gap-3">
             <h2 className="text-lg font-semibold text-kumo-strong">最近订单</h2>
-            <DataTable rows={data.recentOrders.map(toOrderRow)} primaryLabel="客户 / 商品" secondaryLabel="订单号" showActions={false} />
+            <DataTable rows={(data.recentOrders ?? []).map(toOrderRow)} primaryLabel="客户 / 商品" secondaryLabel="订单号" showActions={false} />
           </section>
         </div> : null}
       </PageState>
