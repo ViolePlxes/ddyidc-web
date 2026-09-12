@@ -1,16 +1,6 @@
 import { userRequest, type ApiEnvelope } from "./request";
 import type { AuthPayload } from "../types/auth";
 
-export async function checkAccount(account: string): Promise<boolean> {
-  const response = await userRequest.get<ApiEnvelope<{ available: boolean }>>(
-    "/auth/check-account",
-    {
-      params: { account },
-    },
-  );
-  return !response.data.data.available;
-}
-
 export async function login(
   account: string,
   password: string,
