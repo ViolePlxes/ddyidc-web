@@ -1,3 +1,4 @@
+import { Text } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
 
 export function PageHeader({
@@ -12,9 +13,9 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="grid gap-1">
-        <h1 className="text-2xl font-semibold text-kumo-strong">{title}</h1>
+        <Text variant="heading" size="lg" as="h1">{title}</Text>
         {description ? (
-          <p className="text-base text-kumo-subtle">{description}</p>
+          <Text variant="secondary">{description}</Text>
         ) : null}
       </div>
       {actions ? (

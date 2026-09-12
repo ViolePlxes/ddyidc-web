@@ -81,7 +81,6 @@ export function DataTable({
               <Table.Row
                 key={row.id}
                 variant={selected.includes(row.id) ? "selected" : "default"}
-                className="hover:bg-kumo-tint"
               >
                 {selectable ? (
                   <Table.CheckCell

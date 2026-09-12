@@ -1,4 +1,4 @@
-import { Banner, Button, Input, InputGroup, LayerCard, Select } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation } from "@tanstack/react-query";
 import { getCountries, getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -163,37 +163,29 @@ export function RegisterPage() {
         <form className="grid gap-4" onSubmit={submit}>
           <Input label="账号" value={form.account} onChange={(event) => updateText("account", event.target.value)} autoComplete="username" required />
           <Input label="密码" type="password" value={form.password} onChange={(event) => updateText("password", event.target.value)} autoComplete="new-password" required />
-          <InputGroup
-            label="手机号"
-            required
-            error={mobileError ? { message: mobileError, match: true } : undefined}
-          >
-            <InputGroup.Addon className="border-r border-kumo-line pr-1">
-              <Select<CountryCode>
-                aria-label="国家或地区区号"
-                size="base"
-                className="h-full w-20 rounded-none! border-0! bg-transparent! px-2 shadow-none! ring-0! hover:bg-transparent! focus:ring-0! focus-visible:ring-0! data-[state=open]:bg-transparent!"
-                items={countries}
-                value={form.country}
-                renderValue={(country) =>
-                  countries.find((option) => option.value === country)?.callingCode ?? form.countryCode
-                }
-                onValueChange={(country) => {
-                  const option = countries.find((item) => item.value === country);
-                  if (!option) return;
-                  setForm((current) => ({
-                    ...current,
-                    country: option.value,
-                    countryCode: option.callingCode,
-                  }));
-                  setMobileError("");
-                  setSMSMessage("");
-                  setSMSError(option.callingCode === "+86" ? "" : "该地区暂不支持验证码，敬请期待");
-                }}
-              />
-            </InputGroup.Addon>
-            <InputGroup.Input
-              aria-label="手机号"
+          <div className="grid gap-4 sm:grid-cols-[10rem_minmax(0,1fr)]">
+            <Select<CountryCode>
+              label="国家或地区区号"
+              items={countries}
+              value={form.country}
+              renderValue={(country) =>
+                countries.find((option) => option.value === country)?.callingCode ?? form.countryCode
+              }
+              onValueChange={(country) => {
+                const option = countries.find((item) => item.value === country);
+                if (!option) return;
+                setForm((current) => ({
+                  ...current,
+                  country: option.value,
+                  countryCode: option.callingCode,
+                }));
+                setMobileError("");
+                setSMSMessage("");
+                setSMSError(option.callingCode === "+86" ? "" : "该地区暂不支持验证码，敬请期待");
+              }}
+            />
+            <Input
+              label="手机号"
               placeholder="请输入手机号"
               value={form.mobile}
               onChange={(event) => {
@@ -211,8 +203,9 @@ export function RegisterPage() {
               inputMode="tel"
               autoComplete="tel-national"
               required
+              error={mobileError ? { message: mobileError, match: true } : undefined}
             />
-          </InputGroup>
+          </div>
           <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <Input label="手机验证码" value={form.smsCode} onChange={(event) => updateText("smsCode", event.target.value)} inputMode="numeric" autoComplete="one-time-code" required />
             <Button type="button" variant="secondary" loading={sendSMS.isPending} disabled={countdown > 0} onClick={requestCode}>

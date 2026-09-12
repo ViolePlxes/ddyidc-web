@@ -1,7 +1,7 @@
-import { Banner, Button, LayerCard, Select } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, LinkButton, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { consoleApi, type Order } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { DefinitionList } from "../../../shared/components/DataTable";
@@ -59,7 +59,7 @@ export function OrderConfirm() {
         <LayerCard className="grid gap-5 p-5">
           <Banner title="请完成在线支付" description="到账后系统会自动提交上游开通，并跳转至订单详情。" />
           <div className="flex flex-wrap justify-end gap-3">
-            <Link to={`/console/orders/${createdOrder.id}`} viewTransition><Button variant="secondary">查看订单详情</Button></Link>
+            <LinkButton href={`/console/orders/${createdOrder.id}`} variant="secondary">查看订单详情</LinkButton>
             <PaymentDialog
               businessType="order"
               businessId={createdOrder.id}
@@ -83,7 +83,7 @@ export function OrderConfirm() {
         <PageState empty emptyTitle="没有待确认的订单" emptyDescription="请返回商品页选择配置。">
           <span />
         </PageState>
-        <Link to="/console/products" viewTransition><Button variant="secondary">浏览商品</Button></Link>
+        <LinkButton href="/console/products" variant="secondary">浏览商品</LinkButton>
       </>
     );
   }

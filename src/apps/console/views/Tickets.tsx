@@ -1,8 +1,8 @@
-import { Banner, Button, Input, LayerCard, Pagination, Select, Table, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, BellRingingIcon, PlusIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import {
   userTicketApi,
@@ -62,7 +62,7 @@ export function TicketList() {
       <PageHeader
         title="工单中心"
         description={`查看处理进度与客服回复${query.data ? ` · ${query.data.unreadCount} 条未读` : ""}`}
-        actions={<Link to="/console/tickets/create"><Button icon={<PlusIcon />}>创建工单</Button></Link>}
+        actions={<LinkButton href="/console/tickets/create" icon={<PlusIcon />}>创建工单</LinkButton>}
       />
       {newMessageCount ? (
         <Banner variant="default" icon={<BellRingingIcon />} title="收到新回复" description={`有 ${newMessageCount} 条新消息已局部更新到列表。`} />
@@ -89,7 +89,7 @@ export function TicketList() {
                     <Table.Cell>{ticket.typeName}</Table.Cell>
                     <Table.Cell><TicketStatusBadge status={ticket.status} /></Table.Cell>
                     <Table.Cell className="text-kumo-subtle">{new Date(ticket.lastReplyTime).toLocaleString("zh-CN")}</Table.Cell>
-                    <Table.Cell><Link to={`/console/tickets/${ticket.id}`}><Button variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></Link></Table.Cell>
+                    <Table.Cell><LinkButton href={`/console/tickets/${ticket.id}`} variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -129,7 +129,7 @@ export function TicketCreate() {
 
   return (
     <>
-      <PageHeader title="创建工单" description="请尽量完整描述问题，并可关联受影响的云主机。" actions={<Link to="/console/tickets"><Button variant="secondary" icon={<ArrowLeftIcon />}>返回列表</Button></Link>} />
+      <PageHeader title="创建工单" description="请尽量完整描述问题，并可关联受影响的云主机。" actions={<LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton>} />
       {error ? <Banner variant="error" title="提交失败" description={error} /> : null}
       <LayerCard className="grid gap-5">
         <Select value={typeId} renderValue={(value) => types.data?.find((item) => item.id === value)?.name ?? "请选择工单类型"} onValueChange={(value) => setTypeId(value ?? "")} label="工单类型" hideLabel={false}>
@@ -190,7 +190,7 @@ export function TicketDetailPage() {
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {query.data ? (
         <>
-          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><Link to="/console/tickets"><Button variant="secondary" icon={<ArrowLeftIcon />}>返回</Button></Link></>} />
+          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
           <LayerCard><dl className="grid gap-3 sm:grid-cols-3"><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd className="text-kumo-strong">{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd className="text-kumo-strong">{query.data.ticket.adminName || "等待接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd className="text-kumo-strong">{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
           <TicketConversation replies={query.data.replies} perspective="Client" onQuote={setQuote} />

@@ -77,7 +77,7 @@ function PublicProductCatalog() {
                 {items.map((product) => {
                   const unavailable = !isAvailable(product);
                   return (
-                    <LayerCard key={product.id} className="interactive-card flex h-80 flex-col gap-4 p-5">
+                    <LayerCard key={product.id} className="flex h-80 flex-col gap-4 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><PackageIcon /></div>
                         <Badge variant={unavailable ? "secondary" : "success"}>{unavailable ? "暂无库存" : "可订购"}</Badge>

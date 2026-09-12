@@ -1,8 +1,8 @@
-import { Banner, Button, Dialog, Input, LayerCard, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Dialog, Input, LayerCard, LinkButton, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowsLeftRightIcon, CheckCircleIcon, HandPalmIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { adminTicketApi, type TicketAttachment, type TicketDetail, type TicketListResult, type TicketReply, type TicketStatus } from "../../../shared/api/tickets";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -75,7 +75,7 @@ export function AdminTicketList() {
                     <Table.Cell><div className="grid gap-0.5"><span>{ticket.clientName || ticket.clientId}</span><span className="text-sm text-kumo-subtle">{ticket.typeName}</span></div></Table.Cell>
                     <Table.Cell><TicketStatusBadge status={ticket.status} /></Table.Cell>
                     <Table.Cell>{ticket.adminName || "未接单"}</Table.Cell>
-                    <Table.Cell><div className="flex gap-1">{ticket.status.id === "1" ? <Button size="sm" variant="secondary" icon={<HandPalmIcon />} loading={receive.isPending} onClick={() => receive.mutate(ticket.id)}>接单</Button> : null}<Link to={`/admin/tickets/${ticket.id}`}><Button variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></Link></div></Table.Cell>
+                    <Table.Cell><div className="flex gap-1">{ticket.status.id === "1" ? <Button size="sm" variant="secondary" icon={<HandPalmIcon />} loading={receive.isPending} onClick={() => receive.mutate(ticket.id)}>接单</Button> : null}<LinkButton href={`/admin/tickets/${ticket.id}`} variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></div></Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -166,7 +166,7 @@ export function AdminTicketDetail() {
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {query.data ? (
         <>
-          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><Link to="/admin/tickets"><Button variant="secondary" icon={<ArrowLeftIcon />}>返回</Button></Link></>} />
+          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/admin/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
           <div className="flex flex-wrap gap-2"><Button variant="secondary" icon={<HandPalmIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("receive")}>接单</Button><Button variant="secondary" icon={<CheckCircleIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("resolve")}>已解决</Button><ForwardDialog ticketId={id} onDone={refresh} onError={setNotice} /><Button variant="secondary-destructive" disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("close")}>关闭</Button></div>
           <LayerCard><dl className="grid gap-3 sm:grid-cols-4"><div><dt className="text-sm text-kumo-subtle">工单类型</dt><dd>{query.data.ticket.typeName}</dd></div><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd>{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd>{query.data.ticket.adminName || "未接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd>{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>

@@ -1,4 +1,4 @@
-import { Button, Input, LayerCard, Pagination, Select, Table } from "@cloudflare/kumo";
+import { Button, Input, LayerCard, Link, Pagination, Select, Table } from "@cloudflare/kumo";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -87,10 +87,10 @@ export function InstanceList() {
               {instances.map((instance) => (
                 <Table.Row key={instance.id}>
                   <Table.Cell>
-                    <button className="grid text-left" onClick={() => navigate(`/user/instance/${instance.id}.htm`, { viewTransition: true })}>
+                    <Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="grid text-left">
                       <span className="font-medium text-kumo-strong">{instance.name}</span>
                       <span className="text-xs text-kumo-subtle">{instance.id}</span>
-                    </button>
+                    </Link>
                   </Table.Cell>
                   <Table.Cell>{instance.productName || "—"}</Table.Cell>
                   <Table.Cell>{instance.primaryIp || "—"}</Table.Cell>

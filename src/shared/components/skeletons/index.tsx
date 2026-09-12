@@ -1,4 +1,4 @@
-import { LayerCard, SkeletonLine, Table } from "@cloudflare/kumo";
+import { LayerCard, Sidebar, SkeletonLine, Surface, Table } from "@cloudflare/kumo";
 
 const lineWidths = ["w-32", "w-24", "w-20", "w-28", "w-16", "w-12"] as const;
 
@@ -208,18 +208,23 @@ export function RouteSkeleton({ kind }: { kind: SkeletonKind }) {
 
 export function AppShellSkeleton({ kind = "table" }: { kind?: SkeletonKind }) {
   return (
-    <div className="flex min-h-svh bg-kumo-recessed" role="status" aria-label="正在恢复会话">
-      <aside className="hidden w-[260px] shrink-0 border-r border-kumo-line bg-kumo-base p-4 md:grid md:content-start md:gap-5">
-        <SkeletonLine className="h-8 w-32" />
-        {Array.from({ length: 8 }, (_, index) => <SkeletonLine key={index} blockHeight={40} className="h-5 w-full" />)}
-      </aside>
-      <div className="min-w-0 flex-1">
-        <div className="h-[58px] border-b border-kumo-line bg-kumo-base" />
+    <Sidebar.Provider defaultOpen collapsible="icon" className="h-svh max-h-svh overflow-hidden">
+      <Sidebar aria-label="正在加载主导航">
+        <Sidebar.Header>
+          <SkeletonLine className="h-8 w-32" />
+        </Sidebar.Header>
+        <Sidebar.Loading label="正在恢复会话" />
+        <Sidebar.Footer>
+          <Sidebar.Trigger />
+        </Sidebar.Footer>
+      </Sidebar>
+      <div className="min-w-0 flex-1 bg-kumo-recessed" role="status" aria-label="正在恢复会话">
+        <Surface className="h-[58px] border-b border-kumo-line" />
         <main className="mx-auto grid w-full max-w-7xl gap-6 p-4 md:p-6 lg:p-8">
           <PageHeaderSkeleton />
           <ContentSkeleton kind={kind} />
         </main>
       </div>
-    </div>
+    </Sidebar.Provider>
   );
 }

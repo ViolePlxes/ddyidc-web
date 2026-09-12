@@ -1,7 +1,7 @@
-import { Badge, Button, LayerCard } from "@cloudflare/kumo";
+import { Badge, LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { ClockIcon, UsersThreeIcon } from "@phosphor-icons/react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { groupBuyApi, type GroupBuyActivity } from "../../../shared/api/groupbuy";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -43,7 +43,7 @@ function ActivityCard({ activity }: { activity: GroupBuyActivity }) {
       <div className="flex items-center gap-2 text-sm text-kumo-subtle"><ClockIcon /> 截止 {new Date(activity.endTime).toLocaleString("zh-CN")}</div>
       <div className="mt-auto flex items-end justify-between gap-4 border-t border-kumo-line pt-4">
         <div><span className="text-sm text-kumo-subtle line-through">¥{(activity.originalPrice / 100).toFixed(2)}</span><p className="text-sm text-kumo-subtle">{activity.joinedMembers} 人已参与</p></div>
-        <Link to={actionHref(user, `/console/groupbuy/activities/${activity.id}`)}><Button>去开团 / 参团</Button></Link>
+        <LinkButton href={actionHref(user, `/console/groupbuy/activities/${activity.id}`)}>去开团 / 参团</LinkButton>
       </div>
     </LayerCard>
   );
@@ -74,7 +74,7 @@ export function GroupBuyPublicShare() {
           <div className="flex flex-wrap items-center gap-2"><Badge variant="success">还差 {Math.max(data.leader.needNum - data.members.length, 0)} 人</Badge><Badge variant="outline">{groupLabels[data.leader.groupType]}</Badge></div>
           <div><span className="text-sm text-kumo-subtle">团长</span><strong className="block text-lg text-kumo-strong">{data.members.find((item) => item.isLeader)?.memberName || "拼团用户"}</strong></div>
           <p className="text-kumo-subtle">拼团将于 {new Date(data.leader.timeoutTime).toLocaleString("zh-CN")} 截止，满员后自动开通。</p>
-          <Link to={actionHref(user, `/console/groupbuy/share/${inviteCode}`)}><Button className="w-full">立即参团</Button></Link>
+          <LinkButton href={actionHref(user, `/console/groupbuy/share/${inviteCode}`)} className="w-full">立即参团</LinkButton>
         </LayerCard>
       </div> : null}
     </PageState>

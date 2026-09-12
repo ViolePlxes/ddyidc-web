@@ -5,7 +5,6 @@ import {
   Dialog,
   DropdownMenu,
   Input,
-  InputGroup,
   LayerCard,
   Pagination,
   Select,
@@ -331,38 +330,34 @@ function CreateCustomerDialog({
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
           />
-          <InputGroup label="手机号（可选）">
-            <InputGroup.Addon className="border-r border-kumo-line pr-1">
-              <Select<CountryCode>
-                aria-label="国家或地区区号"
-                size="base"
-                className="h-full w-20 rounded-none! border-0! bg-transparent! px-2 shadow-none! ring-0! hover:bg-transparent! focus:ring-0! focus-visible:ring-0! data-[state=open]:bg-transparent!"
-                items={countries}
-                value={form.country}
-                renderValue={(country) =>
-                  countries.find((option) => option.value === country)?.callingCode ?? form.countryCode
-                }
-                onValueChange={(country) => {
-                  const option = countries.find((item) => item.value === country);
-                  if (!option) return;
-                  setForm((current) => ({
-                    ...current,
-                    country: option.value,
-                    countryCode: option.callingCode,
-                  }));
-                  setValidationError("");
-                }}
-              />
-            </InputGroup.Addon>
-            <InputGroup.Input
-              aria-label="手机号"
+          <div className="grid gap-4 sm:grid-cols-[10rem_minmax(0,1fr)]">
+            <Select<CountryCode>
+              label="国家或地区区号"
+              items={countries}
+              value={form.country}
+              renderValue={(country) =>
+                countries.find((option) => option.value === country)?.callingCode ?? form.countryCode
+              }
+              onValueChange={(country) => {
+                const option = countries.find((item) => item.value === country);
+                if (!option) return;
+                setForm((current) => ({
+                  ...current,
+                  country: option.value,
+                  countryCode: option.callingCode,
+                }));
+                setValidationError("");
+              }}
+            />
+            <Input
+              label="手机号（可选）"
               placeholder="请输入手机号"
               inputMode="tel"
               autoComplete="tel-national"
               value={form.mobile}
               onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value }))}
             />
-          </InputGroup>
+          </div>
           <Input
             label="邮箱（可选）"
             type="email"

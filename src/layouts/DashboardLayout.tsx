@@ -54,12 +54,10 @@ export function DashboardLayout({
   return (
     <Sidebar.Provider
       defaultOpen
-      defaultWidth={260}
-      minWidth={260}
-      maxWidth={260}
+      collapsible="icon"
       className="h-svh max-h-svh overflow-hidden"
     >
-      <Sidebar>
+      <Sidebar aria-label="主导航">
         <Sidebar.Header>
           <span className="grid size-8 place-items-center bg-kumo-brand text-base font-semibold text-kumo-badge-inverted">
             D

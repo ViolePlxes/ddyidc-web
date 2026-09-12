@@ -1,7 +1,6 @@
-import { Badge, Banner, Button, Input, LayerCard, Select, Switch, Table, Textarea } from "@cloudflare/kumo";
+import { Badge, Banner, Button, Input, LayerCard, LinkButton, Select, Switch, Table, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { cdnsellP2AdminApi, type DomainConfig } from "../../../shared/api/cdnsellP2";
 import { getApiMessage } from "../../../shared/api/request";
 import { CdnStatus } from "../../../shared/components/Cdnsell";
@@ -19,11 +18,11 @@ export function AdminCdnDomains() {
   const query = useQuery({ queryKey: ["admin", "cdnsell", "domains", keyword], queryFn: () => cdnsellP2AdminApi.domains(keyword) });
   const sync = useMutation({ mutationFn: cdnsellP2AdminApi.syncDomain, onSuccess: (task) => { setMessage(`同步任务 ${task.taskNo ?? ""} 已创建`); void client.invalidateQueries({ queryKey: ["admin", "cdnsell", "domains"] }); }, onError: (error) => setMessage(getApiMessage(error)) });
   return <>
-    <PageHeader title="CDN 域名" description="全客户视角，按域名、客户账号或服务编号检索。" actions={<Link to="/admin/cdnsell/config-center"><Button>进入配置中心</Button></Link>} />
+    <PageHeader title="CDN 域名" description="全客户视角，按域名、客户账号或服务编号检索。" actions={<LinkButton href="/admin/cdnsell/config-center">进入配置中心</LinkButton>} />
     <Feedback message={message} />
     <LayerCard className="grid gap-3 p-5 md:grid-cols-[minmax(0,1fr)_auto]"><Input label="搜索域名 / 客户 / 服务编号" value={input} onChange={(event) => setInput(event.target.value)} /><div className="flex items-end"><Button onClick={() => setKeyword(input.trim())}>查询</Button></div></LayerCard>
     <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.data?.length} emptyTitle="暂无 CDN 域名">
-      <LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>域名 / 客户</Table.Head><Table.Head>服务编号</Table.Head><Table.Head>所有权</Table.Head><Table.Head>云端状态</Table.Head><Table.Head>版本 / 同步</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header><Table.Body>{query.data?.map((domain) => <Table.Row key={domain.id}><Table.Cell><strong className="text-kumo-strong">{domain.domain}</strong><p className="text-xs text-kumo-subtle">{domain.username || domain.userId}</p></Table.Cell><Table.Cell>{domain.serviceNo || "—"}<p className="text-xs text-kumo-subtle">{domain.cname || "尚无 CNAME"}</p></Table.Cell><Table.Cell><CdnStatus value={domain.ownershipStatus} /></Table.Cell><Table.Cell><CdnStatus value={domain.upstreamStatus} /></Table.Cell><Table.Cell>v{domain.syncVersion}<p className="text-xs text-kumo-subtle">{domain.syncTime ? new Date(domain.syncTime).toLocaleString("zh-CN") : "尚未同步"}</p></Table.Cell><Table.Cell><div className="flex gap-2"><Link to={`/admin/cdnsell/config-center?domain=${domain.id}`}><Button variant="ghost">配置</Button></Link><Button variant="secondary" disabled={!domain.serviceNo} loading={sync.isPending} onClick={() => sync.mutate(domain.id)}>同步</Button></div></Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>
+      <LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>域名 / 客户</Table.Head><Table.Head>服务编号</Table.Head><Table.Head>所有权</Table.Head><Table.Head>云端状态</Table.Head><Table.Head>版本 / 同步</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header><Table.Body>{query.data?.map((domain) => <Table.Row key={domain.id}><Table.Cell><strong className="text-kumo-strong">{domain.domain}</strong><p className="text-xs text-kumo-subtle">{domain.username || domain.userId}</p></Table.Cell><Table.Cell>{domain.serviceNo || "—"}<p className="text-xs text-kumo-subtle">{domain.cname || "尚无 CNAME"}</p></Table.Cell><Table.Cell><CdnStatus value={domain.ownershipStatus} /></Table.Cell><Table.Cell><CdnStatus value={domain.upstreamStatus} /></Table.Cell><Table.Cell>v{domain.syncVersion}<p className="text-xs text-kumo-subtle">{domain.syncTime ? new Date(domain.syncTime).toLocaleString("zh-CN") : "尚未同步"}</p></Table.Cell><Table.Cell><div className="flex gap-2"><LinkButton href={`/admin/cdnsell/config-center?domain=${domain.id}`} variant="ghost">配置</LinkButton><Button variant="secondary" disabled={!domain.serviceNo} loading={sync.isPending} onClick={() => sync.mutate(domain.id)}>同步</Button></div></Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>
     </PageState>
   </>;
 }
@@ -61,7 +60,7 @@ export function AdminCdnConfigCenter() {
   const cloudVersion = Math.max(0, ...(configs.data?.map((item) => item.cloudVersion) ?? [0]));
   const diffCount = configs.data?.reduce((sum, item) => sum + item.diffCount, 0) ?? 0;
   return <>
-    <PageHeader title="域名配置中心" description="18 个配置模块结构化维护，跟踪本地预期、云端回读和异步任务。" actions={<Link to="/admin/cdnsell/domains"><Button variant="secondary">返回域名列表</Button></Link>} />
+    <PageHeader title="域名配置中心" description="18 个配置模块结构化维护，跟踪本地预期、云端回读和异步任务。" actions={<LinkButton href="/admin/cdnsell/domains" variant="secondary">返回域名列表</LinkButton>} />
     <Feedback message={message} />
     {!selected ? <Banner variant="alert" title="暂无可配置域名" description="客户完成域名添加和所有权验证后，可在此统一配置。" /> : <>
       <LayerCard className="grid gap-4 p-5"><Select label="选择域名" value={domainId} onValueChange={(value) => setDomainId(value ?? "")} items={Object.fromEntries((domains.data ?? []).map((domain) => [domain.id, `${domain.domain} · ${domain.username || domain.userId}`]))} /><div><h2 className="text-xl font-semibold text-kumo-strong">{selected.domain}</h2><p className="text-sm text-kumo-subtle">CNAME：{selected.cname || "等待接入"} · 服务：{selected.serviceNo || "—"}</p></div></LayerCard>

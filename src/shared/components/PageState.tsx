@@ -52,10 +52,9 @@ export function PageState({
     }
     return isSkeletonKind(skeleton) ? <ContentSkeleton kind={skeleton} /> : skeleton;
   }
-  const revealClassName = showSkeleton ? "content-reveal" : undefined;
   if (empty) {
     return (
-      <div className={revealClassName}>
+      <div>
         <LayerCard>
           <Empty
             icon={<PackageIcon />}
@@ -68,7 +67,7 @@ export function PageState({
   }
   if (error) {
     return (
-      <div className={revealClassName}>
+      <div>
         <Banner
           variant="error"
           icon={<WarningCircleIcon />}
@@ -83,5 +82,5 @@ export function PageState({
       </div>
     );
   }
-  return <div className={revealClassName}>{children}</div>;
+  return <div>{children}</div>;
 }

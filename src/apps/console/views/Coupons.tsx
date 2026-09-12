@@ -81,7 +81,7 @@ export function Coupons() {
         <div className="grid gap-4">
           <section className="grid gap-4 md:grid-cols-2" data-animate-list>
             {rows.map((coupon) => (
-              <LayerCard key={coupon.id} className="interactive-card grid gap-4 p-5">
+              <LayerCard key={coupon.id} className="grid gap-4 p-5">
                 <div className="flex justify-between gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">{coupon.name}</h2><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用</p></div><strong className="text-3xl text-kumo-brand">{couponValue(coupon.type, coupon.faceValue, coupon.discountRate)}</strong></div>
                 <div className="flex items-center justify-between border-t border-kumo-line pt-4"><span className="text-sm text-kumo-subtle">有效期至 {coupon.expireAt}</span><Badge variant={tab === "available" ? "success" : "secondary"}>{tab === "available" ? "可使用" : tab === "used" ? "已使用" : "已过期"}</Badge></div>
               </LayerCard>

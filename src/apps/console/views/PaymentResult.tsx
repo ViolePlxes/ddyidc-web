@@ -1,7 +1,7 @@
-import { Banner, Button, LayerCard } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { paymentApi, type PaymentBusinessType } from "../../../shared/api/payment";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -66,7 +66,7 @@ export function PaymentResult() {
             ) : null}
             <div className="flex justify-end gap-3">
               <Button variant="secondary" loading={status.isFetching} onClick={() => void status.refetch()}>立即刷新</Button>
-              <Link to={target} viewTransition><Button>{bizType === "order" ? "查看订单" : "返回财务中心"}</Button></Link>
+              <LinkButton href={target}>{bizType === "order" ? "查看订单" : "返回财务中心"}</LinkButton>
             </div>
           </LayerCard>
         </PageState>
