@@ -164,7 +164,7 @@ export function RegisterPage() {
               <Select<string>
                 aria-label="国家或地区区号"
                 size="base"
-                className="w-20 rounded-none border-0 bg-transparent px-2 shadow-none"
+                className="h-full w-20 rounded-none! border-0! bg-transparent! px-2 shadow-none! ring-0! hover:bg-transparent! focus:ring-0! focus-visible:ring-0! data-[state=open]:bg-transparent!"
                 items={countries}
                 value={form.countryCode}
                 renderValue={(code) => code}
