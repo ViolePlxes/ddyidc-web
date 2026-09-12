@@ -49,6 +49,11 @@ const AdminCustomers = lazy(() =>
     .adminCustomers()
     .then((module) => ({ default: module.AdminCustomers })),
 );
+const AdminCustomerDetail = lazy(() =>
+  routeModules
+    .adminCustomerDetail()
+    .then((module) => ({ default: module.AdminCustomerDetail })),
+);
 const AdminHome = lazy(() =>
   routeModules.adminHome().then((module) => ({ default: module.AdminHome })),
 );
@@ -469,6 +474,14 @@ export function AdminApp() {
               element={
                 <LazyRoute kind="table">
                   <AdminCustomers />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="/admin/customers/:id"
+              element={
+                <LazyRoute kind="detail">
+                  <AdminCustomerDetail />
                 </LazyRoute>
               }
             />

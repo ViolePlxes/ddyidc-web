@@ -31,6 +31,7 @@ export const routeModules = {
   adminProductGroups: () => import("../../apps/admin/views/ProductGroups"),
   adminOrders: () => import("../../apps/admin/views/Orders"),
   adminCustomers: () => import("../../apps/admin/views/Customers"),
+  adminCustomerDetail: () => import("../../apps/admin/views/CustomerDetail"),
   adminSystem: () => import("../../apps/admin/views/System"),
   adminUpdates: () => import("../../apps/admin/views/Updates"),
   adminSuppliers: () => import("../../apps/admin/views/UpstreamSuppliers"),
@@ -130,6 +131,10 @@ const routeLoaders: Array<
   ],
   [(path) => path === "/admin/orders", routeModules.adminOrders],
   [(path) => path === "/admin/customers", routeModules.adminCustomers],
+  [
+    (path) => /^\/admin\/customers\/[^/]+$/.test(path),
+    routeModules.adminCustomerDetail,
+  ],
   [(path) => path === "/admin/system", routeModules.adminSystem],
   [(path) => path === "/admin/updates", routeModules.adminUpdates],
   [(path) => path === "/admin/upstream/suppliers", routeModules.adminSuppliers],
