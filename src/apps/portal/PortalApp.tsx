@@ -73,6 +73,7 @@ function UserSessionBoundary() {
       restoreSession={state.restoreSession}
       clearSession={state.clearSession}
       unauthorizedEvent="ddyidc:user-unauthorized"
+      skeleton={false}
     />
   );
 }
@@ -85,7 +86,7 @@ export function PortalApp() {
           <Route
             path="/"
             element={
-              <LazyRoute kind="detail">
+              <LazyRoute kind="detail" skeleton={false}>
                 <PortalHome />
               </LazyRoute>
             }
@@ -93,7 +94,7 @@ export function PortalApp() {
           <Route
             path="/products"
             element={
-              <LazyRoute kind="products">
+              <LazyRoute kind="products" skeleton={false}>
                 <PublicProducts />
               </LazyRoute>
             }
@@ -101,7 +102,7 @@ export function PortalApp() {
           <Route
             path="/products/:id"
             element={
-              <LazyRoute kind="product">
+              <LazyRoute kind="product" skeleton={false}>
                 <PublicProductDetail />
               </LazyRoute>
             }
@@ -109,7 +110,7 @@ export function PortalApp() {
           <Route
             path="/about"
             element={
-              <LazyRoute kind="detail">
+              <LazyRoute kind="detail" skeleton={false}>
                 <About />
               </LazyRoute>
             }
@@ -117,7 +118,7 @@ export function PortalApp() {
           <Route
             path="/reset-password"
             element={
-              <LazyRoute kind="form">
+              <LazyRoute kind="form" skeleton={false}>
                 <ResetPassword />
               </LazyRoute>
             }
@@ -126,7 +127,7 @@ export function PortalApp() {
             path="/groupbuy"
             element={
               <GroupBuyGate scope="public">
-                <LazyRoute kind="products">
+                <LazyRoute kind="products" skeleton={false}>
                   <GroupBuyMarketplace />
                 </LazyRoute>
               </GroupBuyGate>
@@ -136,7 +137,7 @@ export function PortalApp() {
             path="/groupbuy/share/:inviteCode"
             element={
               <GroupBuyGate scope="public">
-                <LazyRoute kind="detail">
+                <LazyRoute kind="detail" skeleton={false}>
                   <GroupBuyPublicShare />
                 </LazyRoute>
               </GroupBuyGate>
@@ -146,7 +147,7 @@ export function PortalApp() {
             path="/marketplace"
             element={
               <MarketplaceGate scope="public">
-                <LazyRoute kind="products">
+                <LazyRoute kind="products" skeleton={false}>
                   <MarketplaceHome />
                 </LazyRoute>
               </MarketplaceGate>
@@ -156,7 +157,7 @@ export function PortalApp() {
             path="/marketplace/listing/:id"
             element={
               <MarketplaceGate scope="public">
-                <LazyRoute kind="product">
+                <LazyRoute kind="product" skeleton={false}>
                   <MarketplaceListingDetail />
                 </LazyRoute>
               </MarketplaceGate>
@@ -166,7 +167,7 @@ export function PortalApp() {
         <Route
           path="/login"
           element={
-            <LazyRoute kind="form">
+            <LazyRoute kind="form" skeleton={false}>
               <LoginPage />
             </LazyRoute>
           }
@@ -174,7 +175,7 @@ export function PortalApp() {
         <Route
           path="/register"
           element={
-            <LazyRoute kind="form">
+            <LazyRoute kind="form" skeleton={false}>
               <RegisterPage />
             </LazyRoute>
           }
@@ -182,7 +183,7 @@ export function PortalApp() {
         <Route
           path="/terms/:kind"
           element={
-            <LazyRoute kind="form">
+            <LazyRoute kind="form" skeleton={false}>
               <AgreementPlaceholder />
             </LazyRoute>
           }

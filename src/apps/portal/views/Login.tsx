@@ -10,6 +10,7 @@ import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { TermsAgreement } from "../components/TermsAgreement";
+import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
 
 type LoginStep = "account" | "password";
 
@@ -20,6 +21,7 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
   const signIn = useAuthStore((state) => state.signIn);
@@ -63,8 +65,7 @@ export function LoginPage() {
     }
   };
 
-  const handlePassword = async (event: FormEvent) => {
-    event.preventDefault();
+  const submitPassword = async () => {
     if (!password) {
       setError("请输入密码");
       return;
@@ -76,6 +77,21 @@ export function LoginPage() {
     } catch (nextError) {
       setError(getApiMessage(nextError));
     }
+  };
+
+  const handlePassword = (event: FormEvent) => {
+    event.preventDefault();
+    if (!agreedToTerms) {
+      setShowAgreementDialog(true);
+      return;
+    }
+    void submitPassword();
+  };
+
+  const agreeAndSubmit = () => {
+    setAgreedToTerms(true);
+    setShowAgreementDialog(false);
+    void submitPassword();
   };
 
   return (
@@ -109,7 +125,6 @@ export function LoginPage() {
               <Button
                 type="submit"
                 loading={checking}
-                disabled={!agreedToTerms}
                 icon={<ArrowRightIcon />}
               >
                 下一步
@@ -142,7 +157,7 @@ export function LoginPage() {
                 >
                   返回
                 </Button>
-                <Button type="submit" loading={loading} disabled={!agreedToTerms}>
+                <Button type="submit" loading={loading}>
                   登录
                 </Button>
               </div>
@@ -154,6 +169,11 @@ export function LoginPage() {
           </div>
         </LayerCard>
       </div>
+      <AgreementConsentDialog
+        open={showAgreementDialog}
+        onOpenChange={setShowAgreementDialog}
+        onAgree={agreeAndSubmit}
+      />
     </main>
   );
 }

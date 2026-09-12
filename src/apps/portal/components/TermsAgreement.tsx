@@ -9,7 +9,6 @@ type TermsAgreementProps = {
 export function TermsAgreement({ checked, onCheckedChange }: TermsAgreementProps) {
   return (
     <Checkbox
-      required
       checked={checked}
       onCheckedChange={(value) => onCheckedChange(value === true)}
       label={

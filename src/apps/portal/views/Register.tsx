@@ -1,6 +1,6 @@
-import { Banner, Button, Input, LayerCard, Select } from "@cloudflare/kumo";
+import { Banner, Button, Input, InputGroup, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation } from "@tanstack/react-query";
-import { getCountries, getCountryCallingCode, type CountryCode } from "libphonenumber-js";
+import { getCountries, getCountryCallingCode } from "libphonenumber-js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { register, sendRegistrationSMS } from "../../../shared/api/auth";
@@ -8,11 +8,12 @@ import { getApiMessage } from "../../../shared/api/request";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { TermsAgreement } from "../components/TermsAgreement";
+import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
 
 type RegistrationForm = {
   account: string;
   password: string;
-  country: CountryCode;
+  countryCode: string;
   mobile: string;
   smsCode: string;
   email: string;
@@ -29,7 +30,7 @@ export function RegisterPage() {
   const [form, setForm] = useState<RegistrationForm>({
     account: "",
     password: "",
-    country: "CN",
+    countryCode: "+86",
     mobile: "",
     smsCode: "",
     email: "",
@@ -41,27 +42,22 @@ export function RegisterPage() {
   const [smsMessage, setSMSMessage] = useState("");
   const [smsError, setSMSError] = useState("");
   const [countdown, setCountdown] = useState(0);
-  const countryNames = useMemo(
-    () => new Intl.DisplayNames(["zh-CN"], { type: "region" }),
-    [],
-  );
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
   const countries = useMemo(
     () =>
-      getCountries()
-        .map((country) => ({
-          value: country,
-          label: `${countryNames.of(country) ?? country} +${getCountryCallingCode(country)}`,
-        }))
+      Array.from(
+        new Set(getCountries().map((country) => `+${getCountryCallingCode(country)}`)),
+      )
+        .map((code) => ({ value: code, label: code }))
         .sort((left, right) =>
-          left.value === "CN"
+          left.value === "+86"
             ? -1
-            : right.value === "CN"
+            : right.value === "+86"
               ? 1
-              : left.label.localeCompare(right.label, "zh-CN"),
+              : Number(left.label.slice(1)) - Number(right.label.slice(1)),
         ),
-    [countryNames],
+    [],
   );
-  const countryCode = `+${getCountryCallingCode(form.country)}`;
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -73,14 +69,14 @@ export function RegisterPage() {
   }, [countdown]);
 
   const mutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (agreedToTerms: boolean) =>
       register({
         account: form.account.trim(),
         password: form.password,
-        countryCode,
+        countryCode: form.countryCode,
         mobile: form.mobile.trim(),
         smsCode: form.smsCode.trim(),
-        agreedToTerms: form.agreedToTerms,
+        agreedToTerms,
         email: form.email.trim() || undefined,
         inviteCode: form.inviteCode.trim() || undefined,
         salesCode: form.salesCode.trim() || undefined,
@@ -92,7 +88,7 @@ export function RegisterPage() {
   });
   const sendSMS = useMutation({
     mutationFn: () =>
-      sendRegistrationSMS({ countryCode, mobile: form.mobile.trim() }),
+      sendRegistrationSMS({ countryCode: form.countryCode, mobile: form.mobile.trim() }),
     onSuccess: () => {
       setSMSError("");
       setSMSMessage("验证码已发送，请注意查收");
@@ -107,7 +103,7 @@ export function RegisterPage() {
   if (user) return <ExternalRedirect to="/console" />;
 
   const updateText = (
-    key: Exclude<keyof RegistrationForm, "country" | "agreedToTerms">,
+    key: Exclude<keyof RegistrationForm, "countryCode" | "agreedToTerms">,
     value: string,
   ) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -115,7 +111,7 @@ export function RegisterPage() {
     const value = form.mobile.trim();
     const error = !value
       ? "请输入手机号"
-      : form.country === "CN" && !mainlandMobilePattern.test(value)
+      : form.countryCode === "+86" && !mainlandMobilePattern.test(value)
         ? "请输入正确的 11 位中国大陆手机号"
         : "";
     setMobileError(error);
@@ -126,7 +122,7 @@ export function RegisterPage() {
     setSMSError("");
     setSMSMessage("");
     if (!validateMobile()) return;
-    if (form.country !== "CN") {
+    if (form.countryCode !== "+86") {
       setSMSError("该地区暂不支持验证码，敬请期待");
       return;
     }
@@ -136,7 +132,17 @@ export function RegisterPage() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!validateMobile()) return;
-    mutation.mutate();
+    if (!form.agreedToTerms) {
+      setShowAgreementDialog(true);
+      return;
+    }
+    mutation.mutate(true);
+  };
+
+  const agreeAndSubmit = () => {
+    setForm((current) => ({ ...current, agreedToTerms: true }));
+    setShowAgreementDialog(false);
+    mutation.mutate(true);
   };
 
   return (
@@ -149,26 +155,36 @@ export function RegisterPage() {
         <form className="grid gap-4" onSubmit={submit}>
           <Input label="账号" value={form.account} onChange={(event) => updateText("account", event.target.value)} autoComplete="username" required />
           <Input label="密码" type="password" value={form.password} onChange={(event) => updateText("password", event.target.value)} autoComplete="new-password" required />
-          <div className="grid gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
-            <Select<CountryCode>
-              label="国家 / 地区"
-              items={countries}
-              value={form.country}
-              onValueChange={(country) => {
-                if (!country) return;
-                setForm((current) => ({ ...current, country }));
-                setMobileError("");
-                setSMSMessage("");
-                setSMSError(country === "CN" ? "" : "该地区暂不支持验证码，敬请期待");
-              }}
-            />
-            <Input
-              label={`手机号（${countryCode}）`}
+          <InputGroup
+            label="手机号"
+            required
+            error={mobileError ? { message: mobileError, match: true } : undefined}
+          >
+            <InputGroup.Addon className="border-r border-kumo-line pr-1">
+              <Select<string>
+                aria-label="国家或地区区号"
+                size="base"
+                className="w-20 rounded-none border-0 bg-transparent px-2 shadow-none"
+                items={countries}
+                value={form.countryCode}
+                renderValue={(code) => code}
+                onValueChange={(countryCode) => {
+                  if (!countryCode) return;
+                  setForm((current) => ({ ...current, countryCode }));
+                  setMobileError("");
+                  setSMSMessage("");
+                  setSMSError(countryCode === "+86" ? "" : "该地区暂不支持验证码，敬请期待");
+                }}
+              />
+            </InputGroup.Addon>
+            <InputGroup.Input
+              aria-label="手机号"
+              placeholder="请输入手机号"
               value={form.mobile}
               onChange={(event) => {
                 const mobile = event.target.value;
                 updateText("mobile", mobile);
-                if (form.country === "CN") {
+                if (form.countryCode === "+86") {
                   setMobileError(
                     mobile && !mainlandMobilePattern.test(mobile.trim())
                       ? "请输入正确的 11 位中国大陆手机号"
@@ -180,9 +196,8 @@ export function RegisterPage() {
               inputMode="tel"
               autoComplete="tel-national"
               required
-              error={mobileError || undefined}
             />
-          </div>
+          </InputGroup>
           <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <Input label="手机验证码" value={form.smsCode} onChange={(event) => updateText("smsCode", event.target.value)} inputMode="numeric" autoComplete="one-time-code" required />
             <Button type="button" variant="secondary" loading={sendSMS.isPending} disabled={countdown > 0} onClick={requestCode}>
@@ -198,10 +213,15 @@ export function RegisterPage() {
           </div>
           <TermsAgreement checked={form.agreedToTerms} onCheckedChange={(agreedToTerms) => setForm((current) => ({ ...current, agreedToTerms }))} />
           {mutation.error ? <Banner variant="error" title="注册失败" description={getApiMessage(mutation.error)} /> : null}
-          <Button type="submit" loading={mutation.isPending} disabled={!form.agreedToTerms}>创建账号</Button>
+          <Button type="submit" loading={mutation.isPending}>创建账号</Button>
         </form>
         <div className="text-center text-sm text-kumo-subtle">已有账号？ <Link className="text-kumo-link hover:underline" to="/login">返回登录</Link></div>
       </LayerCard>
+      <AgreementConsentDialog
+        open={showAgreementDialog}
+        onOpenChange={setShowAgreementDialog}
+        onAgree={agreeAndSubmit}
+      />
     </main>
   );
 }
