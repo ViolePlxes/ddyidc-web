@@ -5,7 +5,6 @@ import {
   ArrowRightIcon,
 } from "@phosphor-icons/react";
 import { Link, useLocation } from "react-router-dom";
-import { checkAccount } from "../../../shared/api/auth";
 import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
@@ -19,7 +18,6 @@ export function LoginPage() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [checking, setChecking] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showAgreementDialog, setShowAgreementDialog] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -41,28 +39,16 @@ export function LoginPage() {
       ? redirect
       : null;
 
-  const handleAccount = async (event: FormEvent) => {
+  const handleAccount = (event: FormEvent) => {
     event.preventDefault();
     const value = account.trim();
     if (!value) {
       setError("请输入账号、邮箱或手机号");
       return;
     }
-    setChecking(true);
     setError("");
-    try {
-      const exists = await checkAccount(value);
-      if (!exists) {
-        setError("未找到该账号，请检查后重试");
-        return;
-      }
-      setAccount(value);
-      setStep("password");
-    } catch (nextError) {
-      setError(getApiMessage(nextError));
-    } finally {
-      setChecking(false);
-    }
+    setAccount(value);
+    setStep("password");
   };
 
   const submitPassword = async () => {
@@ -111,7 +97,7 @@ export function LoginPage() {
           {step === "account" ? (
             <form
               className="grid gap-5"
-              onSubmit={(event) => void handleAccount(event)}
+              onSubmit={handleAccount}
             >
               <Input
                 label="账号"
@@ -124,7 +110,6 @@ export function LoginPage() {
               />
               <Button
                 type="submit"
-                loading={checking}
                 icon={<ArrowRightIcon />}
               >
                 下一步
