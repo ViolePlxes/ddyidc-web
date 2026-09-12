@@ -63,7 +63,9 @@ export function StaffLogin({
         <div className="flex items-center justify-between gap-3">
           <div className="grid gap-0.5">
             <span className="text-sm font-semibold text-kumo-strong">DDYIDC</span>
-            <span className="text-xs text-kumo-subtle">v1.0.0 · 开发环境</span>
+            <span className="text-xs text-kumo-subtle">
+              v1.0.0 · {import.meta.env.PROD ? "生产环境" : "开发环境"}
+            </span>
           </div>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
