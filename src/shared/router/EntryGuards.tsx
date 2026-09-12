@@ -24,11 +24,13 @@ export function SessionBoundary({
   restoreSession,
   clearSession,
   unauthorizedEvent,
+  skeleton = true,
 }: {
   initialized: boolean;
   restoreSession: () => Promise<void>;
   clearSession: () => void;
   unauthorizedEvent: string;
+  skeleton?: boolean;
 }) {
   useEffect(() => {
     void restoreSession();
@@ -37,7 +39,7 @@ export function SessionBoundary({
   }, [clearSession, restoreSession, unauthorizedEvent]);
 
   if (!initialized) {
-    return <SessionSkeleton />;
+    return skeleton ? <SessionSkeleton /> : null;
   }
   return <Outlet />;
 }
