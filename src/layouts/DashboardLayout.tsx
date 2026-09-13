@@ -1,6 +1,7 @@
 import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   CaretDownIcon,
+  CaretUpDownIcon,
   CubeIcon,
   HouseIcon,
   SignOutIcon,
@@ -63,17 +64,39 @@ export function DashboardLayout({
       peekable
       className="h-svh max-h-svh overflow-hidden"
     >
-      <Sidebar aria-label="主导航">
+      <Sidebar aria-label="主导航" className="font-sans leading-[normal] tracking-normal antialiased">
         <Sidebar.Header>
-          <div className="flex w-full min-w-0 items-center gap-2 px-3 transition-[padding] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:px-2">
-            <CubeIcon
-              className="size-4 shrink-0 text-kumo-brand"
-              weight="duotone"
+          <DropdownMenu>
+            <DropdownMenu.Trigger
+              render={
+                <button
+                  type="button"
+                  aria-label="账户菜单"
+                  className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-kumo-default transition-[padding] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) outline-none hover:bg-kumo-tint focus-visible:ring-1 focus-visible:ring-kumo-line"
+                >
+                  <CubeIcon className="size-4 shrink-0 text-kumo-brand" weight="duotone" />
+                  <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">DDYIDC</span>
+                  <span className="w-4 shrink-0 overflow-hidden transition-[width] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:w-0">
+                    <CaretUpDownIcon className="size-4 text-kumo-subtle" />
+                  </span>
+                </button>
+              }
             />
-            <span className="flex-1 truncate text-sm font-semibold text-kumo-strong">
-              DDYIDC
-            </span>
-          </div>
+            <DropdownMenu.Content className="w-(--anchor-width)">
+              <DropdownMenu.Group>
+                <DropdownMenu.Label>{user.name} · {user.account}</DropdownMenu.Label>
+                {profileHref ? (
+                  <DropdownMenu.LinkItem href={profileHref} icon={<UserCircleIcon />}>
+                    个人中心
+                  </DropdownMenu.LinkItem>
+                ) : null}
+              </DropdownMenu.Group>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item icon={<SignOutIcon />} variant="danger" onClick={() => void handleSignOut()}>
+                退出登录
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu>
         </Sidebar.Header>
         <Sidebar.Content>
           <SearchPalette items={searchItems} placement="sidebar" />
@@ -105,7 +128,7 @@ export function DashboardLayout({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-recessed">
         <Surface
           data-dashboard-topbar
-          className={`z-10 flex shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4 ${density === "compact" ? "h-[52px]" : "h-[58px]"}`}
+          className="z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
           <DropdownMenu>
