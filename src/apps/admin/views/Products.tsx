@@ -97,7 +97,7 @@ function SpecsDialog({ product, onClose }: { product: AdminProduct; onClose: () 
                   <Input label="月价（元）" type="number" min={0} step="0.01" value={row.price} disabled={row.priceMode === "upstream"} description={row.priceMode === "upstream" ? `当前代理价 ¥${product.price.toFixed(2)}` : undefined} onChange={(event) => update(index, "price", Number(event.target.value))} />
                 </div>
               </LayerCard>
-            )) : <LayerCard className="p-5 text-sm text-kumo-subtle">尚未配置规格。前台会显示“规格待配置”并暂停购买。</LayerCard>}
+            )) : <LayerCard className="p-5 text-sm text-kumo-subtle">尚未配置人工销售规格。已对接产品可直接使用上游配置订购，无需补建人工规格。</LayerCard>}
             <Button variant="secondary" icon={<PlusIcon />} onClick={() => setRows((current) => [...current, emptySpec(product.id, current.length)])}>添加规格</Button>
           </div>
         </PageState>

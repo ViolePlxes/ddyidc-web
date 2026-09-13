@@ -25,6 +25,7 @@ import { useCartStore } from "../stores/cart";
 import { generateHostname, generatePassword } from "../utils/credentials";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
+import { isUpstreamProduct } from "../utils/productCatalog";
 
 const cycleMonths: Record<string, number> = {
   monthly: 1,
@@ -133,11 +134,11 @@ function ProductOptionControl({
   );
 }
 
-function SpecTable({ specs, selectedId, onSelect }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void }) {
+function SpecTable({ specs, selectedId, onSelect, catalogSelection }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean }) {
   return (
     <LayerCard className="overflow-hidden p-0">
       <div className="grid gap-1 p-5">
-        <h2 className="text-lg font-semibold text-kumo-strong">计算规格</h2>
+        <h2 className="text-lg font-semibold text-kumo-strong">{catalogSelection ? "销售规格" : "计算规格"}</h2>
         <p className="text-sm text-kumo-subtle">规格由运营人工维护，价格不会从上游配置项推导。</p>
       </div>
       {specs.length ? (
@@ -178,16 +179,18 @@ export function ProductConfig({
   orderPage,
   billTarget,
   billLoading = false,
+  catalogSelection = false,
 }: {
   product: ProductDetail;
   orderPage?: OrderPage;
   billTarget?: HTMLElement | null;
   billLoading?: boolean;
+  catalogSelection?: boolean;
 }) {
   const navigate = useNavigate();
   const options = useMemo(() => orderPage?.configOptions ?? product.configOptions ?? [], [orderPage, product.configOptions]);
-  const cycles = useMemo(() => orderPage?.cycles?.length
-    ? orderPage.cycles
+  const cycles = useMemo(() => orderPage?.cycles?.some((item) => item.billingcycle in cycleMonths)
+    ? orderPage.cycles.filter((item) => item.billingcycle in cycleMonths)
     : [{ billingcycle: product.cycle || "monthly", label: cycleLabels[product.cycle] ?? product.cycle ?? "月付", price: product.price, setupFee: 0 }], [orderPage, product.cycle, product.price]);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [selectedSpecId, setSelectedSpecId] = useState(product.specs[0]?.id ?? "");
@@ -199,7 +202,7 @@ export function ProductConfig({
   const addCart = useCartStore((state) => state.add);
 
   useEffect(() => {
-    setSelected(Object.fromEntries(options.map((option) => [option.field, initialValue(option)])));
+    setSelected(Object.fromEntries(options.map((option) => [option.id, initialValue(option)])));
     setSelectedSpecId(product.specs[0]?.id ?? "");
   }, [product.id, options, product.specs]);
 
@@ -209,7 +212,7 @@ export function ProductConfig({
   const dataCenterOption = options.find((option) => option.field === "data_center");
   const imageOption = options.find((option) => option.field === "image");
   const displayedOptions = options
-    .filter((option) => !["data_center", "cpu", "memory", "image"].includes(option.field))
+    .filter((option) => !["data_center", "image", ...(selectedSpec ? ["cpu", "memory"] : [])].includes(option.field))
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
@@ -220,10 +223,10 @@ export function ProductConfig({
 
   useEffect(() => {
     if (!imageGroups.length) return;
-    const selectedImage = selected.image;
+    const selectedImage = imageOption ? selected[imageOption.id] : undefined;
     const group = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
     setImageGroup(group?.name ?? "");
-  }, [imageGroups, selected.image]);
+  }, [imageGroups, imageOption, selected]);
 
   const selectSpec = (spec: ProductSpec) => {
     setSelectedSpecId(spec.id);
@@ -234,8 +237,8 @@ export function ProductConfig({
       const memoryValue = numericPart(spec.memory);
       const cpuMatch = cpu ? matchSpecChoice(cpu, spec.vcpu) : undefined;
       const memoryMatch = memory && memoryValue !== null ? matchSpecChoice(memory, memoryValue) : undefined;
-      if (cpuMatch) next.cpu = cpuMatch;
-      if (memoryMatch) next.memory = memoryMatch;
+      if (cpuMatch) next[cpu!.id] = cpuMatch;
+      if (memoryMatch) next[memory!.id] = memoryMatch;
       return next;
     });
   };
@@ -243,7 +246,7 @@ export function ProductConfig({
   const selectedCycle = cycles.find((item) => item.billingcycle === cycle) ?? cycles[0];
   const durationMonth = cycleMonths[selectedCycle?.billingcycle ?? cycle] ?? 1;
   const selectedOptions = useMemo(() => options.map((option, index) => {
-    const value = selected[option.field] ?? initialValue(option);
+    const value = selected[option.id] ?? initialValue(option);
     const choice = option.options.find((item) => item.id === value);
     return {
       id: option.id,
@@ -255,21 +258,21 @@ export function ProductConfig({
     };
   }), [options, selected]);
   const optionPrice = options.reduce((sum, option) => {
-    const value = selected[option.field] ?? initialValue(option);
+    const value = selected[option.id] ?? initialValue(option);
     if (selectedSpec?.priceMode === "fixed" && (option.field === "cpu" || option.field === "memory")) return sum;
     return sum + (option.optionType === "qty" ? quantityOptionPrice(option, value) : (option.options.find((item) => item.id === value)?.price ?? 0));
   }, 0);
   const monthlyReference = cycles.find((item) => item.billingcycle === "monthly")?.price ?? product.price;
   const cycleDiscount = selectedCycle && monthlyReference > 0 ? selectedCycle.price / (monthlyReference * durationMonth) : 1;
   const monthlySpecPrice = selectedSpec?.price ?? product.price;
-  const periodBase = selectedSpec?.priceMode === "upstream" && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
+  const periodBase = (!selectedSpec || selectedSpec.priceMode === "upstream") && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
   const unitPrice = periodBase + optionPrice * durationMonth + (selectedCycle?.setupFee ?? 0);
   const total = unitPrice * quantity;
   const nextRenewal = (periodBase + optionPrice * durationMonth) * quantity;
   const monthlyEquivalent = durationMonth > 0 ? nextRenewal / durationMonth : nextRenewal;
-  const selectedRegion = dataCenterOption?.options.find((item) => item.id === selected.data_center)?.name ?? "默认地域";
+  const selectedRegion = dataCenterOption?.options.find((item) => item.id === selected[dataCenterOption!.id])?.name ?? "默认地域";
   const outOfStock = selectedSpec?.stock !== null && selectedSpec?.stock !== undefined ? selectedSpec.stock <= 0 : product.stock !== null && product.stock <= 0;
-  const specsUnavailable = product.specs.length === 0;
+  const specsUnavailable = isUpstreamProduct(product) ? !orderPage : product.specs.length === 0;
 
   const draft = (): OrderDraft => ({
     productId: product.id,
@@ -302,15 +305,15 @@ export function ProductConfig({
         <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 ¥{unitPrice.toFixed(2)}</span>
       </div>
       <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
-        {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>实例规格：规格待配置</span>}
+        {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>计算规格：{product.name}</span>}
         {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{item.displayValue}</span>)}
         <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
         <span>购买数量：{quantity} 台</span>
         <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
-      <Button disabled={outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={billLoading || outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
+      <Button disabled={billLoading || outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
     </LayerCard>
   );
   return (
@@ -323,24 +326,24 @@ export function ProductConfig({
         {dataCenterOption ? (
           <LayerCard className="grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">地域选择</h2><p className="text-sm text-kumo-subtle">建议选择距离业务更近的地域，以降低网络延时。</p></div>
-            <Radio.Group legend="地域与线路节点" value={selected.data_center ?? initialValue(dataCenterOption)} onValueChange={(value) => setSelected((current) => ({ ...current, data_center: value }))} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Radio.Group legend="地域与线路节点" value={selected[dataCenterOption!.id] ?? initialValue(dataCenterOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [dataCenterOption.id]: value }))} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {dataCenterOption.options.map((choice) => <Radio.Item key={choice.id} value={choice.id} label={choice.name} />)}
             </Radio.Group>
           </LayerCard>
         ) : null}
 
-        <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} />
+        {product.specs.length || !isUpstreamProduct(product) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} /> : null}
         {selectedSpec ? (
           <LayerCard className="p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}
 
         {displayedOptions.map((option) => {
-          const value = selected[option.field] ?? initialValue(option);
+          const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty";
           return (
             <LayerCard key={`${option.id}-${option.field}`} className="grid gap-4 p-5">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2>{isSlider && product.configMode === "fixed" ? <p className="text-sm text-kumo-subtle">当前商品采用固定资源值。</p> : null}</div>
-              <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.field]: next }))} />
+              <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>
           );
         })}
@@ -348,9 +351,9 @@ export function ProductConfig({
         {imageOption && imageGroups.length ? (
           <LayerCard className="grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">镜像分组和版本来自上游实时订单页。</p></div>
-            <Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, image: first.id })); }} />
+            <Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} />
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
-              <Select key={group.name} label="镜像版本" value={selected.image ?? initialValue(imageOption)} onValueChange={(value) => value && setSelected((current) => ({ ...current, image: value }))} items={Object.fromEntries(group.child.map((choice) => [choice.id, choiceLabel(choice)]))} />
+              <Select key={group.name} label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => value && setSelected((current) => ({ ...current, [imageOption.id]: value }))} items={Object.fromEntries(group.child.map((choice) => [choice.id, choiceLabel(choice)]))} />
             ))}
           </LayerCard>
         ) : null}

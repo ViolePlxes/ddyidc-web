@@ -397,13 +397,22 @@ async function unwrap<T>(
 }
 
 export const consoleApi = {
-  products: (pageSize = 100) =>
-    unwrap(
+  products: async (pageSize = 100) => {
+    const load = (page: number) => unwrap(
       userRequest.get<ApiEnvelope<{ items: ProductSummary[]; groups: ProductGroupSummary[]; total: number; page: number; pageSize: number }>>(
         "/products",
-        { params: { pageSize } },
+        { params: { pageSize, page } },
       ),
-    ),
+    );
+    const first = await load(1);
+    const items = [...(first.items ?? [])];
+    for (let page = 2; items.length < first.total; page += 1) {
+      const next = await load(page);
+      if (!next.items?.length) throw new Error("商品目录发生变化，请刷新后重试");
+      items.push(...next.items);
+    }
+    return { ...first, items: Array.from(new Map(items.map((item) => [item.id, item])).values()), groups: first.groups ?? [] };
+  },
   product: (id: string) => unwrap(userRequest.get<ApiEnvelope<ProductDetail>>(`/products/${id}`)),
   orderPage: (supplierId: string, productId: string) =>
     unwrap(
