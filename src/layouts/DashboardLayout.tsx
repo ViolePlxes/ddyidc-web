@@ -1,6 +1,7 @@
 import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   CaretDownIcon,
+  CubeIcon,
   HouseIcon,
   SignOutIcon,
   UserCircleIcon,
@@ -51,22 +52,31 @@ export function DashboardLayout({
     window.location.replace(loginPath);
   };
 
+  const isItemActive = (href: string) =>
+    location.pathname === href ||
+    (!["/console", "/admin", "/sales"].includes(href) &&
+      location.pathname.startsWith(`${href}/`));
+
   return (
     <Sidebar.Provider
       defaultOpen
-      collapsible="icon"
+      peekable
       className="h-svh max-h-svh overflow-hidden"
     >
       <Sidebar aria-label="主导航">
         <Sidebar.Header>
-          <span className="grid size-8 place-items-center bg-kumo-brand text-base font-semibold text-kumo-badge-inverted">
-            D
-          </span>
-          <span className="truncate text-base font-semibold text-kumo-strong group-data-[state=collapsed]/sidebar:hidden">
-            DDYIDC
-          </span>
+          <div className="flex w-full min-w-0 items-center gap-2 px-3 transition-[padding] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:px-2">
+            <CubeIcon
+              className="size-4 shrink-0 text-kumo-brand"
+              weight="duotone"
+            />
+            <span className="flex-1 truncate text-sm font-semibold text-kumo-strong">
+              DDYIDC
+            </span>
+          </div>
         </Sidebar.Header>
         <Sidebar.Content>
+          <SearchPalette items={searchItems} placement="sidebar" />
           {groups.map((group) => (
             <Sidebar.Group key={group.label}>
               <Sidebar.GroupLabel>{group.label}</Sidebar.GroupLabel>
@@ -77,11 +87,9 @@ export function DashboardLayout({
                     href={item.href}
                     icon={item.icon}
                     tooltip={item.label}
-                    active={
-                      location.pathname === item.href ||
-                      (!["/console", "/admin", "/sales"].includes(item.href) &&
-                        location.pathname.startsWith(`${item.href}/`))
-                    }
+                    itemId={item.href}
+                    active={isItemActive(item.href)}
+                    aria-current={isItemActive(item.href) ? "page" : undefined}
                   >
                     {item.label}
                   </Sidebar.MenuButton>
@@ -97,10 +105,9 @@ export function DashboardLayout({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-recessed">
         <Surface
           data-dashboard-topbar
-          className={`z-10 flex shrink-0 items-center gap-3 border-b border-kumo-line px-4 ${density === "compact" ? "h-[52px]" : "h-[58px]"}`}
+          className={`z-10 flex shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4 ${density === "compact" ? "h-[52px]" : "h-[58px]"}`}
         >
           <Sidebar.Trigger className="md:hidden" />
-          <SearchPalette items={searchItems} />
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={<Button variant="secondary" icon={<UserCircleIcon />} />}

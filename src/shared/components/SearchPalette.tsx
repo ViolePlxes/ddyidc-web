@@ -1,6 +1,6 @@
-import { Button, CommandPalette } from "@cloudflare/kumo";
+import { Button, CommandPalette, Sidebar } from "@cloudflare/kumo";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export interface SearchItem {
@@ -15,7 +15,13 @@ interface SearchGroup {
   items: SearchItem[];
 }
 
-export function SearchPalette({ items }: { items: SearchItem[] }) {
+export function SearchPalette({
+  items,
+  placement = "topbar",
+}: {
+  items: SearchItem[];
+  placement?: "topbar" | "sidebar";
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
@@ -34,16 +40,42 @@ export function SearchPalette({ items }: { items: SearchItem[] }) {
     setQuery("");
   };
 
+  useEffect(() => {
+    const openPalette = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen(true);
+      }
+    };
+    document.addEventListener("keydown", openPalette);
+    return () => document.removeEventListener("keydown", openPalette);
+  }, []);
+
   return (
     <>
-      <Button
-        variant="secondary"
-        className="max-w-xl flex-1 justify-start text-kumo-subtle"
-        icon={<MagnifyingGlassIcon />}
-        onClick={() => setOpen(true)}
-      >
-        搜索资源、订单和设置…
-      </Button>
+      {placement === "sidebar" ? (
+        <Sidebar.Group>
+          <Sidebar.Menu>
+            <Sidebar.MenuButton
+              icon={MagnifyingGlassIcon}
+              tooltip="快速搜索"
+              className="mb-3 ring ring-kumo-line transition-[margin] duration-(--sidebar-animation-duration) group-data-[state=collapsed]/sidebar:mb-0 group-data-[state=collapsed]/sidebar:ring-transparent"
+              onClick={() => setOpen(true)}
+            >
+              快速搜索…
+            </Sidebar.MenuButton>
+          </Sidebar.Menu>
+        </Sidebar.Group>
+      ) : (
+        <Button
+          variant="secondary"
+          className="max-w-xl flex-1 justify-start text-kumo-subtle"
+          icon={<MagnifyingGlassIcon />}
+          onClick={() => setOpen(true)}
+        >
+          搜索资源、订单和设置…
+        </Button>
+      )}
       <CommandPalette.Root<SearchGroup, SearchItem>
         open={open}
         onOpenChange={setOpen}
