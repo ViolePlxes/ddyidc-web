@@ -23,6 +23,21 @@ export interface NavigationGroup {
   items: NavigationItem[];
 }
 
+const navigationCategories: Record<string, string> = {
+  概览: "业务管理",
+  商品管理: "业务管理",
+  上下游: "业务管理",
+  资源与账单: "服务管理",
+  "CDN 加速": "服务管理",
+  账户: "账户与权益",
+  积分中心: "账户与权益",
+  营销中心: "运营管理",
+  交易市场: "运营管理",
+  客户服务: "支持与设置",
+  系统设置: "支持与设置",
+  销售中心: "销售管理",
+};
+
 export function DashboardLayout({
   user,
   groups,
@@ -39,10 +54,22 @@ export function DashboardLayout({
   profileHref?: string;
 }) {
   const location = useLocation();
+  const standalonePaths = ["/console", "/console/products"];
+  const topItems = groups.flatMap((group) => group.items)
+    .filter((item) => standalonePaths.includes(item.href))
+    .sort((a, b) => standalonePaths.indexOf(a.href) - standalonePaths.indexOf(b.href))
+    .map((item) => item.href === "/console" ? { ...item, label: "用户中心" } : item);
+  const categorizedGroups = new Map<string, NavigationGroup[]>();
+  for (const group of groups) {
+    const items = group.items.filter((item) => !standalonePaths.includes(item.href));
+    if (!items.length) continue;
+    const category = navigationCategories[group.label] ?? "更多服务";
+    categorizedGroups.set(category, [...(categorizedGroups.get(category) ?? []), { ...group, items }]);
+  }
   const searchItems = groups.flatMap((group) =>
     group.items.map((item) => ({
       id: item.href,
-      title: item.label,
+      title: item.href === "/console" ? "用户中心" : item.label,
       path: item.href,
       group: group.label,
     })),
@@ -100,10 +127,25 @@ export function DashboardLayout({
         </Sidebar.Header>
         <Sidebar.Content>
           <SearchPalette items={searchItems} placement="sidebar" />
-          {groups.map((group) => (
-            <Sidebar.Group key={group.label}>
+          {topItems.length > 0 && (
+            <Sidebar.Group>
               <Sidebar.Menu>
-                <Sidebar.MenuItem>
+                {topItems.map((item) => (
+                  <Sidebar.MenuButton key={item.href} href={item.href} icon={item.icon}
+                    tooltip={item.label} active={isItemActive(item.href)}
+                    aria-current={isItemActive(item.href) ? "page" : undefined}>
+                    {item.label}
+                  </Sidebar.MenuButton>
+                ))}
+              </Sidebar.Menu>
+            </Sidebar.Group>
+          )}
+          {[...categorizedGroups].map(([category, categoryGroups]) => (
+            <Sidebar.Group key={category}>
+              <Sidebar.GroupLabel>{category}</Sidebar.GroupLabel>
+              <Sidebar.Menu>
+                {categoryGroups.map((group) => (
+                <Sidebar.MenuItem key={group.label}>
                   <Sidebar.Collapsible
                     key={`${group.label}:${location.pathname}`}
                     defaultOpen={group.items.some((item) => isItemActive(item.href))}
@@ -133,6 +175,7 @@ export function DashboardLayout({
                     </Sidebar.CollapsibleContent>
                   </Sidebar.Collapsible>
                 </Sidebar.MenuItem>
+                ))}
               </Sidebar.Menu>
             </Sidebar.Group>
           ))}
