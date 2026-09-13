@@ -478,7 +478,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/customers/:id"
+              path="/admin/customers/:id/:tab?"
               element={
                 <LazyRoute kind="detail">
                   <AdminCustomerDetail />

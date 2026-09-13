@@ -13,6 +13,8 @@ export interface AdminOrderRow {
 }
 
 export interface AdminCustomerRow {
+  name: string;
+  company: string;
   id: string;
   username: string;
   displayName: string;

@@ -49,8 +49,8 @@ function entryScope(path: string): "portal" | "console" | "admin" | "sales" {
 }
 
 const RouterLink = forwardRef<HTMLAnchorElement, LinkComponentProps>(
-  ({ href, onFocus, onMouseEnter, ...props }, ref) => {
-    const target = href ?? "/";
+  ({ href, to, onFocus, onMouseEnter, ...props }, ref) => {
+    const target = href ?? to ?? "/";
     if (entryScope(window.location.pathname) !== entryScope(target)) {
       return <a ref={ref} href={target} {...props} />;
     }
