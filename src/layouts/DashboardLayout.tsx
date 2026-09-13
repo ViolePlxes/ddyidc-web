@@ -102,21 +102,37 @@ export function DashboardLayout({
           <SearchPalette items={searchItems} placement="sidebar" />
           {groups.map((group) => (
             <Sidebar.Group key={group.label}>
-              <Sidebar.GroupLabel>{group.label}</Sidebar.GroupLabel>
               <Sidebar.Menu>
-                {group.items.map((item) => (
-                  <Sidebar.MenuButton
-                    key={item.href}
-                    href={item.href}
-                    icon={item.icon}
-                    tooltip={item.label}
-                    itemId={item.href}
-                    active={isItemActive(item.href)}
-                    aria-current={isItemActive(item.href) ? "page" : undefined}
+                <Sidebar.MenuItem>
+                  <Sidebar.Collapsible
+                    key={`${group.label}:${location.pathname}`}
+                    defaultOpen={group.items.some((item) => isItemActive(item.href))}
+                    autoScrollOnOpen
                   >
-                    {item.label}
-                  </Sidebar.MenuButton>
-                ))}
+                    <Sidebar.CollapsibleTrigger
+                      render={
+                        <Sidebar.MenuButton icon={group.items[0]?.icon} tooltip={group.label}>
+                          {group.label}
+                          <Sidebar.MenuChevron />
+                        </Sidebar.MenuButton>
+                      }
+                    />
+                    <Sidebar.CollapsibleContent>
+                      <Sidebar.MenuSub>
+                        {group.items.map((item) => (
+                          <Sidebar.MenuSubButton
+                            key={item.href}
+                            href={item.href}
+                            active={isItemActive(item.href)}
+                            aria-current={isItemActive(item.href) ? "page" : undefined}
+                          >
+                            {item.label}
+                          </Sidebar.MenuSubButton>
+                        ))}
+                      </Sidebar.MenuSub>
+                    </Sidebar.CollapsibleContent>
+                  </Sidebar.Collapsible>
+                </Sidebar.MenuItem>
               </Sidebar.Menu>
             </Sidebar.Group>
           ))}
