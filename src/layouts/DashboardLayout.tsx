@@ -224,7 +224,7 @@ export function DashboardLayout({
         </Surface>
         <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
           <div
-            className={`mx-auto w-full max-w-7xl ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            className={`w-full ${location.pathname === "/console/products" ? "" : "mx-auto max-w-7xl"} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>

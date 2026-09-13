@@ -25,6 +25,9 @@ interface AdminProductListResponse {
 
 interface ProductSpecListResponse {
   items: ProductSpec[] | null;
+  upstreamStock: string | number | null;
+  capturedAt: string | null;
+  configured: boolean;
 }
 
 async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Promise<T> {

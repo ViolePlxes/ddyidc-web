@@ -79,6 +79,8 @@ export interface CycleItem {
 }
 
 export interface ProductDetail extends ProductSummary {
+  catalogSpec?: ProductSpec;
+  upstreamStock?: string | number | null;
   config: Record<string, string>;
   configMode: "elastic" | "fixed" | "semi";
   configOptions: ConfigOption[] | null;

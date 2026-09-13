@@ -2,10 +2,9 @@ import {
   Badge,
   Banner,
   Button,
-  Input,
+  SensitiveInput,
   LayerCard,
   Radio,
-  Select,
   Table,
   Tabs,
 } from "@cloudflare/kumo";
@@ -22,7 +21,7 @@ import type {
   ProductSpec,
 } from "../api/console";
 import { useCartStore } from "../stores/cart";
-import { generateHostname, generatePassword } from "../utils/credentials";
+import { generatePassword } from "../utils/credentials";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
@@ -142,7 +141,7 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection }: { specs: P
         <p className="text-sm text-kumo-subtle">规格由运营人工维护，价格不会从上游配置项推导。</p>
       </div>
       {specs.length ? (
-        <Radio.Group legend="选择计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
+        <Radio.Group aria-label="计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
           <Table>
             <Table.Header variant="compact">
               <Table.Row>
@@ -196,7 +195,7 @@ export function ProductConfig({
   const [selectedSpecId, setSelectedSpecId] = useState(product.specs[0]?.id ?? "");
   const [cycle, setCycle] = useState(cycles[0]?.billingcycle ?? "monthly");
   const [quantity, setQuantity] = useState(1);
-  const [hostname, setHostname] = useState(generateHostname);
+
   const [password, setPassword] = useState(generatePassword);
   const [imageGroup, setImageGroup] = useState("");
   const addCart = useCartStore((state) => state.add);
@@ -211,8 +210,8 @@ export function ProductConfig({
   const selectedSpec = product.specs.find((spec) => spec.id === selectedSpecId) ?? product.specs[0] ?? null;
   const dataCenterOption = options.find((option) => option.field === "data_center");
   const imageOption = options.find((option) => option.field === "image");
-  const displayedOptions = options
-    .filter((option) => !["data_center", "image", ...(selectedSpec ? ["cpu", "memory"] : [])].includes(option.field))
+  const displayedOptions = (product.configMode === "fixed" ? [] : options)
+    .filter((option) => !["data_center", "区域", "region", "area", "image", "cpu", "bandwidth"].includes(option.field))
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
@@ -286,7 +285,7 @@ export function ProductConfig({
     quantity,
     unitPriceYuan: unitPrice,
     totalYuan: total,
-    hostname: options.length ? hostname : "",
+    hostname: "",
     password: options.length ? password : "",
   });
 
@@ -312,6 +311,7 @@ export function ProductConfig({
         <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
+          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
       <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={billLoading || outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
       <Button disabled={billLoading || outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
     </LayerCard>
@@ -323,17 +323,8 @@ export function ProductConfig({
         className={`${externalBill ? "grid items-start gap-6" : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"}${billLoading ? " pointer-events-none" : ""}`}
       >
         <div className="grid gap-5">
-        {dataCenterOption ? (
-          <LayerCard className="grid gap-4 p-5">
-            <div><h2 className="text-lg font-semibold text-kumo-strong">地域选择</h2><p className="text-sm text-kumo-subtle">建议选择距离业务更近的地域，以降低网络延时。</p></div>
-            <Radio.Group legend="地域与线路节点" value={selected[dataCenterOption!.id] ?? initialValue(dataCenterOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [dataCenterOption.id]: value }))} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {dataCenterOption.options.map((choice) => <Radio.Item key={choice.id} value={choice.id} label={choice.name} />)}
-            </Radio.Group>
-          </LayerCard>
-        ) : null}
-
-        {product.specs.length || !isUpstreamProduct(product) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} /> : null}
-        {selectedSpec ? (
+        {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} /> : null}
+        {!catalogSelection && selectedSpec ? (
           <LayerCard className="p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}
 
@@ -351,23 +342,17 @@ export function ProductConfig({
         {imageOption && imageGroups.length ? (
           <LayerCard className="grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">镜像分组和版本来自上游实时订单页。</p></div>
-            <Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} />
+            <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
-              <Select key={group.name} label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => value && setSelected((current) => ({ ...current, [imageOption.id]: value }))} items={Object.fromEntries(group.child.map((choice) => [choice.id, choiceLabel(choice)]))} />
+              <div key={group.name} className="overflow-x-auto"><Tabs variant="segmented" aria-label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [imageOption.id]: value }))} tabs={group.child.map((choice) => ({ value: choice.id, label: choiceLabel(choice) }))} /></div>
             ))}
           </LayerCard>
         ) : null}
 
         <LayerCard className="grid gap-5 p-5">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
-          <Radio.Group legend="购买时长" value={cycle} onValueChange={setCycle} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {cycles.map((item) => <Radio.Item key={item.billingcycle} value={item.billingcycle} label={item.label || cycleLabels[item.billingcycle] || item.billingcycle} description={`¥${item.price.toFixed(2)}`} />)}
-          </Radio.Group>
-          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
-          {options.length ? <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid grid-cols-[1fr_auto] items-end gap-2"><Input label="自动生成主机名" value={hostname} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成主机名" onClick={() => setHostname(generateHostname())} /></div>
-            <div className="grid grid-cols-[1fr_auto] items-end gap-2"><Input label="自动生成密码" value={password} readOnly type="password" /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div>
-          </div> : null}
+<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle} ¥${item.price.toFixed(2)}` }))} /></div>
+          {options.length ? <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><SensitiveInput label="自动生成密码" value={password} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div> : null}
         </LayerCard>
 
         <Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
