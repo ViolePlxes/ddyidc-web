@@ -55,7 +55,18 @@ export function AdminUpdates() {
   });
 
   if (status.isLoading) return <Loader />;
-  if (status.error || !status.data) return <Banner variant="error" title="更新中心不可用" description={getApiMessage(status.error)} />;
+  if (status.error || !status.data) {
+    return (
+      <>
+        <PageHeader
+          title="更新中心"
+          description="当前无法读取远端版本，可重新同步 Git 远端引用后恢复。"
+          actions={<Button variant="secondary" icon={<ArrowsClockwiseIcon />} loading={check.isPending} onClick={() => check.mutate()}>重新同步远端版本</Button>}
+        />
+        <Banner variant="error" title="更新状态读取失败" description={getApiMessage(check.error ?? status.error)} />
+      </>
+    );
+  }
   const running = status.data.runningTask;
   const operationError = check.error ?? update.error ?? history.error;
 

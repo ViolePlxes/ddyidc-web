@@ -141,7 +141,7 @@ export function AdminProducts() {
       <PageHeader title="商品管理" description="维护商品分组顺序与人工销售规格。" />
       <LayerCard className="p-4"><Select label="二级分组筛选" value={groupId} onValueChange={(value) => setGroupId(value ?? "all")} items={groupItems} /></LayerCard>
       {sort.error ? <Banner variant="error" title="排序保存失败" description={getApiMessage(sort.error)} /> : null}
-      <PageState loading={products.isLoading} error={products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && products.data?.items.length === 0} emptyTitle="暂无商品">
+      <PageState loading={products.isLoading} error={products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && (products.data?.items.length ?? 0) === 0} emptyTitle="暂无商品">
         <LayerCard className="overflow-hidden p-0">
           <Table>
             <Table.Header variant="compact"><Table.Row><Table.Head>商品</Table.Head><Table.Head>所属分组</Table.Head><Table.Head>售价</Table.Head><Table.Head>周期</Table.Head><Table.Head>规格行</Table.Head><Table.Head>状态</Table.Head><Table.Head>排序</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>

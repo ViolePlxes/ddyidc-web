@@ -55,7 +55,7 @@ export async function getUpdateStatus(): Promise<UpdateStatus> {
 }
 
 export async function checkUpdates(): Promise<UpdateStatus> {
-  const response = await adminRequest.post<ApiEnvelope<UpdateStatus>>("/update/check");
+  const response = await adminRequest.post<ApiEnvelope<UpdateStatus>>("/update/check", undefined, { timeout: 120_000 });
   return response.data.data;
 }
 
