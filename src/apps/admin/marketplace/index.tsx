@@ -126,7 +126,11 @@ export function MarketplaceAdminListings() {
       <PageHeader title="挂牌管理" description="审核、推荐和下架市场商品。" />
       <Result message={message} />
       <LayerCard className="grid gap-4 p-5 md:grid-cols-3">
-        <Input label="搜索编号、产品、配置" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+        <Input
+          label="搜索编号、产品、配置"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
         <Select
           label="状态筛选"
           value={status || "all"}
@@ -140,7 +144,17 @@ export function MarketplaceAdminListings() {
             off_shelf: "已下架",
           }}
         />
-        <Select label="审核筛选" value={auditStatus || "all"} onValueChange={(v) => setAuditStatus(v === "all" ? "" : (v ?? ""))} items={{ all: "全部", pending: "待审核", passed: "已通过", rejected: "已拒绝" }} />
+        <Select
+          label="审核筛选"
+          value={auditStatus || "all"}
+          onValueChange={(v) => setAuditStatus(v === "all" ? "" : (v ?? ""))}
+          items={{
+            all: "全部",
+            pending: "待审核",
+            passed: "已通过",
+            rejected: "已拒绝",
+          }}
+        />
       </LayerCard>
       <PageState
         loading={q.isLoading}
@@ -319,7 +333,12 @@ export function MarketplaceAdminFlows() {
   const q = useQuery({
     queryKey: ["admin", "marketplace", "flows", type, direction, userId],
     queryFn: () =>
-      marketplaceAdminApi.flows({ type: type || undefined, direction: direction || undefined, userId: userId || undefined, pageSize: 100 }),
+      marketplaceAdminApi.flows({
+        type: type || undefined,
+        direction: direction || undefined,
+        userId: userId || undefined,
+        pageSize: 100,
+      }),
   });
   return (
     <>
@@ -328,7 +347,11 @@ export function MarketplaceAdminFlows() {
         description="审计成交、冻结、结算、退款和提现流水。"
       />
       <LayerCard className="grid gap-4 p-5 md:grid-cols-3">
-        <Input label="客户 ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
+        <Input
+          label="客户 ID"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+        />
         <Select
           label="流水类型"
           value={type || "all"}
@@ -341,9 +364,15 @@ export function MarketplaceAdminFlows() {
             refund_reversed: "退款回滚",
             withdraw: "提现",
             withdraw_reject: "提现拒绝退回",
+            withdraw_hold: "申请提现冻结",
           }}
         />
-        <Select label="资金方向" value={direction || "all"} onValueChange={(v) => setDirection(v === "all" ? "" : (v ?? ""))} items={{ all: "全部", in: "入账", out: "出账" }} />
+        <Select
+          label="资金方向"
+          value={direction || "all"}
+          onValueChange={(v) => setDirection(v === "all" ? "" : (v ?? ""))}
+          items={{ all: "全部", in: "入账", out: "出账" }}
+        />
       </LayerCard>
       <PageState
         loading={q.isLoading}
@@ -485,7 +514,8 @@ export function MarketplaceAdminReports() {
     queryFn: () => marketplaceAdminApi.reports({ pageSize: 100 }),
   });
   const handle = useMutation({
-    mutationFn: (id: string) => marketplaceAdminApi.handleReport(id, "processed"),
+    mutationFn: (id: string) =>
+      marketplaceAdminApi.handleReport(id, "processed"),
     onSuccess: () => refresh(),
   });
   return (

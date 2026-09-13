@@ -1,3 +1,5 @@
+import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
+import { customerFinanceApi } from "../../../shared/api/customerFinance";
 import {
   Badge,
   Banner,
@@ -263,7 +265,12 @@ function ProfileEditor({
       void refresh();
     },
   });
+  const finance = useQuery({
+    queryKey: ["admin", "finance", customer.id],
+    queryFn: () => customerFinanceApi.detail(customer.id),
+  });
   const metrics = [
+    { label: "冻结余额", value: finance.data?.frozen_balance ?? "—" },
     { label: "余额", value: formatMoney(customer.balance) },
     { label: "消费", value: formatMoney(customer.consumeAmount) },
     { label: "退款", value: formatMoney(customer.refundAmount) },
@@ -469,8 +476,23 @@ function ProfileEditor({
           <RecordList id={customer.id} kind="logins" />
         </LayerCard>
       </div>
+      {["充值", "余额冻结", "强制变更", "变更记录", "以用户登录"].includes(
+        dialog,
+      ) ? (
+        <CustomerFinanceDialog
+          key={dialog}
+          id={customer.id}
+          action={dialog}
+          close={() => setDialog("")}
+        />
+      ) : null}
       <Dialog.Root
-        open={Boolean(dialog)}
+        open={
+          Boolean(dialog) &&
+          !["充值", "余额冻结", "强制变更", "变更记录", "以用户登录"].includes(
+            dialog,
+          )
+        }
         onOpenChange={(open) => {
           if (!open) setDialog("");
         }}
@@ -643,7 +665,11 @@ export function AdminCustomerDetail() {
             ) : null
           ) : ["products", "orders", "transactions"].includes(tab) ? (
             <LayerCard className="p-5">
-              <RecordList key={`${id}-${tab}`} id={id} kind={tab} />
+              {tab === "transactions" ? (
+                <CreditHistory key={id} id={id} />
+              ) : (
+                <RecordList key={`${id}-${tab}`} id={id} kind={tab} />
+              )}
             </LayerCard>
           ) : (
             <LayerCard className="grid gap-3 p-5">
