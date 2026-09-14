@@ -31,12 +31,12 @@ export function expiryLabel(expiresAt?: string, now = Date.now()) {
   return `${expiresAt}（${expires > now ? `剩余 ${days} 天` : `已到期 ${days} 天`}）`;
 }
 
-export function BillingInfo({ instance, preview = false }: { instance: InstanceDetail; preview?: boolean }) {
+export function BillingInfo({ instance }: { instance: InstanceDetail }) {
   return <InfoGroup title="计费信息" rows={[
     { label: "创建时间", value: instance.activatedAt || instance.createdAt || "—" },
     { label: "到期时间", value: expiryLabel(instance.expiresAt) },
     { label: "支付周期", value: cycleLabels[instance.billingCycle || ""] || instance.billingCycle || "—" },
-    { label: "续费价格", value: preview ? "¥128.00 / 月（模拟）" : "—" },
+    { label: "续费价格", value: "—" },
     { label: "自动余额续费", value: <Switch label="不可用" checked={false} disabled /> },
     { label: "计费管理", value: <Button size="sm" variant="secondary" disabled>续费（未开放）</Button> },
     { label: "关联订单", value: instance.orderNo ? <Link className="text-kumo-link" to={`/console/orders/${instance.orderId}`} viewTransition>{instance.orderNo}</Link> : "—" },
@@ -48,7 +48,7 @@ export function monitorPoints(points: MonitorPoint[] = []): [number, number][] {
     .map((p): [number, number] => [p.timestamp * (p.timestamp < 10_000_000_000 ? 1000 : 1), p.value]).sort((a, b) => a[0] - b[0]);
 }
 
-export function InstanceMonitoring({ monitor, loading, error, preview = false }: { monitor?: InstanceMonitor; loading: boolean; error?: string; preview?: boolean }) {
+export function InstanceMonitoring({ monitor, loading, error }: { monitor?: InstanceMonitor; loading: boolean; error?: string }) {
   const charts = [
     { title: "CPU 使用量", unit: "%", series: [{ name: "CPU", data: monitorPoints(monitor?.cpu) }] },
     { title: "硬盘 IO", unit: "KB/s", series: [{ name: "读取", data: monitorPoints(monitor?.diskRead) }, { name: "写入", data: monitorPoints(monitor?.diskWrite) }] },
@@ -56,7 +56,7 @@ export function InstanceMonitoring({ monitor, loading, error, preview = false }:
     { title: "网卡", unit: "bps", series: [{ name: "流入", data: monitorPoints(monitor?.networkIn) }, { name: "流出", data: monitorPoints(monitor?.networkOut) }] },
   ];
   return <section aria-label="实例监控" className="grid min-w-0 content-start gap-4">
-    <div><h2 className="text-lg font-semibold">实例监控{preview ? "（模拟）" : ""}</h2><p className="text-sm text-kumo-subtle">{preview ? "模拟最近 24 小时 · 每 5 分钟一个展示点" : "最近 24 小时 · 时间范围以上游实际采样为准"}</p></div>
+    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-sm text-kumo-subtle">最近 24 小时 · 时间范围以上游实际采样为准</p></div>
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;
