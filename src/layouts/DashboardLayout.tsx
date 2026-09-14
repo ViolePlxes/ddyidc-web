@@ -1,3 +1,5 @@
+import { useNavigation } from "../shared/hooks/useNavigation";
+import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
 import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
 import {
@@ -16,12 +18,14 @@ import { RouteOutlet } from "../shared/router/RouteOutlet";
 import type { AuthUser } from "../shared/types/auth";
 
 export interface NavigationItem {
+  id?: string; target?: "_blank";
   label: string;
   href: string;
   icon: typeof HouseIcon;
 }
 
 export interface NavigationGroup {
+  id?: string; icon?: typeof HouseIcon;
   label: string;
   items: NavigationItem[];
 }
@@ -43,7 +47,7 @@ const navigationCategories: Record<string, string> = {
 
 export function DashboardLayout({
   user,
-  groups,
+  groups: availableGroups,
   signOut,
   loginPath,
   density = "comfortable",
@@ -56,24 +60,29 @@ export function DashboardLayout({
   density?: "comfortable" | "compact";
   profileHref?: string;
 }) {
+  const scope = user.role === "admin" ? "admin" : user.role === "sales" ? "sales" : "console";
+  const navigation = useNavigation(scope, availableGroups);
+  const groups = navigation.groups;
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const standalonePaths = ["/console", "/console/products"];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
-    .sort((a, b) => standalonePaths.indexOf(a.href) - standalonePaths.indexOf(b.href))
-    .map((item) => item.href === "/console" ? { ...item, label: "用户中心" } : item);
-  const categorizedGroups = new Map<string, NavigationGroup[]>();
+
+    ;
+  const categorizedGroups: [string, NavigationGroup[]][] = [];
   for (const group of groups) {
     const items = group.items.filter((item) => !standalonePaths.includes(item.href));
     if (!items.length) continue;
     const category = navigationCategories[group.label] ?? "更多服务";
-    categorizedGroups.set(category, [...(categorizedGroups.get(category) ?? []), { ...group, items }]);
+    const last = categorizedGroups.at(-1);
+    if (last?.[0] === category) last[1].push({ ...group, items });
+    else categorizedGroups.push([category, [{ ...group, items }]]);
   }
   const searchItems = groups.flatMap((group) =>
     group.items.map((item) => ({
-      id: item.href,
-      title: item.href === "/console" ? "用户中心" : item.label,
+      id: item.id ?? item.href,
+      title: item.label,
       path: item.href,
       group: group.label,
     })),
@@ -130,12 +139,13 @@ export function DashboardLayout({
           </DropdownMenu>
         </Sidebar.Header>
         <Sidebar.Content>
+          {navigation.isError && <Banner variant="error" title="导航读取失败" description="请刷新页面重试" />}
           <SearchPalette items={searchItems} placement="sidebar" customer={user.role === "customer"} />
           {topItems.length > 0 && (
             <Sidebar.Group>
               <Sidebar.Menu>
                 {topItems.map((item) => (
-                  <Sidebar.MenuButton key={item.href} href={item.href} icon={item.icon}
+                  <Sidebar.MenuButton key={item.id ?? item.href} href={item.href} target={item.target} rel={item.target ? "noopener noreferrer" : undefined} icon={item.icon}
                     tooltip={item.label} active={isItemActive(item.href)}
                     aria-current={isItemActive(item.href) ? "page" : undefined}>
                     {item.label}
@@ -144,20 +154,20 @@ export function DashboardLayout({
               </Sidebar.Menu>
             </Sidebar.Group>
           )}
-          {[...categorizedGroups].map(([category, categoryGroups]) => (
-            <Sidebar.Group key={category}>
+          {categorizedGroups.map(([category, categoryGroups], categoryIndex) => (
+            <Sidebar.Group key={`${category}:${categoryIndex}`}>
               <Sidebar.GroupLabel>{category}</Sidebar.GroupLabel>
               <Sidebar.Menu>
                 {categoryGroups.map((group) => (
-                <Sidebar.MenuItem key={group.label}>
+                <Sidebar.MenuItem key={group.id ?? group.label}>
                   <Sidebar.Collapsible
-                    key={`${group.label}:${location.pathname}`}
+                    key={`${group.id ?? group.label}:${location.pathname}`}
                     defaultOpen={group.items.some((item) => isItemActive(item.href))}
                     autoScrollOnOpen
                   >
                     <Sidebar.CollapsibleTrigger
                       render={
-                        <Sidebar.MenuButton icon={group.items[0]?.icon} tooltip={group.label}>
+                        <Sidebar.MenuButton icon={group.icon ?? group.items[0]?.icon} tooltip={group.label}>
                           {group.label}
                           <Sidebar.MenuChevron />
                         </Sidebar.MenuButton>
@@ -167,11 +177,12 @@ export function DashboardLayout({
                       <Sidebar.MenuSub>
                         {group.items.map((item) => (
                           <Sidebar.MenuSubButton
-                            key={item.href}
-                            href={item.href}
+                            key={item.id ?? item.href}
+                            href={item.href} target={item.target} rel={item.target ? "noopener noreferrer" : undefined}
                             active={isItemActive(item.href)}
                             aria-current={isItemActive(item.href) ? "page" : undefined}
                           >
+                            <item.icon className="mr-2 size-4 shrink-0" />
                             {item.label}
                           </Sidebar.MenuSubButton>
                         ))}
