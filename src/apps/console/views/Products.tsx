@@ -1,20 +1,20 @@
 import { Badge, Banner, Button, LayerCard, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
-import { useQueries } from "@tanstack/react-query";
+
 import { ArrowRightIcon, PackageIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { consoleApi, type ProductDetail, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
+import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
-import { useOrderPage, useProducts } from "../../../shared/hooks/useConsoleData";
+import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
 import { belongsToGroup, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
 
 function isAvailable(product: ProductSummary) {
-  const stock = (product as ProductDetail).catalogSpec?.stock ?? product.stock;
+  const stock = (product as CatalogProduct).catalogSpec?.stock ?? product.stock;
   return stock === null || stock > 0;
 }
 
@@ -109,7 +109,7 @@ function PublicProductCatalog() {
   );
 }
 
-function CatalogProductRow({ product, selected }: { product: ProductDetail; selected: boolean }) {
+function CatalogProductRow({ product, selected }: { product: CatalogProduct; selected: boolean }) {
   const spec = product.catalogSpec;
   const stock = spec?.stock ?? product.upstreamStock ?? product.stock;
   return (
@@ -141,26 +141,23 @@ function IntegratedProductCatalog() {
   const children = secondaryGroups(groups, selectedGroup);
   const secondary = children.find((group) => group.id === selectedSecondaryId) ?? children[0];
   const visibleProducts = secondary ? products.filter((product) => belongsToGroup(product, secondary)) : [];
-  // The public summary does not carry supplier identifiers. Verify each detail
-  // using the same cached endpoint as the existing product configuration page.
-  const details = useQueries({ queries: visibleProducts.map((item) => ({
-    queryKey: ["product", item.id], queryFn: () => consoleApi.product(item.id), staleTime: 10 * 60 * 1000,
-  })) });
-  const linkedProducts = details.flatMap((result) => result.data && isUpstreamProduct(result.data) ? [result.data] : []);
+  const linkedProducts = visibleProducts.filter(isUpstreamProduct);
   const currentPage = Math.min(page, Math.max(1, Math.ceil(linkedProducts.length / perPage)));
   const pageProducts = linkedProducts.slice((currentPage - 1) * perPage, currentPage * perPage);
   const product = pageProducts.find((item) => item.id === selectedProductId && isAvailable(item))
     ?? pageProducts.find(isAvailable);
-  const orderPageQuery = useOrderPage(product?.supplierId ?? "", product?.upstreamProductId ?? "");
+  // Only the selected SKU loads purchase details. Never render another SKU's
+  // placeholder detail while React Query changes keys.
+  const detailQuery = useProduct(product?.id ?? "");
+  const detail = !detailQuery.isPlaceholderData && detailQuery.data?.id === product?.id ? detailQuery.data : undefined;
+  const orderPageQuery = useOrderPage(detail?.supplierId ?? "", detail?.upstreamProductId ?? "");
   const orderPage = orderPageQuery.isPlaceholderData ? undefined : orderPageQuery.data;
-  const detailsLoading = details.some((result) => result.isPending);
-  const detailsFailed = details.some((result) => result.isError);
-  const configLoading = Boolean(product) && (orderPageQuery.isPending || orderPageQuery.isPlaceholderData);
-  const refresh = () => {
-    void productsQuery.refetch();
-    for (const result of details) void result.refetch();
+  const configError = detailQuery.error ?? (detail ? orderPageQuery.error : null);
+  const configLoading = Boolean(product) && !configError && (!detail || orderPageQuery.isPending || orderPageQuery.isPlaceholderData);
+  const retryConfig = () => {
+    if (!detail || detailQuery.error) void detailQuery.refetch();
+    else void orderPageQuery.refetch();
   };
-
   return (
     <>
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
@@ -172,37 +169,35 @@ function IntegratedProductCatalog() {
                 <strong>一级分类</strong>
                 <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
                   tabs={[{ value: "all", label: "全部" }, ...Array.from(primaryGroups, ([value, label]) => ({ value, label }))]}
-                  value={selectedGroup} onValueChange={(value) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); refresh(); }}
+                  value={selectedGroup} onValueChange={(value) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); }}
                 /></div>
               </div>
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
                 <strong>二级分类</strong>
                 <div className="min-w-0 overflow-x-auto">{children.length ? <Tabs variant="segmented"
                   tabs={children.map((group) => ({ value: group.id, label: selectedGroup === "all" ? `${primaryGroups.get(group.parentId)} / ${group.name}` : group.name }))}
-                  value={secondary?.id ?? ""} onValueChange={(value) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); refresh(); }}
+                  value={secondary?.id ?? ""} onValueChange={(value) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); }}
                 /> : <span>当前一级分类暂无二级分类，请切换其他分类。</span>}</div>
               </div>
             </LayerCard>
 
             <LayerCard className="shadow-none grid gap-4 p-5">
               <h2>计算规格</h2>
-              {detailsFailed ? <Banner variant="error" title="部分产品读取失败" description="可选择已加载的规格，或重试读取。" action={<Button variant="secondary" onClick={refresh}>重试</Button>} /> : null}
               {linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
                 <Table className="whitespace-nowrap">
                   <Table.Header><Table.Row><Table.Head>实例规格</Table.Head><Table.Head>vCPU</Table.Head><Table.Head>内存</Table.Head><Table.Head>处理器型号</Table.Head><Table.Head>处理器主频 / 睿频</Table.Head><Table.Head>基础防御</Table.Head><Table.Head>上行带宽</Table.Head><Table.Head>下行速率</Table.Head><Table.Head>库存数量</Table.Head><Table.Head>参考价格</Table.Head></Table.Row></Table.Header>
                   <Table.Body>{pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
                 </Table>
-              </Radio.Group> : <PageState loading={detailsLoading} skeleton="table" empty={!detailsLoading}
+              </Radio.Group> : <PageState empty
                 emptyTitle={secondary ? "当前分类暂无已对接产品" : "请选择其他分类"}
                 emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>}
-              {detailsLoading && linkedProducts.length ? <span role="status">正在读取其余计算规格…</span> : null}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}
               {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} /> : null}
             </LayerCard>
 
             {product ? <section aria-label="产品配置">
-              <PageState loading={configLoading} skeleton="product" error={orderPageQuery.error ? getApiMessage(orderPageQuery.error) : null}>
-                {orderPage ? <ProductConfig key={product.id} product={product} orderPage={orderPage} billTarget={billTarget} catalogSelection /> : null}
+              <PageState loading={configLoading} skeleton="product" error={configError ? getApiMessage(configError) : null}>
+                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} catalogSelection /> : null}
               </PageState>
             </section> : null}
           </div>
@@ -210,7 +205,7 @@ function IntegratedProductCatalog() {
             <div ref={setBillTarget} />
             {!product ? <PageState empty emptyTitle="请选择计算规格" emptyDescription="选择有库存的计算规格后显示实时账单。"><span /></PageState> : null}
             {configLoading ? <PageState loading skeleton="detail"><span /></PageState> : null}
-            {product && orderPageQuery.error ? <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={() => void orderPageQuery.refetch()}>重试配置</Button>} /> : null}
+            {product && configError ? <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} /> : null}
           </aside>
         </div>
       </PageState>

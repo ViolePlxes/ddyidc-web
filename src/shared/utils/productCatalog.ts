@@ -1,6 +1,6 @@
-import type { ProductDetail, ProductGroupSummary, ProductSummary } from "../api/console";
+import type { CatalogProduct, ProductGroupSummary, ProductSummary } from "../api/console";
 
-export function isUpstreamProduct(product: ProductDetail) {
+export function isUpstreamProduct(product: Pick<CatalogProduct, "supplierId" | "upstreamProductId">) {
   return Boolean(product.supplierId && product.supplierId !== "0" && product.upstreamProductId && product.upstreamProductId !== "0");
 }
 
