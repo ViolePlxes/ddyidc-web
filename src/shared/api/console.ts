@@ -78,7 +78,14 @@ export interface CycleItem {
   setupFee: number;
 }
 
-export interface ProductDetail extends ProductSummary {
+export interface CatalogProduct extends ProductSummary {
+  catalogSpec?: ProductSpec;
+  upstreamStock?: string | number | null;
+  supplierId: string;
+  upstreamProductId: string;
+}
+
+export interface ProductDetail extends CatalogProduct {
   catalogSpec?: ProductSpec;
   upstreamStock?: string | number | null;
   config: Record<string, string>;
@@ -401,7 +408,7 @@ async function unwrap<T>(
 export const consoleApi = {
   products: async (pageSize = 100) => {
     const load = (page: number) => unwrap(
-      userRequest.get<ApiEnvelope<{ items: ProductSummary[]; groups: ProductGroupSummary[]; total: number; page: number; pageSize: number }>>(
+      userRequest.get<ApiEnvelope<{ items: CatalogProduct[]; groups: ProductGroupSummary[]; total: number; page: number; pageSize: number }>>(
         "/products",
         { params: { pageSize, page } },
       ),
