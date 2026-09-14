@@ -15,7 +15,7 @@ function SessionSkeleton() {
       </main>
     );
   }
-  const kind = location.pathname.endsWith("/products") ? "products" : location.pathname === "/console" || location.pathname === "/admin" || location.pathname === "/sales" ? "dashboard" : "table";
+  const kind = location.pathname === "/console/products" ? "catalog" : location.pathname.endsWith("/products") ? "products" : location.pathname === "/console" || location.pathname === "/admin" || location.pathname === "/sales" ? "dashboard" : "table";
   return <AppShellSkeleton kind={kind} />;
 }
 

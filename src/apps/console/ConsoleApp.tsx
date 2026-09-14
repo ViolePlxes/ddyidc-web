@@ -344,7 +344,7 @@ export function ConsoleApp() {
             <Route
               path="/console/products"
               element={
-                <LazyRoute kind="products">
+                <LazyRoute kind="catalog">
                   <ConsoleProducts />
                 </LazyRoute>
               }

@@ -73,7 +73,7 @@ function optionTitle(field: string, fallback: string) {
     data_disk: "数据盘",
     ip_num: "公网 IP",
     network: "计费方式 / 网络类型",
-    bandwidth: "带宽上限",
+    bandwidth: "带宽",
     defense: "防御峰值",
   };
   return labels[field] ?? fallback;
@@ -96,15 +96,12 @@ function ProductOptionControl({
     const immutable = disabled || option.min === option.max;
     const change = (next: number) => onChange(String(Math.min(option.max, Math.max(option.min, next))));
     return (
-      <div className="grid gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label={`减少${option.name}`} disabled={immutable || current <= option.min} onClick={() => change(current - step)} />
-          <strong className="min-w-24 text-center text-kumo-strong">{value} {option.unit}</strong>
-          <Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label={`增加${option.name}`} disabled={immutable || current >= option.max} onClick={() => change(current + step)} />
-        </div>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="hidden shrink-0 text-xs text-kumo-subtle lg:inline">{option.min}</span>
         <input
           aria-label={option.name}
-          className="w-full accent-kumo-brand disabled:cursor-not-allowed disabled:opacity-50"
+          aria-valuetext={`${value} ${option.unit || ""}`.trim()}
+          className="min-w-0 flex-1 accent-kumo-brand disabled:cursor-not-allowed disabled:opacity-50"
           type="range"
           min={option.min}
           max={option.max}
@@ -113,11 +110,10 @@ function ProductOptionControl({
           disabled={immutable}
           onChange={(event) => onChange(event.target.value)}
         />
-        <div className="flex justify-between text-xs text-kumo-subtle">
-          <span>{option.min} {option.unit}</span>
-          <span>{option.max} {option.unit}</span>
-        </div>
-        {disabled ? <span className="text-sm text-kumo-subtle">固定套餐采用上游固定值，此项不可调整。</span> : null}
+        <span className="hidden shrink-0 text-xs text-kumo-subtle lg:inline">{option.max}</span>
+        <Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label={`减少${option.name}`} disabled={immutable || current <= option.min} onClick={() => change(current - step)} />
+        <strong className="min-w-12 shrink-0 whitespace-nowrap text-center text-kumo-strong">{value} {option.unit}</strong>
+        <Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label={`增加${option.name}`} disabled={immutable || current >= option.max} onClick={() => change(current + step)} />
       </div>
     );
   }
@@ -211,7 +207,7 @@ export function ProductConfig({
   const dataCenterOption = options.find((option) => option.field === "data_center");
   const imageOption = options.find((option) => option.field === "image");
   const displayedOptions = (product.configMode === "fixed" ? [] : options)
-    .filter((option) => !["data_center", "区域", "region", "area", "image", "cpu", "bandwidth"].includes(option.field))
+    .filter((option) => !["data_center", "区域", "region", "area", "image", "cpu"].includes(option.field))
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
@@ -332,7 +328,7 @@ export function ProductConfig({
           const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty";
           return (
-            <LayerCard key={`${option.id}-${option.field}`} className="shadow-none grid gap-4 p-5">
+            <LayerCard key={`${option.id}-${option.field}`} className={`shadow-none grid gap-4 p-5 ${isSlider ? "md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" : ""}`}>
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2>{isSlider && product.configMode === "fixed" ? <p className="text-sm text-kumo-subtle">当前商品采用固定资源值。</p> : null}</div>
               <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>

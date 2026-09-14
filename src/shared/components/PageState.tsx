@@ -8,7 +8,7 @@ import { PackageIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ContentSkeleton, type SkeletonKind } from "./skeletons";
 
-const skeletonKinds: readonly SkeletonKind[] = ["dashboard", "table", "cards", "products", "detail", "product", "form", "chart"];
+const skeletonKinds: readonly SkeletonKind[] = ["dashboard", "table", "cards", "products", "catalog", "detail", "product", "form", "chart"];
 
 function isSkeletonKind(value: SkeletonKind | ReactNode): value is SkeletonKind {
   return typeof value === "string" && skeletonKinds.includes(value as SkeletonKind);
