@@ -39,5 +39,6 @@ export const adminProductGroupsApi = {
   remove: (id: string) => unwrap(adminRequest.delete<ApiEnvelope<{ deleted: boolean }>>(`/product-groups/${id}`)),
   hidden: (id: string, hidden: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ hidden: number }>>(`/product-groups/${id}/hidden`, { hidden: hidden ? 1 : 0 })),
   sort: (parentId: string, ids: string[]) => unwrap(adminRequest.put<ApiEnvelope<{ sorted: boolean }>>("/product-groups/sort", { parentId, ids })),
+  moveGroup: (id: string, targetParentId: string, targetIds: string[], sourceIds: string[]) => unwrap(adminRequest.put<ApiEnvelope<{ moved: boolean }>>("/product-groups/move", { id, targetParentId, targetIds, sourceIds })),
   moveProducts: (ids: string[], targetGroupId: string) => unwrap(adminRequest.put<ApiEnvelope<{ moved: boolean }>>("/products/move-group", { ids, targetGroupId })),
 };
