@@ -1,8 +1,9 @@
-import { DragHandle, SortableTableBody } from "../../../shared/components/SortableTableBody";
+import { GroupProducts } from "./GroupProducts";
+import { DragHandle, SortableList } from "../../../shared/components/SortableTableBody";
 import { useSortableList, type ListDrop } from "../../../shared/hooks/useSortableList";
 import { invalidateCatalog, publishCatalogChange } from "../../../shared/utils/catalogCache";
 import { Banner, Button, Checkbox, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
-import { ArrowDownIcon, ArrowUpIcon, FolderPlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, FolderPlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { adminProductGroupsApi, type ProductGroup, type ProductGroupInput } from "../../../shared/api/adminProductGroups";
@@ -77,7 +78,7 @@ function MoveProductsDialog({ source, targets, onClose }: { source: ProductGroup
   );
 }
 
-export function ProductGroups({ embedded = false, blocked = false, onSelectGroup, onBusyChange }: { embedded?: boolean; blocked?: boolean; onSelectGroup?: (id: string) => void; onBusyChange?: (busy: boolean) => void }) {
+export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
   const queryClient = useQueryClient();
   const roots = useQuery({ queryKey: ["admin", "product-groups", "0"], queryFn: () => adminProductGroupsApi.list("0") });
   const childQueries = useQueries({
@@ -92,20 +93,23 @@ export function ProductGroups({ embedded = false, blocked = false, onSelectGroup
   const [deleteTarget, setDeleteTarget] = useState<ProductGroup | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const saving = useRef(false);
   const [pending, setPending] = useState(false);
+  const beginSave = () => { if (saving.current) return false; saving.current = true; setPending(true); return true; };
+  const endSave = () => { saving.current = false; setPending(false); };
   const refresh = async () => { await invalidateCatalog(queryClient); publishCatalogChange(); };
   const hidden = useMutation({ mutationFn: ({ group, value }: { group: ProductGroup; value: boolean }) => adminProductGroupsApi.hidden(group.id, value), onSuccess: refresh, onError: (cause) => setError(getApiMessage(cause)) });
   const remove = useMutation({ mutationFn: (id: string) => adminProductGroupsApi.remove(id), onSuccess: async () => { setDeleteTarget(null); await refresh(); }, onError: (cause) => setError(getApiMessage(cause)) });
   const submit = async (work: () => Promise<unknown>) => {
-    if (saving.current || blocked) return;
-    saving.current = true; setPending(true); onBusyChange?.(true); setError(null);
+    if (saving.current) return;
+    saving.current = true; setPending(true); setError(null);
     try { await work(); await refresh(); }
     catch (cause) { setError(`${getApiMessage(cause)}；已恢复原顺序，请刷新后重试。`); await invalidateCatalog(queryClient); }
-    finally { saving.current = false; setPending(false); onBusyChange?.(false); }
+    finally { saving.current = false; setPending(false); }
   };
   const drop = (event: ListDrop) => {
-    if (saving.current || blocked) return;
+    if (saving.current) return;
     const all = [...(roots.data?.list ?? []), ...childGroups];
     const moving = all.find((group) => group.id === event.id);
     if (!moving || moving.parentId !== event.source) { setError("分组已变化，请刷新后重试"); return; }
@@ -118,7 +122,7 @@ export function ProductGroups({ embedded = false, blocked = false, onSelectGroup
       void submit(() => adminProductGroupsApi.moveGroup(event.id, event.target, event.targetIds, event.sourceIds));
     }
   };
-  const disabled = blocked || pending || hidden.isPending || remove.isPending || roots.isError || roots.isFetching || childQueries.some((query) => query.isFetching || query.isError);
+  const disabled = pending || hidden.isPending || remove.isPending || roots.isError || roots.isFetching || childQueries.some((query) => query.isFetching || query.isError);
   const rootRef = useSortableList("roots", false, disabled, drop);
   const reorder = (items: ProductGroup[], index: number, offset: number) => {
     const target = index + offset;
@@ -128,8 +132,8 @@ export function ProductGroups({ embedded = false, blocked = false, onSelectGroup
     void submit(() => adminProductGroupsApi.sort(items[index]!.parentId, ordered.map((item) => item.id)));
   };
   return (
-    <div className="grid gap-4" inert={pending || blocked}>
-      <PageHeader title={embedded ? "分组管理" : "商品分组"} description="拖动手柄排序；二级分组可拖入其他一级分组的列表，按落点排序。" actions={<Button icon={<PlusIcon />} onClick={() => setDialog({ parentId: "0" })}>新建一级分组</Button>} />
+    <div className="grid gap-4" inert={pending}>
+      <PageHeader title={embedded ? "商品目录" : "商品分组"} description={embedded ? "展开二级分组管理商品；拖动手柄调整顺序，二级分组可跨父移动。" : "维护两级分组；拖动手柄排序，二级分组可跨父移动。"} actions={<Button icon={<PlusIcon />} onClick={() => setDialog({ parentId: "0" })}>新建一级分组</Button>} />
       {error ? <div className="grid gap-2"><Banner variant="error" title="操作失败" description={error} /><Button variant="secondary" onClick={() => void refresh()}>重新读取列表</Button></div> : null}
       <PageState loading={roots.isLoading} error={!roots.data && roots.error ? getApiMessage(roots.error) : null} empty={!roots.isLoading && (roots.data?.list.length ?? 0) === 0} emptyTitle="暂无商品分组">
         <div ref={rootRef} data-sort-list="0" className="grid gap-4">
@@ -150,10 +154,24 @@ export function ProductGroups({ embedded = false, blocked = false, onSelectGroup
                   </div>
                 </div>
                 <PageState loading={childQueries[rootIndex]?.isLoading} error={!childQueries[rootIndex]?.data && childQueries[rootIndex]?.error ? getApiMessage(childQueries[rootIndex]?.error) : null}>
-                  <Table>
-                    <Table.Header variant="compact"><Table.Row><Table.Head>二级分组</Table.Head><Table.Head>状态</Table.Head><Table.Head>商品数</Table.Head><Table.Head>排序</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
-                    <SortableTableBody scope="children" listId={root.id} crossList disabled={disabled} onDrop={drop}>{children.length === 0 ? <Table.Row className="h-16"><Table.Cell colSpan={5}>拖入二级分组，或点击“新建子级”</Table.Cell></Table.Row> : null}{children.map((child, index) => <Table.Row key={child.id} className="sort-item" data-sort-id={child.id}><Table.Cell><div className="grid"><div className="flex items-center gap-2"><DragHandle scope="children" label={`拖动二级分组 ${child.name}`} disabled={disabled} />{onSelectGroup ? <Button variant="ghost" disabled={pending} onClick={() => onSelectGroup(child.id)}>{child.name}</Button> : <strong className="text-kumo-strong">{child.name}</strong>}</div>{child.icon ? <span className="text-xs text-kumo-subtle">图标：{child.icon}</span> : null}</div></Table.Cell><Table.Cell><Switch label={child.status === 1 ? "显示" : "隐藏"} checked={child.status === 1} onCheckedChange={(checked) => hidden.mutate({ group: child, value: !checked })} /></Table.Cell><Table.Cell>{child.productCount}</Table.Cell><Table.Cell>{child.sort}</Table.Cell><Table.Cell><div className="flex flex-wrap gap-2"><Button variant="secondary" shape="square" icon={<ArrowUpIcon />} aria-label="二级分组上移" disabled={index === 0 || disabled} onClick={() => reorder(children, index, -1)} /><Button variant="secondary" shape="square" icon={<ArrowDownIcon />} aria-label="二级分组下移" disabled={index === children.length - 1 || disabled} onClick={() => reorder(children, index, 1)} /><Button disabled={pending} variant="secondary" icon={<PlusIcon />} onClick={() => setDialog({ parentId: child.parentId })}>新建同级</Button><Button variant="secondary" onClick={() => setMoveSource(child)}>移动商品</Button><Button variant="secondary" shape="square" icon={<PencilSimpleIcon />} aria-label="编辑二级分组" onClick={() => setDialog({ group: child, parentId: child.parentId })} /><Button variant="destructive" shape="square" icon={<TrashIcon />} aria-label="删除二级分组" onClick={() => setDeleteTarget(child)} /></div></Table.Cell></Table.Row>)}</SortableTableBody>
-                  </Table>
+                  <div className="overflow-x-auto p-2">
+                    <div className="min-w-[1000px]">
+                      <Table className="table-fixed"><Table.Header variant="compact"><Table.Row><Table.Head className="w-[28%]">二级分组</Table.Head><Table.Head className="w-[12%]">状态</Table.Head><Table.Head className="w-[8%]">商品数</Table.Head><Table.Head className="w-[8%]">排序</Table.Head><Table.Head className="w-[44%]">操作</Table.Head></Table.Row></Table.Header></Table>
+                      <SortableList scope="children" listId={root.id} crossList disabled={disabled} onDrop={drop}>
+                        {children.length === 0 ? <p className="p-4 text-sm text-kumo-subtle">拖入二级分组，或点击“新建子级”</p> : null}
+                        {children.map((child, index) => (
+                          <LayerCard key={child.id} className="sort-item overflow-hidden p-0" data-sort-id={child.id}>
+                            <Table className="table-fixed"><Table.Body><Table.Row>
+                              <Table.Cell className="w-[28%]"><div className="flex items-center gap-2"><DragHandle scope="children" label={`拖动二级分组 ${child.name}`} disabled={disabled} />{embedded ? <Button variant="ghost" shape="square" aria-label={`${expanded.has(child.id) ? "收起" : "展开"} ${child.name}`} aria-expanded={expanded.has(child.id)} aria-controls={`products-${child.id}`} icon={expanded.has(child.id) ? <CaretDownIcon /> : <CaretRightIcon />} onClick={() => setExpanded((current) => { const next = new Set(current); if (next.has(child.id)) next.delete(child.id); else next.add(child.id); return next; })} /> : null}<div><strong className="text-kumo-strong">{child.name}</strong>{child.icon ? <p className="text-xs text-kumo-subtle">图标：{child.icon}</p> : null}</div></div></Table.Cell>
+                              <Table.Cell className="w-[12%]"><Switch label={child.status === 1 ? "显示" : "隐藏"} checked={child.status === 1} onCheckedChange={(checked) => hidden.mutate({ group: child, value: !checked })} /></Table.Cell><Table.Cell className="w-[8%]">{child.productCount}</Table.Cell><Table.Cell className="w-[8%]">{child.sort}</Table.Cell>
+                              <Table.Cell className="w-[44%]"><div className="flex flex-wrap gap-2"><Button variant="secondary" shape="square" icon={<ArrowUpIcon />} aria-label="二级分组上移" disabled={index === 0 || disabled} onClick={() => reorder(children, index, -1)} /><Button variant="secondary" shape="square" icon={<ArrowDownIcon />} aria-label="二级分组下移" disabled={index === children.length - 1 || disabled} onClick={() => reorder(children, index, 1)} /><Button disabled={pending} variant="secondary" icon={<PlusIcon />} onClick={() => setDialog({ parentId: child.parentId })}>新建同级</Button><Button variant="secondary" onClick={() => setMoveSource(child)}>移动商品</Button><Button variant="secondary" shape="square" icon={<PencilSimpleIcon />} aria-label="编辑二级分组" onClick={() => setDialog({ group: child, parentId: child.parentId })} /><Button variant="destructive" shape="square" icon={<TrashIcon />} aria-label="删除二级分组" onClick={() => setDeleteTarget(child)} /></div></Table.Cell>
+                            </Table.Row></Table.Body></Table>
+                            {embedded ? <GroupProducts groupId={child.id} expanded={expanded.has(child.id)} blocked={disabled} beginSave={beginSave} endSave={endSave} /> : null}
+                          </LayerCard>
+                        ))}
+                      </SortableList>
+                    </div>
+                  </div>
                 </PageState>
               </LayerCard>
             );
