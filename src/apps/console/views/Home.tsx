@@ -1,5 +1,5 @@
-import { Button, DropdownMenu, Empty, LayerCard, LinkButton, Select, Text } from "@cloudflare/kumo";
-import { ArrowClockwiseIcon, ArrowRightIcon, CubeIcon, DotsThreeIcon, MagnifyingGlassIcon, TicketIcon, WalletIcon } from "@phosphor-icons/react";
+import { Button, DropdownMenu, Empty, LayerCard, Link, Select, Text } from "@cloudflare/kumo";
+import { ArrowClockwiseIcon, CaretRightIcon, CubeIcon, DotsThreeIcon, MagnifyingGlassIcon, TicketIcon, WalletIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { consoleApi } from "../../../shared/api/console";
@@ -9,11 +9,28 @@ import { getApiMessage } from "../../../shared/api/request";
 import { PageState } from "../../../shared/components/PageState";
 import { MiniTrend } from "../../../shared/components/TrendChart";
 
-function RecentRow({ icon, title, description, href }: { icon: ReactNode; title: string; description: string; href: string }) {
-  return <div className="flex min-w-0 items-center gap-3 border-b border-kumo-line py-4 last:border-0">
-    {icon}
-    <div className="grid min-w-0 flex-1 gap-1"><span className="truncate">{title}</span><span className="truncate text-sm text-kumo-subtle">{description}</span></div>
-    <LinkButton href={href} variant="ghost" shape="square" icon={<ArrowRightIcon />} aria-label={`查看${title}`} />
+function RecentRow({ icon, title, category, href, description }: { icon: ReactNode; title: string; category: string; href: string; description?: string }) {
+  return <Link href={href} variant="plain" title={description || `${category} / ${title}`}
+    className="group flex min-h-14 w-full min-w-0 items-center gap-2! border-b border-kumo-line py-4 text-base last:border-0">
+    <span className="flex shrink-0 items-center text-kumo-default opacity-50 group-hover:opacity-100">{icon}</span>
+    <span className="flex min-w-0 items-baseline group-hover:underline">
+      <span className="min-w-0 shrink truncate text-kumo-subtle">{category}</span>
+      <span className="mx-1 shrink-0 text-kumo-subtle">/</span>
+      <span className="min-w-0 truncate font-medium text-kumo-default">{title}</span>
+    </span>
+    <CaretRightIcon size={10} className="ml-auto shrink-0 text-kumo-subtle group-hover:text-kumo-default" />
+  </Link>;
+}
+
+function RecentHeading({ title, href }: { title: string; href?: string }) {
+  return <div className="flex h-8 items-center justify-between gap-2">
+    <Text as="h2" variant="secondary">{title}</Text>
+    <DropdownMenu>
+      <DropdownMenu.Trigger render={<Button variant="ghost" shape="square" size="sm" aria-label={`${title}选项`} icon={<DotsThreeIcon />} />} />
+      <DropdownMenu.Content>
+        {href ? <DropdownMenu.LinkItem href={href}>查看全部</DropdownMenu.LinkItem> : <DropdownMenu.Item onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>搜索快捷入口</DropdownMenu.Item>}
+      </DropdownMenu.Content>
+    </DropdownMenu>
   </div>;
 }
 
@@ -36,21 +53,21 @@ export function ConsoleHome() {
       </Button>
       <div className="grid gap-8 md:grid-cols-3">
         <section aria-label="快捷入口" className="min-w-0">
-          <div className="flex h-8 items-center"><Text as="h2" variant="heading">快捷入口</Text></div>
-          <RecentRow icon={<CubeIcon />} title="订购产品" description="选择适合你的云服务" href="/console/products" />
-          <RecentRow icon={<WalletIcon />} title="财务中心" description="查看充值与付款记录" href="/console/finance" />
-          <RecentRow icon={<TicketIcon />} title="创建工单" description="联系支持团队" href="/console/tickets/create" />
+          <RecentHeading title="快捷入口" />
+          <RecentRow icon={<CubeIcon size={18} />} category="云服务" title="订购产品" href="/console/products" />
+          <RecentRow icon={<WalletIcon size={18} />} category="账户" title="财务中心" href="/console/finance" />
+          <RecentRow icon={<TicketIcon size={18} />} category="支持" title="创建工单" href="/console/tickets/create" />
         </section>
         <section aria-label="已有服务" className="min-w-0">
-          <div className="flex items-center justify-between"><Text as="h2" variant="heading">已有服务</Text><LinkButton href="/console/instances" variant="ghost" shape="square" icon={<ArrowRightIcon />} aria-label="全部服务" /></div>
+          <RecentHeading title="已有服务" href="/console/instances" />
           <PageState loading={services.isLoading} error={services.error ? getApiMessage(services.error) : null}>
-            {services.data?.items.length ? services.data.items.map(s => <RecentRow key={s.id} icon={<CubeIcon />} title={s.name || s.productName} description={s.primaryIp || s.productName || `#${s.id}`} href={`/console/instances/${s.id}`} />) : <Empty className="bg-kumo-base" icon={<CubeIcon />} title="暂无服务" description="购买的服务将在这里显示。" />}
+            {services.data?.items.length ? services.data.items.map(s => <RecentRow key={s.id} icon={<CubeIcon size={18} />} category="服务" title={s.name || s.productName} description={s.primaryIp || s.productName || `#${s.id}`} href={`/console/instances/${s.id}`} />) : <Empty size="sm" className="bg-kumo-base" icon={<CubeIcon />} title="暂无服务" description="购买的服务将在这里显示。" />}
           </PageState>
         </section>
         <section aria-label="最近工单" className="min-w-0">
-          <div className="flex items-center justify-between"><Text as="h2" variant="heading">最近工单</Text><LinkButton href="/console/tickets" variant="ghost" shape="square" icon={<ArrowRightIcon />} aria-label="全部工单" /></div>
+          <RecentHeading title="最近工单" href="/console/tickets" />
           <PageState loading={tickets.isLoading} error={tickets.error ? getApiMessage(tickets.error) : null}>
-            {tickets.data?.list.length ? tickets.data.list.map(t => <RecentRow key={t.id} icon={<TicketIcon />} title={t.title} description={`${t.ticketNum} · ${t.status.name}`} href={`/console/tickets/${t.id}`} />) : <Empty className="bg-kumo-base" icon={<TicketIcon />} title="暂无工单" description="你的支持请求将在这里显示。" />}
+            {tickets.data?.list.length ? tickets.data.list.map(t => <RecentRow key={t.id} icon={<TicketIcon size={18} />} category={t.status.name} title={t.title} description={`${t.ticketNum} · ${t.status.name}`} href={`/console/tickets/${t.id}`} />) : <Empty size="sm" className="bg-kumo-base" icon={<TicketIcon />} title="暂无工单" description="你的支持请求将在这里显示。" />}
           </PageState>
         </section>
       </div>
