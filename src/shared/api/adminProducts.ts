@@ -38,8 +38,17 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 
 export const adminProductsApi = {
   list: async (groupId?: string) => {
-    const data = await unwrap(adminRequest.get<ApiEnvelope<AdminProductListResponse>>("/products", { params: { pageSize: 100, groupId: groupId || undefined } }));
-    return { ...data, items: data.items ?? [] };
+    const items: AdminProduct[] = [];
+    let total = 0;
+    for (let page = 1; ; page++) {
+      const data = await unwrap(adminRequest.get<ApiEnvelope<AdminProductListResponse>>("/products", { params: { page, pageSize: 100, groupId: groupId || undefined } }));
+      total = data.total;
+      if (!data.items?.length && items.length < total) throw new Error("商品目录已变化，请重试读取整组商品");
+      items.push(...(data.items ?? []));
+      if (items.length >= total) break;
+    }
+    if (new Set(items.map((item) => item.id)).size !== total || items.length !== total) throw new Error("商品目录已变化，请重试读取整组商品");
+    return { items, total };
   },
   sort: (groupId: string, ids: string[]) => unwrap(adminRequest.put<ApiEnvelope<{ sorted: boolean }>>("/products/sort", { groupId, ids })),
   specs: async (productId: string) => {

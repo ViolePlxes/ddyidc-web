@@ -1,3 +1,4 @@
+import { subscribeCatalogChanges } from "../shared/utils/catalogCache";
 import { StrictMode, forwardRef, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -136,12 +137,14 @@ export function createEntry(App: ComponentType) {
     },
   });
   let host: RootHost | null = null;
+  let stopCatalogListener: (() => void) | undefined;
 
   function render(props: MicroAppProps = {}) {
     const rootElement =
       props.container?.querySelector<RootHost>("#root") ??
       (document.getElementById("root") as RootHost | null);
     if (!rootElement) throw new Error("缺少应用挂载节点");
+    stopCatalogListener ??= subscribeCatalogChanges(queryClient);
     host = rootElement;
     host.__ddyidcRoot ??= createRoot(host);
     document.documentElement.classList.toggle(
@@ -171,6 +174,8 @@ export function createEntry(App: ComponentType) {
     bootstrap: async (): Promise<void> => {},
     mount: async (props: MicroAppProps = {}): Promise<void> => render(props),
     unmount: async (): Promise<void> => {
+      stopCatalogListener?.();
+      stopCatalogListener = undefined;
       host?.__ddyidcRoot?.unmount();
       if (host) delete host.__ddyidcRoot;
       host = null;
