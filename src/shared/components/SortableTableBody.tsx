@@ -13,3 +13,10 @@ export function SortableTableBody({ scope, listId, crossList = false, disabled, 
   const ref = useSortableList(scope, crossList, disabled, onDrop);
   return <Table.Body ref={ref} data-sort-list={listId}>{children}</Table.Body>;
 }
+
+export function SortableList({ scope, listId, crossList = false, disabled, onDrop, children }: {
+  scope: string; listId: string; crossList?: boolean; disabled: boolean; onDrop: (drop: ListDrop) => void; children: ReactNode;
+}) {
+  const ref = useSortableList(scope, crossList, disabled, onDrop);
+  return <div ref={ref} data-sort-list={listId} className="grid gap-2 min-h-16">{children}</div>;
+}
