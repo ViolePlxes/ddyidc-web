@@ -131,7 +131,7 @@ function ReinstallDialog({
         {images.isLoading ? <PageState loading skeleton="form"><></></PageState> : null}
         {images.error ? <Banner variant="error" title="镜像列表加载失败" description={getApiMessage(images.error)} /> : null}
         {!images.isLoading && !images.error && groups.length === 0 ? (
-          <LayerCard className="p-5 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
+          <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
         ) : null}
         {!images.isLoading && !images.error && groups.length > 0 && !review ? (
           <div className="grid gap-4">
@@ -225,7 +225,7 @@ export function InstanceConsole() {
             {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
 
             <div className="grid gap-4 xl:grid-cols-2">
-              <LayerCard className="grid gap-4 p-5">
+              <LayerCard className="shadow-none grid gap-4 p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">基础开通信息</h2>
                 <DefinitionList rows={[
                   { label: "实例名称", value: instance.name },
@@ -238,7 +238,7 @@ export function InstanceConsole() {
                   { label: "操作系统", value: instance.operatingSystem || "—" },
                 ]} />
               </LayerCard>
-              <LayerCard className="grid gap-4 p-5">
+              <LayerCard className="shadow-none grid gap-4 p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">计费与关联</h2>
                 <DefinitionList rows={[
                   { label: "关联商品", value: instance.productName },
@@ -251,7 +251,7 @@ export function InstanceConsole() {
               </LayerCard>
             </div>
 
-            <LayerCard className="grid gap-4 p-5">
+            <LayerCard className="shadow-none grid gap-4 p-5">
               <div>
                 <h2 className="text-lg font-semibold text-kumo-strong">实例操作</h2>
                 <p className="text-sm text-kumo-subtle">仅展示供应商适配器已确认支持的真实操作，提交结果以上游响应为准。</p>
@@ -277,7 +277,7 @@ export function InstanceConsole() {
               </div>
               {monitor.isLoading ? <PageState loading skeleton="chart"><></></PageState> : null}
               {!monitor.isLoading && (!monitor.data?.available || monitor.error) ? (
-                <LayerCard className="p-5 text-sm text-kumo-subtle">{monitor.data?.message || (monitor.error ? getApiMessage(monitor.error) : "当前实例暂无监控数据。")}</LayerCard>
+                <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">{monitor.data?.message || (monitor.error ? getApiMessage(monitor.error) : "当前实例暂无监控数据。")}</LayerCard>
               ) : null}
               {monitor.data?.available ? (
                 <div className="grid gap-5 xl:grid-cols-2">
@@ -291,7 +291,7 @@ export function InstanceConsole() {
               ) : null}
             </section>
 
-            <LayerCard className="overflow-x-auto p-0">
+            <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>
               </div>
@@ -303,7 +303,7 @@ export function InstanceConsole() {
               </Table>
             </LayerCard>
 
-            <LayerCard className="overflow-x-auto p-0">
+            <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5"><h2 className="text-lg font-semibold text-kumo-strong">操作日志</h2></div>
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>结果</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header>

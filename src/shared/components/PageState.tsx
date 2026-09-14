@@ -55,8 +55,8 @@ export function PageState({
   if (empty) {
     return (
       <div>
-        <LayerCard>
-          <Empty
+        <LayerCard className="shadow-none">
+          <Empty className="bg-kumo-base"
             icon={<PackageIcon />}
             title={emptyTitle}
             description={emptyDescription}

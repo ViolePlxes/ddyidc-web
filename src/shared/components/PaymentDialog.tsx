@@ -133,7 +133,7 @@ export function PaymentDialog({
         </div>
 
         {!checkout ? (
-          <LayerCard className="grid gap-2 p-5">
+          <LayerCard className="shadow-none grid gap-2 p-5">
             <strong className="text-kumo-strong">支付宝</strong>
             <span className="text-sm text-kumo-subtle">电脑端打开电脑网站收银台，移动端跳转手机网站收银台。</span>
           </LayerCard>

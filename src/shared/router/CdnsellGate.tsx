@@ -10,6 +10,6 @@ export function useCdnsellAvailability(scope:"public"|"admin"){
 export function CdnsellGate({scope,children}:{scope:"public"|"admin";children:ReactNode}){
   const query=useCdnsellAvailability(scope);
   if(query.isLoading)return <PageState loading skeleton="detail"><span /></PageState>;
-  if(!query.data?.enabled)return <LayerCard className="grid gap-2 p-8"><strong className="text-xl text-kumo-strong">404</strong><p className="text-kumo-subtle">页面不存在或 CDN 流量服务当前未启用。</p></LayerCard>;
+  if(!query.data?.enabled)return <LayerCard className="shadow-none grid gap-2 p-8"><strong className="text-xl text-kumo-strong">404</strong><p className="text-kumo-subtle">页面不存在或 CDN 流量服务当前未启用。</p></LayerCard>;
   return children;
 }

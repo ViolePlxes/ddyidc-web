@@ -1,4 +1,6 @@
-import { Button, CommandPalette, Sidebar } from "@cloudflare/kumo";
+import { Banner, Button, CommandPalette, Sidebar } from "@cloudflare/kumo";
+import { useQuery } from "@tanstack/react-query";
+import { getConsoleSearch } from "../api/consoleHome";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,22 +20,25 @@ interface SearchGroup {
 export function SearchPalette({
   items,
   placement = "topbar",
+  customer = false,
 }: {
   items: SearchItem[];
   placement?: "topbar" | "sidebar";
+  customer?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const resources = useQuery({ queryKey: ["console", "search"], queryFn: getConsoleSearch, enabled: customer && open, staleTime: 60_000 });
   const groups = useMemo<SearchGroup[]>(() => {
-    const filtered = items.filter((item) =>
+    const filtered = [...items, ...(customer ? resources.data ?? [] : [])].filter((item) =>
       item.title.toLowerCase().includes(query.toLowerCase()),
     );
     return [...new Set(filtered.map((item) => item.group))].map((label) => ({
       label,
       items: filtered.filter((item) => item.group === label),
     }));
-  }, [items, query]);
+  }, [items, query, customer, resources.data]);
   const select = (item: SearchItem) => {
     navigate(item.path, { viewTransition: true });
     setOpen(false);
@@ -48,7 +53,12 @@ export function SearchPalette({
       }
     };
     document.addEventListener("keydown", openPalette);
-    return () => document.removeEventListener("keydown", openPalette);
+    const trigger = () => setOpen(true);
+    window.addEventListener("ddyidc:open-search", trigger);
+    return () => {
+      document.removeEventListener("keydown", openPalette);
+      window.removeEventListener("ddyidc:open-search", trigger);
+    };
   }, []);
 
   return (
@@ -88,7 +98,9 @@ export function SearchPalette({
         }
         onSelect={(item) => select(item)}
       >
-        <CommandPalette.Input placeholder="搜索页面…" />
+        <CommandPalette.Input placeholder={customer ? "搜索页面、产品、服务和工单…" : "搜索页面…"} />
+        {customer && resources.isFetching ? <p role="status" className="p-3">正在读取产品、服务和工单…</p> : null}
+        {customer && resources.error ? <Banner variant="error" title="资源搜索加载失败，仍可搜索菜单" action={<Button variant="secondary" onClick={() => void resources.refetch()}>重试</Button>} /> : null}
         <CommandPalette.List>
           <CommandPalette.Results>
             {(group: SearchGroup) => (

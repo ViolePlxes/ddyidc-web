@@ -55,7 +55,7 @@ export function PaymentResult() {
         <Banner variant="error" title="支付单号缺失" description="请从订单详情或充值记录重新进入支付流程。" />
       ) : (
         <PageState loading={status.isLoading} skeleton="detail" error={status.error ? getApiMessage(status.error) : null}>
-          <LayerCard className="grid gap-5 p-5">
+          <LayerCard className="shadow-none grid gap-5 p-5">
             {currentStatus === "paid" ? <Banner title="支付成功" description="服务端已完成验签和入账确认。" /> : null}
             {currentStatus === "pending" && !timedOut ? (
               <Banner variant="alert" title={cancelled ? "支付已取消或尚未完成" : "正在确认支付结果"} description="请保留此页面，系统会自动刷新。" />

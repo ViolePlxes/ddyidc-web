@@ -83,7 +83,7 @@ export function LoginPage() {
   return (
     <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
       <div className="grid w-full max-w-md gap-6">
-        <LayerCard className="grid gap-6 p-6 md:p-8">
+        <LayerCard className="shadow-none grid gap-6 p-6 md:p-8">
           <div className="grid gap-2">
             <h1 className="text-2xl font-semibold text-kumo-strong">
               {step === "account" ? "登录控制台" : "输入密码"}

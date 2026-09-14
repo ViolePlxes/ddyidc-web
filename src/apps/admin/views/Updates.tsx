@@ -80,7 +80,7 @@ export function AdminUpdates() {
       {notice ? <Banner title="更新中心" description={notice} /> : null}
       {operationError ? <Banner variant="error" title="操作失败" description={getApiMessage(operationError)} /> : null}
       {running ? (
-        <LayerCard className="grid gap-4 p-5">
+        <LayerCard className="shadow-none grid gap-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><h2 className="font-medium text-kumo-strong">正在更新{targetLabels[running.target]}</h2><p className="text-sm text-kumo-subtle">任务 {running.id} · {running.branch}</p></div>
             <Badge variant="warning">执行中</Badge>
@@ -93,7 +93,7 @@ export function AdminUpdates() {
         <VersionCard info={status.data.backend} busy={Boolean(running) || update.isPending} onUpdate={() => update.mutate("backend")} />
         <VersionCard info={status.data.frontend} busy={Boolean(running) || update.isPending} onUpdate={() => update.mutate("frontend")} />
       </div>
-      <LayerCard className="p-0">
+      <LayerCard className="shadow-none p-0">
         <div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-sm text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div>
         <Table>
           <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>目标 / 状态</Table.Head><Table.Head>功能 / 分支</Table.Head><Table.Head>版本 / 提交变化</Table.Head><Table.Head>日志摘要 / 回滚</Table.Head></Table.Row></Table.Header>
@@ -117,7 +117,7 @@ export function AdminUpdates() {
 
 function VersionCard({ info, busy, onUpdate }: { info: VersionInfo; busy: boolean; onUpdate: () => void }) {
   return (
-    <LayerCard className="grid gap-4 p-5">
+    <LayerCard className="shadow-none grid gap-4 p-5">
       <div className="flex items-center justify-between gap-3">
         <div><h2 className="font-medium text-kumo-strong">{targetLabels[info.target]}</h2><p className="flex items-center gap-1 text-sm text-kumo-subtle"><GitBranchIcon /> {info.branch}</p></div>
         <Badge variant={info.hasUpdate ? "warning" : "success"}>{info.hasUpdate ? `落后 ${info.behind} 个提交` : "已是最新"}</Badge>

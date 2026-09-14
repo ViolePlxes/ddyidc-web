@@ -312,7 +312,7 @@ function ProfileEditor({
   ];
   return (
     <div className="grid gap-4">
-      <LayerCard className="grid gap-5 p-5">
+      <LayerCard className="shadow-none grid gap-5 p-5">
         <Text as="h2" variant="heading">
           账户信息
         </Text>
@@ -392,7 +392,7 @@ function ProfileEditor({
         </p>
       </LayerCard>
       <div className="grid items-start gap-4 xl:grid-cols-3">
-        <LayerCard className="grid gap-4 p-5 xl:col-span-2">
+        <LayerCard className="shadow-none grid gap-4 p-5 xl:col-span-2">
           <Text as="h2" variant="heading">
             基础资料
           </Text>
@@ -511,7 +511,7 @@ function ProfileEditor({
             </div>
           </form>
         </LayerCard>
-        <LayerCard className="grid gap-4 p-5">
+        <LayerCard className="shadow-none grid gap-4 p-5">
           <Text as="h2" variant="heading">
             登录记录
           </Text>
@@ -706,7 +706,7 @@ export function AdminCustomerDetail() {
               />
             ) : null
           ) : ["products", "orders", "transactions"].includes(tab) ? (
-            <LayerCard className="p-5">
+            <LayerCard className="shadow-none p-5">
               {tab === "transactions" ? (
                 <CreditHistory key={id} id={id} />
               ) : (
@@ -714,7 +714,7 @@ export function AdminCustomerDetail() {
               )}
             </LayerCard>
           ) : (
-            <LayerCard className="grid gap-3 p-5">
+            <LayerCard className="shadow-none grid gap-3 p-5">
               <Text as="h2" variant="heading">
                 {tabs.find((item) => item.value === tab)?.label}
               </Text>

@@ -1,5 +1,8 @@
+import { useTheme } from "../shared/hooks/useTheme";
 import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
 import {
+  MoonIcon,
+  SunIcon,
   CaretDownIcon,
   CaretUpDownIcon,
   CubeIcon,
@@ -54,6 +57,7 @@ export function DashboardLayout({
   profileHref?: string;
 }) {
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const standalonePaths = ["/console", "/console/products"];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
@@ -89,10 +93,10 @@ export function DashboardLayout({
     <Sidebar.Provider
       defaultOpen
       peekable
-      className="h-svh max-h-svh overflow-hidden"
+      className="h-svh max-h-svh overflow-hidden font-sans"
     >
       <Sidebar aria-label="主导航" className="font-sans leading-[normal] tracking-normal antialiased">
-        <Sidebar.Header>
+        <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={
@@ -126,7 +130,7 @@ export function DashboardLayout({
           </DropdownMenu>
         </Sidebar.Header>
         <Sidebar.Content>
-          <SearchPalette items={searchItems} placement="sidebar" />
+          <SearchPalette items={searchItems} placement="sidebar" customer={user.role === "customer"} />
           {topItems.length > 0 && (
             <Sidebar.Group>
               <Sidebar.Menu>
@@ -184,12 +188,13 @@ export function DashboardLayout({
           <Sidebar.Trigger />
         </Sidebar.Footer>
       </Sidebar>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-recessed">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-base">
         <Surface
           data-dashboard-topbar
-          className="z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
+          className="shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
+          <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={<Button variant="secondary" icon={<UserCircleIcon />} />}

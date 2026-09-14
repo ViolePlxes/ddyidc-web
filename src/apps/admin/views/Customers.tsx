@@ -445,7 +445,7 @@ export function AdminCustomers() {
       {createdName ? (
         <Banner variant="default" title="用户创建成功" description={`${createdName} 已加入客户列表。`} />
       ) : null}
-      <LayerCard className="grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
+      <LayerCard className="shadow-none grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
         <Input
           aria-label="客户关键词"
           placeholder="账号、姓名、邮箱或手机号…"
@@ -479,7 +479,7 @@ export function AdminCustomers() {
         emptyTitle="暂无客户"
       >
         <div className="grid gap-3">
-          <LayerCard className="overflow-x-auto p-0">
+          <LayerCard className="shadow-none overflow-x-auto p-0">
             <Table>
               <Table.Header variant="compact">
                 <Table.Row>
@@ -501,7 +501,7 @@ export function AdminCustomers() {
               </Table.Body>
             </Table>
           </LayerCard>
-          <LayerCard className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <LayerCard className="shadow-none flex flex-wrap items-center justify-between gap-3 p-4">
             <span className="text-sm text-kumo-subtle">
               总用户数 <strong className="text-kumo-strong">{query.data?.totalUsers ?? 0}</strong>
             </span>

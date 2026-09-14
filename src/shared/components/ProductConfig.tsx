@@ -135,7 +135,7 @@ function ProductOptionControl({
 
 function SpecTable({ specs, selectedId, onSelect, catalogSelection }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean }) {
   return (
-    <LayerCard className="overflow-hidden p-0">
+    <LayerCard className="shadow-none overflow-hidden p-0">
       <div className="grid gap-1 p-5">
         <h2 className="text-lg font-semibold text-kumo-strong">{catalogSelection ? "销售规格" : "计算规格"}</h2>
         <p className="text-sm text-kumo-subtle">规格由运营人工维护，价格不会从上游配置项推导。</p>
@@ -293,7 +293,7 @@ export function ProductConfig({
   const bill = (
     <LayerCard
       aria-busy={billLoading}
-      className={`${externalBill ? "grid gap-5 p-5" : "sticky top-20 grid gap-5 p-5"}${billLoading ? " pointer-events-none" : ""}`}
+      className={`shadow-none ${externalBill ? "grid gap-5 p-5" : "sticky top-20 grid gap-5 p-5"}${billLoading ? " pointer-events-none" : ""}`}
     >
       <div className="grid gap-1">
         <div className="flex items-center justify-between gap-3">
@@ -325,14 +325,14 @@ export function ProductConfig({
         <div className="grid gap-5">
         {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} /> : null}
         {!catalogSelection && selectedSpec ? (
-          <LayerCard className="p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
+          <LayerCard className="shadow-none p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}
 
         {displayedOptions.map((option) => {
           const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty";
           return (
-            <LayerCard key={`${option.id}-${option.field}`} className="grid gap-4 p-5">
+            <LayerCard key={`${option.id}-${option.field}`} className="shadow-none grid gap-4 p-5">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2>{isSlider && product.configMode === "fixed" ? <p className="text-sm text-kumo-subtle">当前商品采用固定资源值。</p> : null}</div>
               <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>
@@ -340,7 +340,7 @@ export function ProductConfig({
         })}
 
         {imageOption && imageGroups.length ? (
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">镜像分组和版本来自上游实时订单页。</p></div>
             <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
@@ -349,14 +349,14 @@ export function ProductConfig({
           </LayerCard>
         ) : null}
 
-        <LayerCard className="grid gap-5 p-5">
+        <LayerCard className="shadow-none grid gap-5 p-5">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
 <div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle} ¥${item.price.toFixed(2)}` }))} /></div>
           {options.length ? <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><SensitiveInput label="自动生成密码" value={password} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div> : null}
         </LayerCard>
 
         <Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
-        <LayerCard className="grid gap-2 p-5"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按供应商实际退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
+        <LayerCard className="shadow-none grid gap-2 p-5"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按供应商实际退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
         </div>
 
         {externalBill ? null : bill}

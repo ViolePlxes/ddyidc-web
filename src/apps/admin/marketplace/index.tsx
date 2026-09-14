@@ -73,7 +73,7 @@ export function MarketplaceAdminDashboard() {
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map(([label, value]) => (
-            <LayerCard key={String(label)} className="grid gap-1 p-5">
+            <LayerCard key={String(label)} className="shadow-none grid gap-1 p-5">
               <span className="text-sm text-kumo-subtle">{label}</span>
               <strong className="text-2xl text-kumo-strong">{value}</strong>
             </LayerCard>
@@ -125,7 +125,7 @@ export function MarketplaceAdminListings() {
     <>
       <PageHeader title="挂牌管理" description="审核、推荐和下架市场商品。" />
       <Result message={message} />
-      <LayerCard className="grid gap-4 p-5 md:grid-cols-3">
+      <LayerCard className="shadow-none grid gap-4 p-5 md:grid-cols-3">
         <Input
           label="搜索编号、产品、配置"
           value={keyword}
@@ -163,7 +163,7 @@ export function MarketplaceAdminListings() {
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无挂牌"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -277,7 +277,7 @@ export function MarketplaceAdminOrders() {
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无交易订单"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -346,7 +346,7 @@ export function MarketplaceAdminFlows() {
         title="资金流水"
         description="审计成交、冻结、结算、退款和提现流水。"
       />
-      <LayerCard className="grid gap-4 p-5 md:grid-cols-3">
+      <LayerCard className="shadow-none grid gap-4 p-5 md:grid-cols-3">
         <Input
           label="客户 ID"
           value={userId}
@@ -381,7 +381,7 @@ export function MarketplaceAdminFlows() {
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无流水"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -448,7 +448,7 @@ export function MarketplaceAdminWithdrawals() {
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无提现申请"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -531,7 +531,7 @@ export function MarketplaceAdminReports() {
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无举报"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -654,7 +654,7 @@ export function MarketplaceAdminSettings() {
         error={q.error ? getApiMessage(q.error) : null}
       >
         <div className="grid gap-5">
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <h2 className="font-semibold text-kumo-strong">运行状态</h2>
             <div className="flex flex-wrap gap-6">
               <Switch
@@ -686,7 +686,7 @@ export function MarketplaceAdminSettings() {
               onChange={(e) => update("maintenanceTip", e.target.value)}
             />
           </LayerCard>
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <h2 className="font-semibold text-kumo-strong">交易费用</h2>
             <div className="grid gap-4 md:grid-cols-3">
               <Select
@@ -733,7 +733,7 @@ export function MarketplaceAdminSettings() {
               />
             </div>
           </LayerCard>
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <h2 className="font-semibold text-kumo-strong">风控与时限</h2>
             <div className="flex flex-wrap gap-6">
               <Switch
@@ -818,7 +818,7 @@ export function MarketplaceAdminSettings() {
               />
             </div>
           </LayerCard>
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <h2 className="font-semibold text-kumo-strong">
               允许交易的商品分组
             </h2>
@@ -836,7 +836,7 @@ export function MarketplaceAdminSettings() {
               ))}
             </div>
           </LayerCard>
-          <LayerCard className="grid gap-4 p-5">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <h2 className="font-semibold text-kumo-strong">交易协议</h2>
             <Textarea
               label="用户交易协议"

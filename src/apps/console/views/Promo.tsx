@@ -50,12 +50,12 @@ export function Promo() {
       <PageState loading={loading} skeleton="dashboard" error={error ? getApiMessage(error) : null}>
         <div className="grid gap-5">
           {inviteCode ? (
-            <LayerCard className="flex flex-wrap items-center justify-between gap-4 p-5">
+            <LayerCard className="shadow-none flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属优惠码</span><ClipboardText text={inviteCode} /></div>
               <Button variant="secondary" icon={<CopyIcon />} disabled={!link} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制分享链接"}</Button>
             </LayerCard>
           ) : (
-            <LayerCard className="grid gap-4 p-5">
+            <LayerCard className="shadow-none grid gap-4 p-5">
               <Input label="自定义优惠码（可选）" value={customCode} onChange={(event) => setCustomCode(event.target.value)} disabled={!config.data?.inviteEnabled} />
               <Button className="justify-self-start" loading={create.isPending} disabled={!config.data?.inviteEnabled} onClick={() => create.mutate()}>生成优惠码</Button>
               {!config.data?.inviteEnabled ? <Banner variant="alert" title="优惠码申请已关闭" description="营销公共配置当前未开放优惠码申请。" /> : null}
