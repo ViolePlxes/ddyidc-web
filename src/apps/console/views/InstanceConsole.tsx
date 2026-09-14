@@ -2,7 +2,8 @@ import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } fr
 import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { createInstanceDemo } from "./instanceDemo";
 import { consoleApi, type InstanceActionInput } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageState } from "../../../shared/components/PageState";
@@ -158,24 +159,27 @@ function ReinstallDialog({
 
 export function InstanceConsole() {
   const { instanceId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const preview = searchParams.get("preview") === "demo";
+  const demo = useMemo(() => preview ? createInstanceDemo() : null, [preview]);
   const queryClient = useQueryClient();
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState("");
   const detail = useQuery({
     queryKey: ["instances", instanceId],
     queryFn: () => consoleApi.instance(instanceId),
-    enabled: Boolean(instanceId),
+    enabled: Boolean(instanceId) && !preview,
     retry: false,
     placeholderData: keepPreviousData,
   });
   const monitor = useQuery({
     queryKey: ["instances", instanceId, "monitor"],
     queryFn: () => consoleApi.instanceMonitor(instanceId),
-    enabled: Boolean(instanceId) && Boolean(detail.data?.capabilities.traffic),
+    enabled: Boolean(instanceId) && !preview && Boolean(detail.data?.capabilities.traffic),
     retry: false,
   });
   const action = useMutation({
-    mutationFn: (input: InstanceActionInput) => consoleApi.instanceAction(instanceId, input),
+    mutationFn: (input: InstanceActionInput) => preview ? Promise.reject(new Error("模拟预览不能执行实例操作")) : consoleApi.instanceAction(instanceId, input),
     onSuccess: async (result) => {
       if (result.remote) {
         const expectedPath = `/console/instance/${encodeURIComponent(instanceId)}/vnc`;
@@ -194,9 +198,9 @@ export function InstanceConsole() {
       ]);
     },
   });
-  const instance = detail.data;
+  const instance = demo?.instance ?? detail.data;
   const capabilities = instance?.capabilities;
-  const submit = (input: InstanceActionInput) => { setNotice(""); action.mutate(input); };
+  const submit = (input: InstanceActionInput) => { if (preview) return; setNotice(""); action.mutate(input); };
 
   const [activeTab, setActiveTab] = useState("overview");
   const config = (fields: string[], names: string[] = []) => instance ? configValue(instance, fields, names) : "—";
@@ -204,9 +208,10 @@ export function InstanceConsole() {
     <Input label="新密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
   </ActionDialog>;
   return (
-    <PageState loading={detail.isLoading} skeleton="detail" error={detail.error ? getApiMessage(detail.error) : null}
+    <PageState loading={!preview && detail.isLoading} skeleton="detail" error={!preview && detail.error ? getApiMessage(detail.error) : null}
       empty={!detail.isLoading && !detail.error && !instance} emptyTitle="实例不存在">
       {instance ? <div className="grid gap-5">
+        {preview ? <div className="grid gap-2"><Banner variant="alert" title="模拟数据预览" description="左侧资料与四张监控图均为模拟数据，仅用于查看页面效果；不写入数据库，所有实例操作已禁用。" /><Link className="text-kumo-link" to={`/console/instances/${instanceId}`}>退出预览，查看真实实例</Link></div> : null}
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
           <div aria-label="实例操作" className="flex flex-wrap gap-2">
@@ -248,11 +253,11 @@ export function InstanceConsole() {
               { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
               { label: "带宽", value: config(["bandwidth"], ["带宽", "上行带宽", "下行带宽"]) }, { label: "数据盘", value: config(["data_disk"], ["数据盘"]) },
             ]} />
-            <BillingInfo instance={instance} />
+            <BillingInfo instance={instance} preview={preview} />
           </aside>
-          <InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error ? getApiMessage(monitor.error) : undefined} />
+          <InstanceMonitoring monitor={demo?.monitor ?? monitor.data} preview={preview} loading={!preview && monitor.isLoading} error={!preview && monitor.error ? getApiMessage(monitor.error) : undefined} />
         </div> : null}
-        {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
+        {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} preview={preview} /></div> : null}
         {activeTab === "upgrade" || activeTab === "security" ? <LayerCard className="grid gap-2 p-6"><h2 className="text-lg font-semibold">{activeTab === "upgrade" ? "产品升级降级" : "安全组"}</h2><p className="text-kumo-subtle">功能开发中，当前尚无可用接口。</p></LayerCard> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
           <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">当前上游没有已验证的客户侧销毁协议。</p></LayerCard>
