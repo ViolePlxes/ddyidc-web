@@ -21,7 +21,7 @@ import {
   parsePhoneNumberFromString,
   type CountryCode,
 } from "libphonenumber-js";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   adminOverviewApi,
@@ -228,6 +228,38 @@ function ProfileEditor({
     receiveEmail: profile.settings.receiveEmail,
   });
   const [dialog, setDialog] = useState("");
+  const loginBusy = useRef(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const login = useMutation({
+    mutationFn: () => customerFinanceApi.login(customer.id),
+  });
+  const loginAsCustomer = async () => {
+    if (loginBusy.current) return;
+    loginBusy.current = true;
+    setLoginError(null);
+    login.reset();
+    // Open within the user gesture, before awaiting the authenticated session.
+    const target = window.open("about:blank", "_blank");
+    if (!target) {
+      setLoginError("浏览器阻止了新标签页，请允许弹出窗口后重试。");
+      loginBusy.current = false;
+      return;
+    }
+    target.opener = null;
+    try {
+      await login.mutateAsync();
+      if (target.closed) {
+        setLoginError("新标签页已关闭，请重新点击以用户登录。");
+        return;
+      }
+      target.location.replace("/console");
+    } catch (error) {
+      target.close();
+      setLoginError(getApiMessage(error));
+    } finally {
+      loginBusy.current = false;
+    }
+  };
   const [saved, setSaved] = useState(false);
   const update = <K extends keyof CustomerProfileInput>(
     key: K,
@@ -315,7 +347,7 @@ function ProfileEditor({
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          {["充值", "余额冻结", "强制变更", "变更记录", "以用户登录"].map(
+          {["充值", "余额冻结", "强制变更", "变更记录"].map(
             (action) => (
               <Button
                 key={action}
@@ -326,7 +358,17 @@ function ProfileEditor({
               </Button>
             ),
           )}
+          <Button
+            variant="secondary"
+            loading={login.isPending}
+            disabled={login.isPending}
+            onClick={() => void loginAsCustomer()}
+          >
+            {login.isPending ? "登录中…" : "以用户登录"}
+          </Button>
         </div>
+        {loginError ? <Banner variant="error" title={loginError} /> : null}
+        {login.isSuccess && !loginError ? <Banner variant="default" title="已在新标签页打开用户中心。" /> : null}
         <div className="flex flex-wrap gap-5">
           <Switch
             label="社交绑定"
@@ -476,7 +518,7 @@ function ProfileEditor({
           <RecordList id={customer.id} kind="logins" />
         </LayerCard>
       </div>
-      {["充值", "余额冻结", "强制变更", "变更记录", "以用户登录"].includes(
+      {["充值", "余额冻结", "强制变更", "变更记录"].includes(
         dialog,
       ) ? (
         <CustomerFinanceDialog
@@ -489,7 +531,7 @@ function ProfileEditor({
       <Dialog.Root
         open={
           Boolean(dialog) &&
-          !["充值", "余额冻结", "强制变更", "变更记录", "以用户登录"].includes(
+          !["充值", "余额冻结", "强制变更", "变更记录"].includes(
             dialog,
           )
         }

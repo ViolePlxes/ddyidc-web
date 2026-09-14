@@ -167,11 +167,6 @@ export function CustomerFinanceDialog({
   const [requestID] = useState(() => crypto.randomUUID());
   const mutation = useMutation({
     mutationFn: async () => {
-      if (action === "以用户登录") {
-        await customerFinanceApi.login(id);
-        window.location.assign("/console");
-        return;
-      }
       const input = {
         request_id: requestID,
         notes,
@@ -197,7 +192,7 @@ export function CustomerFinanceDialog({
     },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: ["admin"] });
-      if (action !== "以用户登录") close();
+      close();
     },
   });
   const large =
@@ -212,14 +207,12 @@ export function CustomerFinanceDialog({
       }}
     >
       <Dialog
-        size={action === "以用户登录" ? "base" : "xl"}
+        size="xl"
         className="grid max-h-[85vh] gap-4 overflow-y-auto p-6"
       >
         <Dialog.Title>{action}</Dialog.Title>
         <Dialog.Description>
-          {action === "以用户登录"
-            ? "确认以该用户身份进入用户中心？本次操作将记录管理员和用户登录审计。"
-            : "资金变动会保留完整流水与操作记录。"}
+          资金变动会保留完整流水与操作记录。
         </Dialog.Description>
         {action === "变更记录" ? (
           <CreditHistory id={id} />
@@ -235,7 +228,7 @@ export function CustomerFinanceDialog({
               mutation.mutate();
             }}
           >
-            {action !== "以用户登录" ? (
+
               <>
                 {action === "强制变更" ? (
                   <Select
@@ -303,7 +296,6 @@ export function CustomerFinanceDialog({
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </>
-            ) : null}
             {confirmLarge ? (
               <Banner
                 variant="alert"
