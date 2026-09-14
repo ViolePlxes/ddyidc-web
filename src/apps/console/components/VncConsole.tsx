@@ -73,7 +73,7 @@ export function VncConsole({ instanceId, token }: { instanceId: string; token: s
   };
 
   return (
-    <LayerCard className="flex min-h-screen flex-col p-0">
+    <LayerCard className="shadow-none flex min-h-screen flex-col p-0">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kumo-line p-3">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-kumo-strong">实例远程控制台</span>

@@ -19,7 +19,7 @@ export function TableSkeleton({
   rows?: number;
 }) {
   return (
-    <LayerCard className="overflow-x-auto p-0" role="status" aria-label="正在加载表格数据">
+    <LayerCard className="shadow-none overflow-x-auto p-0" role="status" aria-label="正在加载表格数据">
       <Table>
         <Table.Header variant="compact">
           <Table.Row>
@@ -51,7 +51,7 @@ export function TableSkeleton({
 
 export function CardSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <LayerCard className={`grid gap-4 ${compact ? "p-4" : "h-80 p-5"}`} aria-hidden="true">
+    <LayerCard className={`shadow-none grid gap-4 ${compact ? "p-4" : "h-80 p-5"}`} aria-hidden="true">
       <div className="flex items-center justify-between gap-4">
         <SkeletonLine className="h-10 w-10" />
         <SkeletonLine className="h-5 w-20" />
@@ -90,7 +90,7 @@ export function MetricSkeleton({ count = 4 }: { count?: number }) {
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
-        <LayerCard key={index} className="grid min-h-36 gap-3 p-5">
+        <LayerCard key={index} className="shadow-none grid min-h-36 gap-3 p-5">
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-9 w-20" />
           <SkeletonLine className="h-4 w-32" />
@@ -102,7 +102,7 @@ export function MetricSkeleton({ count = 4 }: { count?: number }) {
 
 export function ChartSkeleton() {
   return (
-    <LayerCard className="grid gap-4 p-5" role="status" aria-label="正在加载趋势图">
+    <LayerCard className="shadow-none grid gap-4 p-5" role="status" aria-label="正在加载趋势图">
       <SkeletonLine className="h-6 w-40" />
       <div className="grid h-[280px] grid-cols-12 items-end gap-2 border-b border-l border-kumo-line p-4" aria-hidden="true">
         {[35, 48, 42, 64, 55, 72, 68, 82, 66, 76, 88, 80].map((height, index) => (
@@ -115,7 +115,7 @@ export function ChartSkeleton() {
 
 export function FormSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <LayerCard className="grid gap-5 p-5" role="status" aria-label="正在加载表单">
+    <LayerCard className="shadow-none grid gap-5 p-5" role="status" aria-label="正在加载表单">
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} className="grid gap-2 sm:grid-cols-[12rem_1fr] sm:items-center">
           <SkeletonLine className="h-4 w-28" />
@@ -131,7 +131,7 @@ export function DetailSkeleton() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" role="status" aria-label="正在加载详情">
       <FormSkeleton rows={7} />
-      <LayerCard className="grid gap-5 p-5" aria-hidden="true">
+      <LayerCard className="shadow-none grid gap-5 p-5" aria-hidden="true">
         <SkeletonLine className="h-4 w-24" />
         <SkeletonLine className="h-9 w-36" />
         <SkeletonLine className="h-4 w-full" />
@@ -146,13 +146,13 @@ export function ProductConfigSkeleton() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" role="status" aria-label="正在加载商品配置">
       <div className="grid gap-5">
-        <LayerCard className="grid min-h-28 gap-3 p-5" aria-hidden="true">
+        <LayerCard className="shadow-none grid min-h-28 gap-3 p-5" aria-hidden="true">
           <SkeletonLine className="h-6 w-32" />
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-4 w-2/3" />
         </LayerCard>
         {Array.from({ length: 8 }, (_, index) => (
-          <LayerCard key={index} className="grid min-h-36 gap-4 p-5" aria-hidden="true">
+          <LayerCard key={index} className="shadow-none grid min-h-36 gap-4 p-5" aria-hidden="true">
             <SkeletonLine className="h-6 w-32" />
             <SkeletonLine className="h-4 w-24" />
             <SkeletonLine className="h-10 w-48 max-w-full" />
@@ -160,7 +160,7 @@ export function ProductConfigSkeleton() {
         ))}
         <FormSkeleton rows={4} />
       </div>
-      <LayerCard className="sticky top-20 grid gap-5 p-5" aria-hidden="true">
+      <LayerCard className="shadow-none sticky top-20 grid gap-5 p-5" aria-hidden="true">
         <SkeletonLine className="h-4 w-24" />
         <SkeletonLine className="h-9 w-36" />
         <SkeletonLine className="h-4 w-20" />

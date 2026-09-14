@@ -140,7 +140,7 @@ export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
           {(roots.data?.list ?? []).map((root, rootIndex) => {
             const children = childQueries[rootIndex]?.data?.list ?? [];
             return (
-              <LayerCard key={root.id} data-sort-id={root.id} className="sort-item overflow-hidden p-0">
+              <LayerCard key={root.id} data-sort-id={root.id} className="shadow-none sort-item overflow-hidden p-0">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kumo-line p-4">
                   <div className="grid gap-1"><div className="flex items-center gap-2"><DragHandle scope="roots" label={`拖动一级分组 ${root.name}`} disabled={disabled} /><strong className="text-kumo-strong">{root.name}</strong><span className="text-sm text-kumo-subtle">一级 · 排序 {root.sort} · {root.productCount} 个商品</span></div>{root.icon ? <span className="text-xs text-kumo-subtle">图标：{root.icon}</span> : null}</div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -160,7 +160,7 @@ export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
                       <SortableList scope="children" listId={root.id} crossList disabled={disabled} onDrop={drop}>
                         {children.length === 0 ? <p className="p-4 text-sm text-kumo-subtle">拖入二级分组，或点击“新建子级”</p> : null}
                         {children.map((child, index) => (
-                          <LayerCard key={child.id} className="sort-item overflow-hidden p-0" data-sort-id={child.id}>
+                          <LayerCard key={child.id} className="shadow-none sort-item overflow-hidden p-0" data-sort-id={child.id}>
                             <Table className="table-fixed"><Table.Body><Table.Row>
                               <Table.Cell className="w-[28%]"><div className="flex items-center gap-2"><DragHandle scope="children" label={`拖动二级分组 ${child.name}`} disabled={disabled} />{embedded ? <Button variant="ghost" shape="square" aria-label={`${expanded.has(child.id) ? "收起" : "展开"} ${child.name}`} aria-expanded={expanded.has(child.id)} aria-controls={`products-${child.id}`} icon={expanded.has(child.id) ? <CaretDownIcon /> : <CaretRightIcon />} onClick={() => setExpanded((current) => { const next = new Set(current); if (next.has(child.id)) next.delete(child.id); else next.add(child.id); return next; })} /> : null}<div><strong className="text-kumo-strong">{child.name}</strong>{child.icon ? <p className="text-xs text-kumo-subtle">图标：{child.icon}</p> : null}</div></div></Table.Cell>
                               <Table.Cell className="w-[12%]"><Switch label={child.status === 1 ? "显示" : "隐藏"} checked={child.status === 1} onCheckedChange={(checked) => hidden.mutate({ group: child, value: !checked })} /></Table.Cell><Table.Cell className="w-[8%]">{child.productCount}</Table.Cell><Table.Cell className="w-[8%]">{child.sort}</Table.Cell>

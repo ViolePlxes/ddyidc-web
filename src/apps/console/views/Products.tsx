@@ -75,7 +75,7 @@ function PublicProductCatalog() {
                 {items.map((product) => {
                   const unavailable = !isAvailable(product);
                   return (
-                    <LayerCard key={product.id} className="flex h-80 flex-col gap-4 p-5">
+                    <LayerCard key={product.id} className="shadow-none flex h-80 flex-col gap-4 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><PackageIcon /></div>
                         <Badge variant={unavailable ? "secondary" : "success"}>{unavailable ? "暂无库存" : "可订购"}</Badge>
@@ -167,7 +167,7 @@ function IntegratedProductCatalog() {
       <PageState loading={productsQuery.isLoading} skeleton="products" error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,28rem)]">
           <div className="grid min-w-0 gap-5">
-            <LayerCard className="grid gap-4 p-4">
+            <LayerCard className="shadow-none grid gap-4 p-4">
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
                 <strong>一级分类</strong>
                 <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
@@ -184,7 +184,7 @@ function IntegratedProductCatalog() {
               </div>
             </LayerCard>
 
-            <LayerCard className="grid gap-4 p-5">
+            <LayerCard className="shadow-none grid gap-4 p-5">
               <h2>计算规格</h2>
               {detailsFailed ? <Banner variant="error" title="部分产品读取失败" description="可选择已加载的规格，或重试读取。" action={<Button variant="secondary" onClick={refresh}>重试</Button>} /> : null}
               {linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">

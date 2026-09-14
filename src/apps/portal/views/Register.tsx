@@ -138,7 +138,7 @@ export function RegisterPage() {
 
   return (
     <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
-      <LayerCard className="grid w-full max-w-lg gap-5 p-6 md:p-8">
+      <LayerCard className="shadow-none grid w-full max-w-lg gap-5 p-6 md:p-8">
         <div className="grid gap-2">
           <h1 className="text-2xl font-semibold text-kumo-strong">
             创建客户账号

@@ -56,7 +56,7 @@ export function OrderConfirm() {
     return (
       <>
         <PageHeader title="订单已创建" description={`订单 ${createdOrder.orderNo} 正在等待支付。`} />
-        <LayerCard className="grid gap-5 p-5">
+        <LayerCard className="shadow-none grid gap-5 p-5">
           <Banner title="请完成在线支付" description="到账后系统会自动提交上游开通，并跳转至订单详情。" />
           <div className="flex flex-wrap justify-end gap-3">
             <LinkButton href={`/console/orders/${createdOrder.id}`} variant="secondary">查看订单详情</LinkButton>
@@ -93,7 +93,7 @@ export function OrderConfirm() {
       <PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
       <PageState loading={coupons.isLoading} skeleton="detail" error={coupons.error ? getApiMessage(coupons.error) : null}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <LayerCard className="p-5">
+        <LayerCard className="shadow-none p-5">
           <DefinitionList
             rows={[
               { label: "商品", value: draft.productName },
@@ -108,7 +108,7 @@ export function OrderConfirm() {
             ]}
           />
         </LayerCard>
-        <LayerCard className="grid gap-5 p-5">
+        <LayerCard className="shadow-none grid gap-5 p-5">
           <Select
             label="优惠券"
             value={couponId}

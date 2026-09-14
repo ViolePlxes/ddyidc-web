@@ -70,7 +70,7 @@ export function InstanceList() {
         emptyTitle="暂无产品实例"
         emptyDescription="当前账号在所选条件下没有实例产品。"
       >
-        <LayerCard className="overflow-x-auto p-0">
+        <LayerCard className="shadow-none overflow-x-auto p-0">
           <Table>
             <Table.Header variant="compact">
               <Table.Row>

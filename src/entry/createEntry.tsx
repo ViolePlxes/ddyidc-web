@@ -1,3 +1,4 @@
+import "../shared/hooks/useTheme";
 import { subscribeCatalogChanges } from "../shared/utils/catalogCache";
 import { StrictMode, forwardRef, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";

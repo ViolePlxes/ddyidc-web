@@ -69,7 +69,7 @@ export function StaffLogin({
           </div>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
-        <LayerCard className="grid gap-5 p-6">
+        <LayerCard className="shadow-none grid gap-5 p-6">
           <div className="grid gap-1">
             <h1 className="text-xl font-semibold text-kumo-strong">{title}</h1>
             <p className="text-sm text-kumo-subtle">{subtitle}</p>

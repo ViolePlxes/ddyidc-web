@@ -84,7 +84,7 @@ export function EntryGuard({
 export function ForbiddenPage({ loginPath }: { loginPath: string }) {
   return (
     <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
-      <LayerCard className="grid max-w-md justify-items-center gap-4 p-8 text-center">
+      <LayerCard className="shadow-none grid max-w-md justify-items-center gap-4 p-8 text-center">
         <LockKeyIcon className="size-8 text-kumo-danger" />
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold text-kumo-strong">403 无权限</h1>

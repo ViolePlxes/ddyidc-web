@@ -29,7 +29,7 @@ export function MarketplaceGate({
     );
   if (!query.data)
     return (
-      <LayerCard className="grid gap-2 p-8">
+      <LayerCard className="shadow-none grid gap-2 p-8">
         <strong className="text-xl text-kumo-strong">404</strong>
         <p className="text-kumo-subtle">页面不存在或交易市场当前未启用。</p>
       </LayerCard>

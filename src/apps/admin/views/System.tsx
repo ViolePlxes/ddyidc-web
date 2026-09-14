@@ -82,7 +82,7 @@ export function AdminSystem() {
 
 function BaseSettings() {
   return (
-    <LayerCard className="grid gap-3 p-5">
+    <LayerCard className="shadow-none grid gap-3 p-5">
       <h2 className="font-medium text-kumo-strong">基础设置</h2>
       <Banner variant="alert" title="尚无基础设置接口" description="当前后端未提供站点名称、客服邮箱与注册开关的读取或保存接口，因此本页不展示推测值，也不会提交无效配置。" />
       <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前访问地址</span><strong className="text-kumo-strong">{window.location.origin}</strong></div>
@@ -124,7 +124,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
 
   return (
     <div className="grid gap-5">
-      <LayerCard className="grid gap-4 p-5">
+      <LayerCard className="shadow-none grid gap-4 p-5">
         <div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">邮件 SMTP</h2><p className="text-sm text-kumo-subtle">465 使用 SMTPS，其他端口（常用 587）自动协商 STARTTLS。</p></div>
           <Badge variant={config.mail.mock ? "warning" : "success"}>{config.mail.mock ? "待配置" : "真实通道"}</Badge>
@@ -138,7 +138,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
         </div>
       </LayerCard>
 
-      <LayerCard className="grid gap-4 p-5">
+      <LayerCard className="shadow-none grid gap-4 p-5">
         <div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">阿里云短信</h2><p className="text-sm text-kumo-subtle">SendSms 2017-05-25；TemplateCode 须在阿里云控制台审核通过。</p></div>
           <Badge variant={config.sms.mock ? "warning" : "success"}>{config.sms.mock ? "待配置" : "真实通道"}</Badge>
@@ -161,7 +161,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
         </div>
       </LayerCard>
 
-      <LayerCard className="grid gap-4 p-5">
+      <LayerCard className="shadow-none grid gap-4 p-5">
         <h2 className="font-medium text-kumo-strong">到期提醒与通道测试</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Switch label="启用实例到期提醒" checked={config.expiry.enabled} onCheckedChange={(enabled) => setConfig({ ...config, expiry: { ...config.expiry, enabled } })} />
@@ -195,7 +195,7 @@ function TemplateSettings({ onSaved }: { onSaved: (message: string) => void }) {
     <div className="grid gap-4">
       <Banner title="模板变量" description="使用 {{变量名}} 占位；邮件变量会在渲染时自动进行 HTML 转义。短信正文以阿里云控制台模板为准，此处内容用于变量校验与发送记录快照。" />
       {items.map((template) => (
-        <LayerCard key={template.id} className="grid gap-4 p-5">
+        <LayerCard key={template.id} className="shadow-none grid gap-4 p-5">
           <div className="flex items-center justify-between gap-3">
             <div><h2 className="font-medium text-kumo-strong">{sceneLabels[template.scene] ?? template.scene}</h2><p className="text-sm text-kumo-subtle">场景标识：{template.scene}</p></div>
             <Switch label="启用" checked={template.enabled} onCheckedChange={(enabled) => update(template.id, { enabled })} />
@@ -219,7 +219,7 @@ function NotifyLogs() {
   if (query.isLoading) return <Loader />;
   if (query.error) return <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} />;
   return (
-    <LayerCard className="p-0">
+    <LayerCard className="shadow-none p-0">
       <Table>
         <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>场景 / 通道</Table.Head><Table.Head>目标</Table.Head><Table.Head>状态</Table.Head><Table.Head>回执 / 错误</Table.Head></Table.Row></Table.Header>
         <Table.Body>
