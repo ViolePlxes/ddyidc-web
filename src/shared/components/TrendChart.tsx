@@ -37,6 +37,7 @@ export function TrendChart({
   yAxisName = "金额（元）",
   valuePrefix = "¥",
   valueSuffix = "",
+  series,
 }: {
   title?: string;
   type?: "line" | "bar";
@@ -44,6 +45,7 @@ export function TrendChart({
   yAxisName?: string;
   valuePrefix?: string;
   valueSuffix?: string;
+  series?: { name: string; data: [number, number][] }[];
 }) {
   const { theme } = useTheme();
   const chartValues = values;
@@ -59,7 +61,7 @@ export function TrendChart({
           ariaDescription={title}
           yAxisName={yAxisName}
           tooltipValueFormat={(value) => `${valuePrefix}${value.toFixed(2)}${valueSuffix}`}
-          data={[
+          data={series ? series.map((item, index) => ({ ...item, color: ChartPalette.categorical(index) })) : [
             {
               name: title,
               color: ChartPalette.categorical(0),

@@ -1,15 +1,12 @@
-import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
+import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
-import { consoleApi, type InstanceActionInput, type MonitorPoint } from "../../../shared/api/console";
+import { useParams } from "react-router-dom";
+import { consoleApi, type InstanceActionInput } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
-import { DefinitionList } from "../../../shared/components/DataTable";
-import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
-import { TrendChart } from "../../../shared/components/TrendChart";
-import { cycleLabels } from "../../../shared/utils/format";
 
 const eventLabels: Record<string, string> = {
   start: "开机", stop: "关机", reboot: "重启", reinstall: "重装系统",
@@ -24,9 +21,6 @@ function statusBadge(status: number): StatusCode {
   return "expired";
 }
 
-function chartPoints(points: MonitorPoint[]): [number, number][] {
-  return points.map((point) => [point.timestamp * (point.timestamp < 10_000_000_000 ? 1000 : 1), point.value]);
-}
 
 function ActionDialog({
   label,
@@ -204,94 +198,65 @@ export function InstanceConsole() {
   const capabilities = instance?.capabilities;
   const submit = (input: InstanceActionInput) => { setNotice(""); action.mutate(input); };
 
+  const [activeTab, setActiveTab] = useState("overview");
+  const config = (fields: string[], names: string[] = []) => instance ? configValue(instance, fields, names) : "—";
+  const resetPassword = <ActionDialog label="重置密码" title="重置实例密码" description="请输入至少 12 位、包含大小写字母与数字的新密码。" disabled={!capabilities?.resetPassword} loading={action.isPending} onConfirm={() => submit({ action: "reset_password", password })}>
+    <Input label="新密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
+  </ActionDialog>;
   return (
-    <>
-      <PageHeader
-        title={instance?.name || "产品控制台"}
-        description={instance ? `${instance.productName} · 实例 ${instance.id}` : "读取实例详情与真实上游能力"}
-        actions={instance ? <StatusBadge status={statusBadge(instance.status)} /> : undefined}
-      />
-      <PageState
-        loading={detail.isLoading}
-        skeleton="detail"
-        error={detail.error ? getApiMessage(detail.error) : null}
-        empty={!detail.isLoading && !detail.error && !instance}
-        emptyTitle="实例不存在"
-      >
-        {instance ? (
-          <div className="grid gap-6">
-            {instance.warning ? <Banner variant="alert" title="上游信息提示" description={instance.warning} /> : null}
-            {notice ? <Banner title="操作结果" description={notice} /> : null}
-            {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
-
-            <div className="grid gap-4 xl:grid-cols-2">
-              <LayerCard className="shadow-none grid gap-4 p-5">
-                <h2 className="text-lg font-semibold text-kumo-strong">基础开通信息</h2>
-                <DefinitionList rows={[
-                  { label: "实例名称", value: instance.name },
-                  { label: "实例唯一 ID", value: instance.id },
-                  { label: "上游实例 ID", value: instance.upstreamInstanceId || "—" },
-                  { label: "主机名", value: instance.hostname || "—" },
-                  { label: "主 IP 地址", value: instance.primaryIp || "—" },
-                  { label: "子网掩码", value: instance.subnetMask || "—" },
-                  { label: "网关", value: instance.gateway || "—" },
-                  { label: "操作系统", value: instance.operatingSystem || "—" },
-                ]} />
-              </LayerCard>
-              <LayerCard className="shadow-none grid gap-4 p-5">
-                <h2 className="text-lg font-semibold text-kumo-strong">计费与关联</h2>
-                <DefinitionList rows={[
-                  { label: "关联商品", value: instance.productName },
-                  { label: "计费周期", value: cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—" },
-                  { label: "开通时间", value: instance.activatedAt || "—" },
-                  { label: "到期时间", value: instance.expiresAt || "—" },
-                  { label: "登录密码", value: instance.passwordMasked || "未保存" },
-                  { label: "关联订单", value: instance.orderNo ? <Link className="text-kumo-link" to={`/console/orders/${instance.orderId}`} viewTransition>{instance.orderNo}</Link> : instance.orderId },
-                ]} />
-              </LayerCard>
-            </div>
-
-            <LayerCard className="shadow-none grid gap-4 p-5">
-              <div>
-                <h2 className="text-lg font-semibold text-kumo-strong">实例操作</h2>
-                <p className="text-sm text-kumo-subtle">仅展示供应商适配器已确认支持的真实操作，提交结果以上游响应为准。</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <ActionDialog label="开机" title="确认开机" description="将向上游提交真实开机指令。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
-                <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
-                <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
-                <ActionDialog label="重置密码" title="重置实例密码" description="请输入至少 12 位、包含大小写字母与数字的新密码。" disabled={!capabilities?.resetPassword} loading={action.isPending} onConfirm={() => submit({ action: "reset_password", password })}>
-                  <Input label="新密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
-                </ActionDialog>
-                <ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />
-                <Button variant="secondary" disabled={!capabilities?.remote || action.isPending} onClick={() => submit({ action: "remote" })}>远程连接</Button>
-                <Button variant="secondary" disabled>销毁实例（暂不支持）</Button>
-              </div>
-              {!capabilities?.destroy ? <Banner variant="alert" title="销毁操作未开放" description="当前上游没有已验证的客户侧销毁协议，因此不会展示可提交的销毁按钮。" /> : null}
-            </LayerCard>
-
-            <section className="grid gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-kumo-strong">资源统计</h2>
-                <p className="text-sm text-kumo-subtle">最近 24 小时上游监控数据。</p>
-              </div>
-              {monitor.isLoading ? <PageState loading skeleton="chart"><></></PageState> : null}
-              {!monitor.isLoading && (!monitor.data?.available || monitor.error) ? (
-                <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">{monitor.data?.message || (monitor.error ? getApiMessage(monitor.error) : "当前实例暂无监控数据。")}</LayerCard>
-              ) : null}
-              {monitor.data?.available ? (
-                <div className="grid gap-5 xl:grid-cols-2">
-                  <TrendChart title="CPU 使用率" values={chartPoints(monitor.data.cpu)} yAxisName="使用率（%）" valuePrefix="" valueSuffix="%" />
-                  <TrendChart title="内存使用率" values={chartPoints(monitor.data.memory)} yAxisName="使用率（%）" valuePrefix="" valueSuffix="%" />
-                  <TrendChart title="磁盘读取" values={chartPoints(monitor.data.diskRead)} yAxisName="读取速度（KB/s）" valuePrefix="" />
-                  <TrendChart title="磁盘写入" values={chartPoints(monitor.data.diskWrite)} yAxisName="写入速度（KB/s）" valuePrefix="" />
-                  <TrendChart title="网络流入" values={chartPoints(monitor.data.networkIn)} yAxisName="流量（bps）" valuePrefix="" />
-                  <TrendChart title="网络流出" values={chartPoints(monitor.data.networkOut)} yAxisName="流量（bps）" valuePrefix="" />
-                </div>
-              ) : null}
-            </section>
-
-            <LayerCard className="shadow-none overflow-x-auto p-0">
+    <PageState loading={detail.isLoading} skeleton="detail" error={detail.error ? getApiMessage(detail.error) : null}
+      empty={!detail.isLoading && !detail.error && !instance} emptyTitle="实例不存在">
+      {instance ? <div className="grid gap-5">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
+          <div aria-label="实例操作" className="flex flex-wrap gap-2">
+            <ActionDialog label="开机" title="确认开机" description="将向上游提交真实开机指令。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
+            <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
+            <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
+            <Button variant="secondary" disabled>硬关机（未开放）</Button><Button variant="secondary" disabled>硬重启（未开放）</Button><Button variant="secondary" disabled>救援系统（未开放）</Button>
+            <Button variant="secondary" disabled={!capabilities?.remote || action.isPending} onClick={() => submit({ action: "remote" })}>VNC</Button>
+          </div>
+        </header>
+        <Tabs variant="underline" aria-label="实例详情导航" value={activeTab} onValueChange={setActiveTab} tabs={[
+          { value: "overview", label: "概要" }, { value: "upgrade", label: "产品升级降级" }, { value: "security", label: "安全组" },
+          { value: "settings", label: "设置" }, { value: "logs", label: "日志" }, { value: "billing", label: "财务" },
+        ]} />
+        {instance.warning ? <Banner variant="alert" title="上游信息提示" description={instance.warning} /> : null}
+        {notice ? <Banner title="操作结果" description={notice} /> : null}
+        {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
+        {activeTab === "overview" ? <div className="grid items-start gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">
+          <aside aria-label="实例信息面板" className="grid min-w-0 gap-4">
+            <InfoGroup title="实例信息" rows={[
+              { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
+              { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
+              { label: "上游实例 ID", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
+              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: config(["remark", "notes"], ["备注", "备注信息"]) },
+            ]} />
+            <InfoGroup title="登录信息" action={resetPassword} rows={[
+              { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },
+              { label: "用户名", value: <CopyValue value={config(["username", "login_user"], ["用户名", "登录用户名"])} label="用户名" /> },
+              { label: "密码", value: instance.passwordMasked ? <div className="grid gap-1"><CopyValue value={instance.passwordMasked} label="密码掩码" /><span className="text-xs text-kumo-subtle">仅返回掩码，无法复制真实密码</span></div> : "—" },
+              { label: "端口", value: <CopyValue value={config(["port", "ssh_port", "rdp_port"], ["端口", "链接端口", "远程端口"])} label="端口" /> },
+              { label: "主机名", value: instance.hostname || "—" }, { label: "子网掩码", value: instance.subnetMask || "—" }, { label: "网关", value: instance.gateway || "—" },
+            ]} />
+            <InfoGroup title="系统信息" action={<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
+              { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },
+              { label: "系统版本", value: instance.currentImageName || instance.operatingSystem || "—" },
+            ]} />
+            <InfoGroup title="实例规格" rows={[
+              { label: "网络类型", value: config(["network"], ["网络类型"]) }, { label: "系统盘", value: config(["system_disk"], ["系统盘"]) },
+              { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
+              { label: "带宽", value: config(["bandwidth"], ["带宽", "上行带宽", "下行带宽"]) }, { label: "数据盘", value: config(["data_disk"], ["数据盘"]) },
+            ]} />
+            <BillingInfo instance={instance} />
+          </aside>
+          <InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error ? getApiMessage(monitor.error) : undefined} />
+        </div> : null}
+        {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
+        {activeTab === "upgrade" || activeTab === "security" ? <LayerCard className="grid gap-2 p-6"><h2 className="text-lg font-semibold">{activeTab === "upgrade" ? "产品升级降级" : "安全组"}</h2><p className="text-kumo-subtle">功能开发中，当前尚无可用接口。</p></LayerCard> : null}
+        {activeTab === "settings" ? <div className="grid gap-4">
+          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">当前上游没有已验证的客户侧销毁协议。</p></LayerCard>
+                      <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>
               </div>
@@ -302,8 +267,8 @@ export function InstanceConsole() {
                 </Table.Body>
               </Table>
             </LayerCard>
-
-            <LayerCard className="shadow-none overflow-x-auto p-0">
+        </div> : null}
+        {activeTab === "logs" ?             <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5"><h2 className="text-lg font-semibold text-kumo-strong">操作日志</h2></div>
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>结果</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header>
@@ -313,10 +278,8 @@ export function InstanceConsole() {
                   )) : <Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}
                 </Table.Body>
               </Table>
-            </LayerCard>
-          </div>
-        ) : null}
-      </PageState>
-    </>
+            </LayerCard> : null}
+      </div> : null}
+    </PageState>
   );
 }
