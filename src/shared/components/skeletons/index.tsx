@@ -181,6 +181,10 @@ export function ProductSpecTableSkeleton() {
 export function ProductCatalogSkeleton() {
   return (
     <div className={catalogLayout} role="status" aria-label="正在加载订购目录">
+      <div className="hidden min-w-0 gap-3 xl:grid" aria-hidden="true">
+        <SkeletonLine className="h-4 w-24" />
+        {[0, 1, 2, 3].map((index) => <SkeletonLine key={index} className="h-5 w-32" />)}
+      </div>
       <div className="grid min-w-0 gap-5">
         <LayerCard className="shadow-none grid gap-4 p-4">
           {["一级分类", "二级分类"].map((label) => <div key={label} className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">

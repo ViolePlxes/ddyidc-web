@@ -9,12 +9,11 @@ import {
   Tabs,
 } from "@cloudflare/kumo";
 import { ArrowsClockwiseIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import type {
   ConfigOption,
-  ConfigOptionValue,
   OrderDraft,
   OrderPage,
   ProductDetail,
@@ -25,6 +24,8 @@ import { generatePassword } from "../utils/credentials";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
+import { choiceLabel, isAdjustableOption, optionIndex, optionValueAt, withoutZeroPrice } from "../utils/productOptions";
+import { ProductSteps } from "./ProductSteps";
 
 const cycleMonths: Record<string, number> = {
   monthly: 1,
@@ -51,10 +52,6 @@ function quantityOptionPrice(option: ConfigOption, selectedValue: string): numbe
     const units = minimum === 0 ? upper / step : (upper - minimum + step) / step;
     return sum + Math.max(0, units) * tier.price;
   }, 0);
-}
-
-function choiceLabel(choice: ConfigOptionValue) {
-  return `${choice.name}${choice.price ? `（+¥${choice.price.toFixed(2)}）` : ""}`;
 }
 
 function numericPart(value: string): number | null {
@@ -90,6 +87,7 @@ function ProductOptionControl({
   disabled: boolean;
   onChange: (value: string) => void;
 }) {
+  const stopsId = useId();
   if (option.optionType === "qty") {
     const current = Number(value);
     const step = option.step || 1;
@@ -117,15 +115,23 @@ function ProductOptionControl({
       </div>
     );
   }
-  if (option.options.length === 1) {
-    return <strong className="text-kumo-strong">{choiceLabel(option.options[0]!)}</strong>;
-  }
+  const index = optionIndex(option, value);
+  const selectIndex = (next: number) => {
+    const id = optionValueAt(option, next);
+    if (id !== undefined) onChange(id);
+  };
   return (
-    <Radio.Group legend={option.name} value={value} onValueChange={onChange} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {option.options.map((choice) => (
-        <Radio.Item key={choice.id} value={choice.id} label={choice.name} description={choice.price ? `增加 ¥${choice.price.toFixed(2)}` : undefined} />
-      ))}
-    </Radio.Group>
+    <div className="grid min-w-0 gap-3">
+      <input type="range" aria-label={option.name} aria-valuetext={option.options[index] ? choiceLabel(option.options[index]) : ""}
+        className="min-w-0 w-full accent-kumo-brand disabled:cursor-not-allowed disabled:opacity-50"
+        min={0} max={option.options.length - 1} step={1} value={index} list={stopsId} disabled={disabled}
+        onChange={(event) => selectIndex(Number(event.target.value))} />
+      <datalist id={stopsId}>{option.options.map((choice, stop) => <option key={choice.id} value={stop} label={choiceLabel(choice)} />)}</datalist>
+      <div className="flex flex-wrap gap-2" role="group" aria-label={`${option.name}档位`}>
+        {option.options.map((choice, stop) => <Button key={choice.id} variant={index === stop ? "secondary" : "ghost"}
+          size="sm" aria-pressed={index === stop} disabled={disabled} onClick={() => selectIndex(stop)}>{choiceLabel(choice)}</Button>)}
+      </div>
+    </div>
   );
 }
 
@@ -175,12 +181,14 @@ export function ProductConfig({
   billTarget,
   billLoading = false,
   catalogSelection = false,
+  stepsTarget,
 }: {
   product: ProductDetail;
   orderPage?: OrderPage;
   billTarget?: HTMLElement | null;
   billLoading?: boolean;
   catalogSelection?: boolean;
+  stepsTarget?: HTMLElement | null;
 }) {
   const navigate = useNavigate();
   const options = useMemo(() => orderPage?.configOptions ?? product.configOptions ?? [], [orderPage, product.configOptions]);
@@ -207,6 +215,7 @@ export function ProductConfig({
   const dataCenterOption = options.find((option) => option.field === "data_center");
   const imageOption = options.find((option) => option.field === "image");
   const displayedOptions = (product.configMode === "fixed" ? [] : options)
+    .filter(isAdjustableOption)
     .filter((option) => !["data_center", "区域", "region", "area", "image", "cpu"].includes(option.field))
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
@@ -286,6 +295,13 @@ export function ProductConfig({
   });
 
   const externalBill = billTarget !== undefined;
+  const anchor = (name: string) => `product-${product.id}-${name}`;
+  const steps = [
+    ...(catalogSelection ? [{ id: "catalog-specifications", title: "计算规格" }] : []),
+    ...displayedOptions.map((option) => ({ id: anchor(`option-${option.id}`), title: optionTitle(option.field, option.name || option.field) })),
+    ...(imageOption && imageGroups.length ? [{ id: anchor("images"), title: "操作系统" }] : []),
+    { id: anchor("purchase"), title: "购买信息" },
+  ];
   const bill = (
     <LayerCard
       aria-busy={billLoading}
@@ -301,7 +317,7 @@ export function ProductConfig({
       </div>
       <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
         {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>计算规格：{product.name}</span>}
-        {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{item.displayValue}</span>)}
+        {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{withoutZeroPrice(item.displayValue)}</span>)}
         <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
         <span>购买数量：{quantity} 台</span>
         <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
@@ -328,15 +344,15 @@ export function ProductConfig({
           const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty";
           return (
-            <LayerCard key={`${option.id}-${option.field}`} className={`shadow-none grid gap-4 p-5 ${isSlider ? "md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" : ""}`}>
-              <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2>{isSlider && product.configMode === "fixed" ? <p className="text-sm text-kumo-subtle">当前商品采用固定资源值。</p> : null}</div>
+            <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className={`scroll-mt-4 shadow-none grid gap-4 p-5 ${isSlider ? "md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" : ""}`}>
+              <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
               <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>
           );
         })}
 
         {imageOption && imageGroups.length ? (
-          <LayerCard className="shadow-none grid gap-4 p-5">
+          <LayerCard id={anchor("images")} className="scroll-mt-4 shadow-none grid gap-4 p-5">
             <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">镜像分组和版本来自上游实时订单页。</p></div>
             <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
@@ -345,9 +361,9 @@ export function ProductConfig({
           </LayerCard>
         ) : null}
 
-        <LayerCard className="shadow-none grid gap-5 p-5">
+        <LayerCard id={anchor("purchase")} className="scroll-mt-4 shadow-none grid gap-5 p-5">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
-<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle} ¥${item.price.toFixed(2)}` }))} /></div>
+<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
           {options.length ? <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><SensitiveInput label="自动生成密码" value={password} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div> : null}
         </LayerCard>
 
@@ -358,6 +374,7 @@ export function ProductConfig({
         {externalBill ? null : bill}
       </div>
       {billTarget ? createPortal(bill, billTarget) : null}
+      {stepsTarget ? createPortal(<ProductSteps steps={steps} />, stepsTarget) : null}
     </>
   );
 }

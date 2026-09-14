@@ -9,6 +9,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { ProductBillSkeleton, ProductConfigSkeleton } from "../../../shared/components/skeletons";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
+import { ProductSteps } from "../../../shared/components/ProductSteps";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
@@ -138,6 +139,7 @@ function IntegratedProductCatalog() {
   const [selectedSecondaryId, setSelectedSecondaryId] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [billTarget, setBillTarget] = useState<HTMLDivElement | null>(null);
+  const [stepsTarget, setStepsTarget] = useState<HTMLDivElement | null>(null);
   const primaryGroups = useMemo(() => buildPrimaryGroups(products, groups), [groups, products]);
   const children = secondaryGroups(groups, selectedGroup);
   const secondary = children.find((group) => group.id === selectedSecondaryId) ?? children[0];
@@ -164,6 +166,10 @@ function IntegratedProductCatalog() {
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
       <PageState loading={productsQuery.isLoading} skeleton="catalog" skeletonDelayMs={0} error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
         <div className={catalogLayout}>
+          <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:block">
+            <div ref={setStepsTarget} />
+            {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
+          </aside>
           <div className="grid min-w-0 gap-5">
             <LayerCard className="shadow-none grid gap-4 p-4">
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
@@ -182,7 +188,7 @@ function IntegratedProductCatalog() {
               </div>
             </LayerCard>
 
-            <LayerCard className="shadow-none grid gap-4 p-5">
+            <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid gap-4 p-5">
               <h2>计算规格</h2>
               {linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
                 <Table className="whitespace-nowrap">
@@ -198,7 +204,7 @@ function IntegratedProductCatalog() {
 
             {product ? <section aria-label="产品配置">
               <PageState loading={configLoading} skeleton={<ProductConfigSkeleton externalBill />} skeletonDelayMs={0} error={configError ? getApiMessage(configError) : null}>
-                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} catalogSelection /> : null}
+                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} stepsTarget={stepsTarget} catalogSelection /> : null}
               </PageState>
             </section> : null}
           </div>
