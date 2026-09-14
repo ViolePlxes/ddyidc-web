@@ -1,0 +1,49 @@
+import { useEffect } from "react";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { navigationApi, type NavigationScope } from "../api/navigation";
+import { navigationIcon } from "../utils/navigationIcons";
+import type { NavigationGroup } from "../../layouts/DashboardLayout";
+
+const signal = "ddyidc:navigation-changed";
+export async function navigationChanged(client: QueryClient) {
+ await client.invalidateQueries({ queryKey: ["navigation"] });
+ window.dispatchEvent(new Event(signal));
+ try { localStorage.setItem(signal, crypto.randomUUID()); } catch { /* Local refresh remains available. */ }
+}
+const pluginPath = (href: string) => {
+ try {
+  const url = new URL(href, window.location.origin);
+  // Also inspect same-host absolute links, escaped paths and query/hash variants.
+  return decodeURIComponent(url.pathname);
+ } catch { return href; }
+};
+const plugin = (href: string) => pluginPath(href).match(/^\/(?:console|admin)\/(?:marketing\/)?(groupbuy|marketplace|points|cdnsell)(?:\/|$)/)?.[1];
+export function useNavigation(scope: NavigationScope, available: NavigationGroup[]) {
+ const client = useQueryClient();
+ const query = useQuery({ queryKey: ["navigation", scope], queryFn: () => navigationApi.list(scope), refetchInterval: 15_000 });
+ useEffect(() => {
+  const refresh = () => { void client.invalidateQueries({ queryKey: ["navigation"] }); };
+  const storage = (event: StorageEvent) => { if (event.key === signal) refresh(); };
+  window.addEventListener(signal, refresh); window.addEventListener("storage", storage);
+  return () => { window.removeEventListener(signal, refresh); window.removeEventListener("storage", storage); };
+ }, [client]);
+ const availableItems = available.flatMap(group => group.items);
+ const permitted = (href: string) => {
+  const module = plugin(href); if (!module) return true;
+  const path = pluginPath(href);
+  const feature = path.match(/^\/console\/points\/(signin|tasks|mall|orders)(?:\/|$)/)?.[1];
+  if (feature) return availableItems.some(item => item.href === `/console/points/${feature}`);
+  // Known subfeatures (e.g. points signin/mall) retain their individual Gate switches.
+  const known = query.data?.nodes.some(node => node.gate === path);
+  return known ? availableItems.some(item => item.href === path) : availableItems.some(item => plugin(item.href) === module);
+ };
+ const nodes = query.data?.nodes ?? [];
+ const groups: NavigationGroup[] = nodes.filter(node => node.parentId === "0").map(group => ({
+  label: group.name, id: group.id, icon: navigationIcon(group.icon),
+  items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({
+   id: node.id, label: node.href === "/console/groupbuy" && node.name === "拼团" ? (availableItems.find(item => item.href === node.href)?.label ?? node.name) : node.name,
+   href: node.href, icon: navigationIcon(node.icon), target: node.target === "blank" ? "_blank" as const : undefined,
+  })),
+ }));
+ return { ...query, groups };
+}

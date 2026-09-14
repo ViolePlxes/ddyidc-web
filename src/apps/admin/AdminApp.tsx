@@ -207,6 +207,7 @@ const AdminCdnConfigCenter = lazy(() => routeModules.adminCdnsell().then((module
 
 const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 
+const Navigation = lazy(() => routeModules.adminNavigation().then(module => ({ default: module.Navigation })));
 const adminGroups: NavigationGroup[] = [
   {
     label: "概览",
@@ -485,6 +486,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
             <Route
               path="/admin/system"
               element={
