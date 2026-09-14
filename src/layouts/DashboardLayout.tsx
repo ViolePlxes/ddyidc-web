@@ -104,7 +104,7 @@ export function DashboardLayout({
       peekable
       className="h-svh max-h-svh overflow-hidden font-sans"
     >
-      <Sidebar aria-label="主导航" className="font-sans leading-[normal] tracking-normal antialiased">
+      <Sidebar aria-label="主导航" className="font-sans leading-[normal] tracking-normal antialiased [--sidebar-bg:var(--color-kumo-canvas)] [--sidebar-active-bg:var(--color-kumo-recessed)] dark:[--sidebar-active-bg:var(--color-kumo-control)]">
         <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
@@ -199,10 +199,10 @@ export function DashboardLayout({
           <Sidebar.Trigger />
         </Sidebar.Footer>
       </Sidebar>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-base">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-canvas">
         <Surface
           data-dashboard-topbar
-          className="shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
+          className="bg-kumo-canvas shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
