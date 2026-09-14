@@ -166,7 +166,7 @@ function IntegratedProductCatalog() {
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
       <PageState loading={productsQuery.isLoading} skeleton="catalog" skeletonDelayMs={0} error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
         <div className={catalogLayout}>
-          <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:block">
+          <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:h-[calc(100dvh-12rem)] xl:flex-col xl:justify-center xl:overflow-y-auto">
             <div ref={setStepsTarget} />
             {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
           </aside>

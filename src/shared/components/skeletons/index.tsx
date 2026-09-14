@@ -181,7 +181,7 @@ export function ProductSpecTableSkeleton() {
 export function ProductCatalogSkeleton() {
   return (
     <div className={catalogLayout} role="status" aria-label="正在加载订购目录">
-      <div className="hidden min-w-0 gap-3 xl:grid" aria-hidden="true">
+      <div className="hidden min-w-0 gap-3 xl:flex xl:h-[calc(100dvh-12rem)] xl:flex-col xl:justify-center" aria-hidden="true">
         <SkeletonLine className="h-4 w-24" />
         {[0, 1, 2, 3].map((index) => <SkeletonLine key={index} className="h-5 w-32" />)}
       </div>

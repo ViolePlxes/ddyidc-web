@@ -24,7 +24,7 @@ import { generatePassword } from "../utils/credentials";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
-import { choiceLabel, isAdjustableOption, optionIndex, optionValueAt, withoutZeroPrice } from "../utils/productOptions";
+import { choiceLabel, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, withoutZeroPrice } from "../utils/productOptions";
 import { ProductSteps } from "./ProductSteps";
 
 const cycleMonths: Record<string, number> = {
@@ -88,6 +88,26 @@ function ProductOptionControl({
   onChange: (value: string) => void;
 }) {
   const stopsId = useId();
+  const pageSize = 25;
+  const [quantityPage, setQuantityPage] = useState(() => Math.max(0, Math.floor((Number(value) - option.min) / (option.step || 1) / pageSize)));
+  if (!usesResourceSlider(option)) {
+    const quantityCount = Math.floor((option.max - option.min) / (option.step || 1)) + 1;
+    const page = Math.min(quantityPage, Math.max(0, Math.ceil(quantityCount / pageSize) - 1));
+    const tabs = option.optionType === "qty"
+      ? Array.from({ length: Math.min(pageSize, quantityCount - page * pageSize) }, (_, index) => {
+        const quantity = Number((option.min + (page * pageSize + index) * (option.step || 1)).toFixed(8));
+        return { value: String(quantity), label: `${quantity} ${option.unit || ""}`.trim(), disabled };
+      })
+      : option.options.map((choice) => ({ value: choice.id, label: choiceLabel(choice), disabled }));
+    return <div className="grid min-w-0 gap-2">
+      <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />
+      {option.optionType === "qty" && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" size="sm" disabled={disabled || page === 0} onClick={() => setQuantityPage(page - 1)}>上一组</Button>
+        <span className="text-sm text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
+        <Button variant="secondary" size="sm" disabled={disabled || (page + 1) * pageSize >= quantityCount} onClick={() => setQuantityPage(page + 1)}>下一组</Button>
+      </div> : null}
+    </div>;
+  }
   if (option.optionType === "qty") {
     const current = Number(value);
     const step = option.step || 1;
@@ -342,7 +362,7 @@ export function ProductConfig({
 
         {displayedOptions.map((option) => {
           const value = selected[option.id] ?? initialValue(option);
-          const isSlider = option.optionType === "qty";
+          const isSlider = option.optionType === "qty" && usesResourceSlider(option);
           return (
             <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className={`scroll-mt-4 shadow-none grid gap-4 p-5 ${isSlider ? "md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" : ""}`}>
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
