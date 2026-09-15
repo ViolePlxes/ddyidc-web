@@ -1,12 +1,17 @@
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { certificationApi, certificationStatuses } from "../../../shared/api/certification";
 import { Banner, Button, Input, LayerCard, Switch } from "@cloudflare/kumo";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { useAuthStore } from "../../../shared/stores/auth";
 
 export function Profile() {
+  const certification = useQuery({queryKey:["certification"],queryFn:certificationApi.info,gcTime:0});
   const user = useAuthStore((state) => state.user);
   return (
     <>
       <PageHeader title="个人中心" description="以下资料来自当前登录会话。" />
+      <LayerCard className="flex items-center justify-between gap-3 p-5"><span>实名认证：{certification.data ? certificationStatuses[certification.data.status] : "读取中"}</span><Link to="/console/certification">查看实名认证</Link></LayerCard>
       <Banner
         variant="alert"
         title="资料修改与换绑暂不可用"

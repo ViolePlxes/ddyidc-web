@@ -1,3 +1,4 @@
+import { useCertificationGate } from "../../../shared/components/CertificationGate";
 import { Banner, Button, LayerCard, LinkButton, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { clearOrderDraft, loadOrderDraft } from "../../../shared/utils/orderDraft";
 
 export function OrderConfirm() {
+  const certification = useCertificationGate();
   const [draft] = useState(loadOrderDraft);
   const [couponId, setCouponId] = useState("none");
   const [createdOrder, setCreatedOrder] = useState<Order>();
@@ -79,7 +81,7 @@ export function OrderConfirm() {
   if (!draft) {
     return (
       <>
-        <PageHeader title="确认订单" description="订单配置仅在当前浏览器会话中保留。" />
+        {certification.feedback}<PageHeader title="确认订单" description="订单配置仅在当前浏览器会话中保留。" />
         <PageState empty emptyTitle="没有待确认的订单" emptyDescription="请返回商品页选择配置。">
           <span />
         </PageState>
@@ -90,7 +92,7 @@ export function OrderConfirm() {
 
   return (
     <>
-      <PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
+      {certification.feedback}<PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
       <PageState loading={coupons.isLoading} skeleton="detail" error={coupons.error ? getApiMessage(coupons.error) : null}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <LayerCard className="shadow-none p-5">
@@ -124,8 +126,8 @@ export function OrderConfirm() {
           </div>
           {create.error ? <Banner variant="error" title="创建订单失败" description={getApiMessage(create.error)} /> : null}
           <Button
-            loading={create.isPending}
-            onClick={() => create.mutate()}
+            loading={create.isPending || certification.busy}
+            onClick={() => void certification.run(() => create.mutate())}
           >
             提交订单并去支付
           </Button>

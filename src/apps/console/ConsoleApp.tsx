@@ -112,6 +112,7 @@ const ConsoleProducts = lazy(() =>
     .consoleProducts()
     .then((module) => ({ default: module.ConsoleProducts })),
 );
+const Certification = lazy(() => routeModules.consoleCertification().then(module => ({default: module.Certification})));
 const Profile = lazy(() =>
   routeModules.consoleProfile().then((module) => ({ default: module.Profile })),
 );
@@ -414,7 +415,8 @@ export function ConsoleApp() {
               }
             />
             <Route
-              path="/console/profile"
+              path="/console/certification" element={<LazyRoute kind="form"><Certification /></LazyRoute>} />
+            <Route path="/console/profile"
               element={
                 <LazyRoute kind="form">
                   <Profile />

@@ -339,7 +339,7 @@ function ProfileEditor({
               {realnameLabels[customer.realnameStatus] ?? "未知"}
             </Badge>
           </span>
-          <Button variant="ghost" onClick={() => setDialog("实名认证")}>
+          <Button variant="ghost" onClick={() => navigate(`/admin/certifications?customerId=${customer.id}`)}>
             查看
           </Button>
           <Badge variant={customer.status === 1 ? "success" : "warning"}>

@@ -1,3 +1,4 @@
+import { useCertificationGate } from "../../../shared/components/CertificationGate";
 import { Button, LayerCard, Table } from "@cloudflare/kumo";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -6,6 +7,7 @@ import { useCartStore } from "../../../shared/stores/cart";
 import { saveOrderDraft } from "../../../shared/utils/orderDraft";
 
 export function Cart() {
+  const certification = useCertificationGate();
   const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
   const remove = useCartStore((state) => state.remove);
@@ -14,7 +16,7 @@ export function Cart() {
   return (
     <>
       <PageHeader title="购物车" description="购物车仅保存于当前设备；订单提交仍使用真实后端接口。" actions={items.length ? <Button variant="secondary" onClick={clear}>清空</Button> : undefined} />
-      <PageState empty={items.length === 0} emptyTitle="购物车为空">
+      {certification.feedback}<PageState empty={items.length === 0} emptyTitle="购物车为空">
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <LayerCard className="shadow-none overflow-x-auto p-0">
             <Table>
@@ -26,7 +28,7 @@ export function Cart() {
                     <Table.Cell className="text-kumo-subtle">{item.configOptions.length ? item.configOptions.map((option) => `${option.displayName}：${option.displayValue}`).join(" / ") : "固定配置"}</Table.Cell>
                     <Table.Cell>{item.quantity}</Table.Cell>
                     <Table.Cell className="text-right">¥{item.totalYuan.toFixed(2)}</Table.Cell>
-                    <Table.Cell><div className="flex gap-2"><Button size="sm" onClick={() => { saveOrderDraft(item); navigate("/order/confirm", { viewTransition: true }); }}>结算</Button><Button size="sm" variant="ghost" onClick={() => remove(item.cartId)}>移除</Button></div></Table.Cell>
+                    <Table.Cell><div className="flex gap-2"><Button size="sm" disabled={certification.busy} onClick={() => void certification.run(() => { saveOrderDraft(item); navigate("/order/confirm", { viewTransition: true }); })}>结算</Button><Button size="sm" variant="ghost" onClick={() => remove(item.cartId)}>移除</Button></div></Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
