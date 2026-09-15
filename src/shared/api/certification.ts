@@ -1,9 +1,28 @@
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
 export interface CertificationSettings {
+  channel: "manual" | "alipay";
+  bizCode: string;
+  freeAttempts: number;
+  fee: string;
   enabled: boolean;
   requirePurchase: boolean;
   companyEnabled: boolean;
   companyRequiresPerson: boolean;
+}
+export interface CertificationAdminSettings extends CertificationSettings {
+  appId: string;
+  publicKey: string;
+  privateKey?: string;
+  publicKeyMasked: string;
+  privateKeyConfigured: boolean;
+}
+export interface AlipayCertificationResult {
+  certifyId?: string;
+  url?: string;
+  status: number;
+  paymentRequired: boolean;
+  orderId?: string;
+  amountCents?: number;
 }
 export interface CertificationInput {
   name: string;
@@ -19,6 +38,8 @@ export interface CertificationInput {
   authorization: string;
 }
 export interface CertificationRecord extends CertificationInput {
+  certifyChannel: string;
+  certifyAttempts: number;
   id: string;
   customerId: string;
   type: number;
@@ -46,6 +67,25 @@ async function unwrap<T>(promise: Promise<{ data: ApiEnvelope<T> }>) {
   return data.data;
 }
 export const certificationApi = {
+  alipayInitialize: (input: CertificationInput) =>
+    unwrap(
+      userRequest.post<ApiEnvelope<AlipayCertificationResult>>(
+        "/certification/alipay/initialize",
+        input,
+      ),
+    ),
+  alipayCertify: () =>
+    unwrap(
+      userRequest.get<ApiEnvelope<AlipayCertificationResult>>(
+        "/certification/alipay/certify",
+      ),
+    ),
+  alipayStatus: () =>
+    unwrap(
+      userRequest.get<ApiEnvelope<AlipayCertificationResult>>(
+        "/certification/alipay/status",
+      ),
+    ),
   info: () =>
     unwrap(
       userRequest.get<ApiEnvelope<CertificationInfo>>("/certification/info"),
@@ -99,13 +139,13 @@ export const certificationAdminApi = {
     unwrap(adminRequest.post(`/certifications/${id}/${action}`, { reason })),
   settings: () =>
     unwrap(
-      adminRequest.get<ApiEnvelope<CertificationSettings>>(
+      adminRequest.get<ApiEnvelope<CertificationAdminSettings>>(
         "/certifications/settings",
       ),
     ),
-  saveSettings: (input: CertificationSettings) =>
+  saveSettings: (input: CertificationAdminSettings) =>
     unwrap(
-      adminRequest.put<ApiEnvelope<CertificationSettings>>(
+      adminRequest.put<ApiEnvelope<CertificationAdminSettings>>(
         "/certifications/settings",
         input,
       ),

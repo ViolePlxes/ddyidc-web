@@ -19,12 +19,19 @@ import {
   certificationAdminApi as api,
   certificationStatuses as statuses,
   documentTypes,
-  type CertificationSettings,
+  type CertificationAdminSettings,
 } from "../../../shared/api/certification";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 
 const auditLabels: Record<string, string> = {
+  alipay_initialize: "发起支付宝认证",
+  alipay_initialize_failed: "支付宝认证发起失败",
+  alipay_query: "查询支付宝结果",
+  alipay_query_failed: "支付宝结果查询失败",
+  alipay_auto_pass: "支付宝自动通过",
+  fee_order: "创建认证手续费订单",
+  fee_paid: "认证手续费到账",
   submit: "提交认证",
   submit_failed: "提交失败",
   pass: "审核通过",
@@ -42,7 +49,7 @@ function Settings() {
     queryKey: ["certification-settings"],
     queryFn: api.settings,
   });
-  const [form, setForm] = useState<CertificationSettings | null>(null);
+  const [form, setForm] = useState<CertificationAdminSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -73,8 +80,82 @@ function Settings() {
               }
             />
           ))}
+          <Select
+            label="认证通道"
+            value={value.channel}
+            onValueChange={(channel) =>
+              setForm({ ...value, channel: channel as "manual" | "alipay" })
+            }
+            items={[
+              { value: "manual", label: "人工审核" },
+              { value: "alipay", label: "支付宝芝麻信用（自动认证）" },
+            ]}
+          />
+          {value.channel === "alipay" && (
+            <>
+              <Input
+                label="支付宝 AppID"
+                value={value.appId}
+                onChange={(e) => setForm({ ...value, appId: e.target.value })}
+                autoComplete="off"
+              />
+              <Textarea
+                label="支付宝公钥（留空保留）"
+                value={value.publicKey}
+                onChange={(e) =>
+                  setForm({ ...value, publicKey: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <p>{value.publicKeyMasked || "尚未配置公钥"}</p>
+              <Textarea
+                label="应用私钥（仅写入，留空保留）"
+                value={value.privateKey ?? ""}
+                onChange={(e) =>
+                  setForm({ ...value, privateKey: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <p>
+                {value.privateKeyConfigured
+                  ? "私钥已加密保存，不会回显。"
+                  : "尚未配置私钥"}
+              </p>
+              <Select
+                label="认证方式"
+                value={value.bizCode}
+                onValueChange={(bizCode) =>
+                  setForm({ ...value, bizCode: String(bizCode) })
+                }
+                items={[
+                  { value: "FACE", label: "人脸识别" },
+                  { value: "SMART_FACE", label: "快捷认证" },
+                  { value: "CERT_PHOTO", label: "身份证识别" },
+                  { value: "CERT_PHOTO_FACE", label: "人脸 + 身份证" },
+                ]}
+              />
+              <Input
+                label="免费认证次数"
+                type="number"
+                min={1}
+                max={100}
+                value={value.freeAttempts}
+                onChange={(e) =>
+                  setForm({ ...value, freeAttempts: Number(e.target.value) })
+                }
+              />
+              <Input
+                label="认证手续费（元）"
+                value={value.fee}
+                onChange={(e) => setForm({ ...value, fee: e.target.value })}
+              />
+              <p>
+                企业认证仍由人工审核。支付宝初始化失败不累计免费次数，但仍受防刷频控限制。
+              </p>
+            </>
+          )}
           <p>
-            每人仅有一次免费认证机会。开启“企业认证要求先个人认证”时，企业申请入口将不可用；不允许通过个人转企业绕过次数限制。
+            人工通道保留原一次机会规则；支付宝通道按配置的免费次数执行。开启“企业认证要求先个人认证”时，企业申请入口将不可用。
           </p>
           <Button
             disabled={busy}
@@ -84,6 +165,7 @@ function Settings() {
               setMessage("");
               try {
                 await api.saveSettings(value);
+                setForm(null);
                 await query.refetch();
                 setMessage("设置已保存");
               } catch (e) {
@@ -140,7 +222,11 @@ function Detail({
         )}
         {record && (
           <>
-            <Badge>{statuses[record.status]}</Badge>
+            <Badge>
+              {record.certifyChannel === "alipay" && record.status === 1
+                ? "待认证"
+                : statuses[record.status]}
+            </Badge>
             <dl className="grid gap-2">
               {[
                 ["客户ID", record.customerId],
@@ -195,7 +281,7 @@ function Detail({
                 ))}
             </div>
             <div className="flex gap-2">
-              {record.status === 1 && (
+              {record.status === 1 && record.certifyChannel !== "alipay" && (
                 <>
                   <Button onClick={() => setAction("pass")}>通过</Button>
                   <Button
@@ -206,7 +292,7 @@ function Detail({
                   </Button>
                 </>
               )}
-              {record.status === 3 && (
+              {record.status === 3 && record.certifyChannel !== "alipay" && (
                 <Button variant="secondary" onClick={() => setAction("unlock")}>
                   解除限制
                 </Button>
@@ -352,7 +438,7 @@ export function Certifications() {
     <>
       <PageHeader
         title="实名审核"
-        description="人工审核客户认证申请，管理实名限制与设置。"
+        description="查看客户认证结果，审核人工申请并管理认证通道。"
       />
       <Tabs
         value={tab}
@@ -447,7 +533,12 @@ export function Certifications() {
                     </Table.Cell>
                     <Table.Cell>{record.documentNumber}</Table.Cell>
                     <Table.Cell>
-                      <Badge>{statuses[record.status]}</Badge>
+                      <Badge>
+                        {record.certifyChannel === "alipay" &&
+                        record.status === 1
+                          ? "待认证"
+                          : statuses[record.status]}
+                      </Badge>
                     </Table.Cell>
                     <Table.Cell>
                       {new Date(record.createdAt).toLocaleString()}

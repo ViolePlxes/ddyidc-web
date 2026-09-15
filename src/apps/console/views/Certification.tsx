@@ -1,3 +1,4 @@
+import { AlipayCertification } from "../../../shared/components/AlipayCertification";
 import {
   Badge,
   Banner,
@@ -112,7 +113,7 @@ export function Certification() {
     <>
       <PageHeader
         title="实名认证"
-        description="人工审核认证资料。每位客户仅有一次免费认证机会，请认真核对后提交。"
+        description="请提交本人真实资料。已通过的实名认证终身有效。"
       />
       {(error || query.error) && (
         <Banner variant="error" title={error || getApiMessage(query.error)} />
@@ -123,7 +124,11 @@ export function Certification() {
         <>
           <LayerCard className="grid gap-3 p-5">
             <div>
-              <Badge>{certificationStatuses[data.status]}</Badge>
+              <Badge>
+                {data.record?.certifyChannel === "alipay" && data.status === 1
+                  ? "待认证"
+                  : certificationStatuses[data.status]}
+              </Badge>
             </div>
             {data.record && (
               <>
@@ -150,29 +155,36 @@ export function Certification() {
             )}
             {!data.settings.enabled && <p>实名认证暂未开放。</p>}
           </LayerCard>
+          {data.status !== 2 &&
+            (data.record?.certifyChannel === "alipay" ||
+              (data.status === 0 && data.settings.channel === "alipay")) && (
+              <AlipayCertification info={data} changed={query.refetch} />
+            )}
           {data.status === 0 && data.settings.enabled && (
             <>
               <div className="grid gap-4 md:grid-cols-2">
-                <LayerCard className="grid gap-3 p-5">
-                  <h2>个人认证</h2>
-                  <p>提交本人证件资料，由管理员审核。</p>
-                  <Button
-                    disabled={busy}
-                    onClick={() => {
-                      setType("person");
-                      setForm(empty);
-                    }}
-                  >
-                    选择个人认证
-                  </Button>
-                </LayerCard>
+                {data.settings.channel !== "alipay" && (
+                  <LayerCard className="grid gap-3 p-5">
+                    <h2>个人认证</h2>
+                    <p>提交本人证件资料，由管理员审核。</p>
+                    <Button
+                      disabled={busy}
+                      onClick={() => {
+                        setType("person");
+                        setForm(empty);
+                      }}
+                    >
+                      选择个人认证
+                    </Button>
+                  </LayerCard>
+                )}
                 {data.settings.companyEnabled && (
                   <LayerCard className="grid gap-3 p-5">
                     <h2>企业认证</h2>
                     <p>
                       {data.settings.companyRequiresPerson
                         ? "当前要求先个人认证；一次认证机会规则下，企业申请暂不可用。"
-                        : "提交企业与申请人证件资料。"}
+                        : "企业认证由人工审核，请提交企业与申请人证件资料。"}
                     </p>
                     <Button
                       disabled={busy || data.settings.companyRequiresPerson}
