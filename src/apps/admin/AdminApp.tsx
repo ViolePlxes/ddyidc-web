@@ -49,6 +49,7 @@ const AdminCustomers = lazy(() =>
     .adminCustomers()
     .then((module) => ({ default: module.AdminCustomers })),
 );
+const Certifications = lazy(() => routeModules.adminCertifications().then(module => ({default: module.Certifications})));
 const AdminCustomerDetail = lazy(() =>
   routeModules
     .adminCustomerDetail()
@@ -486,6 +487,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
             <Route
               path="/admin/system"

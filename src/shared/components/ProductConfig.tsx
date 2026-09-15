@@ -1,3 +1,4 @@
+import { useCertificationGate } from "./CertificationGate";
 import {
   Badge,
   Banner,
@@ -222,6 +223,7 @@ export function ProductConfig({
 
   const [password, setPassword] = useState(generatePassword);
   const [imageGroup, setImageGroup] = useState("");
+  const certification = useCertificationGate();
   const addCart = useCartStore((state) => state.add);
 
   useEffect(() => {
@@ -344,8 +346,8 @@ export function ProductConfig({
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
           <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={billLoading || outOfStock || specsUnavailable} onClick={() => addCart(draft())}>加入购物车</Button>
-      <Button disabled={billLoading || outOfStock || specsUnavailable} onClick={() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); }}>立即购买</Button>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
+      <Button disabled={billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
     </LayerCard>
   );
   return (
@@ -387,7 +389,7 @@ export function ProductConfig({
           {options.length ? <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><SensitiveInput label="自动生成密码" value={password} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div> : null}
         </LayerCard>
 
-        <Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
+        {certification.feedback}<Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
         <LayerCard className="shadow-none grid gap-2 p-5"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按供应商实际退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
         </div>
 
