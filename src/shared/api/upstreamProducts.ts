@@ -24,6 +24,7 @@ export interface CatalogProduct {
 }
 
 export interface UpstreamProduct {
+  checkedAt: number;
   id: string;
   supplierId: string;
   upstreamProductId: string;
@@ -50,6 +51,15 @@ export interface UpstreamProduct {
   deletable: boolean;
 }
 
+export interface UpstreamChangeSummary {
+  supplierId: string; upstreamProductId: number; checkedAt: number;
+  price: number; stock: number; specification: number; unavailable: number; unchanged: number;
+  stockCompared: boolean; specificationCompared: boolean;
+}
+export interface UpstreamRequestMetric {
+  supplierId: string; name: string; oneMinute: number; fiveMinutes: number; fifteenMinutes: number; averageInterval: number | null;
+}
+
 export interface ProductMappingInput {
   supplierId: string;
   upstreamProductId: number;
@@ -74,6 +84,7 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 }
 
 export const upstreamProductsApi = {
+  metrics: () => unwrap(adminRequest.get<ApiEnvelope<{ items: UpstreamRequestMetric[] }>>("/upstream/metrics")),
   suppliers: () => unwrap(adminRequest.get<ApiEnvelope<UpstreamSupplier[]>>("/upstream/suppliers")),
   list: (supplierId?: string) => unwrap(adminRequest.get<ApiEnvelope<{ items: UpstreamProduct[]; total: number; lossGuard: boolean }>>("/upstream/products", { params: { page: 1, pageSize: 100, supplierId: supplierId || undefined } })),
   catalog: (supplierId: string, keyword: string, page: number) => unwrap(adminRequest.get<ApiEnvelope<{ items: CatalogProduct[]; total: number; syncedAt: number; stale: boolean }>>(`/upstream/suppliers/${supplierId}/catalog`, { params: { keyword: keyword || undefined, page, pageSize: 20 } })),
@@ -98,6 +109,6 @@ export const upstreamProductsApi = {
   })),
   remove: (ids: string[]) => unwrap(adminRequest.post<ApiEnvelope<{ deleted: boolean }>>("/upstream/products/batch-delete", { ids })),
   hidden: (id: string, hidden: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ hidden: boolean }>>(`/upstream/products/${id}/hidden`, { hidden })),
-  sync: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ taskId: string; status: string }>>(`/upstream/products/${id}/sync`)),
+  sync: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ status: string; summary: UpstreamChangeSummary }>>(`/upstream/products/${id}/sync`)),
   setLossGuard: (enabled: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ enabled: boolean }>>("/upstream/config/loss-guard", { enabled })),
 };
