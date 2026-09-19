@@ -2,11 +2,13 @@ import { Banner, Button, Dialog, LayerCard } from "@cloudflare/kumo";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { XIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import {
   paymentApi,
   type AlipayCheckoutMode,
   type PaymentBusinessType,
   type PaymentCheckout,
+  type PaymentChannel,
 } from "../api/payment";
 import { getApiMessage } from "../api/request";
 import { formatMoney } from "../utils/format";
@@ -47,18 +49,24 @@ export function PaymentDialog({
   amountCents,
   disabled = false,
   defaultOpen = false,
-  triggerLabel = "支付宝支付",
+  triggerLabel = "在线支付",
   onPaid,
 }: PaymentDialogProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [checkout, setCheckout] = useState<PaymentCheckout>();
+  const [qrImage, setQrImage] = useState<string>();
+  const [qrError, setQrError] = useState(false);
   const handledPaymentId = useRef<string | undefined>(undefined);
   const pollCount = useRef(0);
 
   const create = useMutation({
-    mutationFn: async ({ mode, popup }: { mode: AlipayCheckoutMode; popup?: Window | null }) => {
+    mutationFn: async ({ channel, mode, popup }: { channel: PaymentChannel; mode: AlipayCheckoutMode; popup?: Window | null }) => {
       try {
-        const result = await paymentApi.create(businessType, businessId, "alipay", mode);
+        const result = await paymentApi.create(businessType, businessId, channel, mode);
+        if (channel === "wechat") {
+          if (!result.wechat?.codeUrl?.startsWith("weixin://wxpay/")) throw new Error("微信未返回有效的收款二维码");
+          return result;
+        }
         if (!result.alipay?.payUrl) throw new Error("支付宝未返回收银台地址");
         const payURL = verifiedCheckoutURL(result.alipay.payUrl);
         if (mode === "wap") {
@@ -108,10 +116,22 @@ export function PaymentDialog({
     void onPaid?.();
   }, [checkout, onPaid, status.data?.status]);
 
-  function startPayment() {
+  useEffect(() => {
+    let active = true;
+    setQrImage(undefined);
+    setQrError(false);
+    if (checkout?.wechat?.codeUrl) {
+      void QRCode.toDataURL(checkout.wechat.codeUrl, { width: 280, margin: 2 })
+        .then((value) => { if (active) setQrImage(value); })
+        .catch(() => { if (active) setQrError(true); });
+    }
+    return () => { active = false; };
+  }, [checkout]);
+
+  function startPayment(channel: PaymentChannel) {
     const mode = checkoutMode();
-    const popup = mode === "page" ? window.open("about:blank", "_blank") : undefined;
-    create.mutate({ mode, popup });
+    const popup = channel === "alipay" && mode === "page" ? window.open("about:blank", "_blank") : undefined;
+    create.mutate({ channel, mode, popup });
   }
 
   const currentState = status.data?.status ?? checkout?.status;
@@ -124,7 +144,7 @@ export function PaymentDialog({
       <Dialog className="grid gap-5 p-6">
         <div className="flex justify-between gap-4">
           <div className="grid gap-2">
-            <Dialog.Title className="text-xl font-semibold">支付宝支付</Dialog.Title>
+            <Dialog.Title className="text-xl font-semibold">在线支付</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               应付 {formatMoney(amountCents)}。到账状态只以服务端验签结果为准。
             </Dialog.Description>
@@ -134,8 +154,15 @@ export function PaymentDialog({
 
         {!checkout ? (
           <LayerCard className="shadow-none grid gap-2 p-5">
-            <strong className="text-kumo-strong">支付宝</strong>
-            <span className="text-sm text-kumo-subtle">电脑端打开电脑网站收银台，移动端跳转手机网站收银台。</span>
+            <strong className="text-kumo-strong">选择支付方式</strong>
+            <span className="text-sm text-kumo-subtle">支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。</span>
+          </LayerCard>
+        ) : null}
+        {checkout?.wechat && currentState === "pending" && !expired ? (
+          <LayerCard className="grid justify-items-center gap-3 p-5">
+            <strong>请使用微信扫码支付 {formatMoney(amountCents)}</strong>
+            {qrImage ? <img src={qrImage} width={280} height={280} alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
+            {qrError ? <Banner variant="error" title="二维码生成失败" description="请关闭后重新打开支付窗口。" /> : null}
           </LayerCard>
         ) : null}
 
@@ -149,7 +176,7 @@ export function PaymentDialog({
         {currentState === "closed" || currentState === "failed" || expired
           ? <Banner variant="error" title="支付单不可继续" description="支付单已关闭、失败或过期，请刷新业务页面后重试。" />
           : null}
-        {pollingStopped ? <Banner variant="alert" title="仍在等待结果" description="尚未收到支付宝异步通知，可稍后在订单或充值记录中再次查看。" /> : null}
+        {pollingStopped ? <Banner variant="alert" title="仍在等待结果" description="尚未收到支付异步通知，可刷新状态或稍后在订单中查看。" /> : null}
         {create.error ? <Banner variant="error" title="创建支付失败" description={getApiMessage(create.error)} /> : null}
         {status.error ? <Banner variant="error" title="查询支付状态失败" description={getApiMessage(status.error)} /> : null}
         {close.error ? <Banner variant="error" title="关闭支付单失败" description={getApiMessage(close.error)} /> : null}
@@ -158,7 +185,8 @@ export function PaymentDialog({
           {checkout && businessType === "order" && currentState === "pending"
             ? <Button variant="secondary" loading={close.isPending} onClick={() => close.mutate()}>关闭支付单</Button>
             : null}
-          {!checkout ? <Button loading={create.isPending} onClick={startPayment}>确认并前往支付宝</Button> : null}
+          {pollingStopped ? <Button variant="secondary" loading={status.isFetching} onClick={() => void status.refetch()}>刷新支付状态</Button> : null}
+          {!checkout ? <><Button disabled={create.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
           <Dialog.Close render={<Button variant="secondary">{currentState === "paid" ? "完成" : "稍后处理"}</Button>} />
         </div>
       </Dialog>

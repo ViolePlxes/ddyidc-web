@@ -83,7 +83,7 @@ export function OrderDetail() {
                 variant={order.status === 1 ? "alert" : "default"}
                 title={order.status === 1 ? "等待在线支付" : "支付结果已由服务端确认"}
                 description={order.status === 1
-                  ? "支付宝会根据设备进入电脑或手机网站收银台；验签到账后系统将异步向上游发起开通。"
+                  ? "支持支付宝收银台与微信扫码支付；验签到账后系统将异步向上游发起开通。"
                   : "订单支付状态来自支付平台回调；实例状态来自真实上游响应。"}
               />
             </div>
