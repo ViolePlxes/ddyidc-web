@@ -19,6 +19,7 @@ import {
   CoinsIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { Route, Routes } from "react-router-dom";
 import {
   DashboardLayout,
@@ -487,7 +488,8 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
-            <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
+            <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
+ <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
             <Route
               path="/admin/system"

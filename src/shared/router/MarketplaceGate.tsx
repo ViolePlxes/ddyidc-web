@@ -8,7 +8,8 @@ export function useMarketplaceAvailability(scope: "public" | "admin") {
   return useQuery({
     queryKey: [scope, "marketplace", "available"],
     queryFn: () => probeMarketplace(scope),
-    staleTime: 60_000,
+    staleTime: 5_000,
+ refetchInterval:5_000,
     retry: false,
   });
 }
@@ -16,9 +17,11 @@ export function useMarketplaceAvailability(scope: "public" | "admin") {
 export function MarketplaceGate({
   scope,
   children,
+ allowExisting = false,
 }: {
   scope: "public" | "admin";
   children: ReactNode;
+ allowExisting?: boolean;
 }) {
   const query = useMarketplaceAvailability(scope);
   if (query.isLoading)
@@ -27,7 +30,7 @@ export function MarketplaceGate({
         <span />
       </PageState>
     );
-  if (!query.data)
+  if (!query.data && !allowExisting)
     return (
       <LayerCard className="shadow-none grid gap-2 p-8">
         <strong className="text-xl text-kumo-strong">404</strong>

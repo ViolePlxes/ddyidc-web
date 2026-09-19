@@ -1,3 +1,4 @@
+import { transfersApi } from "../api/transfers";
 import { useEffect } from "react";
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { navigationApi, type NavigationScope } from "../api/navigation";
@@ -20,6 +21,7 @@ const pluginPath = (href: string) => {
 const plugin = (href: string) => pluginPath(href).match(/^\/(?:console|admin)\/(?:marketing\/)?(groupbuy|marketplace|points|cdnsell)(?:\/|$)/)?.[1];
 export function useNavigation(scope: NavigationScope, available: NavigationGroup[]) {
  const client = useQueryClient();
+ const push = useQuery({queryKey:["transfers","navigation"],queryFn:()=>transfersApi.status(),enabled:scope==="console",refetchInterval:5_000});
  const query = useQuery({ queryKey: ["navigation", scope], queryFn: () => navigationApi.list(scope), refetchInterval: 15_000 });
  useEffect(() => {
   const refresh = () => { void client.invalidateQueries({ queryKey: ["navigation"] }); };
@@ -29,7 +31,8 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
  }, [client]);
  const availableItems = available.flatMap(group => group.items);
  const permitted = (href: string) => {
-  const module = plugin(href); if (!module) return true;
+  if(pluginPath(href)==="/console/transfers")return push.data?.enabled===true;
+ const module = plugin(href); if (!module) return true;
   const path = pluginPath(href);
   const feature = path.match(/^\/console\/points\/(signin|tasks|mall|orders)(?:\/|$)/)?.[1];
   if (feature) return availableItems.some(item => item.href === `/console/points/${feature}`);

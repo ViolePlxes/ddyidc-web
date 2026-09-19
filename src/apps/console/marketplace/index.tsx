@@ -1,3 +1,8 @@
+import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
+import { ConfirmAction } from "../../../shared/components/ConfirmAction";
+import { PaymentDialog } from "../../../shared/components/PaymentDialog";
+import { useAuthStore } from "../../../shared/stores/auth";
+import { useMarketplaceAvailability } from "../../../shared/router/MarketplaceGate";
 import {
   Badge,
   Banner,
@@ -64,7 +69,8 @@ function MarketTab() {
                 <div>
                   <strong className="text-kumo-strong">{r.productName}</strong>
                   <p className="text-sm text-kumo-subtle">
-                    {r.region || "区域不限"} · 剩余 {r.remainingDays} 天
+                    {r.region || "区域未提供"} · 剩余 {r.remainingDays} 天
+ <br />{r.sellerLabel} · {new Date(r.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <Badge variant={r.isRecommended ? "success" : "outline"}>
@@ -76,7 +82,7 @@ function MarketTab() {
                   <span className="text-xs text-kumo-subtle">转让价</span>
                   <p className="text-xl font-semibold">{money(r.price)}</p>
                 </div>
-                  <Link to={`/marketplace/listing/${r.id}`}>
+                  <Link reloadDocument to={`/marketplace/listing/${r.id}`}>
                   <Button>查看并购买</Button>
                 </Link>
               </div>
@@ -111,8 +117,8 @@ function SellTab() {
   const create = useMutation({
     mutationFn: () =>
       marketplaceApi.createListing({ productId: selected?.id, ...form }),
-    onSuccess: () => {
-      setMessage("挂牌已提交，等待平台审核。");
+    onSuccess: (row) => {
+      setMessage(row.status === "on_sale" ? "挂牌已发布。" : "挂牌已提交，等待平台审核。");
       setStep(1);
       setSelected(undefined);
       void client.invalidateQueries({
@@ -130,6 +136,7 @@ function SellTab() {
     <>
       <Notice message={message} />
       <LayerCard className="shadow-none grid gap-5 p-5">
+        {status.data && <p className="text-sm text-kumo-subtle">成交后平台收取 {status.data.feeRate}% 佣金，按元保留两位小数四舍五入；其余金额结算至账户余额。</p>}
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3].map((n) => (
             <Badge key={n} variant={step === n ? "success" : "outline"}>
@@ -306,6 +313,7 @@ function MyListingsTab() {
                   <Table.Cell>{money(r.price)}</Table.Cell>
                   <Table.Cell>
                     <MarketplaceStatusBadge status={r.status} />
+
                   </Table.Cell>
                   <Table.Cell>
                     <div className="flex flex-wrap items-end gap-2">
@@ -350,11 +358,13 @@ function MyListingsTab() {
 }
 
 function OrdersTab() {
+ const user=useAuthStore(state=>state.user);
   const client = useQueryClient();
   const [message, setMessage] = useState("");
   const query = useQuery({
     queryKey: ["marketplace", "orders"],
     queryFn: () => marketplaceApi.orders({ pageSize: 100 }),
+ refetchInterval:5_000,
   });
   const refresh = () =>
     client.invalidateQueries({ queryKey: ["marketplace", "orders"] });
@@ -368,7 +378,8 @@ function OrdersTab() {
     },
     onError: (e) => setMessage(getApiMessage(e)),
   });
-  const refund = useMutation({
+  const receipt=useMutation({mutationFn:marketplaceApi.confirm,onSuccess:()=>{setMessage("确认收货成功，卖家收入已结算到账户余额。");void refresh();},onError:(e)=>setMessage(getApiMessage(e))});
+ const refund = useMutation({
     mutationFn: marketplaceApi.refund,
     onSuccess: () => refresh(),
     onError: (e) => setMessage(getApiMessage(e)),
@@ -407,16 +418,19 @@ function OrdersTab() {
                   <Table.Cell>{money(r.fee)}</Table.Cell>
                   <Table.Cell>
                     <MarketplaceStatusBadge status={r.status} />
+{r.status==="paid"&&r.settleAt&&<p className="text-xs text-kumo-subtle">自动收货：{new Date(r.settleAt).toLocaleString()}</p>}
                   </Table.Cell>
                   <Table.Cell>
                     <div className="flex gap-2">
-                      {r.status === "pending_pay" ? (
+                      {r.status === "pending_pay" && r.buyerId===String(user?.id) ? (
                         <>
                           <Button loading={pay.isPending} onClick={() => pay.mutate({ id: r.id, method: "balance" })}>余额支付</Button>
-                          <Button variant="secondary" loading={pay.isPending} onClick={() => pay.mutate({ id: r.id, method: "alipay" })}>支付宝</Button>
+                          <PaymentDialog businessType="marketplace" businessId={r.id} amountCents={Math.round(Number(r.payAmount)*100)} onPaid={async()=>{await refresh();}} />
                         </>
                       ) : null}
-                      {r.status === "paid" ? (
+                      {r.status === "paid" && r.buyerId===String(user?.id) ? (
+ <>
+ <ConfirmAction title="确认收货" description="确认已接收实例后，平台将结算卖家收入。" loading={receipt.isPending} onConfirm={() => receipt.mutate(r.id)}>确认收货</ConfirmAction>
                         <Button
                           variant="destructive"
                           loading={refund.isPending}
@@ -424,6 +438,7 @@ function OrdersTab() {
                         >
                           申请退款
                         </Button>
+ </>
                       ) : null}
                     </div>
                   </Table.Cell>
@@ -468,6 +483,7 @@ function WalletTab() {
   return (
     <>
       <Notice message={message} />
+<Banner title="新交易收入结算至账户余额" description="买家确认收货或超时后，扣除佣金的收入自动进入主账户。下方可提现金额仅为原市场钱包存量。" /><Link to="/console/finance">查看账户余额与流水</Link>
       <div className="grid gap-4 md:grid-cols-4">
         {[
           ["可提现", wallet.data?.balance],
@@ -513,7 +529,7 @@ function WalletTab() {
             {flows.data?.list.map((r) => (
               <Table.Row key={r.id}>
                 <Table.Cell>{r.flowNo}</Table.Cell>
-                <Table.Cell>{r.type}</Table.Cell>
+                <Table.Cell>{marketplaceFlowLabel(r.type)}</Table.Cell>
                 <Table.Cell>
                   {r.direction === "in" ? "入账" : "出账"}
                 </Table.Cell>
@@ -647,7 +663,10 @@ function WantsTab() {
 
 export function MarketplaceConsole() {
   const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") ?? "market";
+  const availability=useMarketplaceAvailability("public");
+ const requestedTab=params.get("tab")??"market";
+ const allowedTabs=availability.data?tabs:tabs.filter(item=>["mine","orders","wallet"].includes(item.value));
+ const tab=allowedTabs.some(item=>item.value===requestedTab)?requestedTab:"orders";
   useEffect(() => {
     if (!tabs.some((x) => x.value === tab))
       setParams({ tab: "market" }, { replace: true });
@@ -658,14 +677,14 @@ export function MarketplaceConsole() {
         title="交易市场"
         description="挂牌、购买、求购和资金记录统一管理。"
         actions={
-          <Link to="/marketplace">
+          availability.data ? <Link reloadDocument to="/marketplace">
             <Button variant="secondary">公开市场</Button>
-          </Link>
+          </Link> : <span>市场暂未开放，已有交易继续处理</span>
         }
       />
       <Tabs
         variant="segmented"
-        tabs={tabs}
+        tabs={allowedTabs}
         value={tab}
         onValueChange={(value) => setParams({ tab: value })}
       />

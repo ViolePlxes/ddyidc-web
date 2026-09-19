@@ -1,3 +1,4 @@
+import { ConfirmAction } from "../../../shared/components/ConfirmAction";
 import {
   Badge,
   Banner,
@@ -14,7 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { marketplaceApi, type Listing } from "../../../shared/api/marketplace";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -56,7 +57,8 @@ function ListingCard({ row, refundEnabled, feeRate }: { row: Listing; refundEnab
           {row.productName}
         </h2>
         <p className="text-sm text-kumo-subtle">
-          {row.region || "区域不限"} · 剩余 {row.remainingDays} 天
+          {row.region || "区域未提供"} · 剩余 {row.remainingDays} 天
+ <br />{row.sellerLabel} · {new Date(row.createdAt).toLocaleString()}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 bg-kumo-control p-4">
@@ -111,7 +113,7 @@ export function MarketplaceHome() {
         title="交易市场"
         description="安全流转站内云产品，成交后系统自动完成归属变更。"
         actions={
-          <Link to="/console/marketplace?tab=sell">
+          <Link reloadDocument to="/console/marketplace?tab=sell">
             <Button>出售云产品</Button>
           </Link>
         }
@@ -205,7 +207,6 @@ export function MarketplaceHome() {
 export function MarketplaceListingDetail() {
   const { id = "" } = useParams();
   const user = useAuthStore((s) => s.user);
-  const navigate = useNavigate();
   const client = useQueryClient();
   const [message, setMessage] = useState("");
   const [showAgreement, setShowAgreement] = useState(false);
@@ -218,7 +219,7 @@ export function MarketplaceListingDetail() {
   const agreement = useQuery({ queryKey: ["marketplace", "agreement"], queryFn: marketplaceApi.agreement, enabled: showAgreement });
   const buy = useMutation({
     mutationFn: () => marketplaceApi.createOrder(id),
-    onSuccess: () => navigate("/console/marketplace?tab=orders"),
+    onSuccess: () => window.location.assign("/console/marketplace?tab=orders"),
     onError: (e) => setMessage(getApiMessage(e)),
   });
   const favorite = useMutation({
@@ -332,19 +333,7 @@ export function MarketplaceListingDetail() {
                   支付成功后，平台在本地事务内变更产品归属；交易期间资源操作会被锁定。
                 </p>
               </div>
-              <Button
-                loading={buy.isPending}
-                disabled={row.status !== "on_sale"}
-                onClick={() =>
-                  user
-                    ? window.confirm("确认下单并锁定此商品？订单超时未支付将自动取消。") && buy.mutate()
-                    : navigate(
-                        `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
-                      )
-                }
-              >
-                立即购买
-              </Button>
+              <ConfirmAction title="确认下单" description="下单将锁定此商品；超时未支付会自动取消。" loading={buy.isPending} disabled={row.status !== "on_sale"} onConfirm={() => user ? buy.mutate() : window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)}>立即购买</ConfirmAction>
               {user ? (
                 <Button
                   variant="secondary"

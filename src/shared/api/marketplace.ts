@@ -30,6 +30,8 @@ export interface ListingPrice {
   createdAt: string;
 }
 export interface Listing {
+ sellerLabel?: string;
+ riskFlag?: string;
   id: string;
   listingNo: string;
   sellerId?: string;
@@ -139,6 +141,7 @@ export interface Report {
   createdAt: string;
 }
 export interface MarketplaceSettings extends MarketplaceStatus {
+ autoConfirmHours: number;
   id: string;
   auditEnabled: boolean;
   requireBackupConfirm: boolean;
@@ -200,6 +203,7 @@ export async function probeMarketplace(scope: "public" | "admin") {
 }
 
 export const marketplaceApi = {
+ confirm: (id:string)=>unwrap(userRequest.post(`/marketplace/orders/${id}/confirm`,{})),
   status: () =>
     unwrap(
       userRequest.get<ApiEnvelope<MarketplaceStatus>>("/marketplace/status"),

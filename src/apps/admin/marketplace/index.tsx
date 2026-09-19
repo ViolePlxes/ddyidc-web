@@ -1,3 +1,4 @@
+import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
 import {
   Badge,
   Banner,
@@ -27,7 +28,8 @@ const statusLabel: Record<string, string> = {
   on_sale: "在售",
   locked: "锁定",
   sold: "已售",
-  paid: "已成交",
+  paid: "待确认收货",
+ refund_pending:"原路退款处理中",
   settled: "已结算",
   refunded: "已退款",
   rejected: "已拒绝",
@@ -180,6 +182,7 @@ export function MarketplaceAdminListings() {
                   <Table.Cell>
                     <strong>{r.productName}</strong>
                     <p className="text-xs text-kumo-subtle">{r.listingNo}</p>
+ {r.riskFlag&&<Badge variant="warning">短期再次挂牌</Badge>}
                   </Table.Cell>
                   <Table.Cell>{r.sellerId}</Table.Cell>
                   <Table.Cell>{money(r.price)}</Table.Cell>
@@ -360,6 +363,8 @@ export function MarketplaceAdminFlows() {
             all: "全部",
             buyer_paid: "买家付款",
             seller_pending: "卖家待结算",
+ settled_to_balance:"结算至主账户",
+ platform_commission:"平台佣金收益",
             settled: "解冻结算",
             refund_reversed: "退款回滚",
             withdraw: "提现",
@@ -398,7 +403,7 @@ export function MarketplaceAdminFlows() {
                 <Table.Row key={r.id}>
                   <Table.Cell>{r.flowNo}</Table.Cell>
                   <Table.Cell>{r.userId}</Table.Cell>
-                  <Table.Cell>{r.type}</Table.Cell>
+                  <Table.Cell>{marketplaceFlowLabel(r.type)}</Table.Cell>
                   <Table.Cell>
                     {r.direction === "in" ? "入" : "出"} {money(r.amount)}
                   </Table.Cell>
@@ -574,6 +579,7 @@ export function MarketplaceAdminReports() {
 }
 
 const defaults: MarketplaceSettings = {
+ autoConfirmHours:24,
   id: "1",
   enabled: true,
   maintenance: false,
@@ -621,7 +627,7 @@ export function MarketplaceAdminSettings() {
     mutationFn: () => marketplaceAdminApi.saveSettings(form),
     onSuccess: (v) => {
       setForm(v);
-      setMessage("交易市场设置已保存。部分总开关变更将在服务重启后完整生效。");
+      setMessage("交易市场设置已保存并实时生效，已有交易继续处理。");
     },
     onError: (e) => setMessage(getApiMessage(e)),
   });
@@ -690,13 +696,15 @@ export function MarketplaceAdminSettings() {
             <h2 className="font-semibold text-kumo-strong">交易费用</h2>
             <div className="grid gap-4 md:grid-cols-3">
               <Select
-                label="手续费模式"
+                disabled
+                label="手续费模式（按比例）"
                 value={form.feeType}
                 onValueChange={(v) => update("feeType", v ?? "ratio")}
                 items={{ ratio: "按比例", fixed: "固定金额" }}
               />
               <Select
-                label="手续费承担方"
+                disabled
+                label="手续费承担方（卖家）"
                 value={form.feeBearer}
                 onValueChange={(v) => update("feeBearer", v ?? "seller")}
                 items={{ seller: "卖家", buyer: "买家", platform: "平台" }}
@@ -708,7 +716,8 @@ export function MarketplaceAdminSettings() {
                 onChange={(e) => update("feeRate", e.target.value)}
               />
               <Input
-                label="成交固定手续费（元）"
+                disabled
+                label="固定手续费（新交易不使用）"
                 type="number"
                 value={form.feeFixed}
                 onChange={(e) => update("feeFixed", e.target.value)}
@@ -742,12 +751,14 @@ export function MarketplaceAdminSettings() {
                 onCheckedChange={(v) => update("requireBackupConfirm", v)}
               />
               <Switch
-                label="挂牌须实名"
+                disabled
+ label="挂牌须实名（必须）"
                 checked={form.requireRealnameListing}
                 onCheckedChange={(v) => update("requireRealnameListing", v)}
               />
               <Switch
-                label="购买须实名"
+                disabled
+ label="购买须实名（必须）"
                 checked={form.requireRealnamePurchase}
                 onCheckedChange={(v) => update("requireRealnamePurchase", v)}
               />
@@ -801,15 +812,15 @@ export function MarketplaceAdminSettings() {
                 }
               />
               <Input
-                label="结算冻结天数"
+                label="自动确认收货（小时）"
                 type="number"
-                value={form.settleFreezeDays}
+                value={form.autoConfirmHours}
                 onChange={(e) =>
-                  update("settleFreezeDays", Number(e.target.value))
+                  update("autoConfirmHours", Number(e.target.value))
                 }
               />
               <Input
-                label="退款窗口天数"
+                label="存量订单退款窗口天数"
                 type="number"
                 value={form.refundWindowDays}
                 onChange={(e) =>

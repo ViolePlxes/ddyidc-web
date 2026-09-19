@@ -18,6 +18,7 @@ import {
   CloudCheckIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import {
@@ -414,7 +415,8 @@ export function ConsoleApp() {
                 </LazyRoute>
               }
             />
-            <Route
+            <Route path="/console/transfers" element={<LazyRoute kind="table"><TransfersPage /></LazyRoute>} />
+ <Route
               path="/console/certification" element={<LazyRoute kind="form"><Certification /></LazyRoute>} />
             <Route path="/console/profile"
               element={
@@ -516,7 +518,7 @@ export function ConsoleApp() {
             <Route
               path="/console/marketplace"
               element={
-                <MarketplaceGate scope="public">
+                <MarketplaceGate scope="public" allowExisting>
                   <LazyRoute kind="dashboard">
                     <MarketplaceConsole />
                   </LazyRoute>

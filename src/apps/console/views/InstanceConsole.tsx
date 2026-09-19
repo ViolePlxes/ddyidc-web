@@ -1,3 +1,4 @@
+import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
 import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -210,6 +211,7 @@ export function InstanceConsole() {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
           <div aria-label="实例操作" className="flex flex-wrap gap-2">
+ <TransferDialog instanceId={instanceId} />
             <ActionDialog label="开机" title="确认开机" description="将向上游提交真实开机指令。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
             <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />

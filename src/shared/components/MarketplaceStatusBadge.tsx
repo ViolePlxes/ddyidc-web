@@ -7,8 +7,9 @@ const labels: Record<string, string> = {
   on_sale: "在售",
   locked: "交易锁定",
   sold: "已售出",
-  paid: "已成交",
-  settled: "已结算",
+  paid: "待确认收货",
+ refund_pending:"原路退款处理中",
+  settled: "已完成",
   refunded: "已退款",
   rejected: "已拒绝",
   off_shelf: "已下架",
@@ -31,6 +32,16 @@ export function MarketplaceStatusBadge({ status }: { status: string }) {
 }
 
 export function marketplaceFee(amount: string, type: string, rate: string, fixed: string) {
-  const value = Math.max(0, Number(amount || 0));
-  return type === "fixed" ? Math.max(0, Number(fixed || 0)) : value * Math.max(0, Number(rate || 0)) / 100;
+  const cents = Math.round(Math.max(0, Number(amount || 0)) * 100);
+  const basisPoints = Math.round(Math.max(0, Number(rate || 0)) * 100);
+  return type === "fixed" ? Math.round(Math.max(0, Number(fixed || 0)) * 100) / 100 : Math.floor((cents * basisPoints + 5_000) / 10_000) / 100;
+}
+
+export function marketplaceFlowLabel(type: string): string {
+  const labels: Record<string, string> = {
+    buyer_paid: "买家付款", seller_pending: "卖家待结算", settled_to_balance: "结算至主账户",
+    platform_commission: "平台佣金收益", settled: "交易结算", refund_reversed: "退款回滚",
+    withdraw: "提现", withdraw_reject: "提现拒绝退回", withdraw_hold: "申请提现冻结",
+  };
+  return labels[type] ?? type;
 }

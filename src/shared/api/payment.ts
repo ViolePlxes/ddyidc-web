@@ -2,7 +2,7 @@ import type { AxiosResponse } from "axios";
 import { userRequest, type ApiEnvelope } from "./request";
 
 export type PaymentChannel = "wechat" | "alipay";
-export type PaymentBusinessType = "order" | "recharge";
+export type PaymentBusinessType = "order" | "recharge" | "marketplace";
 export type AlipayCheckoutMode = "page" | "wap";
 export type PaymentState = "pending" | "paid" | "closed" | "failed" | "refunded";
 
@@ -29,7 +29,7 @@ function unwrap<T>(request: Promise<AxiosResponse<ApiEnvelope<T>>>) {
 
 export const paymentApi = {
   create: (businessType: PaymentBusinessType, businessId: string, channel: PaymentChannel, mode: AlipayCheckoutMode) =>
-    businessType === "order"
+    businessType === "marketplace" ? unwrap(userRequest.post<ApiEnvelope<PaymentCheckout>>(`/marketplace/orders/${businessId}/pay`,{method:channel,mode})) : businessType === "order"
       ? unwrap(userRequest.post<ApiEnvelope<PaymentCheckout>>(`/payment/order/${businessId}/create`, { channel, mode }))
       : unwrap(userRequest.post<ApiEnvelope<PaymentCheckout>>("/payment/recharge/create", { rechargeId: businessId, channel, mode })),
   status: (businessType: PaymentBusinessType, businessId: string) =>
