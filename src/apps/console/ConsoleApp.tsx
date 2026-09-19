@@ -18,6 +18,7 @@ import {
   CloudCheckIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
@@ -415,6 +416,7 @@ export function ConsoleApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/console/video-bindings" element={<LazyRoute kind="cards"><PointsGate scope="public"><VideoBindings /></PointsGate></LazyRoute>} />
             <Route path="/console/transfers" element={<LazyRoute kind="table"><TransfersPage /></LazyRoute>} />
  <Route
               path="/console/certification" element={<LazyRoute kind="form"><Certification /></LazyRoute>} />

@@ -10,7 +10,7 @@ import { PointsBadge } from "../../../shared/components/PointsBadge";
 
 const num=(v:number)=>new Intl.NumberFormat("zh-CN").format(v);
 function Feedback({message}:{message:string}){return message?<Banner variant="default" title={message}/>:null}
-const eventItems={register:"注册",login:"登录",signin:"签到",recharge:"充值",order:"下单",renew:"续费",upgrade:"升级",first_purchase:"首购",group_buy:"拼团成功",seckill:"秒杀成功（预留）",ticket:"提交工单",invite:"推介",profile_complete:"完善资料",certification:"实名认证（预留）",manual:"手动"};
+const eventItems={douyin_follow:"抖音关注",kuaishou_follow:"快手关注",bilibili_follow:"B站关注",xhs_follow:"小红书关注",register:"注册",login:"登录",signin:"签到",recharge:"充值",order:"下单",renew:"续费",upgrade:"升级",first_purchase:"首购",group_buy:"拼团成功",seckill:"秒杀成功（预留）",ticket:"提交工单",invite:"推介",profile_complete:"完善资料",certification:"实名认证（预留）",manual:"手动"};
 
 export function PointsDashboard(){const query=useQuery({queryKey:["admin","points","stats"],queryFn:pointsAdminApi.stats});return <><PageHeader title="积分统计" description="积分发放、消耗、余额与来源分布。"/><PageState loading={query.isLoading} skeleton="dashboard" error={query.error?getApiMessage(query.error):null}>{query.data?<><MetricGrid metrics={[{label:"累计发放",value:num(query.data.totalEarned),hint:"全部积分账户"},{label:"累计消耗",value:num(query.data.totalUsed),hint:"兑换、退款与过期"},{label:"当前余额",value:num(query.data.balance),hint:"用户可用积分"},{label:"积分账户",value:num(query.data.accounts),hint:"已创建账户"}]}/><LayerCard className="shadow-none grid gap-3 p-5"><h2 className="text-lg font-semibold text-kumo-strong">来源分布</h2>{query.data.sources.map(v=><div key={v.source} className="flex justify-between border-b border-kumo-line py-3"><span>{v.source}</span><strong>{num(v.points)}</strong></div>)}</LayerCard></>:null}</PageState></>}
 

@@ -19,6 +19,7 @@ import {
   CoinsIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { Route, Routes } from "react-router-dom";
 import {
@@ -488,6 +489,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/admin/video-bindings" element={<LazyRoute kind="cards"><VideoBindings admin /></LazyRoute>} />
             <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
  <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
