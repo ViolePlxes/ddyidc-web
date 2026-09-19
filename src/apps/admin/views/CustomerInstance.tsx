@@ -13,7 +13,7 @@ import { CopyValue, InfoGroup, InstanceMonitoring, configValue } from '../../con
 import { VncConsole } from '../../console/components/VncConsole';
 
 const statuses:Record<number,string>={1:'待开通',2:'开通中',3:'运行中',4:'已停机',5:'已过期',6:'已删除'};
-const actions:Record<string,string>={start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
+const actions:Record<string,string>={import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
 export function CustomerInstanceVnc(){
  const {customerId='',instanceId=''}=useParams();const [search]=useSearchParams();
  const token=search.get('token')||'';
@@ -63,7 +63,7 @@ export function CustomerInstance(){
      <div className="grid gap-5"><InfoGroup title="基础信息" rows={[
       {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`/admin/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
       {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'状态',value:<Badge variant={item.status===3?'success':'secondary'}>{statuses[item.status]||item.status}</Badge>},
-      {label:'电源状态',value:({running:'运行中',stopped:'已关机',starting:'启动中',stopping:'关机中',unknown:'未知'} as Record<string,string>)[item.powerStatus||'']||item.powerStatus||'—'},{label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
+      {label:'电源状态',value:({on:'运行中',off:'已关机',operating:'操作中',pending:'待开通',fault:'异常',running:'运行中',stopped:'已关机',starting:'启动中',stopping:'关机中',unknown:'未知'} as Record<string,string>)[item.powerStatus||'']||item.powerStatus||'—'},{label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
       {label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},
      ]}/><InfoGroup title="财务信息" rows={[
       {label:'计费周期',value:cycleLabels[item.billingCycle||'']||item.billingCycle||'—'},{label:'到期时间',value:item.expiresAt?formatDate(item.expiresAt):'—'},
@@ -78,7 +78,7 @@ export function CustomerInstance(){
     </div>}
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
     {tab==='monitor'&&<InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error?getApiMessage(monitor.error):undefined}/>}
-    {tab==='logs'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>状态</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header><Table.Body>{item.events.length?item.events.map(e=><Table.Row key={e.id}><Table.Cell>{formatDate(e.createdAt)}</Table.Cell><Table.Cell>{actions[e.type]||e.type}</Table.Cell><Table.Cell>{e.status===1?'处理中':e.status===2?'成功':'失败'}</Table.Cell><Table.Cell>{e.message||'—'}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
+    {tab==='logs'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>状态</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header><Table.Body>{item.events.length?item.events.map(e=><Table.Row key={e.id}><Table.Cell>{formatDate(e.createdAt)}</Table.Cell><Table.Cell>{actions[e.type]||e.type}</Table.Cell><Table.Cell>{e.status===1?'处理中':e.status===2?'成功':'失败'}</Table.Cell><Table.Cell>{e.type==='import'?'已拉取真实实例信息并完成绑定':e.message||'—'}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
    </>}
   </PageState>
  </div>;

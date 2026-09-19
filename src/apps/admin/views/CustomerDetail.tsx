@@ -1,3 +1,4 @@
+import { ImportInstanceDialog } from "./ImportInstanceDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";
 import {
@@ -104,6 +105,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
           : ["产品", "订单号", "状态", "金额（元）", "创建时间"];
   return (
     <div className="grid gap-4">
+      {kind === "products" && <div className="flex justify-end"><ImportInstanceDialog customerId={id} /></div>}
       {kind === "products" ? (
         <Tabs
           variant="segmented"
