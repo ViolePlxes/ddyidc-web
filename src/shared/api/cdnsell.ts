@@ -1,6 +1,6 @@
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
 
-export interface CdnsellStatus { enabled:boolean; phase:string }
+export interface CdnsellStatus { enabled:boolean; phase:string; ready?:boolean; setupMessage?:string }
 export interface CdnProduct { id:string; name:string; capacityBytes:number; validDays:number; price:number; tierPrices:Record<string,number>; minQty:number; maxQty:number; description:string; isHot:boolean; status:boolean; sort:number }
 export interface CdnBatch { id:string; productId:string; orderId:string; originalBytes:number; consumedBytes:number; remainingBytes:number; effectiveTime:string; expireTime:string; status:string }
 export interface MeterRecord { id:string; domainId:string; windowStart:string; windowEnd:string; confirmedBytes:number; revisedBytes:number; status:string; source:string }

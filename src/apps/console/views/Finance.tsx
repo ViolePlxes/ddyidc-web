@@ -73,9 +73,8 @@ export function Finance() {
           </div>
         </LayerCard>
       ) : null}
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4">
         <LayerCard className="shadow-none grid gap-2 p-5"><span className="text-sm text-kumo-subtle">账户余额</span><strong className="text-3xl text-kumo-strong">{balance.data ? `¥${Number(balance.data.balance).toFixed(2)}` : "—"}</strong><span className="text-sm text-kumo-subtle">{balance.error ? getApiMessage(balance.error) : "当前可用余额（元）"}</span></LayerCard>
-        <LayerCard className="shadow-none grid gap-2 p-5"><span className="text-sm text-kumo-subtle">供应商可用余额</span><strong className="text-3xl text-kumo-strong">暂不可查</strong><span className="text-sm text-kumo-subtle">用户端无供应商余额接口</span></LayerCard>
       </section>
       <section className="grid gap-3">
         <h2 className="text-lg font-semibold text-kumo-strong">充值记录</h2>

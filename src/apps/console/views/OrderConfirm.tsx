@@ -59,7 +59,7 @@ export function OrderConfirm() {
       <>
         <PageHeader title="订单已创建" description={`订单 ${createdOrder.orderNo} 正在等待支付。`} />
         <LayerCard className="shadow-none grid gap-5 p-5">
-          <Banner title="请完成在线支付" description="到账后系统会自动提交上游开通，并跳转至订单详情。" />
+          <Banner title="请完成在线支付" description="到账后系统会自动开通服务，并跳转至订单详情。" />
           <div className="flex flex-wrap justify-end gap-3">
             <LinkButton href={`/console/orders/${createdOrder.id}`} variant="secondary">查看订单详情</LinkButton>
             <PaymentDialog

@@ -20,7 +20,7 @@ export function TransfersPage({ admin = false }: { admin?: boolean }) {
  const settings = useQuery({ queryKey: ["transfers", "settings", admin], queryFn: () => admin ? transfersApi.settings() : transfersApi.status(), refetchInterval: 5_000 });
  const refresh = async () => { await Promise.all([client.invalidateQueries({ queryKey: ["transfers"] }), client.invalidateQueries({ queryKey: ["instances"] })]); };
  const save = useMutation({ mutationFn: transfersApi.save, onSuccess: refresh });
- const decide = useMutation({ mutationFn: () => { if (!confirm) throw new Error("请选择转让记录"); return transfersApi.decide(confirm.row.id, confirm.action); }, onSuccess: async () => { setMessage(confirm?.action === "accept" ? "过户成功。请进入实例详情，根据真实能力重置密码；上游不支持时请自行更新访问凭证。" : "转让状态已更新"); setConfirm(undefined); await refresh(); } });
+ const decide = useMutation({ mutationFn: () => { if (!confirm) throw new Error("请选择转让记录"); return transfersApi.decide(confirm.row.id, confirm.action); }, onSuccess: async () => { setMessage(confirm?.action === "accept" ? "过户成功。请进入实例详情重置密码；如暂不支持自助重置，请登录实例更新访问凭证。" : "转让状态已更新"); setConfirm(undefined); await refresh(); } });
  const rows = (query.data?.list ?? []).filter(row => tab !== "pending" || (row.status === "pending" && row.toCustomerId === String(user?.id)));
  return <div className="grid gap-5">
   <PageHeader title={admin ? "实例转让记录" : "实例接收中心"} description="直连转让免费；市场过户与交易号关联。原购买订单仍归付款人，过户记录保留原订单标记。" />

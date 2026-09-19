@@ -56,7 +56,7 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
     { title: "网卡", unit: "bps", series: [{ name: "流入", data: monitorPoints(monitor?.networkIn) }, { name: "流出", data: monitorPoints(monitor?.networkOut) }] },
   ];
   return <section aria-label="实例监控" className="grid min-w-0 content-start gap-4">
-    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-sm text-kumo-subtle">最近 24 小时 · 时间范围以上游实际采样为准</p></div>
+    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-sm text-kumo-subtle">最近 24 小时 · 时间范围以实际采样为准</p></div>
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;

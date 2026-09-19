@@ -120,7 +120,7 @@ function ReinstallDialog({
         <div className="grid gap-2">
           <Dialog.Title className="text-xl font-semibold">{review ? "二次确认重装" : "选择重装系统"}</Dialog.Title>
           <Dialog.Description className="text-kumo-subtle">
-            {review ? "请再次核对镜像与端口。确认后将向上游发送真实重装指令。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
+            {review ? "请再次核对镜像与端口，确认后将开始重装系统。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
           </Dialog.Description>
         </div>
         {images.isLoading ? <PageState loading skeleton="form"><></></PageState> : null}
@@ -188,7 +188,7 @@ export function InstanceConsole() {
           return;
         }
       }
-      setNotice(result.message || "操作已提交至上游");
+      setNotice(result.message || "操作已提交");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["instances", instanceId] }),
         queryClient.invalidateQueries({ queryKey: ["instances", "product-list"] }),
@@ -212,7 +212,7 @@ export function InstanceConsole() {
           <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
           <div aria-label="实例操作" className="flex flex-wrap gap-2">
  <TransferDialog instanceId={instanceId} />
-            <ActionDialog label="开机" title="确认开机" description="将向上游提交真实开机指令。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
+            <ActionDialog label="开机" title="确认开机" description="确认后将启动此实例。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
             <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
             <Button variant="secondary" disabled>硬关机（未开放）</Button><Button variant="secondary" disabled>硬重启（未开放）</Button><Button variant="secondary" disabled>救援系统（未开放）</Button>
@@ -223,7 +223,7 @@ export function InstanceConsole() {
           { value: "overview", label: "概要" }, { value: "upgrade", label: "产品升级降级" }, { value: "security", label: "安全组" },
           { value: "settings", label: "设置" }, { value: "logs", label: "日志" }, { value: "billing", label: "财务" },
         ]} />
-        {instance.warning ? <Banner variant="alert" title="上游信息提示" description={instance.warning} /> : null}
+        {instance.warning ? <Banner variant="alert" title="实例信息提示" description={instance.warning} /> : null}
         {notice ? <Banner title="操作结果" description={notice} /> : null}
         {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
         {activeTab === "overview" ? <div className="grid items-start gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">
@@ -231,7 +231,7 @@ export function InstanceConsole() {
             <InfoGroup title="实例信息" rows={[
               { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
               { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
-              { label: "上游实例 ID", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
+              { label: "资源编号", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
               { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: config(["remark", "notes"], ["备注", "备注信息"]) },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
@@ -257,7 +257,7 @@ export function InstanceConsole() {
         {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
         {activeTab === "upgrade" || activeTab === "security" ? <LayerCard className="grid gap-2 p-6"><h2 className="text-lg font-semibold">{activeTab === "upgrade" ? "产品升级降级" : "安全组"}</h2><p className="text-kumo-subtle">功能开发中，当前尚无可用接口。</p></LayerCard> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
-          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">当前上游没有已验证的客户侧销毁协议。</p></LayerCard>
+          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
                       <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>

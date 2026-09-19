@@ -475,7 +475,7 @@ export function AdminCustomers() {
         loading={query.isLoading}
         skeleton="table"
         error={query.error ? getApiMessage(query.error) : null}
-        empty={!query.isLoading && !query.error && (query.data?.items.length ?? 0) === 0}
+        empty={!query.isLoading && !query.error && (query.data?.items?.length ?? 0) === 0}
         emptyTitle="暂无客户"
       >
         <div className="grid gap-3">
@@ -489,7 +489,7 @@ export function AdminCustomers() {
                 </Table.Row>
               </Table.Header>
               <Table.Body data-animate-list>
-                {query.data?.items.map((customer) => (
+                {query.data?.items?.map((customer) => (
                   <Table.Row key={customer.id} className="hover:bg-kumo-tint">
                     {renderedColumns.map((column) => (
                       <Table.Cell key={`${customer.id}-${column.key}`}>

@@ -16,7 +16,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
     <>
       <PageHeader
         title={product?.name ?? (publicView ? "云服务器配置" : "配置云服务器")}
-        description="人工规格与上游真实配置统一呈现，提交前可核对完整计费明细。"
+        description="查看产品规格与可选配置，提交前请核对计费明细。"
       />
       <PageState
         loading={productQuery.isLoading}
@@ -30,7 +30,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
             {product.supplierId !== "0" && orderPageQuery.error ? (
               <Banner
                 variant="error"
-                title="上游配置读取失败"
+                title="产品配置读取失败"
                 description={getApiMessage(orderPageQuery.error)}
               />
             ) : null}

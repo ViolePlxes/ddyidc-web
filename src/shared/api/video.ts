@@ -1,5 +1,5 @@
 import { adminRequest, userRequest, type ApiEnvelope } from './request';
-export interface VideoPlatform {code:string;name:string;enabled:boolean;mode:string;callbackUrl:string;officialUrl:string;notes:string;appConfigured:boolean;secretConfigured:boolean;officialId?:string;scope?:string;capability:string;event:string}
+export interface VideoPlatform {code:string;name:string;enabled:boolean;ready:boolean;setupMessage?:string;mode:string;callbackUrl:string;officialUrl:string;notes:string;appConfigured:boolean;secretConfigured:boolean;officialId?:string;scope?:string;capability:string;event:string}
 export interface VideoBinding {id:string;userId:string;platform:string;identity:string;nickname:string;status:string;verified:boolean;awarded:boolean;awardedPoints:number;boundAt:string;unboundAt?:string;reviewNotes:string}
 export interface VideoConfig {enabled:boolean;mode:string;appId:string;secret:string;officialId:string;scope:string;callbackUrl:string;officialUrl:string;notes:string}
 async function data<T>(p:Promise<{data:ApiEnvelope<T>}>){return (await p).data.data}

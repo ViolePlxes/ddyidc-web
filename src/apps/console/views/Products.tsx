@@ -196,7 +196,7 @@ function IntegratedProductCatalog() {
                   <Table.Body>{pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
                 </Table>
               </Radio.Group> : <PageState empty
-                emptyTitle={secondary ? "当前分类暂无已对接产品" : "请选择其他分类"}
+                emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
                 emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}
               {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} /> : null}
