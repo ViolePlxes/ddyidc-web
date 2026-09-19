@@ -46,6 +46,7 @@ export interface CustomerRecord {
   remark: string;
   created_at: string;
   expires_at: string | null;
+  activated_at: string | null;
 }
 async function data<T>(request: Promise<{ data: ApiEnvelope<T> }>) {
   const response = (await request).data;

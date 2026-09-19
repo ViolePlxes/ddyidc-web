@@ -52,6 +52,8 @@ const AdminCustomers = lazy(() =>
     .then((module) => ({ default: module.AdminCustomers })),
 );
 const Certifications = lazy(() => routeModules.adminCertifications().then(module => ({default: module.Certifications})));
+const AdminInstanceDetail = lazy(() => routeModules.adminInstanceDetail().then(module => ({default: module.CustomerInstance})));
+const AdminInstanceVnc = lazy(() => routeModules.adminInstanceDetail().then(module => ({default: module.CustomerInstanceVnc})));
 const AdminCustomerDetail = lazy(() =>
   routeModules
     .adminCustomerDetail()
@@ -489,6 +491,8 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/admin/customers/:customerId/instances/:instanceId" element={<LazyRoute kind="detail"><AdminInstanceDetail /></LazyRoute>} />
+            <Route path="/admin/customers/:customerId/instances/:instanceId/vnc" element={<LazyRoute kind="detail"><AdminInstanceVnc /></LazyRoute>} />
             <Route path="/admin/video-bindings" element={<LazyRoute kind="cards"><VideoBindings admin /></LazyRoute>} />
             <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
  <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />

@@ -11,7 +11,7 @@ const statusLabels: Record<ConnectionState, string> = {
   failed: "连接失败",
 };
 
-export function VncConsole({ instanceId, token }: { instanceId: string; token: string }) {
+export function VncConsole({ instanceId, token, customerId }: { instanceId: string; token: string; customerId?: string }) {
   const screenRef = useRef<HTMLDivElement>(null);
   const rfbRef = useRef<RFB | null>(null);
   const [state, setState] = useState<ConnectionState>("connecting");
@@ -25,7 +25,8 @@ export function VncConsole({ instanceId, token }: { instanceId: string; token: s
       return;
     }
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const socketURL = `${protocol}//${window.location.host}/api/v1/instance/${encodeURIComponent(instanceId)}/vnc/ws?token=${encodeURIComponent(token)}`;
+    const endpoint = customerId ? `/admin/v1/customers/${encodeURIComponent(customerId)}/instances/${encodeURIComponent(instanceId)}/vnc/ws` : `/api/v1/instance/${encodeURIComponent(instanceId)}/vnc/ws`;
+    const socketURL = `${protocol}//${window.location.host}${endpoint}?token=${encodeURIComponent(token)}`;
     const rfb = new RFB(target, socketURL, { shared: false });
     rfb.scaleViewport = true;
     rfb.resizeSession = true;
@@ -60,7 +61,7 @@ export function VncConsole({ instanceId, token }: { instanceId: string; token: s
       rfb.disconnect();
       rfbRef.current = null;
     };
-  }, [instanceId, token]);
+  }, [instanceId, token, customerId]);
 
   const pasteClipboard = async () => {
     try {

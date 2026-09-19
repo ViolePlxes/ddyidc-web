@@ -22,7 +22,7 @@ import {
   type CountryCode,
 } from "libphonenumber-js";
 import { useRef, useState, type ReactNode } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   adminOverviewApi,
   type AdminCustomerRow,
@@ -100,7 +100,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
             "时间",
           ]
         : kind === "products"
-          ? ["产品", "实例编号", "状态", "IP 地址", "到期时间"]
+          ? ["产品", "实例编号", "状态", "IP 地址", "开通时间", "到期时间"]
           : ["产品", "订单号", "状态", "金额（元）", "创建时间"];
   return (
     <div className="grid gap-4">
@@ -158,12 +158,13 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
                   ];
                 else if (kind === "products")
                   cells = [
-                    r.name,
+                    <Link className="text-kumo-link hover:underline" to={`/admin/customers/${id}/instances/${r.id}`}>{r.name || r.number}</Link>,
                     r.number,
                     <Badge variant="secondary">
                       {productLabels[r.status] ?? r.status}
                     </Badge>,
                     r.ip || "—",
+                    r.activated_at ? formatDate(r.activated_at) : "—",
                     r.expires_at ? formatDate(r.expires_at) : "—",
                   ];
                 else

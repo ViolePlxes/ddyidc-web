@@ -4,7 +4,7 @@ import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs }
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { consoleApi, type InstanceActionInput } from "../../../shared/api/console";
+import { consoleApi, type InstanceActionInput, type InstanceImages } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
@@ -23,7 +23,7 @@ function statusBadge(status: number): StatusCode {
 }
 
 
-function ActionDialog({
+export function ActionDialog({
   label,
   title,
   description,
@@ -58,13 +58,17 @@ function ActionDialog({
   );
 }
 
-function ReinstallDialog({
+export function ReinstallDialog({
   instanceId,
   disabled,
   loading,
   onConfirm,
+  loadImages,
+  scope = "customer",
 }: {
   instanceId: string;
+  loadImages?: () => Promise<InstanceImages>;
+  scope?: string;
   disabled?: boolean;
   loading?: boolean;
   onConfirm: (input: InstanceActionInput) => void;
@@ -76,8 +80,8 @@ function ReinstallDialog({
   const [port, setPort] = useState("22");
   const [formatDataDisk, setFormatDataDisk] = useState(false);
   const images = useQuery({
-    queryKey: ["instances", instanceId, "images"],
-    queryFn: () => consoleApi.instanceImages(instanceId),
+    queryKey: [scope, "instances", instanceId, "images"],
+    queryFn: loadImages ?? (() => consoleApi.instanceImages(instanceId)),
     enabled: open && Boolean(instanceId),
     retry: false,
     placeholderData: keepPreviousData,

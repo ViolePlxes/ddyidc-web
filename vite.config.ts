@@ -115,13 +115,13 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       "/api": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: true, ws: true },
-      "/admin/v1": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: true },
+      "/admin/v1": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: false, ws: true },
     },
   },
   preview: {
     proxy: {
       "/api": { target: "http://localhost:8080", changeOrigin: true, ws: true },
-      "/admin/v1": { target: "http://localhost:8080", changeOrigin: true },
+      "/admin/v1": { target: "http://localhost:8080", changeOrigin: false, ws: true },
     },
   },
   build: {
