@@ -17,7 +17,7 @@ export function CopyValue({ value, label }: { value?: string; label: string }) {
 export function InfoGroup({ title, rows, action, columns = 1 }: { columns?: 1 | 2 | 3; title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
   return <LayerCard className="grid min-w-0 gap-4 p-5">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div>
-    <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-start gap-3" : "grid min-w-0 content-start gap-1"}>
+    <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3" : "grid min-w-0 content-start gap-1"}>
       <dt className="text-sm text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-sm">{row.value}</dd>
     </div>)}</dl>
   </LayerCard>;

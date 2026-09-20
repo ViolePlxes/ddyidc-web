@@ -258,7 +258,6 @@ export function InstanceConsole() {
               { label: "用户名", value: instance.username?<CopyValue value={instance.username} label="用户名" />:"服务未提供" },
               { label: "密码", value: <InstanceCredentials key={instance.id} instance={instance}/> },
               { label: instance.portIsDefault ? "端口（默认）" : "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
-              { label: "主机名", value: instance.hostname || "—" },
             ]} />
             <InfoGroup title="系统信息" columns={2} action={<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
               { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },

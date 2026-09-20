@@ -26,16 +26,21 @@ export function InstanceCredentials({instance,customerId}:{instance:InstanceDeta
 
 export function InstanceRemark({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
  const [editing,setEditing]=useState(false);const [value,setValue]=useState(instance.remark||'');
+ const [savedRemark,setSavedRemark]=useState(instance.remark||'');
+ useEffect(()=>setSavedRemark(instance.remark||''),[instance.remark]);
  const client=useQueryClient();
- const save=useMutation({mutationFn:()=>instanceManagementApi(instance.id,customerId).remark(value),onSuccess:async()=>{
-  await Promise.all([
-   client.invalidateQueries({queryKey:['instances']}),
-   client.invalidateQueries({queryKey:['admin','customer-instance']}),
-   client.invalidateQueries({queryKey:['admin','customer-records']}),
-  ]);setEditing(false);
+ const save=useMutation({mutationFn:(remark:string)=>instanceManagementApi(instance.id,customerId).remark(remark),onSuccess:(_result,remark)=>{
+  setSavedRemark(remark.trim());setEditing(false);
+  // Keep the mounted detail and credential views stable; revisit fetches fresh data.
+  void client.invalidateQueries({queryKey:['instances',instance.id],exact:true,refetchType:'none'});
+  void client.invalidateQueries({queryKey:['instances','product-list'],refetchType:'none'});
+  if(customerId){
+   void client.invalidateQueries({queryKey:['admin','customer-instance',customerId,instance.id],exact:true,refetchType:'none'});
+   void client.invalidateQueries({queryKey:['admin','customer-records',customerId,'products'],refetchType:'none'});
+  }
  }});
- if(!editing)return <div className="flex flex-wrap items-start gap-2"><span className="min-w-0 break-words whitespace-pre-wrap">{instance.remark||'未填写备注'}</span><Button size="sm" variant="secondary" aria-label="编辑实例备注" onClick={()=>{setValue(instance.remark||'');save.reset();setEditing(true)}}>编辑</Button></div>;
- return <div className="grid gap-2"><Textarea aria-label="实例备注" rows={2} maxLength={1000} value={value} disabled={save.isPending} onChange={e=>setValue(e.target.value)}/><span className="text-xs text-kumo-subtle">{Array.from(value).length}/1000</span>{save.error&&<p role="alert">{getApiMessage(save.error)}</p>}<div className="flex gap-2"><Button size="sm" loading={save.isPending} onClick={()=>save.mutate()}>保存备注</Button><Button size="sm" variant="secondary" disabled={save.isPending} onClick={()=>setEditing(false)}>取消</Button></div></div>;
+ if(!editing)return <div className="flex flex-wrap items-center gap-2"><span className="min-w-0 break-words whitespace-pre-wrap">{savedRemark||'未填写备注'}</span><Button size="sm" variant="secondary" aria-label="编辑实例备注" onClick={()=>{setValue(savedRemark);save.reset();setEditing(true)}}>编辑</Button></div>;
+ return <div className="grid gap-2"><Textarea aria-label="实例备注" rows={2} maxLength={1000} value={value} disabled={save.isPending} onChange={e=>setValue(e.target.value)}/><span className="text-xs text-kumo-subtle">{Array.from(value).length}/1000</span>{save.error&&<p role="alert">{getApiMessage(save.error)}</p>}<div className="flex gap-2"><Button size="sm" loading={save.isPending} onClick={()=>save.mutate(value)}>保存备注</Button><Button size="sm" variant="secondary" disabled={save.isPending} onClick={()=>setEditing(false)}>取消</Button></div></div>;
 }
 
 export function InstanceEdit({instance,customerId}:{instance:InstanceDetail;customerId:string}){
