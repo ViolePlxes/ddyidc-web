@@ -277,6 +277,7 @@ export interface ResourceRecord {
 }
 
 export interface InstanceListItem {
+  remark?: string;
   id: string;
   name: string;
   productName: string;

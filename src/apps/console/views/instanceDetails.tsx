@@ -14,10 +14,10 @@ export function CopyValue({ value, label }: { value?: string; label: string }) {
   return value && value !== "—" ? <ClipboardText text={value} size="sm" tooltip={{ text: `复制${label}`, copiedText: "已复制" }} /> : <>—</>;
 }
 
-export function InfoGroup({ title, rows, action }: { title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
+export function InfoGroup({ title, rows, action, columns = 1 }: { columns?: 1 | 2 | 3; title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
   return <LayerCard className="grid min-w-0 gap-4 p-5">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div>
-    <dl className="grid gap-3">{rows.map((row) => <div key={row.label} className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-start gap-3">
+    <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-start gap-3" : "grid min-w-0 content-start gap-1"}>
       <dt className="text-sm text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-sm">{row.value}</dd>
     </div>)}</dl>
   </LayerCard>;
@@ -33,7 +33,6 @@ export function expiryLabel(expiresAt?: string, now = Date.now()) {
 
 export function BillingInfo({ instance }: { instance: InstanceDetail }) {
   return <InfoGroup title="计费信息" rows={[
-    { label: "创建时间", value: formatDate(instance.createdAt) },
     { label: "开通时间", value: instance.activatedAt ? formatDate(instance.activatedAt) : "尚未开通" },
     { label: "到期时间", value: expiryLabel(instance.expiresAt) },
     { label: "支付周期", value: cycleLabels[instance.billingCycle || ""] || instance.billingCycle || "—" },

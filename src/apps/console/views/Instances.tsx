@@ -76,6 +76,7 @@ export function InstanceList() {
               <Table.Row>
                 <Table.Head>实例 ID / 名称</Table.Head>
                 <Table.Head>关联商品</Table.Head>
+                <Table.Head>备注</Table.Head>
                 <Table.Head>主 IP</Table.Head>
                 <Table.Head>状态</Table.Head>
                 <Table.Head>创建时间</Table.Head>
@@ -93,6 +94,7 @@ export function InstanceList() {
                     </Link>
                   </Table.Cell>
                   <Table.Cell>{instance.productName || "—"}</Table.Cell>
+                  <Table.Cell className="max-w-xs whitespace-pre-wrap break-words">{instance.remark || "—"}</Table.Cell>
                   <Table.Cell>{instance.primaryIp || "—"}</Table.Cell>
                   <Table.Cell><StatusBadge status={instanceStatus(instance.status)} /></Table.Cell>
                   <Table.Cell>{instance.createdAt}</Table.Cell>

@@ -1,4 +1,4 @@
-import { InstanceCredentials } from '../../../shared/components/InstanceManagement';
+import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
 import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
@@ -11,6 +11,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
 
 const eventLabels: Record<string, string> = {
+  remark: "修改备注",
  edit:"修改实例",credentials:"查看登录信息",auto_renew:"自动续费设置",renew:"实例续费",
   start: "开机", stop: "关机", reboot: "重启", reinstall: "重装系统",
   reset_password: "重置密码", remote: "远程连接", destroy: "销毁实例",
@@ -250,20 +251,20 @@ export function InstanceConsole() {
               { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
               { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
               { label: "资源编号", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
-              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: instance.remark||"未填写备注" },
+              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: <InstanceRemark key={instance.id} instance={instance}/> },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
               { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },
               { label: "用户名", value: instance.username?<CopyValue value={instance.username} label="用户名" />:"服务未提供" },
-              { label: "密码", value: <InstanceCredentials instance={instance}/> },
+              { label: "密码", value: <InstanceCredentials key={instance.id} instance={instance}/> },
               { label: instance.portIsDefault ? "端口（默认）" : "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
               { label: "主机名", value: instance.hostname || "—" },
             ]} />
-            <InfoGroup title="系统信息" action={<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
+            <InfoGroup title="系统信息" columns={2} action={<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
               { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },
               { label: "系统版本", value: instance.currentImageName || instance.operatingSystem || "—" },
             ]} />
-            <InfoGroup title="实例规格" rows={[
+            <InfoGroup title="实例规格" columns={3} rows={[
               { label: "网络类型", value: config(["network"], ["网络类型"]) }, { label: "系统盘", value: config(["system_disk"], ["系统盘"]) },
               { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
               { label: "带宽", value: config(["bandwidth"], ["带宽", "上行带宽", "下行带宽"]) }, { label: "数据盘", value: config(["data_disk"], ["数据盘"]) },

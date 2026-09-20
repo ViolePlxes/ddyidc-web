@@ -1,6 +1,6 @@
-import { Banner, Button, ClipboardText, DatePicker, Dialog, Input, Select, SensitiveInput, Switch } from '@cloudflare/kumo';
+import { Banner, Button, DatePicker, Dialog, Input, Select, SensitiveInput, Switch, Textarea } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { InstanceDetail } from '../api/console';
 import { instanceManagementApi } from '../api/instanceManagement';
@@ -8,18 +8,34 @@ import { getApiMessage } from '../api/request';
 import { PaymentDialog } from './PaymentDialog';
 
 export function InstanceCredentials({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
- const [open,setOpen]=useState(false); const generation=useRef(0);
- const [data,setData]=useState<{username:string;password:string;port:string;portIsDefault?:boolean}>();const [error,setError]=useState('');const [loading,setLoading]=useState(false);
- function close(){generation.current++;setOpen(false);setData(undefined);setError('');setLoading(false)}
- async function load(){const current=++generation.current;setOpen(true);setData(undefined);setError('');setLoading(true);try{const result=await instanceManagementApi(instance.id,customerId).credentials();if(current===generation.current)setData(result)}catch(e){if(current===generation.current)setError(getApiMessage(e))}finally{if(current===generation.current)setLoading(false)}}
- return <Dialog.Root open={open} onOpenChange={v=>{if(!v)close()}}>
-  <Button variant="secondary" size="sm" onClick={()=>void load()}>查看登录信息</Button>
-  <Dialog className="grid gap-4 p-6"><Dialog.Title>实例登录信息</Dialog.Title><Dialog.Description>仅实例所有者与管理员可查看，读取操作会记录审计。</Dialog.Description>
-   {loading&&<p role="status">正在读取…</p>}{error&&<Banner variant="error" title={error}/>}
-   {data&&<><div>用户名：{data.username?<ClipboardText text={data.username}/>:"服务未提供"}</div><div>端口：{data.port?<><ClipboardText text={data.port}/>{data.portIsDefault && data.port!=="默认" ? "（默认）" : ""}</>:"服务未提供有效端口"}</div>{data.password?<SensitiveInput label="实例密码" value={data.password} readOnly/>:<p>服务未提供密码，请通过重置密码设置。</p>}</>}
-   <Button variant="secondary" onClick={close}>关闭</Button>
-  </Dialog>
- </Dialog.Root>;
+ const identity=`${customerId||'self'}:${instance.id}:${instance.upstreamInstanceId||''}`;
+ const [state,setState]=useState<{identity:string;password?:string;error?:string}>();
+ const [retry,setRetry]=useState(0);
+ useEffect(()=>{
+  let active=true;
+  setState(undefined);
+  void instanceManagementApi(instance.id,customerId).credentials().then(result=>{
+   if(active)setState({identity,password:result.password});
+  }).catch(error=>{if(active)setState({identity,error:getApiMessage(error)})});
+  return ()=>{active=false};
+ },[identity,instance,customerId,retry]);
+ if(state?.identity!==identity)return <span role="status">正在读取密码…</span>;
+ if(state.error)return <div className="grid gap-2"><p role="alert">{state.error}</p><Button size="sm" variant="secondary" onClick={()=>setRetry(x=>x+1)}>重新读取密码</Button></div>;
+ return state.password ? <SensitiveInput key={`${identity}:${retry}`} aria-label="实例密码" value={state.password} readOnly/> : <span>服务未提供密码，请通过重置密码设置。</span>;
+}
+
+export function InstanceRemark({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
+ const [editing,setEditing]=useState(false);const [value,setValue]=useState(instance.remark||'');
+ const client=useQueryClient();
+ const save=useMutation({mutationFn:()=>instanceManagementApi(instance.id,customerId).remark(value),onSuccess:async()=>{
+  await Promise.all([
+   client.invalidateQueries({queryKey:['instances']}),
+   client.invalidateQueries({queryKey:['admin','customer-instance']}),
+   client.invalidateQueries({queryKey:['admin','customer-records']}),
+  ]);setEditing(false);
+ }});
+ if(!editing)return <div className="flex flex-wrap items-start gap-2"><span className="min-w-0 break-words whitespace-pre-wrap">{instance.remark||'未填写备注'}</span><Button size="sm" variant="secondary" aria-label="编辑实例备注" onClick={()=>{setValue(instance.remark||'');save.reset();setEditing(true)}}>编辑</Button></div>;
+ return <div className="grid gap-2"><Textarea aria-label="实例备注" rows={2} maxLength={1000} value={value} disabled={save.isPending} onChange={e=>setValue(e.target.value)}/><span className="text-xs text-kumo-subtle">{Array.from(value).length}/1000</span>{save.error&&<p role="alert">{getApiMessage(save.error)}</p>}<div className="flex gap-2"><Button size="sm" loading={save.isPending} onClick={()=>save.mutate()}>保存备注</Button><Button size="sm" variant="secondary" disabled={save.isPending} onClick={()=>setEditing(false)}>取消</Button></div></div>;
 }
 
 export function InstanceEdit({instance,customerId}:{instance:InstanceDetail;customerId:string}){
