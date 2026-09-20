@@ -62,6 +62,7 @@ export function ActionDialog({
 
 export function ReinstallDialog({
   instanceId,
+  currentPort,
   disabled,
   loading,
   onConfirm,
@@ -69,6 +70,7 @@ export function ReinstallDialog({
   scope = "customer",
 }: {
   instanceId: string;
+  currentPort?: string;
   loadImages?: () => Promise<InstanceImages>;
   scope?: string;
   disabled?: boolean;
@@ -79,7 +81,8 @@ export function ReinstallDialog({
   const [review, setReview] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [imageId, setImageId] = useState("");
-  const [port, setPort] = useState("22");
+  const [port, setPort] = useState("");
+  const validPort = /^\d+$/.test(port) && Number(port) >= 1 && Number(port) <= 65535;
   const [formatDataDisk, setFormatDataDisk] = useState(false);
   const images = useQuery({
     queryKey: [scope, "instances", instanceId, "images"],
@@ -120,7 +123,7 @@ export function ReinstallDialog({
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => { setOpen(next); if (!next) setReview(false); }}>
+    <Dialog.Root open={open} onOpenChange={(next) => { setOpen(next); setReview(false); if (next) setPort(currentPort && /^\d+$/.test(currentPort) && Number(currentPort) > 0 && Number(currentPort) <= 65535 ? currentPort : ""); }}>
       <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>重装系统</Button>} />
       <Dialog className="grid gap-5 p-6">
         <div className="grid gap-2">
@@ -138,7 +141,7 @@ export function ReinstallDialog({
           <div className="grid gap-4">
             <Select label="系统分组" value={selectedGroup?.name ?? ""} onValueChange={changeGroup} items={groupItems} />
             <Select label="系统镜像" value={imageId} onValueChange={(next) => { if (next) setImageId(next); }} items={imageItems} />
-            <Input label="SSH / RDP 端口" type="number" min={1} max={65535} value={port} onChange={(event) => setPort(event.target.value)} />
+            <Input label="SSH / RDP 端口" type="number" min={1} max={65535} step={1} placeholder="请输入 1–65535 的整数" value={port} onChange={(event) => setPort(event.target.value)} />
             <Switch label="格式化数据盘（数据将不可恢复）" checked={formatDataDisk} onCheckedChange={setFormatDataDisk} />
             {images.data?.currentImageName ? <Banner title="当前系统" description={`${images.data.currentImageGroup ? `${images.data.currentImageGroup} · ` : ""}${images.data.currentImageName}`} /> : null}
           </div>
@@ -153,7 +156,7 @@ export function ReinstallDialog({
         <div className="flex justify-end gap-3">
           {review ? <Button variant="secondary" onClick={() => setReview(false)}>返回修改</Button> : <Dialog.Close render={<Button variant="secondary">取消</Button>} />}
           {!review ? (
-            <Button disabled={!imageId || !port || images.isLoading || Boolean(images.error)} onClick={() => setReview(true)}>下一步确认</Button>
+            <Button disabled={!imageId || !validPort || images.isLoading || Boolean(images.error)} onClick={() => setReview(true)}>下一步确认</Button>
           ) : (
             <Dialog.Close render={<Button variant="destructive" loading={loading} onClick={() => onConfirm({ action: "reinstall", imageId, port, formatDataDisk })}>确认重装</Button>} />
           )}
@@ -253,10 +256,10 @@ export function InstanceConsole() {
               { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },
               { label: "用户名", value: instance.username?<CopyValue value={instance.username} label="用户名" />:"服务未提供" },
               { label: "密码", value: <InstanceCredentials instance={instance}/> },
-              { label: "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
-              { label: "主机名", value: instance.hostname || "—" }, { label: "子网掩码", value: instance.subnetMask || "服务未提供" }, { label: "网关", value: instance.gateway || "服务未提供" },
+              { label: instance.portIsDefault ? "端口（默认）" : "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
+              { label: "主机名", value: instance.hostname || "—" },
             ]} />
-            <InfoGroup title="系统信息" action={<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
+            <InfoGroup title="系统信息" action={<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
               { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },
               { label: "系统版本", value: instance.currentImageName || instance.operatingSystem || "—" },
             ]} />
@@ -272,7 +275,7 @@ export function InstanceConsole() {
         {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
         {activeTab === "upgrade" || activeTab === "security" ? <LayerCard className="grid gap-2 p-6"><h2 className="text-lg font-semibold">{activeTab === "upgrade" ? "产品升级降级" : "安全组"}</h2><p className="text-kumo-subtle">功能开发中，当前尚无可用接口。</p></LayerCard> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
-          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
+          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
                       <LayerCard className="shadow-none overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>

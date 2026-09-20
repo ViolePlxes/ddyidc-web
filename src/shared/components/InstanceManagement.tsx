@@ -9,14 +9,14 @@ import { PaymentDialog } from './PaymentDialog';
 
 export function InstanceCredentials({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
  const [open,setOpen]=useState(false); const generation=useRef(0);
- const [data,setData]=useState<{username:string;password:string;port:string}>();const [error,setError]=useState('');const [loading,setLoading]=useState(false);
+ const [data,setData]=useState<{username:string;password:string;port:string;portIsDefault?:boolean}>();const [error,setError]=useState('');const [loading,setLoading]=useState(false);
  function close(){generation.current++;setOpen(false);setData(undefined);setError('');setLoading(false)}
  async function load(){const current=++generation.current;setOpen(true);setData(undefined);setError('');setLoading(true);try{const result=await instanceManagementApi(instance.id,customerId).credentials();if(current===generation.current)setData(result)}catch(e){if(current===generation.current)setError(getApiMessage(e))}finally{if(current===generation.current)setLoading(false)}}
  return <Dialog.Root open={open} onOpenChange={v=>{if(!v)close()}}>
   <Button variant="secondary" size="sm" onClick={()=>void load()}>查看登录信息</Button>
   <Dialog className="grid gap-4 p-6"><Dialog.Title>实例登录信息</Dialog.Title><Dialog.Description>仅实例所有者与管理员可查看，读取操作会记录审计。</Dialog.Description>
    {loading&&<p role="status">正在读取…</p>}{error&&<Banner variant="error" title={error}/>}
-   {data&&<><div>用户名：{data.username?<ClipboardText text={data.username}/>:"服务未提供"}</div><div>端口：{data.port?<ClipboardText text={data.port}/>:"服务未提供有效端口"}</div>{data.password?<SensitiveInput label="实例密码" value={data.password} readOnly/>:<p>服务未提供密码，请通过重置密码设置。</p>}</>}
+   {data&&<><div>用户名：{data.username?<ClipboardText text={data.username}/>:"服务未提供"}</div><div>端口：{data.port?<><ClipboardText text={data.port}/>{data.portIsDefault && data.port!=="默认" ? "（默认）" : ""}</>:"服务未提供有效端口"}</div>{data.password?<SensitiveInput label="实例密码" value={data.password} readOnly/>:<p>服务未提供密码，请通过重置密码设置。</p>}</>}
    <Button variant="secondary" onClick={close}>关闭</Button>
   </Dialog>
  </Dialog.Root>;

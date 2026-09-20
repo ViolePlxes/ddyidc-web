@@ -7,7 +7,7 @@ export function instanceManagementApi(id:string,customerId?:string){
  async function unwrap<T>(p:Promise<{data:ApiEnvelope<T>}>){const {data}=await p;if(data.code!==0)throw new Error(data.message||'请求失败');return data.data}
  return {
   edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string})=>unwrap(client.patch(path,data,{timeout:65000})),
-  credentials:()=>unwrap<{username:string;password:string;port:string}>(client.post(`${path}/credentials`,{}, {timeout:65000})),
+  credentials:()=>unwrap<{username:string;password:string;port:string;portIsDefault?:boolean}>(client.post(`${path}/credentials`,{}, {timeout:65000})),
   options:()=>unwrap<{items:RenewalOption[]}>(client.get(`${path}/renewal-options`,{timeout:65000})),
   renew:(cycle:string)=>unwrap<RenewalOrder>(client.post(`${path}/renewals`,{cycle},{timeout:65000})),
   pay:(orderId:string)=>unwrap(client.post(`${path}/renewals/pay`,{orderId},{timeout:120000})),

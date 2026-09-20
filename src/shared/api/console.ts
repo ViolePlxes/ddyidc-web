@@ -317,7 +317,7 @@ export interface InstanceEvent {
 }
 
 export interface InstanceDetail extends InstanceListItem {
- username?:string; port?:string; remark?:string; upstreamOrderId?:string; upstreamOrderNo?:string; invoiceId?:string; firstPayment?:string; renewalAmount?:string; autoRenew?:boolean;
+ username?:string; port?:string; portIsDefault?:boolean; remark?:string; upstreamOrderId?:string; upstreamOrderNo?:string; invoiceId?:string; firstPayment?:string; renewalAmount?:string; autoRenew?:boolean;
   orderId: string;
   orderNo?: string;
   productId: string;

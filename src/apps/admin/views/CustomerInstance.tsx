@@ -48,7 +48,7 @@ export function CustomerInstance(){
  }
  const item=query.data;const caps=item?.capabilities;
  const reset=<ActionDialog label="重置密码" title="重置实例密码" description="密码至少 12 位，包含大小写字母和数字。此操作会改变实例登录凭据。" disabled={!caps?.resetPassword} loading={action.isPending} onConfirm={()=>submit({action:'reset_password',password})}><Input label="新密码" type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/></ActionDialog>;
- const reinstall=<ReinstallDialog key={instanceId} instanceId={instanceId} scope={`admin-${customerId}`} loadImages={api.images} disabled={!caps?.reinstall} loading={action.isPending} onConfirm={submit}/>;
+ const reinstall=<ReinstallDialog key={instanceId} instanceId={instanceId} currentPort={query.data?.port} scope={`admin-${customerId}`} loadImages={api.images} disabled={!caps?.reinstall} loading={action.isPending} onConfirm={submit}/>;
  const config=(fields:string[],names:string[]=[])=>item?configValue(item,fields,names):'—';
  const listPath=`/admin/customers/${customerId}/products`;
  return <div className="grid gap-5">
@@ -74,7 +74,7 @@ export function CustomerInstance(){
       {(['start','stop','reboot'] as const).map(op=><ActionDialog key={op} label={actions[op]??op} title={`确认${actions[op]}`} description={op==='start'?'将启动该实例。':'操作可能中断客户业务，请确认后继续。'} disabled={!caps?.[op]} loading={action.isPending} onConfirm={()=>submit({action:op})}/>)}
       {reset}{reinstall}<Button variant="secondary" disabled={!caps?.remote||action.isPending} onClick={()=>submit({action:'remote'})}>VNC</Button>
      </div>{!Object.values(caps??{}).some(Boolean)&&<p className="text-sm text-kumo-subtle">配置后可用：当前实例没有已就绪的操作通道。</p>}</LayerCard>
-     <InfoGroup title="登录与系统" rows={[{label:'公网 IP',value:<CopyValue value={item.primaryIp} label="公网 IP"/>},{label:'主机名',value:item.hostname||'—'},{label:'系统',value:item.currentImageName||item.operatingSystem||'—'},{label:'密码',value:<InstanceCredentials instance={item} customerId={customerId}/>},{label:'端口',value:item.port?<CopyValue value={item.port} label="端口"/>:'服务未提供有效端口'},{label:'用户名',value:item.username?<CopyValue value={item.username} label="用户名"/>:'服务未提供'}]}/>
+     <InfoGroup title="登录与系统" rows={[{label:'公网 IP',value:<CopyValue value={item.primaryIp} label="公网 IP"/>},{label:'主机名',value:item.hostname||'—'},{label:'系统',value:item.currentImageName||item.operatingSystem||'—'},{label:'密码',value:<InstanceCredentials instance={item} customerId={customerId}/>},{label:item.portIsDefault?'端口（默认）':'端口',value:item.port?<CopyValue value={item.port} label="端口"/>:'服务未提供有效端口'},{label:'用户名',value:item.username?<CopyValue value={item.username} label="用户名"/>:'服务未提供'}]}/>
      <InfoGroup title="资源规格" rows={[{label:'CPU',value:config(['cpu'],['CPU','vCPU'])},{label:'内存',value:config(['memory'],['内存'])},{label:'系统盘',value:config(['system_disk'],['系统盘'])},{label:'数据盘',value:config(['data_disk'],['数据盘'])},{label:'带宽',value:config(['bandwidth'],['带宽'])},{label:'网络类型',value:config(['network'],['网络类型'])}]}/></div>
     </div>}
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
