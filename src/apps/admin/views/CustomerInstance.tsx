@@ -1,3 +1,4 @@
+import { InstanceCredentials, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
 import { Badge, Banner, Breadcrumbs, Button, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
@@ -13,7 +14,7 @@ import { CopyValue, InfoGroup, InstanceMonitoring, configValue } from '../../con
 import { VncConsole } from '../../console/components/VncConsole';
 
 const statuses:Record<number,string>={1:'待开通',2:'开通中',3:'运行中',4:'已停机',5:'已过期',6:'已删除'};
-const actions:Record<string,string>={import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
+const actions:Record<string,string>={edit:'修改实例',credentials:'查看登录信息',auto_renew:'自动续费设置',renew:'实例续费',import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
 export function CustomerInstanceVnc(){
  const {customerId='',instanceId=''}=useParams();const [search]=useSearchParams();
  const token=search.get('token')||'';
@@ -60,20 +61,20 @@ export function CustomerInstance(){
     {notice&&<Banner title="操作结果" description={notice}/>}
     {action.error&&<Banner variant="error" title="操作失败" description={getApiMessage(action.error)}/>}
     {tab==='overview'&&<div className="grid items-start gap-5 xl:grid-cols-2">
-     <div className="grid gap-5"><InfoGroup title="基础信息" rows={[
+     <div className="grid gap-5"><InfoGroup title="基础信息" action={<InstanceEdit key={item.id} instance={item} customerId={customerId}/>} rows={[
       {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`/admin/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
       {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'状态',value:<Badge variant={item.status===3?'success':'secondary'}>{statuses[item.status]||item.status}</Badge>},
       {label:'电源状态',value:({on:'运行中',off:'已关机',operating:'操作中',pending:'待开通',fault:'异常',running:'运行中',stopped:'已关机',starting:'启动中',stopping:'关机中',unknown:'未知'} as Record<string,string>)[item.powerStatus||'']||item.powerStatus||'—'},{label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
       {label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},
      ]}/><InfoGroup title="财务信息" rows={[
       {label:'计费周期',value:cycleLabels[item.billingCycle||'']||item.billingCycle||'—'},{label:'到期时间',value:item.expiresAt?formatDate(item.expiresAt):'—'},
-      {label:'关联订单',value:item.orderNo?<Link className="text-kumo-link hover:underline" to={`/admin/customers/${customerId}/orders`}>{item.orderNo}</Link>:'—'},
-     ]}/><Banner title="续费与带宽调整" description="当前适配器尚未接入续费和带宽变更的报价与订单结算，暂不可操作。"/></div>
+      {label:'关联订单',value:<InstanceOrder instance={item} customerId={customerId}/>},
+     ]}/><LayerCard className="grid gap-4 p-5"><h2 className="text-lg font-semibold">续费管理</h2><InstanceRenewal key={item.id} instance={item} customerId={customerId}/></LayerCard></div>
      <div className="grid gap-5"><LayerCard className="grid gap-4 p-5"><h2 className="text-lg font-semibold">实例操作</h2><p className="text-sm text-kumo-subtle">支持的操作由实例能力决定，执行结果与操作人员记录到实例日志。</p><div className="flex flex-wrap gap-2">
       {(['start','stop','reboot'] as const).map(op=><ActionDialog key={op} label={actions[op]??op} title={`确认${actions[op]}`} description={op==='start'?'将启动该实例。':'操作可能中断客户业务，请确认后继续。'} disabled={!caps?.[op]} loading={action.isPending} onConfirm={()=>submit({action:op})}/>)}
       {reset}{reinstall}<Button variant="secondary" disabled={!caps?.remote||action.isPending} onClick={()=>submit({action:'remote'})}>VNC</Button>
      </div>{!Object.values(caps??{}).some(Boolean)&&<p className="text-sm text-kumo-subtle">配置后可用：当前实例没有已就绪的操作通道。</p>}</LayerCard>
-     <InfoGroup title="登录与系统" rows={[{label:'公网 IP',value:<CopyValue value={item.primaryIp} label="公网 IP"/>},{label:'主机名',value:item.hostname||'—'},{label:'系统',value:item.currentImageName||item.operatingSystem||'—'},{label:'密码',value:item.passwordMasked||'—'},{label:'端口',value:config(['port','ssh_port','rdp_port'],['端口','链接端口'])},{label:'用户名',value:config(['username','login_user'],['用户名'])}]}/>
+     <InfoGroup title="登录与系统" rows={[{label:'公网 IP',value:<CopyValue value={item.primaryIp} label="公网 IP"/>},{label:'主机名',value:item.hostname||'—'},{label:'系统',value:item.currentImageName||item.operatingSystem||'—'},{label:'密码',value:<InstanceCredentials instance={item} customerId={customerId}/>},{label:'端口',value:item.port?<CopyValue value={item.port} label="端口"/>:'服务未提供有效端口'},{label:'用户名',value:item.username?<CopyValue value={item.username} label="用户名"/>:'服务未提供'}]}/>
      <InfoGroup title="资源规格" rows={[{label:'CPU',value:config(['cpu'],['CPU','vCPU'])},{label:'内存',value:config(['memory'],['内存'])},{label:'系统盘',value:config(['system_disk'],['系统盘'])},{label:'数据盘',value:config(['data_disk'],['数据盘'])},{label:'带宽',value:config(['bandwidth'],['带宽'])},{label:'网络类型',value:config(['network'],['网络类型'])}]}/></div>
     </div>}
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}

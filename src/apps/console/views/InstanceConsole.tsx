@@ -1,8 +1,9 @@
+import { InstanceCredentials } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
 import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { consoleApi, type InstanceActionInput, type InstanceImages } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -10,6 +11,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
 
 const eventLabels: Record<string, string> = {
+ edit:"修改实例",credentials:"查看登录信息",auto_renew:"自动续费设置",renew:"实例续费",
   start: "开机", stop: "关机", reboot: "重启", reinstall: "重装系统",
   reset_password: "重置密码", remote: "远程连接", destroy: "销毁实例",
 };
@@ -179,6 +181,8 @@ export function InstanceConsole() {
     enabled: Boolean(instanceId) && Boolean(detail.data?.capabilities.traffic),
     retry: false,
   });
+  const remoteWindow = useRef<Window|null>(null);
+  const actionBusy = useRef(false);
   const action = useMutation({
     mutationFn: (input: InstanceActionInput) => consoleApi.instanceAction(instanceId, input),
     onSuccess: async (result) => {
@@ -186,8 +190,9 @@ export function InstanceConsole() {
         const expectedPath = `/console/instance/${encodeURIComponent(instanceId)}/vnc`;
         const target = new URL(result.remote.url, window.location.origin);
         if (result.remote.url.startsWith("/") && !result.remote.url.startsWith("//") && target.origin === window.location.origin && target.pathname === expectedPath) {
-          window.open(`${target.pathname}${target.search}`, "_blank", "noopener,noreferrer");
+          if(remoteWindow.current&&!remoteWindow.current.closed)remoteWindow.current.location.replace(`${target.pathname}${target.search}`);
         } else {
+          remoteWindow.current?.close();
           setNotice("服务器返回了非本站远程会话地址，系统已阻止打开。");
           return;
         }
@@ -198,10 +203,16 @@ export function InstanceConsole() {
         queryClient.invalidateQueries({ queryKey: ["instances", "product-list"] }),
       ]);
     },
+    onError:()=>remoteWindow.current?.close(),
+    onSettled:()=>{actionBusy.current=false;remoteWindow.current=null},
   });
   const instance = detail.data;
   const capabilities = instance?.capabilities;
-  const submit = (input: InstanceActionInput) => { setNotice(""); action.mutate(input); };
+  const submit = (input: InstanceActionInput) => {
+    if(actionBusy.current)return;
+    if(input.action==='remote'){const target=window.open('about:blank','_blank');if(!target){setNotice('请允许弹出窗口后重试');return}target.opener=null;remoteWindow.current=target}
+    actionBusy.current=true;setNotice("");action.mutate(input);
+  };
 
   const [activeTab, setActiveTab] = useState("overview");
   const config = (fields: string[], names: string[] = []) => instance ? configValue(instance, fields, names) : "—";
@@ -236,14 +247,14 @@ export function InstanceConsole() {
               { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
               { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
               { label: "资源编号", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
-              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: config(["remark", "notes"], ["备注", "备注信息"]) },
+              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: instance.remark||"未填写备注" },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
               { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },
-              { label: "用户名", value: <CopyValue value={config(["username", "login_user"], ["用户名", "登录用户名"])} label="用户名" /> },
-              { label: "密码", value: instance.passwordMasked ? <div className="grid gap-1"><CopyValue value={instance.passwordMasked} label="密码掩码" /><span className="text-xs text-kumo-subtle">仅返回掩码，无法复制真实密码</span></div> : "—" },
-              { label: "端口", value: <CopyValue value={config(["port", "ssh_port", "rdp_port"], ["端口", "链接端口", "远程端口"])} label="端口" /> },
-              { label: "主机名", value: instance.hostname || "—" }, { label: "子网掩码", value: instance.subnetMask || "—" }, { label: "网关", value: instance.gateway || "—" },
+              { label: "用户名", value: instance.username?<CopyValue value={instance.username} label="用户名" />:"服务未提供" },
+              { label: "密码", value: <InstanceCredentials instance={instance}/> },
+              { label: "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
+              { label: "主机名", value: instance.hostname || "—" }, { label: "子网掩码", value: instance.subnetMask || "服务未提供" }, { label: "网关", value: instance.gateway || "服务未提供" },
             ]} />
             <InfoGroup title="系统信息" action={<ReinstallDialog instanceId={instanceId} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
               { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },

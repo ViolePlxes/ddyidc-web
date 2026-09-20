@@ -1,9 +1,9 @@
-import { ClipboardText, LayerCard, Switch, Button } from "@cloudflare/kumo";
+import { ClipboardText, LayerCard } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { InstanceOrder, InstanceRenewal } from "../../../shared/components/InstanceManagement";
 import type { InstanceDetail, InstanceMonitor, MonitorPoint } from "../../../shared/api/console";
 import { TrendChart } from "../../../shared/components/TrendChart";
-import { cycleLabels } from "../../../shared/utils/format";
+import { cycleLabels, formatDate } from "../../../shared/utils/format";
 
 export function configValue(instance: InstanceDetail, fields: string[], names: string[] = []) {
   const matches = instance.config.filter((item) => fields.includes((item.field || "").toLowerCase()) || names.includes(item.displayName));
@@ -28,18 +28,19 @@ export function expiryLabel(expiresAt?: string, now = Date.now()) {
   const expires = Date.parse(expiresAt);
   if (!Number.isFinite(expires)) return expiresAt;
   const days = Math.ceil(Math.abs(expires - now) / 86_400_000);
-  return `${expiresAt}（${expires > now ? `剩余 ${days} 天` : `已到期 ${days} 天`}）`;
+  return `${formatDate(expiresAt)}（${expires > now ? `剩余 ${days} 天` : `已到期 ${days} 天`}）`;
 }
 
 export function BillingInfo({ instance }: { instance: InstanceDetail }) {
   return <InfoGroup title="计费信息" rows={[
-    { label: "创建时间", value: instance.activatedAt || instance.createdAt || "—" },
+    { label: "创建时间", value: formatDate(instance.createdAt) },
+    { label: "开通时间", value: instance.activatedAt ? formatDate(instance.activatedAt) : "尚未开通" },
     { label: "到期时间", value: expiryLabel(instance.expiresAt) },
     { label: "支付周期", value: cycleLabels[instance.billingCycle || ""] || instance.billingCycle || "—" },
-    { label: "续费价格", value: "—" },
-    { label: "自动余额续费", value: <Switch label="不可用" checked={false} disabled /> },
-    { label: "计费管理", value: <Button size="sm" variant="secondary" disabled>续费（未开放）</Button> },
-    { label: "关联订单", value: instance.orderNo ? <Link className="text-kumo-link" to={`/console/orders/${instance.orderId}`} viewTransition>{instance.orderNo}</Link> : "—" },
+    { label: "续费价格", value: instance.renewalAmount ? `¥${instance.renewalAmount}（以实时报价为准）` : "打开续费查看实时报价" },
+
+    { label: "计费管理", value: <InstanceRenewal key={instance.id} instance={instance}/> },
+    { label: "关联订单", value: <InstanceOrder instance={instance}/> },
   ]} />;
 }
 

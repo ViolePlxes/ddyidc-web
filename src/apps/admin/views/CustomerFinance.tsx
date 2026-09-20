@@ -21,6 +21,7 @@ const labels: Record<string, string> = {
   freeze: "冻结",
   unfreeze: "解冻",
   order_pay: "消费",
+  instance_renewal_pay: "实例续费",
   refund: "退款",
   withdraw: "提现",
   overpayment: "多付入账",
