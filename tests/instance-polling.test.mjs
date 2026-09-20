@@ -44,3 +44,23 @@ test('leaving page cancels scheduled requests silently', async () => {
   }, { ...limits, interval: 20 });
   controller.abort(); await done; assert.equal(reads, 0);
 });
+
+test('resuming a suspended tab past deadline does not send another request', async () => {
+  let clock = 0, reads = 0, timeouts = 0;
+  const done = pollInstanceOperation('start', new AbortController(), {
+    read: async () => { reads++; return { status: 2, powerStatus: 'running' }; },
+    update() { assert.fail('late update'); }, complete() { assert.fail('late completion'); }, timeout() { timeouts++; },
+  }, limits, () => clock);
+  clock = limits.duration;
+  await done;
+  assert.equal(reads, 0); assert.equal(timeouts, 1);
+});
+
+test('target response after absolute deadline cannot complete the operation', async () => {
+  let clock = 0, timeouts = 0;
+  await pollInstanceOperation('stop', new AbortController(), {
+    read: async () => { clock = limits.duration + 1; return { status: 2, powerStatus: 'stopped' }; },
+    update() { assert.fail('late update'); }, complete() { assert.fail('late completion'); }, timeout() { timeouts++; },
+  }, limits, () => clock);
+  assert.equal(timeouts, 1);
+});

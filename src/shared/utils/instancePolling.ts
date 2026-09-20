@@ -5,8 +5,10 @@ export async function pollInstanceOperation<T extends OperationStatus>(
   controller: AbortController,
   callbacks: { read: () => Promise<T>; update: (status: T) => void; complete: () => void; timeout: () => void },
   limits = { attempts: 20, duration: 5 * 60_000, interval: 5_000 },
+  now = Date.now,
 ) {
   const target = action === 'stop' ? 'stopped' : 'running';
+  const expiresAt = now() + limits.duration;
   const expire = () => {
     if (!controller.signal.aborted) { callbacks.timeout(); controller.abort(); }
   };
@@ -19,9 +21,12 @@ export async function pollInstanceOperation<T extends OperationStatus>(
         controller.signal.addEventListener('abort', done, { once: true });
       });
       if (controller.signal.aborted) return;
+      // Timers can be delayed while a browser tab or the computer is suspended.
+      if (now() >= expiresAt) { expire(); return; }
       try {
         const status = await callbacks.read();
         if (controller.signal.aborted) return;
+        if (now() >= expiresAt) { expire(); return; }
         callbacks.update(status);
         if (!status.warning && status.powerStatus === target) { callbacks.complete(); return; }
       } catch { if (controller.signal.aborted) return; }
