@@ -1,3 +1,4 @@
+import { useInstanceDetailRoute } from '../hooks/useInstanceDetailRoute';
 import { LayerCard } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -5,11 +6,12 @@ import { probeMarketplace } from "../api/marketplace";
 import { PageState } from "../components/PageState";
 
 export function useMarketplaceAvailability(scope: "public" | "admin") {
+  const quiet=useInstanceDetailRoute();
   return useQuery({
     queryKey: [scope, "marketplace", "available"],
     queryFn: () => probeMarketplace(scope),
     staleTime: 5_000,
- refetchInterval:5_000,
+ refetchInterval:quiet?false:5_000,
     retry: false,
   });
 }

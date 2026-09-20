@@ -31,7 +31,7 @@ export function CustomerInstance(){
    const first=await customerDetailApi.records(customerId,'products',1,false);const rows=[...(first.items??[])];
    for(let page=2;rows.length<first.total;page++){const next=await customerDetailApi.records(customerId,'products',page,false);if(!next.items?.length)break;rows.push(...next.items)}return rows;
  }});
- const monitor=useQuery({queryKey:[...key,'monitor'],queryFn:api.monitor,enabled:!!query.data?.capabilities.traffic,retry:false});
+ const monitor=useQuery({queryKey:['admin-instance-monitor',customerId,instanceId],queryFn:api.monitor,staleTime:Infinity,refetchOnMount:"always",refetchOnWindowFocus:false,refetchOnReconnect:false,refetchInterval:false,enabled:!!query.data?.capabilities.traffic,retry:false});
  const [tab,setTab]=useState('overview');const [password,setPassword]=useState('');const [notice,setNotice]=useState('');
  const busy=useRef(false);const remoteWindow=useRef<Window|null>(null);
  const action=useMutation({mutationFn:api.action,onSuccess:async(result,input)=>{

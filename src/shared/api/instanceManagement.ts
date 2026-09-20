@@ -7,7 +7,7 @@ export function instanceManagementApi(id:string,customerId?:string){
  const path=customerId?`/customers/${customerId}/instances/${id}`:`/instance/${id}`;
  async function unwrap<T>(p:Promise<{data:ApiEnvelope<T>}>){const {data}=await p;if(data.code!==0)throw new Error(data.message||'请求失败');return data.data}
  return {
-  status:()=>unwrap<LiveInstanceStatus>(client.get(`${path}/status`,{timeout:30000})),
+  status:(signal?:AbortSignal)=>unwrap<LiveInstanceStatus>(client.get(`${path}/status`,{timeout:30000,signal})),
   remark:(remark:string)=>unwrap(client.put(`${path}/remark`,{remark})),
   edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string})=>unwrap(client.patch(path,data,{timeout:65000})),
   credentials:()=>unwrap<{username:string;password:string;port:string;portIsDefault?:boolean}>(client.post(`${path}/credentials`,{}, {timeout:65000})),

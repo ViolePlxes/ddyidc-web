@@ -10,11 +10,11 @@ export function TransferDialog({ instanceId }: { instanceId: string }) {
  const [open, setOpen] = useState(false);
  const [account, setAccount] = useState("");
  const [password, setPassword] = useState("");
- const status = useQuery({ queryKey: ["transfers", "status", instanceId], queryFn: () => transfersApi.status(instanceId), refetchInterval: 5_000 });
+ const status = useQuery({ queryKey: ["transfers", "status", instanceId], queryFn: () => transfersApi.status(instanceId), refetchInterval: false });
  const submit = useMutation({ mutationFn: () => transfersApi.create(instanceId, account.trim(), password), onSuccess: async () => { setPassword(""); setOpen(false); await client.invalidateQueries({ queryKey: ["transfers"] }); }, onSettled: () => setPassword("") });
  if (!status.data?.enabled) return null;
  const busy = status.data.trading || status.data.transferring;
- return <Dialog.Root open={open} onOpenChange={(value) => { if (!submit.isPending) { setOpen(value); setPassword(""); submit.reset(); } }}>
+ return <Dialog.Root open={open} onOpenChange={(value) => { if (!submit.isPending) { setOpen(value); if(value)void status.refetch(); setPassword(""); submit.reset(); } }}>
   <Dialog.Trigger render={<Button variant="secondary" disabled={busy}>{status.data.trading ? "交易中" : status.data.transferring ? "待接收" : "转让实例"}</Button>} />
   <Dialog className="grid gap-5 p-6">
    <Dialog.Title>免费转让实例</Dialog.Title>

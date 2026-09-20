@@ -172,8 +172,9 @@ export function InstanceConsole() {
   });
   const live = useInstanceStatus(instanceId,undefined,Boolean(detail.data),()=>detail.refetch());
   const monitor = useQuery({
-    queryKey: ["instances", instanceId, "monitor"],
+    queryKey: ["instance-monitor", instanceId],
     queryFn: () => consoleApi.instanceMonitor(instanceId),
+    staleTime: Infinity, refetchOnMount: "always", refetchOnWindowFocus: false, refetchOnReconnect: false, refetchInterval: false,
     enabled: Boolean(instanceId) && Boolean(detail.data?.capabilities.traffic),
     retry: false,
   });
@@ -196,7 +197,7 @@ export function InstanceConsole() {
       }
       setNotice(result.message || "操作已提交");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["instances", instanceId] }),
+        queryClient.invalidateQueries({ queryKey: ["instances", instanceId], exact:true }),
         queryClient.invalidateQueries({ queryKey: ["instances", "product-list"] }),
       ]);
     },

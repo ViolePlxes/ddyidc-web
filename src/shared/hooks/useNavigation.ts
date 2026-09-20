@@ -1,3 +1,4 @@
+import { useInstanceDetailRoute } from './useInstanceDetailRoute';
 import { transfersApi } from "../api/transfers";
 import { useEffect } from "react";
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
@@ -21,8 +22,9 @@ const pluginPath = (href: string) => {
 const plugin = (href: string) => pluginPath(href).match(/^\/(?:console|admin)\/(?:marketing\/)?(groupbuy|marketplace|points|cdnsell)(?:\/|$)/)?.[1];
 export function useNavigation(scope: NavigationScope, available: NavigationGroup[]) {
  const client = useQueryClient();
- const push = useQuery({queryKey:["transfers","navigation"],queryFn:()=>transfersApi.status(),enabled:scope==="console",refetchInterval:5_000});
- const query = useQuery({ queryKey: ["navigation", scope], queryFn: () => navigationApi.list(scope), refetchInterval: 15_000 });
+ const quiet=useInstanceDetailRoute();
+ const push = useQuery({queryKey:["transfers","navigation"],queryFn:()=>transfersApi.status(),enabled:scope==="console",refetchInterval:quiet?false:5_000});
+ const query = useQuery({ queryKey: ["navigation", scope], queryFn: () => navigationApi.list(scope), refetchInterval: quiet?false:15_000 });
  useEffect(() => {
   const refresh = () => { void client.invalidateQueries({ queryKey: ["navigation"] }); };
   const storage = (event: StorageEvent) => { if (event.key === signal) refresh(); };
