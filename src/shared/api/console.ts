@@ -469,13 +469,13 @@ export const consoleApi = {
       ),
     ),
   instance: (id: string) =>
-    unwrap(userRequest.get<ApiEnvelope<InstanceDetail>>(`/instance/${id}`)),
+    unwrap(userRequest.get<ApiEnvelope<InstanceDetail>>(`/instance/${id}`,{timeout:30000})),
   instanceImages: (id: string) =>
-    unwrap(userRequest.get<ApiEnvelope<InstanceImages>>(`/instance/${id}/images`)),
+    unwrap(userRequest.get<ApiEnvelope<InstanceImages>>(`/instance/${id}/images`,{timeout:30000})),
   instanceMonitor: (id: string) =>
-    unwrap(userRequest.get<ApiEnvelope<InstanceMonitor>>(`/instance/${id}/monitor`)),
+    unwrap(userRequest.get<ApiEnvelope<InstanceMonitor>>(`/instance/${id}/monitor`,{timeout:30000})),
   instanceAction: (id: string, input: InstanceActionInput) =>
-    unwrap(userRequest.post<ApiEnvelope<InstanceActionResult>>(`/instance/${id}/action`, input)),
+    unwrap(userRequest.post<ApiEnvelope<InstanceActionResult>>(`/instance/${id}/action`, input,{timeout:65000})),
   notifications: () => unwrap(userRequest.get<ApiEnvelope<ResourceRecord[]>>("/notifications")),
   marketingConfig: () =>
     unwrap(userRequest.get<ApiEnvelope<PublicMarketingConfig>>("/marketing/public-config")),

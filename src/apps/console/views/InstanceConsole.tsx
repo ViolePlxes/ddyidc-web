@@ -1,3 +1,4 @@
+import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
@@ -8,7 +9,6 @@ import { useParams } from "react-router-dom";
 import { consoleApi, type InstanceActionInput, type InstanceImages } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageState } from "../../../shared/components/PageState";
-import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
 
 const eventLabels: Record<string, string> = {
   remark: "修改备注",
@@ -16,15 +16,6 @@ const eventLabels: Record<string, string> = {
   start: "开机", stop: "关机", reboot: "重启", reinstall: "重装系统",
   reset_password: "重置密码", remote: "远程连接", destroy: "销毁实例",
 };
-
-function statusBadge(status: number): StatusCode {
-  if (status === 3) return "running";
-  if (status === 4) return "stopped";
-  if (status === 6) return "destroyed";
-  if (status === 1 || status === 2) return "provisioning";
-  return "expired";
-}
-
 
 export function ActionDialog({
   label,
@@ -106,7 +97,7 @@ export function ReinstallDialog({
   );
 
   useEffect(() => {
-    if (!images.data || groupName) return;
+    if (!images.data || images.isFetching || groupName) return;
     const initialGroup = images.data.groups.find((group) => group.name === images.data.currentImageGroup)
       ?? images.data.groups.find((group) => group.child.some((image) => image.id === images.data?.currentImageId))
       ?? images.data.groups[0];
@@ -114,7 +105,7 @@ export function ReinstallDialog({
     setGroupName(initialGroup.name);
     const initialImage = initialGroup.child.find((image) => image.id === images.data?.currentImageId) ?? initialGroup.child[0];
     setImageId(initialImage?.id ?? "");
-  }, [groupName, images.data]);
+  }, [groupName, images.data, images.isFetching]);
 
   const changeGroup = (next: string | null) => {
     if (!next) return;
@@ -124,7 +115,7 @@ export function ReinstallDialog({
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => { setOpen(next); setReview(false); if (next) setPort(currentPort && /^\d+$/.test(currentPort) && Number(currentPort) > 0 && Number(currentPort) <= 65535 ? currentPort : ""); }}>
+    <Dialog.Root open={open} onOpenChange={(next) => { setOpen(next); setReview(false); if(next){setGroupName("");setImageId("")}; if (next) setPort(currentPort && /^\d+$/.test(currentPort) && Number(currentPort) > 0 && Number(currentPort) <= 65535 ? currentPort : ""); }}>
       <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>重装系统</Button>} />
       <Dialog className="grid gap-5 p-6">
         <div className="grid gap-2">
@@ -179,6 +170,7 @@ export function InstanceConsole() {
     retry: false,
     placeholderData: keepPreviousData,
   });
+  const live = useInstanceStatus(instanceId,undefined,Boolean(detail.data),()=>detail.refetch());
   const monitor = useQuery({
     queryKey: ["instances", instanceId, "monitor"],
     queryFn: () => consoleApi.instanceMonitor(instanceId),
@@ -189,7 +181,8 @@ export function InstanceConsole() {
   const actionBusy = useRef(false);
   const action = useMutation({
     mutationFn: (input: InstanceActionInput) => consoleApi.instanceAction(instanceId, input),
-    onSuccess: async (result) => {
+    onSuccess: async (result,input) => {
+      if(input.action!=="remote")live.afterAction(input.action);
       if (result.remote) {
         const expectedPath = `/console/instance/${encodeURIComponent(instanceId)}/vnc`;
         const target = new URL(result.remote.url, window.location.origin);
@@ -231,7 +224,7 @@ export function InstanceConsole() {
           <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
           <div aria-label="实例操作" className="flex flex-wrap gap-2">
  <TransferDialog instanceId={instanceId} />
-            <ActionDialog label="开机" title="确认开机" description="确认后将启动此实例。" disabled={!capabilities?.start || instance.status === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
+            <ActionDialog label="开机" title="确认开机" description="确认后将启动此实例。" disabled={!capabilities?.start || (live.data?.status ?? instance.status) === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
             <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
             <Button variant="secondary" disabled>硬关机（未开放）</Button><Button variant="secondary" disabled>硬重启（未开放）</Button><Button variant="secondary" disabled>救援系统（未开放）</Button>
@@ -251,7 +244,7 @@ export function InstanceConsole() {
               { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
               { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
               { label: "资源编号", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
-              { label: "实例状态", value: <StatusBadge status={statusBadge(instance.status)} /> }, { label: "备注信息", value: <InstanceRemark key={instance.id} instance={instance}/> },
+              { label: "实例状态", value: <InstanceStatusControl live={live} fallback={instance.powerStatus}/> }, { label: "备注信息", value: <InstanceRemark key={instance.id} instance={instance}/> },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
               { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },

@@ -8,9 +8,9 @@ const unwrap = async <T>(request: Promise<{data: ApiEnvelope<T>}>) => {
 export function adminInstanceApi(customerId:string,instanceId:string) {
   const path=`/customers/${encodeURIComponent(customerId)}/instances/${encodeURIComponent(instanceId)}`;
   return {
-    detail:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceDetail>>(path)),
-    images:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceImages>>(`${path}/images`)),
-    monitor:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceMonitor>>(`${path}/monitor`)),
-    action:(input:InstanceActionInput)=>unwrap(adminRequest.post<ApiEnvelope<InstanceActionResult>>(`${path}/action`,input)),
+    detail:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceDetail>>(path,{timeout:30000})),
+    images:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceImages>>(`${path}/images`,{timeout:30000})),
+    monitor:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceMonitor>>(`${path}/monitor`,{timeout:30000})),
+    action:(input:InstanceActionInput)=>unwrap(adminRequest.post<ApiEnvelope<InstanceActionResult>>(`${path}/action`,input,{timeout:65000})),
   };
 }

@@ -1,5 +1,6 @@
+import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
-import { Badge, Banner, Breadcrumbs, Button, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
+import { Banner, Breadcrumbs, Button, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -13,7 +14,6 @@ import { ActionDialog, ReinstallDialog } from '../../console/views/InstanceConso
 import { CopyValue, InfoGroup, InstanceMonitoring, configValue } from '../../console/views/instanceDetails';
 import { VncConsole } from '../../console/components/VncConsole';
 
-const statuses:Record<number,string>={1:'待开通',2:'开通中',3:'运行中',4:'已停机',5:'已过期',6:'已删除'};
 const actions:Record<string,string>={remark:'修改备注',edit:'修改实例',credentials:'查看登录信息',auto_renew:'自动续费设置',renew:'实例续费',import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
 export function CustomerInstanceVnc(){
  const {customerId='',instanceId=''}=useParams();const [search]=useSearchParams();
@@ -25,6 +25,7 @@ export function CustomerInstance(){
  const api=useMemo(()=>adminInstanceApi(customerId,instanceId),[customerId,instanceId]);
  const key=['admin','customer-instance',customerId,instanceId];
  const query=useQuery({queryKey:key,queryFn:api.detail,retry:false});
+ const live=useInstanceStatus(instanceId,customerId,!!query.data,()=>query.refetch());
  const profile=useQuery({queryKey:['admin','customers',customerId,'profile'],queryFn:()=>customerDetailApi.profile(customerId)});
  const products=useQuery({queryKey:['admin','customer-instance-options',customerId],queryFn:async()=>{
    const first=await customerDetailApi.records(customerId,'products',1,false);const rows=[...(first.items??[])];
@@ -33,7 +34,8 @@ export function CustomerInstance(){
  const monitor=useQuery({queryKey:[...key,'monitor'],queryFn:api.monitor,enabled:!!query.data?.capabilities.traffic,retry:false});
  const [tab,setTab]=useState('overview');const [password,setPassword]=useState('');const [notice,setNotice]=useState('');
  const busy=useRef(false);const remoteWindow=useRef<Window|null>(null);
- const action=useMutation({mutationFn:api.action,onSuccess:async(result)=>{
+ const action=useMutation({mutationFn:api.action,onSuccess:async(result,input)=>{
+   if(input.action!=="remote")live.afterAction(input.action);
    if(result.remote){const target=new URL(result.remote.url,window.location.origin);const expected=`/admin/customers/${customerId}/instances/${instanceId}/vnc`;
      if(target.origin!==window.location.origin||target.pathname!==expected){remoteWindow.current?.close();throw new Error('远程会话地址无效')}
      if(remoteWindow.current&&!remoteWindow.current.closed)remoteWindow.current.location.replace(target.pathname+target.search);
@@ -53,7 +55,7 @@ export function CustomerInstance(){
  const listPath=`/admin/customers/${customerId}/products`;
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href="/admin/customers">客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`/admin/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
-  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`/admin/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>void query.refetch()}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
+  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`/admin/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
   <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
   <PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null} skeleton="detail">
    {item&&<>
@@ -63,8 +65,8 @@ export function CustomerInstance(){
     {tab==='overview'&&<div className="grid items-start gap-5 xl:grid-cols-2">
      <div className="grid gap-5"><InfoGroup title="基础信息" action={<InstanceEdit key={item.id} instance={item} customerId={customerId}/>} rows={[
       {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`/admin/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
-      {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'状态',value:<Badge variant={item.status===3?'success':'secondary'}>{statuses[item.status]||item.status}</Badge>},
-      {label:'电源状态',value:({on:'运行中',off:'已关机',operating:'操作中',pending:'待开通',fault:'异常',running:'运行中',stopped:'已关机',starting:'启动中',stopping:'关机中',unknown:'未知'} as Record<string,string>)[item.powerStatus||'']||item.powerStatus||'—'},{label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
+      {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'实例状态',value:<InstanceStatusControl live={live} fallback={item.powerStatus}/>},
+      {label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
       {label:'备注信息',value:<InstanceRemark key={instanceId} instance={item} customerId={customerId}/>},{label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},
      ]}/><InfoGroup title="财务信息" rows={[
       {label:'计费周期',value:cycleLabels[item.billingCycle||'']||item.billingCycle||'—'},{label:'到期时间',value:item.expiresAt?formatDate(item.expiresAt):'—'},
