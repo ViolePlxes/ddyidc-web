@@ -19,6 +19,7 @@ import {
   CoinsIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const AdminBackups = lazy(() => routeModules.adminBackups().then(module => ({ default: module.AdminBackups })));
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { Route, Routes } from "react-router-dom";
@@ -234,6 +235,7 @@ const adminGroups: NavigationGroup[] = [
     items: [
       { label: "系统配置", href: "/admin/system", icon: GearIcon },
       { label: "更新中心", href: "/admin/updates", icon: ArrowsClockwiseIcon },
+      { label: "数据库备份", href: "/admin/backups", icon: CloudArrowDownIcon },
     ],
   },
   {
@@ -496,6 +498,7 @@ export function AdminApp() {
             <Route path="/admin/video-bindings" element={<LazyRoute kind="cards"><VideoBindings admin /></LazyRoute>} />
             <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
  <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
+            <Route path="/admin/backups" element={<LazyRoute kind="form"><AdminBackups /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
             <Route
               path="/admin/system"
