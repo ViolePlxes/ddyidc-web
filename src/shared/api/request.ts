@@ -7,11 +7,13 @@ export interface ApiEnvelope<T> {
   message?: string;
 }
 
-function createRequest(baseURL: string, unauthorizedEvent: string, customerFacing = false) {
+function createRequest(baseURL: string, unauthorizedEvent: string, customerFacing = false, csrfKind: "user" | "admin" | "sales" = "user") {
   const client = axios.create({
     baseURL,
     timeout: 15_000,
     withCredentials: true,
+    xsrfCookieName: `ddyidc_csrf_${csrfKind}`,
+    xsrfHeaderName: "X-CSRF-Token",
     headers: { "Content-Type": "application/json" },
   });
   client.interceptors.response.use(
@@ -38,11 +40,14 @@ export const userRequest = createRequest(
 export const adminRequest = createRequest(
   "/admin/v1",
   "ddyidc:admin-unauthorized",
+  false,
+  "admin",
 );
 export const salesRequest = createRequest(
   "/admin/v1",
   "ddyidc:sales-unauthorized",
   true,
+  "sales",
 );
 
 export function getApiMessage(error: unknown): string {

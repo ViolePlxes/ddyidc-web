@@ -49,15 +49,11 @@ export const customerFinanceApi = {
     ),
   login: async (id: string) => {
     const result = await unwrap(
-      adminRequest.post<ApiEnvelope<{ jwt: string; redirect: string }>>(
+      adminRequest.post<ApiEnvelope<{ redirect: string }>>(
         `/clients/${id}/login`,
       ),
     );
-    await unwrap(
-      userRequest.get("/auth/me", {
-        headers: { Authorization: `Bearer ${result.jwt}` },
-      }),
-    );
+    await unwrap(userRequest.get("/auth/me"));
     return result;
   },
 };
