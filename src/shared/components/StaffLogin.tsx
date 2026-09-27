@@ -64,7 +64,7 @@ export function StaffLogin({
           <div className="grid gap-0.5">
             <span className="text-sm font-semibold text-kumo-strong">DDYIDC</span>
             <span className="text-xs text-kumo-subtle">
-              v1.0.0 · {import.meta.env.PROD ? "生产环境" : "开发环境"}
+              {import.meta.env.VITE_DDYIDC_VERSION || "版本未标记"} · {import.meta.env.PROD ? "发布构建" : "开发构建"}
             </span>
           </div>
           <Badge variant="secondary">{roleLabel}</Badge>
