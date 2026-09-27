@@ -14,22 +14,31 @@ const columns = [
   { key: "status", label: "订单状态", width: 120, min: 100 },
   { key: "actions", label: "操作", width: 100, min: 80 },
 ] as const;
-const maxWidth = 800;
-const clamp = (value: number, min: number) => Math.max(min, Math.min(maxWidth, Math.round(value)));
-function readWidths(key: string) {
+const minShare = 0.05;
+const normalize = (values: number[]) => {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return values.map(value => value / total);
+};
+const defaults = normalize(columns.map(column => column.width));
+function readWidths(key: string, legacyKey: string) {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(key) ?? "null");
-    return columns.map(column => {
-      const value = saved && typeof saved === "object" ? (saved as Record<string, unknown>)[column.key] : undefined;
-      return typeof value === "number" && Number.isFinite(value) ? clamp(value, column.min) : column.width;
-    });
-  } catch { return columns.map(column => column.width); }
+    const raw = localStorage.getItem(key);
+    const saved: unknown = JSON.parse(raw ?? localStorage.getItem(legacyKey) ?? "null");
+    if (!saved || typeof saved !== "object") return defaults;
+    const values = columns.map(column => (saved as Record<string, unknown>)[column.key]);
+    if (!values.every((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 800)) return defaults;
+    const shares = normalize(values);
+    if (shares.every(value => value >= minShare - 1e-9)) return shares;
+    if (raw) return defaults;
+    // Convert legacy pixel widths into proportions while reserving a minimum for every column.
+    return shares.map(value => minShare + value * (1 - columns.length * minShare));
+  } catch { return defaults; }
 }
 
 export function AdminOrdersTable({ rows, adminId }: { rows: AdminOrderRow[]; adminId: string }) {
-  const storageKey = `ddyidc-admin-order-column-widths:v1:${adminId}`;
-  const [widths, setWidths] = useState<number[]>(() => readWidths(storageKey));
-  const drag = useRef<{ index: number; x: number; width: number } | null>(null);
+  const storageKey = `ddyidc-admin-order-column-shares:v2:${adminId}`;
+  const [widths, setWidths] = useState<number[]>(() => readWidths(storageKey, `ddyidc-admin-order-column-widths:v1:${adminId}`));
+  const drag = useRef<{ index: number; x: number; width: number; tableWidth: number } | null>(null);
   const [resizing, setResizing] = useState(false);
   useEffect(() => {
     if (resizing) return;
@@ -37,33 +46,46 @@ export function AdminOrdersTable({ rows, adminId }: { rows: AdminOrderRow[]; adm
       localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(columns.map((column, index) => [column.key, widths[index]]))));
     } catch { /* Resizing still works when browser storage is unavailable. */ }
   }, [widths, storageKey, resizing]);
-  const resize = (index: number, value: number) => setWidths(current => current.map((width, i) => i === index ? clamp(value, columns[i]?.min ?? 80) : width));
+  const resize = (index: number, value: number) => setWidths(current => {
+    const left = current[index];
+    const right = current[index + 1];
+    if (left === undefined || right === undefined) return current;
+    const pair = left + right;
+    const next = Math.max(minShare, Math.min(pair - minShare, value));
+    return current.map((width, i) => i === index ? next : i === index + 1 ? pair - next : width);
+  });
+  const resetPair = (index: number) => {
+    const pair = (widths[index] ?? 0) + (widths[index + 1] ?? 0);
+    const defaultLeft = defaults[index] ?? minShare;
+    resize(index, pair * defaultLeft / (defaultLeft + (defaults[index + 1] ?? minShare)));
+  };
   const finishResize = () => { drag.current = null; setResizing(false); };
   return <LayerCard className="shadow-none min-w-0 overflow-x-auto p-0">
-    <Table aria-label="订单列表" layout="fixed" style={{ width: widths.reduce((total, width) => total + width, 0) }}>
-      <colgroup>{columns.map((column, index) => <col key={column.key} style={{ width: widths[index] }} />)}</colgroup>
+    <Table aria-label="订单列表" layout="fixed" className="w-full">
+      <colgroup>{columns.map((column, index) => <col key={column.key} style={{ width: `${(widths[index] ?? 0) * 100}%` }} />)}</colgroup>
       <Table.Header variant="compact"><Table.Row>{columns.map((column, index) => (
         <Table.Head key={column.key} className="group relative select-none pr-4 [&_button]:visible">
           {column.label}
-          <span id={`order-resize-${column.key}`} className="sr-only">调整{column.label}列宽</span>
-          <Table.ResizeHandle aria-labelledby={`order-resize-${column.key}`} title={`拖拽调整${column.label}列宽；方向键微调，双击恢复默认`}
+          {index < columns.length - 1 && <><span id={`order-resize-${column.key}`} className="sr-only">调整{column.label}列宽</span>
+          <Table.ResizeHandle aria-labelledby={`order-resize-${column.key}`} title={`拖拽调整相邻两列占比；方向键微调，双击恢复默认比例`}
             onPointerDown={event => {
               if (event.button !== 0) return;
               event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture(event.pointerId);
-              drag.current = { index, x: event.clientX, width: widths[index] ?? column.width }; setResizing(true);
+              drag.current = { index, x: event.clientX, width: widths[index] ?? minShare, tableWidth: event.currentTarget.closest("table")?.getBoundingClientRect().width ?? 1 }; setResizing(true);
             }}
             onPointerMove={event => {
               const start = drag.current;
-              if (start && start.index === index) resize(index, start.width + event.clientX - start.x);
+              if (start && start.index === index) resize(index, start.width + (event.clientX - start.x) / start.tableWidth);
             }}
             onPointerUp={finishResize} onPointerCancel={finishResize} onLostPointerCapture={finishResize}
-            onDoubleClick={() => resize(index, column.width)}
+            onDoubleClick={() => resetPair(index)}
             onKeyDown={event => {
               if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
               event.preventDefault();
-              resize(index, event.key === "Home" ? column.width : event.key === "End" ? maxWidth : (widths[index] ?? column.width) + (event.key === "ArrowRight" ? 10 : -10));
+              if (event.key === "Home") resetPair(index);
+              else resize(index, event.key === "End" ? 1 : (widths[index] ?? minShare) + (event.key === "ArrowRight" ? 0.01 : -0.01));
             }}
-          />
+          /></>}
         </Table.Head>
       ))}</Table.Row></Table.Header>
       <Table.Body>{rows.map(order => <Table.Row key={order.id}>
