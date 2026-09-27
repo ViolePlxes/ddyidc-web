@@ -17,6 +17,9 @@ import {
   getNotificationTemplates,
   getNotifyConfig,
   getNotifyLogs,
+	getNoticeReviews,
+	reviewNotice,
+	type NoticeReview,
   saveNotifyConfig,
   sendTestNotification,
   updateNotificationTemplate,
@@ -67,6 +70,7 @@ export function AdminSystem() {
           { value: "notify", label: "通知设置" },
           { value: "templates", label: "通知模板" },
           { value: "logs", label: "发送记录" },
+          { value: "reviews", label: "通知待处置" },
         ]}
         value={tab}
         onValueChange={(value) => { setTab(value); setNotice(""); }}
@@ -76,8 +80,38 @@ export function AdminSystem() {
       {tab === "notify" ? <NotifySettings onSaved={setNotice} /> : null}
       {tab === "templates" ? <TemplateSettings onSaved={setNotice} /> : null}
       {tab === "logs" ? <NotifyLogs /> : null}
+      {tab === "reviews" ? <NoticeReviews /> : null}
     </>
   );
+}
+
+function NoticeReviews() {
+  const query = useQuery({ queryKey: ["admin", "notify", "reviews"], queryFn: getNoticeReviews });
+  const [selected, setSelected] = useState<NoticeReview | null>(null);
+  const [reason, setReason] = useState("");
+  const mutation = useMutation({
+    mutationFn: (action: "retry" | "resolve") => {
+      if (!selected) throw new Error("请先选择通知");
+      return reviewNotice(selected, action, reason);
+    },
+    onSuccess: async () => { setSelected(null); setReason(""); await query.refetch(); },
+  });
+  const labels: Record<string, string> = { dead: "重试耗尽", unknown: "发送结果未知", retry_pending: "等待人工重试" };
+  return <div className="grid gap-4">
+    <Banner title="余额冻结通知待处置" description="展示最近 100 条待处置记录。发送结果未知时，请先核对渠道回执；重试可能重复通知或产生费用，每次授权只重试一次。记录已处理不会将通知标记为发送成功。" />
+    <div><Button disabled={mutation.isPending} onClick={() => void query.refetch()}>刷新</Button></div>
+    {query.isLoading ? <Loader /> : null}
+    {query.error ? <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} /> : null}
+    <LayerCard><Table><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
+      <Table.Body>{(query.data ?? []).map(row => <Table.Row key={row.id}><Table.Cell>{row.id}</Table.Cell><Table.Cell>#{row.customerId}</Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.attempts}</Table.Cell><Table.Cell><Button disabled={mutation.isPending || row.status === "retry_pending"} onClick={() => { setSelected(row); setReason(""); mutation.reset(); }}>处置</Button></Table.Cell></Table.Row>)}</Table.Body>
+    </Table>{query.data?.length === 0 ? <p className="p-4">暂无待处置通知。</p> : null}</LayerCard>
+    {selected ? <LayerCard className="grid gap-3 p-4">
+      <p>处理通知 #{selected.id}（{labels[selected.status]}）</p>
+      <Textarea label="核对结果与处置原因（必填）" maxLength={256} value={reason} onChange={event => setReason(event.target.value)} disabled={mutation.isPending} />
+      <div className="flex flex-wrap gap-3"><Button disabled={mutation.isPending || !reason.trim()} onClick={() => mutation.mutate("resolve")}>记录已人工处理</Button><Button disabled={mutation.isPending || !reason.trim()} onClick={() => mutation.mutate("retry")}>确认重复风险并重试一次</Button><Button disabled={mutation.isPending} onClick={() => setSelected(null)}>取消</Button></div>
+    </LayerCard> : null}
+    {mutation.error ? <Banner variant="error" title="处置失败" description={getApiMessage(mutation.error)} /> : null}
+  </div>;
 }
 
 function BaseSettings() {

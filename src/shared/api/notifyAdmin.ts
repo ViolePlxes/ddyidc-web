@@ -1,5 +1,13 @@
 import { adminRequest } from "./request";
 
+export interface NoticeReview { id: string; customerId: string; status: string; attempts: number; nextAttempt: string }
+export async function getNoticeReviews(): Promise<NoticeReview[]> {
+  return (await adminRequest.get<ApiEnvelope<NoticeReview[]>>("/system/notify/reviews")).data.data;
+}
+export async function reviewNotice(row: NoticeReview, action: "retry" | "resolve", reason: string): Promise<void> {
+  await adminRequest.post(`/system/notify/reviews/${row.id}`, { action, reason, status: row.status, attempts: row.attempts, acknowledge: action === "retry" });
+}
+
 export type NotifyChannel = "sms" | "email" | "both";
 
 export interface NotifyConfig {
