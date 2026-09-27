@@ -9,13 +9,12 @@ export function LayoutWidthToggle({ width, toggleWidth }: {
   return (
     <Button
       variant="ghost"
+      shape="square"
       aria-label={label}
       title={label}
       aria-pressed={width === "wide"}
       icon={width === "wide" ? <ArrowsInLineHorizontalIcon /> : <ArrowsOutLineHorizontalIcon />}
       onClick={toggleWidth}
-    >
-      <span className="hidden sm:inline">{width === "wide" ? "居中窄版" : "宽屏平铺"}</span>
-    </Button>
+    />
   );
 }
