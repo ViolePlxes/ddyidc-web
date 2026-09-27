@@ -75,6 +75,11 @@ export interface AdminPage<T> {
   pageSize: number;
 }
 
+export interface OperationsSnapshot {
+  sampledAt: string;
+  metrics: { key: string; label: string; value: number | null; unit: string; hint: string }[];
+}
+
 export interface AdminCustomerPage extends AdminPage<AdminCustomerRow> {
   pageBalanceSum: number;
   totalBalanceSum: number;
@@ -88,6 +93,7 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 }
 
 export const adminOverviewApi = {
+  operations: () => unwrap(adminRequest.get<ApiEnvelope<OperationsSnapshot>>("/operations")),
   dashboard: () => unwrap(adminRequest.get<ApiEnvelope<AdminDashboard>>("/dashboard")),
   orders: (params: { page: number; pageSize: number; status?: string; keyword?: string }) =>
     unwrap(adminRequest.get<ApiEnvelope<AdminPage<AdminOrderRow>>>("/orders", { params })),

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@cloudflare/kumo";
 import { adminOverviewApi, type AdminOrderRow } from "../../../shared/api/adminOverview";
 import { getApiMessage } from "../../../shared/api/request";
 import { DataTable } from "../../../shared/components/DataTable";
@@ -20,6 +21,7 @@ function toOrderRow(order: AdminOrderRow) {
 }
 
 export function AdminHome() {
+  const operations = useQuery({ queryKey: ["admin", "operations"], queryFn: adminOverviewApi.operations, staleTime: 60_000, refetchOnWindowFocus: false });
   const dashboard = useQuery({
     queryKey: ["admin", "dashboard"],
     queryFn: adminOverviewApi.dashboard,
@@ -47,6 +49,18 @@ export function AdminHome() {
       <PageState loading={dashboard.isLoading} skeleton="dashboard" error={dashboard.error ? getApiMessage(dashboard.error) : null}>
         {data ? <div className="grid gap-6">
           <MetricGrid metrics={metrics} />
+          <section className="grid gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-kumo-strong">运行观察</h2>
+              <Button variant="secondary" disabled={operations.isFetching} onClick={() => void operations.refetch()}>刷新运行指标</Button>
+            </div>
+            <PageState loading={operations.isLoading} error={operations.error ? getApiMessage(operations.error) : null}>
+              {operations.data ? <>
+                <p className="text-sm text-kumo-subtle">采样时间：{formatDate(operations.data.sampledAt)}。仅按需读取；不可用不代表数值为零。</p>
+                <MetricGrid metrics={operations.data.metrics.map((metric) => ({ label: metric.label, value: metric.value === null ? "不可用" : `${metric.value.toLocaleString("zh-CN")} ${metric.unit}`, hint: metric.hint }))} />
+              </> : null}
+            </PageState>
+          </section>
           <TrendChart title="近 30 天收入" type="bar" values={trend} />
           <section className="grid gap-3">
             <h2 className="text-lg font-semibold text-kumo-strong">最近订单</h2>
