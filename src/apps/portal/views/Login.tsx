@@ -1,21 +1,22 @@
-import { FormEvent, useState } from "react";
-import { Button, Input, LayerCard } from "@cloudflare/kumo";
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-} from "@phosphor-icons/react";
+import { type FormEvent, useState } from "react";
+import { Banner, Button, Checkbox, Input } from "@cloudflare/kumo";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { Link, useLocation } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { TermsAgreement } from "../components/TermsAgreement";
 import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
+import { AuthPageShell, SocialLoginOptions, authSubmitClassName } from "../components/AuthPageShell";
 
-type LoginStep = "account" | "password";
+const rememberedAccountKey = "ddyidc-remembered-account";
+function readRememberedAccount() {
+  try { return localStorage.getItem(rememberedAccountKey) ?? ""; } catch { return ""; }
+}
 
 export function LoginPage() {
-  const [step, setStep] = useState<LoginStep>("account");
-  const [account, setAccount] = useState("");
+  const [account, setAccount] = useState(readRememberedAccount);
+  const [rememberMe, setRememberMe] = useState(() => Boolean(readRememberedAccount()));
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -26,139 +27,51 @@ export function LoginPage() {
   const location = useLocation();
 
   if (user) return <ExternalRedirect to="/console" />;
-
   const redirect = new URLSearchParams(location.search).get("redirect");
-  const safeRedirect =
-    redirect &&
-    !redirect.startsWith("//") &&
-    (redirect === "/cart" ||
-      redirect === "/order/confirm" ||
-      redirect === "/bind-mobile" ||
-      redirect === "/console" ||
-      redirect.startsWith("/console/"))
-      ? redirect
-      : null;
+  const safeRedirect = redirect && !redirect.startsWith("//") &&
+    (["/cart", "/order/confirm", "/bind-mobile", "/console"].includes(redirect) || redirect.startsWith("/console/")) ? redirect : null;
 
-  const handleAccount = (event: FormEvent) => {
-    event.preventDefault();
-    const value = account.trim();
-    if (!value) {
-      setError("请输入账号、邮箱或手机号");
-      return;
-    }
-    setError("");
-    setAccount(value);
-    setStep("password");
-  };
-
-  const submitPassword = async () => {
-    if (!password) {
-      setError("请输入密码");
-      return;
-    }
+  const submitCredentials = async () => {
+    if (loading) return;
+    if (!account.trim() || !password) { setError("请输入账号和密码"); return; }
     setError("");
     try {
-      await signIn(account, password);
+      await signIn(account.trim(), password);
+      try {
+        if (rememberMe) localStorage.setItem(rememberedAccountKey, account.trim());
+        else localStorage.removeItem(rememberedAccountKey);
+      } catch { /* Storage availability must not prevent sign-in. */ }
       window.location.replace(safeRedirect ?? "/console");
-    } catch (nextError) {
-      setError(getApiMessage(nextError));
-    }
+    } catch (nextError) { setError(getApiMessage(nextError)); }
   };
-
-  const handlePassword = (event: FormEvent) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!agreedToTerms) {
-      setShowAgreementDialog(true);
-      return;
-    }
-    void submitPassword();
-  };
-
-  const agreeAndSubmit = () => {
-    setAgreedToTerms(true);
-    setShowAgreementDialog(false);
-    void submitPassword();
+    if (!agreedToTerms) { setShowAgreementDialog(true); return; }
+    void submitCredentials();
   };
 
   return (
-    <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
-      <div className="grid w-full max-w-md gap-6">
-        <LayerCard className="shadow-none grid gap-6 p-6 md:p-8">
-          <div className="grid gap-2">
-            <h1 className="text-2xl font-semibold text-kumo-strong">
-              {step === "account" ? "登录控制台" : "输入密码"}
-            </h1>
-            <p className="text-base text-kumo-subtle">
-              {step === "account"
-                ? "使用你的客户账号继续，管理与销售入口相互独立。"
-                : account}
-            </p>
+    <AuthPageShell title="欢迎回来" description="请登录你的账户">
+      <form className="grid gap-5" onSubmit={submit}>
+        <Input label="Email" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="username" placeholder="邮箱、账号或手机号" required autoFocus />
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <label htmlFor="login-password">密码</label>
+            <Link className="text-kumo-subtle hover:underline" to="/reset-password">忘记密码？</Link>
           </div>
-          {step === "account" ? (
-            <form
-              className="grid gap-5"
-              onSubmit={handleAccount}
-            >
-              <Input
-                label="账号"
-                value={account}
-                onChange={(event) => setAccount(event.target.value)}
-                autoComplete="username"
-                placeholder="账号、邮箱或手机号"
-                error={error || undefined}
-                autoFocus
-              />
-              <Button
-                type="submit"
-                icon={<ArrowRightIcon />}
-              >
-                下一步
-              </Button>
-            </form>
-          ) : (
-            <form
-              className="grid gap-5"
-              onSubmit={(event) => void handlePassword(event)}
-            >
-              <Input
-                label="密码"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                error={error || undefined}
-                autoFocus
-              />
-              <div className="flex items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  icon={<ArrowLeftIcon />}
-                  onClick={() => {
-                    setStep("account");
-                    setError("");
-                    setPassword("");
-                  }}
-                >
-                  返回
-                </Button>
-                <Button type="submit" loading={loading}>
-                  登录
-                </Button>
-              </div>
-            </form>
-          )}
-          <TermsAgreement checked={agreedToTerms} onCheckedChange={setAgreedToTerms} />
-          <div className="text-center text-sm text-kumo-subtle">
-            还没有客户账号？ <Link className="text-kumo-link hover:underline" to="/register">创建账号</Link>
-          </div>
-        </LayerCard>
-      </div>
-      <AgreementConsentDialog
-        open={showAgreementDialog}
-        onOpenChange={setShowAgreementDialog}
-        onAgree={agreeAndSubmit}
-      />
-    </main>
+          <Input id="login-password" aria-label="密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
+        </div>
+        <Checkbox label={<span title="仅记住登录账号，不保存密码">记住我</span>} checked={rememberMe} onCheckedChange={(checked) => {
+          setRememberMe(checked === true);
+          if (checked !== true) { try { localStorage.removeItem(rememberedAccountKey); } catch { /* Storage is optional. */ } }
+        }} />
+        {error && <Banner variant="error" title="登录失败" description={error} />}
+        <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={loading}>登录 <ArrowRightIcon /></Button>
+      </form>
+      <div className="text-center text-sm text-kumo-subtle">新用户？ <Link className="text-kumo-default hover:underline" to="/register">注册</Link></div>
+      <SocialLoginOptions />
+      <TermsAgreement checked={agreedToTerms} onCheckedChange={setAgreedToTerms} />
+      <AgreementConsentDialog open={showAgreementDialog} onOpenChange={setShowAgreementDialog} onAgree={() => { setAgreedToTerms(true); setShowAgreementDialog(false); void submitCredentials(); }} />
+    </AuthPageShell>
   );
 }

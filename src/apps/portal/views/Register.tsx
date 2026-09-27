@@ -1,5 +1,7 @@
 import { PhoneCountrySelect } from "../../../shared/components/PhoneCountrySelect";
-import { Banner, Button, Input, LayerCard } from "@cloudflare/kumo";
+import { Banner, Button, Input } from "@cloudflare/kumo";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { AuthPageShell, SocialLoginOptions, authSubmitClassName } from "../components/AuthPageShell";
 import { useMutation } from "@tanstack/react-query";
 import { type CountryCode } from "libphonenumber-js";
 import { useEffect, useState, type FormEvent } from "react";
@@ -137,16 +139,7 @@ export function RegisterPage() {
   };
 
   return (
-    <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
-      <LayerCard className="shadow-none grid w-full max-w-lg gap-5 p-6 md:p-8">
-        <div className="grid gap-2">
-          <h1 className="text-2xl font-semibold text-kumo-strong">
-            创建客户账号
-          </h1>
-          <p className="text-base text-kumo-subtle">
-            注册成功后将直接建立用户端安全会话。
-          </p>
-        </div>
+    <AuthPageShell title="创建账户" description="欢迎加入，请填写你的注册信息">
         <form className="grid gap-4" onSubmit={submit}>
           <Input
             label="账号"
@@ -226,7 +219,7 @@ export function RegisterPage() {
             value={form.email}
             onChange={(event) => updateText("email", event.target.value)}
           />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4">
             <Input
               label="优惠码（可选）"
               placeholder="请输入优惠码"
@@ -252,8 +245,8 @@ export function RegisterPage() {
               description={getApiMessage(mutation.error)}
             />
           ) : null}
-          <Button type="submit" loading={mutation.isPending}>
-            创建账号
+          <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={mutation.isPending}>
+            注册 <ArrowRightIcon />
           </Button>
         </form>
         <div className="text-center text-sm text-kumo-subtle">
@@ -262,12 +255,12 @@ export function RegisterPage() {
             返回登录
           </Link>
         </div>
-      </LayerCard>
+      <SocialLoginOptions />
       <AgreementConsentDialog
         open={showAgreementDialog}
         onOpenChange={setShowAgreementDialog}
         onAgree={agreeAndSubmit}
       />
-    </main>
+    </AuthPageShell>
   );
 }
