@@ -1,16 +1,17 @@
-import { Button, Input, LayerCard, Select } from "@cloudflare/kumo";
+import { Button, Input, LayerCard, Pagination, Select } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminOverviewApi } from "../../../shared/api/adminOverview";
 import { getApiMessage } from "../../../shared/api/request";
-import { DataTable } from "../../../shared/components/DataTable";
+import { AdminOrdersTable } from "./AdminOrdersTable";
+import { useAdminAuthStore } from "../../../shared/stores/staffAuth";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
-import { formatDate, formatMoney, orderStatusCode } from "../../../shared/utils/format";
 import { ReceiptReviews } from "./ReceiptReviews";
 import { DeliveryTasks } from "./DeliveryTasks";
 
 export function AdminOrders() {
+  const adminId = useAdminAuthStore(state => state.user?.id ?? "anonymous");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
   const [draftKeyword, setDraftKeyword] = useState("");
@@ -20,14 +21,7 @@ export function AdminOrders() {
     queryKey: ["admin", "orders", page, status, keyword],
     queryFn: () => adminOverviewApi.orders({ page, pageSize, status: status === "all" ? undefined : status, keyword: keyword || undefined }),
   });
-  const rows = (query.data?.items ?? []).map((order) => ({
-    id: order.id,
-    primary: `${order.username || "未知客户"} · ${order.productName || "未命名商品"}`,
-    secondary: order.orderNo,
-    meta: `创建于 ${formatDate(order.createdAt)}`,
-    amount: formatMoney(order.payAmount),
-    status: orderStatusCode(order.status),
-  }));
+  const rows = query.data?.items ?? [];
 
   return (
     <>
@@ -38,17 +32,15 @@ export function AdminOrders() {
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>
       <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无订单">
-        <DataTable
-          rows={rows}
-          primaryLabel="客户 / 商品"
-          secondaryLabel="订单号"
-          withPagination
+        <div className="grid min-w-0 gap-3">
+        <AdminOrdersTable key={adminId} rows={rows} adminId={adminId} />
+        <Pagination
           page={page}
-          onPageChange={setPage}
+          setPage={setPage}
           perPage={pageSize}
           totalCount={query.data?.total ?? 0}
-          showActions={false}
         />
+        </div>
       </PageState>
       <ReceiptReviews />
       <DeliveryTasks />

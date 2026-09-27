@@ -5,6 +5,8 @@ export interface AdminOrderRow {
   id: string;
   orderNo: string;
   username: string;
+  customerId: string;
+  customerDisplayName: string;
   productName: string;
   payAmount: number;
   status: number;
