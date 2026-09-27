@@ -1,6 +1,8 @@
 import { useNavigation } from "../shared/hooks/useNavigation";
 import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
+import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
+import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
 import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   MoonIcon,
@@ -65,6 +67,7 @@ export function DashboardLayout({
   const groups = navigation.groups;
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const layoutWidth = useLayoutWidth(user);
   const standalonePaths = ["/console", "/console/products"];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
@@ -205,6 +208,7 @@ export function DashboardLayout({
           className="bg-kumo-canvas shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
+          <LayoutWidthToggle {...layoutWidth} />
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
           <DropdownMenu>
             <DropdownMenu.Trigger
@@ -240,7 +244,8 @@ export function DashboardLayout({
         </Surface>
         <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
           <div
-            className={`w-full ${location.pathname === "/console/products" || /^\/(?:console\/instances\/[^/]+|user\/instance\/[^/]+\.htm)$/.test(location.pathname) ? "" : "mx-auto max-w-7xl"} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            data-layout-width={layoutWidth.width}
+            className={`${layoutWidth.containerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>

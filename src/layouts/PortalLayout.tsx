@@ -1,18 +1,21 @@
 import { Button, Link, Surface } from "@cloudflare/kumo";
 import { CloudIcon, ShoppingCartIcon } from "@phosphor-icons/react";
 import { useAuthStore } from "../shared/stores/auth";
+import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
+import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
 import { RouteOutlet } from "../shared/router/RouteOutlet";
 import { useGroupBuyAvailability } from "../shared/router/GroupBuyGate";
 import { useMarketplaceAvailability } from "../shared/router/MarketplaceGate";
 
 export function PortalLayout() {
   const user = useAuthStore((state) => state.user);
+  const layoutWidth = useLayoutWidth(user);
   const groupBuy = useGroupBuyAvailability("public");
   const marketplace = useMarketplaceAvailability("public");
   return (
     <div className="min-h-svh bg-kumo-recessed">
       <Surface className="border-b border-kumo-line">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+        <div className={`${layoutWidth.containerClassName} flex min-h-16 flex-wrap items-center justify-between gap-4 px-4 py-2 md:px-6`}>
           <Link
             href="/"
             variant="plain"
@@ -23,7 +26,8 @@ export function PortalLayout() {
             </span>
             DDYIDC
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-4">
+            <LayoutWidthToggle {...layoutWidth} />
             <Link href="/products">云产品</Link>
             {groupBuy.data ? <Link href="/groupbuy">拼团</Link> : null}
             {marketplace.data ? (
@@ -39,7 +43,7 @@ export function PortalLayout() {
           </nav>
         </div>
       </Surface>
-      <main className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
+      <main data-layout-width={layoutWidth.width} className={`${layoutWidth.containerClassName} p-4 md:p-6 lg:p-8`}>
         <RouteOutlet className="grid gap-6" />
       </main>
     </div>
