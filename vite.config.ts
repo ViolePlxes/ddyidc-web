@@ -85,7 +85,7 @@ function entryRewrite(): Plugin {
 
 function gitValue(args: string[], fallback: string): string {
   try {
-    return execFileSync("git", args, { cwd: __dirname, encoding: "utf8" }).trim() || fallback;
+    return execFileSync("git", args, { cwd: __dirname, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || fallback;
   } catch {
     return fallback;
   }
@@ -99,6 +99,9 @@ function versionAsset(): Plugin {
   const builtAt = process.env.DDYIDC_BUILD_TIME || new Date().toISOString();
   return {
     name: "ddyidc-version-asset",
+    config() {
+      return { define: { "import.meta.env.VITE_DDYIDC_VERSION": JSON.stringify(version) } };
+    },
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, commit, branch, builtAt }, null, 2) });
     },
