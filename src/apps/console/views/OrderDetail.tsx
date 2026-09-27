@@ -12,6 +12,14 @@ import { useOrder } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels, formatMoney, orderStatusCode } from "../../../shared/utils/format";
 
 const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付" };
+const orderMessages: Record<number, { title: string; description: string }> = {
+  1: { title: "等待在线支付", description: "支持支付宝收银台与微信扫码支付，到账状态以服务端确认结果为准。" },
+  2: { title: "订单已支付", description: "服务正在处理交付，请在产品列表查看开通结果。" },
+  3: { title: "订单已取消", description: "本订单不会继续交付。如取消前已打开收银台，请勿继续付款；已到账款项将进入核对流程。" },
+  4: { title: "订单已退款", description: "退款状态已由服务端确认，到账情况请查看原付款渠道。" },
+  5: { title: "订单已部分退款", description: "退款状态已由服务端确认，剩余订单情况请联系平台核对。" },
+  6: { title: "订单已完成", description: "订单交付已完成，可在产品列表查看服务。" },
+};
 
 export function OrderDetail() {
   const { id = "" } = useParams();
@@ -59,7 +67,7 @@ export function OrderDetail() {
                     { label: "订单号", value: order.orderNo },
                     { label: "商品", value: order.productName || order.items?.[0]?.productName || "—" },
                     { label: "下单时间", value: order.createdAt },
-                    { label: "支付方式", value: order.payType ? payTypes[order.payType] ?? `类型 ${order.payType}` : "尚未支付" },
+                    { label: "支付方式", value: order.payAmount === 0 && [2, 6].includes(order.status) ? "优惠全额抵扣（无渠道付款）" : order.payType ? payTypes[order.payType] ?? `类型 ${order.payType}` : "尚未支付" },
                     ...configRows,
                     ...(snapshot?.hostname
                       ? [{ label: "主机名", value: snapshot.hostname }]
@@ -81,10 +89,8 @@ export function OrderDetail() {
               </LayerCard>
               <Banner
                 variant={order.status === 1 ? "alert" : "default"}
-                title={order.status === 1 ? "等待在线支付" : "支付结果已由服务端确认"}
-                description={order.status === 1
-                  ? "支持支付宝收银台与微信扫码支付，到账后系统将自动开通服务。"
-                  : "付款成功后将自动更新订单与实例状态。"}
+                title={orderMessages[order.status]?.title ?? "订单状态待核对"}
+                description={orderMessages[order.status]?.description ?? "请刷新订单，或联系平台核对处理进度。"}
               />
             </div>
             <LayerCard className="shadow-none grid gap-4 p-5">

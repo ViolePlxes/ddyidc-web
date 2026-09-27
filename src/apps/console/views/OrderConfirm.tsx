@@ -1,5 +1,5 @@
 import { useCertificationGate } from "../../../shared/components/CertificationGate";
-import { Banner, Button, LayerCard, LinkButton, Select } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, LinkButton, Select, SensitiveInput } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -109,6 +109,7 @@ export function OrderConfirm() {
               { label: "数量", value: `${draft.quantity} 台` },
             ]}
           />
+          {draft.password ? <div className="mt-4 grid gap-2"><SensitiveInput label="本次实例密码" value={draft.password} readOnly /><p className="text-sm text-kumo-subtle">密码仅保存在当前页面内存中；刷新页面后会重新生成，请以本次确认的密码为准。</p></div> : null}
         </LayerCard>
         <LayerCard className="shadow-none grid gap-5 p-5">
           <Select

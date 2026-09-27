@@ -7,6 +7,8 @@ import { DataTable } from "../../../shared/components/DataTable";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { formatDate, formatMoney, orderStatusCode } from "../../../shared/utils/format";
+import { ReceiptReviews } from "./ReceiptReviews";
+import { DeliveryTasks } from "./DeliveryTasks";
 
 export function AdminOrders() {
   const [page, setPage] = useState(1);
@@ -48,6 +50,8 @@ export function AdminOrders() {
           showActions={false}
         />
       </PageState>
+      <ReceiptReviews />
+      <DeliveryTasks />
     </>
   );
 }

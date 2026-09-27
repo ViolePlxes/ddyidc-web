@@ -4,7 +4,7 @@ import { userRequest, type ApiEnvelope } from "./request";
 export type PaymentChannel = "wechat" | "alipay";
 export type PaymentBusinessType = "order" | "recharge" | "marketplace";
 export type AlipayCheckoutMode = "page" | "wap";
-export type PaymentState = "pending" | "paid" | "closed" | "failed" | "refunded";
+export type PaymentState = "pending" | "paid" | "closed" | "failed" | "refunded" | "received_review";
 
 export interface PaymentCheckout {
   paymentId: string;

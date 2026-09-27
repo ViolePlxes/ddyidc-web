@@ -5,7 +5,21 @@ import ts from "typescript";
 
 const source = await readFile(new URL("../src/shared/utils/productCatalog.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext } });
-const { secondaryGroups, belongsToGroup, isUpstreamProduct, catalogDescription } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+const { secondaryGroups, belongsToGroup, isUpstreamProduct, catalogDescription, catalogStock, isCatalogAvailable } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+
+test("visible inventory and selection use the same local quota precedence", () => {
+  const available = { stock: 5, upstreamStock: "0", catalogSpec: { stock: null } };
+  assert.equal(catalogStock(available), 5);
+  assert.equal(isCatalogAvailable(available), true);
+  const exhausted = { stock: 5, upstreamStock: "99", catalogSpec: { stock: 0 } };
+  assert.equal(catalogStock(exhausted), 0);
+  assert.equal(isCatalogAvailable(exhausted), false);
+  assert.equal(isCatalogAvailable({ stock: null, upstreamStock: "0" }), false);
+  assert.equal(isCatalogAvailable({ stock: null, upstreamStock: 3 }), true);
+  assert.equal(catalogStock({ stock: null, upstreamStock: "余量待确认" }), "余量待确认");
+  assert.equal(isCatalogAvailable({ stock: null, upstreamStock: "余量待确认" }), true);
+  assert.equal(catalogStock({ stock: null }), null);
+});
 
 test("second-level ownership uses IDs, including duplicate names and empty roots", () => {
   const groups = [

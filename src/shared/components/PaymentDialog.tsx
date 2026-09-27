@@ -23,7 +23,7 @@ interface PaymentDialogProps {
   onPaid?: () => void | Promise<void>;
 }
 
-const finalStates = new Set(["paid", "closed", "failed", "refunded"]);
+const finalStates = new Set(["paid", "closed", "failed", "refunded", "received_review"]);
 const allowedAlipayHosts = new Set([
   "openapi.alipay.com",
   "openapi.alipaydev.com",
@@ -58,6 +58,9 @@ export function PaymentDialog({
   const [qrError, setQrError] = useState(false);
   const handledPaymentId = useRef<string | undefined>(undefined);
   const pollCount = useRef(0);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
+  const pollStartedAt = useRef(0);
 
   const create = useMutation({
     mutationFn: async ({ channel, mode, popup }: { channel: PaymentChannel; mode: AlipayCheckoutMode; popup?: Window | null }) => {
@@ -85,6 +88,9 @@ export function PaymentDialog({
     onSuccess: (result) => {
       handledPaymentId.current = undefined;
       pollCount.current = 0;
+      setPollAttempts(0);
+      setPollTimedOut(false);
+      pollStartedAt.current = Date.now();
       setCheckout(result);
     },
   });
@@ -94,16 +100,24 @@ export function PaymentDialog({
     queryFn: async () => {
       if (!checkout) throw new Error("支付单不存在");
       pollCount.current += 1;
+      setPollAttempts(pollCount.current);
       return paymentApi.statusByPayNo(checkout.payNo);
     },
-    enabled: open && Boolean(checkout?.payNo),
+    enabled: open && Boolean(checkout?.payNo) && !pollTimedOut,
     refetchInterval: (query) => {
-      if (finalStates.has(query.state.data?.status ?? "") || pollCount.current >= 30) return false;
+      if (finalStates.has(query.state.data?.status ?? "") || pollTimedOut || pollCount.current >= 30) return false;
       return 2_000;
     },
     refetchIntervalInBackground: false,
     retry: false,
   });
+
+  useEffect(() => {
+    if (!open || !checkout) return;
+    const remaining = Math.max(0, 60_000 - (Date.now() - pollStartedAt.current));
+    const timer = window.setTimeout(() => setPollTimedOut(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, [open, checkout]);
 
   const close = useMutation({
     mutationFn: () => paymentApi.closeOrder(businessId),
@@ -136,7 +150,7 @@ export function PaymentDialog({
 
   const currentState = status.data?.status ?? checkout?.status;
   const expired = checkout ? new Date(checkout.expireAt).getTime() <= Date.now() : false;
-  const pollingStopped = Boolean(checkout) && pollCount.current >= 30 && !finalStates.has(currentState ?? "");
+  const pollingStopped = Boolean(checkout) && (pollTimedOut || pollAttempts >= 30) && !finalStates.has(currentState ?? "");
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -173,7 +187,8 @@ export function PaymentDialog({
           />
         ) : null}
         {currentState === "paid" ? <Banner title="支付成功" description="服务端已确认到账，后续业务正在处理。" /> : null}
-        {currentState === "closed" || currentState === "failed" || expired
+        {currentState === "received_review" ? <Banner title="已收到付款，待核对" description="订单已关闭或已由另一笔付款完成。本次收款已记录，请联系平台核对原路退款，无需再次付款。" /> : null}
+        {currentState === "closed" || currentState === "failed" || (expired && currentState === "pending")
           ? <Banner variant="error" title="支付单不可继续" description="支付单已关闭、失败或过期，请刷新业务页面后重试。" />
           : null}
         {pollingStopped ? <Banner variant="alert" title="仍在等待结果" description="尚未收到支付异步通知，可刷新状态或稍后在订单中查看。" /> : null}

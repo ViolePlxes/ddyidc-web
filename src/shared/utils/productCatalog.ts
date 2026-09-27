@@ -3,6 +3,22 @@ import type { CatalogProduct, ProductGroupSummary, ProductSummary } from "../api
 export const catalogLayout = "grid items-start gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_minmax(22rem,28rem)]";
 export const catalogColumns = ["实例规格", "vCPU", "内存", "处理器型号", "处理器主频 / 睿频", "基础防御", "上行带宽", "下行速率", "库存数量", "参考价格"];
 
+type StockProduct = Pick<ProductSummary, "stock"> & Partial<Pick<CatalogProduct, "catalogSpec" | "upstreamStock">>;
+
+// Match the server's local quota precedence. A resource snapshot is only a
+// fallback when neither local quota is configured, never an infinite guarantee.
+export function catalogStock(product: StockProduct) {
+  return product.catalogSpec?.stock ?? product.stock ?? product.upstreamStock ?? null;
+}
+
+export function isCatalogAvailable(product: StockProduct) {
+  const stock = catalogStock(product);
+  if (typeof stock === "number") return Number.isFinite(stock) && stock > 0;
+  if (typeof stock === "string" && /^\d+$/.test(stock.trim())) return Number(stock) > 0;
+  // Unknown/textual stock may be configured; the server validates at checkout.
+  return true;
+}
+
 export function isUpstreamProduct(product: Pick<CatalogProduct, "supplierId" | "upstreamProductId">) {
   return Boolean(product.supplierId && product.supplierId !== "0" && product.upstreamProductId && product.upstreamProductId !== "0");
 }

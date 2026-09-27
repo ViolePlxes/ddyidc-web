@@ -13,12 +13,7 @@ import { ProductSteps } from "../../../shared/components/ProductSteps";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
-import { belongsToGroup, catalogColumns, catalogLayout, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
-
-function isAvailable(product: ProductSummary) {
-  const stock = (product as CatalogProduct).catalogSpec?.stock ?? product.stock;
-  return stock === null || stock > 0;
-}
+import { belongsToGroup, catalogColumns, catalogLayout, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
 
 function productSummary(product: ProductSummary) {
   return (product.summary || product.description || "暂无商品简介")
@@ -113,7 +108,7 @@ function PublicProductCatalog() {
 
 function CatalogProductRow({ product, selected }: { product: CatalogProduct; selected: boolean }) {
   const spec = product.catalogSpec;
-  const stock = spec?.stock ?? product.upstreamStock ?? product.stock;
+  const stock = catalogStock(product);
   return (
     <Table.Row variant={selected ? "selected" : "default"}>
       <Table.Cell><Radio.Item value={product.id} label={spec?.name || product.name} disabled={!isAvailable(product)} /></Table.Cell>
