@@ -13,7 +13,7 @@ export type BackupInput = Omit<BackupConfig, "accessKeyMasked" | "secretConfigur
 export interface BackupJob {
   id: string;
   kind: "manual" | "scheduled" | "restore";
-  status: "queued" | "running" | "success" | "failed" | "interrupted";
+  status: "queued" | "running" | "success" | "failed" | "interrupted" | "awaiting_review" | "released";
   sourceId: string;
   localBytes: number;
   ossBytes: number;

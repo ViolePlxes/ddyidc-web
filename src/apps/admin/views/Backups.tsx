@@ -6,7 +6,7 @@ import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 
 const initial: BackupInput = { enabled: false, endpoint: "https://oss-cn-hangzhou.aliyuncs.com", bucket: "", prefix: "ddyidc/", retentionDays: 30, accessKeyId: "", accessKeySecret: "" };
-const statuses = { queued: "等待执行", running: "执行中", success: "成功", failed: "失败", interrupted: "已中断" };
+const statuses = { queued: "等待执行", running: "执行中", success: "成功", failed: "失败", interrupted: "已中断", awaiting_review: "已导入，待运维核对放行", released: "运维已核对放行" };
 const kinds = { manual: "手动备份", scheduled: "定时备份", restore: "恢复" };
 const regions = { "https://oss-cn-hangzhou.aliyuncs.com": "华东 1 · 杭州", "https://oss-cn-shenzhen.aliyuncs.com": "华南 1 · 深圳", "https://oss-cn-beijing.aliyuncs.com": "华北 2 · 北京", "https://oss-cn-qingdao.aliyuncs.com": "华北 1 · 青岛", "https://oss-cn-chengdu.aliyuncs.com": "西南 1 · 成都", custom: "其他地域" };
 function bytes(value: number) { return value ? `${(value / 1024 / 1024).toFixed(2)} MB` : "—"; }
@@ -26,7 +26,7 @@ export function AdminBackups() {
   const save = useMutation({ mutationFn: backupAdmin.save, onSuccess: (value) => { cache.setQueryData(["admin", "backup", "config"], value); setNotice("配置已加密保存，密钥不会回显。"); } });
   const test = useMutation({ mutationFn: backupAdmin.test, onSuccess: () => setNotice("连接成功：已确认私有 Bucket，完成备份前缀查询和探针写入、删除。") });
   const run = useMutation({ mutationFn: backupAdmin.run, onSuccess: async () => { setNotice("备份任务已提交，完成后可在历史记录下载。"); await refresh(); } });
-  const restore = useMutation({ mutationFn: () => backupAdmin.restore(restoreJob!.id, confirmation), onSuccess: async () => { setRestoreJob(null); setNotice("恢复已提交。校验后服务会短暂停止，恢复完成后需要重新登录；请勿重复操作。"); await refresh(); } });
+  const restore = useMutation({ mutationFn: () => backupAdmin.restore(restoreJob!.id, confirmation), onSuccess: async () => { setRestoreJob(null); setNotice("恢复已提交。校验后业务将进入维护状态；导入完成不会自动恢复服务，须由运维核对外部交易并放行，请勿重复操作。"); await refresh(); } });
   const busy = Boolean(history.data?.activeId) || run.isPending || restore.isPending;
   const error = save.error ?? test.error ?? run.error ?? restore.error ?? config.error ?? history.error;
   if (config.isLoading) return <Loader />;
@@ -54,7 +54,7 @@ export function AdminBackups() {
     </LayerCard>
     <LayerCard className="grid gap-4 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">备份任务</h2><Button loading={run.isPending} disabled={busy} onClick={() => run.mutate()}>{config.data?.enabled ? "立即备份并上传" : "立即备份到本地"}</Button></div>
-      {history.data?.activeId ? <Banner title="任务进行中" description="备份和恢复共用执行锁。恢复期间服务会暂时不可用，请等待完成后重新登录。" /> : null}
+      {history.data?.activeId ? <Banner title="任务进行中" description="备份和恢复共用执行锁。恢复会暂停业务；导入完成后仍须运维核对交易、显式放行并启动服务。" /> : null}
       <div className="grid gap-3 text-sm md:grid-cols-3"><div>最近任务：{timestamp(history.data?.items?.[0]?.createdAt)}</div><div>结果：{history.data?.items?.[0] ? statuses[history.data.items[0].status] : "暂无记录"}</div><div>下次定时：{history.data?.nextScheduledAt || "由 systemd timer 管理"}</div></div>
     </LayerCard>
     <LayerCard className="overflow-x-auto p-0">
@@ -73,8 +73,8 @@ export function AdminBackups() {
       {(history.data?.total ?? 0) > 20 ? <div className="p-5"><Pagination page={page} setPage={setPage} perPage={20} totalCount={history.data?.total ?? 0} /></div> : null}
     </LayerCard>
     <Dialog.Root open={restoreJob !== null} onOpenChange={(open) => { if (!open && !restore.isPending) setRestoreJob(null); }}>
-      <Dialog className="grid gap-4 p-6"><Dialog.Title>恢复业务数据</Dialog.Title><Dialog.Description>将覆盖当前 MySQL 数据和用户附件。系统先校验备份，再暂停本机 API、保存本地回滚副本并恢复。多实例部署须先停止其他实例及外部写入任务。恢复后需要重新登录。</Dialog.Description>
-        <Banner variant="alert" title="配置和密钥不会从 OSS 恢复" description="必须保留匹配的原 AES 密钥；恢复前副本仅保留本地，不上传 OSS。" />
+      <Dialog className="grid gap-4 p-6"><Dialog.Title>恢复业务数据</Dialog.Title><Dialog.Description>将覆盖当前 MySQL 数据和用户附件。系统校验后等待已受理工作退出，隔离应用数据库账号并保存回滚副本。导入完成后保持维护状态，须由运维核对支付、退款、采购和续费事实后显式放行。外部写入程序也须纳入停机安排。</Dialog.Description>
+        <Banner variant="alert" title="配置和密钥不会从 OSS 恢复" description="必须保留匹配的原 AES 密钥、独立备份签名密钥及应用版本；恢复前副本仅保留本地，不上传 OSS。" />
         <p className="break-all text-sm">所选备份：{restoreJob?.id}</p>
         <Input label={`请输入：恢复 ${restoreJob?.id ?? ""}`} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
         {restore.error ? <Banner variant="error" title="恢复未启动" description={getApiMessage(restore.error)} /> : null}
