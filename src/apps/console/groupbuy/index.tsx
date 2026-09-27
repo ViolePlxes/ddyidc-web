@@ -11,8 +11,8 @@ import { PageState } from "../../../shared/components/PageState";
 const groupOptions: Array<{ value: GroupType; label: string; size: number }> = [
   { value: "two", label: "2 人团", size: 2 }, { value: "three", label: "3 人团", size: 3 }, { value: "five", label: "5 人团", size: 5 },
 ];
-const statusLabels = { 1: "拼团中", 2: "成功", 3: "已退款" } as const;
-const statusVariants = { 1: "warning", 2: "success", 3: "secondary" } as const;
+const statusLabels = { 1: "拼团中", 2: "成功", 3: "已退款", 4: "交付中" } as const;
+const statusVariants = { 1: "warning", 2: "success", 3: "secondary", 4: "warning" } as const;
 
 function groupPrice(a: GroupBuyActivity, kind: GroupType, leader = false) {
   const prefix = `${kind}${leader ? "Leader" : ""}` as const;
@@ -51,7 +51,7 @@ export function GroupBuyGroupDetail() {
 
 export function GroupBuyMine() {
   const [status,setStatus]=useState("1"); const query=useQuery({queryKey:["groupbuy","mine",status],queryFn:()=>groupBuyApi.mine(Number(status))});
-  return <><PageHeader title="我的拼团" description="查看进行中、成功和已退款记录。" actions={<LinkButton href="/console/groupbuy">发现活动</LinkButton>} /><Tabs variant="segmented" tabs={[{value:"1",label:"拼团中"},{value:"2",label:"成功"},{value:"3",label:"已退款"}]} value={status} onValueChange={setStatus}/><PageState loading={query.isLoading} skeleton="table" error={query.error?getApiMessage(query.error):null} empty={!query.isLoading&&!query.data?.list.length} emptyTitle="此状态暂无拼团"><LayerCard className="shadow-none overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>活动</Table.Head><Table.Head>人数</Table.Head><Table.Head>实付</Table.Head><Table.Head>状态</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header><Table.Body>{query.data?.list.map((r)=><Table.Row key={r.id}><Table.Cell>{r.activity?.productName||r.activityId}</Table.Cell><Table.Cell>{r.isLeader?r.currentNum:"—"}/{r.needNum}</Table.Cell><Table.Cell>¥{(r.payAmount/100).toFixed(2)}</Table.Cell><Table.Cell><Badge variant={statusVariants[r.status]}>{statusLabels[r.status]}</Badge></Table.Cell><Table.Cell><LinkButton href={`/console/groupbuy/groups/${r.leaderId}`} variant="ghost">查看</LinkButton></Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard></PageState></>;
+  return <><PageHeader title="我的拼团" description="查看拼团、交付、成功和已退款记录。" actions={<LinkButton href="/console/groupbuy">发现活动</LinkButton>} /><Tabs variant="segmented" tabs={[{value:"1",label:"拼团中"},{value:"4",label:"交付中"},{value:"2",label:"成功"},{value:"3",label:"已退款"}]} value={status} onValueChange={setStatus}/><PageState loading={query.isLoading} skeleton="table" error={query.error?getApiMessage(query.error):null} empty={!query.isLoading&&!query.data?.list.length} emptyTitle="此状态暂无拼团"><LayerCard className="shadow-none overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>活动</Table.Head><Table.Head>人数</Table.Head><Table.Head>实付</Table.Head><Table.Head>状态</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header><Table.Body>{query.data?.list.map((r)=><Table.Row key={r.id}><Table.Cell>{r.activity?.productName||r.activityId}</Table.Cell><Table.Cell>{r.isLeader?r.currentNum:"—"}/{r.needNum}</Table.Cell><Table.Cell>¥{(r.payAmount/100).toFixed(2)}</Table.Cell><Table.Cell><Badge variant={statusVariants[r.status]}>{statusLabels[r.status]}</Badge></Table.Cell><Table.Cell><LinkButton href={`/console/groupbuy/groups/${r.leaderId}`} variant="ghost">查看</LinkButton></Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard></PageState></>;
 }
 
 export function GroupBuyShare() {

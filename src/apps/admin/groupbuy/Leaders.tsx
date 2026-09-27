@@ -8,6 +8,7 @@ import { PageState } from "../../../shared/components/PageState";
 
 function statusLabel(status: number) {
   if (status === 1) return "拼团中";
+  if (status === 4) return "交付中";
   if (status === 2) return "拼团成功";
   return "已退款";
 }

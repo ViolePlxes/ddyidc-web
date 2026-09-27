@@ -63,6 +63,7 @@ export function InstanceRenewal({instance,customerId}:{instance:InstanceDetail;c
  const create=useMutation({mutationFn:()=>api.renew(cycle)});const refresh=async()=>{await client.invalidateQueries({queryKey:customerId?['admin','customer-instance',customerId,instance.id]:['instances',instance.id]})};
  const pay=useMutation({mutationFn:()=>api.pay(create.data!.orderId),onSettled:refresh});
  const auto=useMutation({mutationFn:api.auto,onSuccess:refresh});
+ if(instance.status===6||instance.powerStatus==='deleted')return <Banner title="实例已删除，不支持续费"/>;
  return <div className="grid gap-3"><Switch label="自动余额续费" checked={instance.autoRenew||false} disabled={auto.isPending} onCheckedChange={v=>auto.mutate(v)}/><p className="text-xs text-kumo-subtle">开启后，到期前 3 天按当前周期创建订单，余额充足时自动支付续费。余额不足不扣款。</p>{auto.error&&<Banner variant="error" title={getApiMessage(auto.error)}/>}
  <Dialog.Root open={open} onOpenChange={v=>{if(!create.isPending&&!pay.isPending)setOpen(v)}}><Button variant="secondary" size="sm" onClick={()=>{setOpen(true);pay.reset();create.reset();setCycle('')}}>续费</Button><Dialog className="grid gap-4 p-6"><Dialog.Title>实例续费</Dialog.Title><Dialog.Description>报价来自当前服务，创建订单后可选择支付方式。请核对周期和金额。</Dialog.Description>
  <Select label="续费周期" value={cycle} items={{"":"请选择续费周期",...Object.fromEntries((options.data?.items||[]).map(x=>[x.cycle,`${x.label||x.cycle} · ¥${x.amount}`]))}} onValueChange={v=>setCycle(v||'')} disabled={create.isPending||!!create.data}/>

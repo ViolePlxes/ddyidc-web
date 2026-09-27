@@ -60,7 +60,7 @@ export interface GroupBuyRecord {
   inviteCode: string;
   isPublic: boolean;
   forceClosePublic: boolean;
-  status: 1 | 2 | 3;
+  status: 1 | 2 | 3 | 4;
   timeoutTime: string;
   successTime?: string;
   memberName?: string;
