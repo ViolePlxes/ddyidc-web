@@ -1,18 +1,24 @@
 import { userRequest, type ApiEnvelope } from "./request";
 import type { AuthPayload } from "../types/auth";
+import { clearRefreshSession, saveRefreshSession } from "./refreshSession";
 
 export async function login(
   account: string,
   password: string,
+  rememberMe = false,
 ): Promise<AuthPayload> {
   const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/login", {
     account,
     password,
+    rememberMe,
   });
-  return response.data.data;
+  const payload = response.data.data;
+  if (payload.refresh_token) saveRefreshSession(payload as Required<AuthPayload>, rememberMe);
+  return payload;
 }
 export async function getSession(): Promise<AuthPayload> {
   const response = await userRequest.get<ApiEnvelope<AuthPayload>>("/auth/me");
+  if (response.data.data.refreshable === false) clearRefreshSession();
   return response.data.data;
 }
 
@@ -29,6 +35,7 @@ export async function register(input: {
 }): Promise<AuthPayload> {
   const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/register", input);
   if (response.data.code !== 0) throw new Error(response.data.message || "注册失败");
+  if (response.data.data.refresh_token) saveRefreshSession(response.data.data as Required<AuthPayload>, false);
   return response.data.data;
 }
 
@@ -47,4 +54,13 @@ export async function sendRegistrationSMS(input: {
 
 export async function logout(): Promise<void> {
   await userRequest.post("/auth/logout");
+  clearRefreshSession();
+}
+
+export interface LoginDevice { id: string; browser: string; ip: string; loginAt: string; lastActiveAt: string; current: boolean }
+export async function getLoginDevices(): Promise<LoginDevice[]> {
+  return (await userRequest.get<ApiEnvelope<LoginDevice[]>>("/auth/devices")).data.data;
+}
+export async function revokeLoginDevice(id: string): Promise<void> {
+  await userRequest.delete(`/auth/devices/${encodeURIComponent(id)}`);
 }

@@ -1,13 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { certificationApi, certificationStatuses } from "../../../shared/api/certification";
 import { Banner, Button, Input, LayerCard, Switch } from "@cloudflare/kumo";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { useAuthStore } from "../../../shared/stores/auth";
+import { LoginDevices } from "../../../shared/components/LoginDevices";
 
 export function Profile() {
+  const location = useLocation();
   const certification = useQuery({queryKey:["certification"],queryFn:certificationApi.info,gcTime:0});
   const user = useAuthStore((state) => state.user);
+  if (location.pathname === "/console/security") return <><PageHeader title="安全中心" description="查看登录设备，管理账号的登录权限。" /><LoginDevices /></>;
   return (
     <>
       <PageHeader title="个人中心" description="以下资料来自当前登录会话。" />
@@ -34,6 +37,7 @@ export function Profile() {
           <Button variant="secondary" disabled>更换手机号</Button>
         </LayerCard>
       </div>
+      <LoginDevices />
     </>
   );
 }
