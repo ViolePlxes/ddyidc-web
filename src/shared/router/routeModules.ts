@@ -23,6 +23,7 @@ export const routeModules = {
   consoleOrderConfirm: () => import("../../apps/console/views/OrderConfirm"),
   consolePaymentResult: () => import("../../apps/console/views/PaymentResult"),
   consoleTickets: () => import("../../apps/console/views/Tickets"),
+  consoleMenuPlaceholder: () => import("../../apps/console/views/MenuPlaceholder"),
   consoleGroupBuy: () => import("../../apps/console/groupbuy"),
   consoleMarketplace: () => import("../../apps/console/marketplace"),
   consolePoints: () => import("../../apps/console/points"),
@@ -105,10 +106,16 @@ const routeLoaders: Array<
   ],
   [(path) => path === "/console/certification", routeModules.consoleCertification],
   [(path) => path === "/admin/certifications", routeModules.adminCertifications],
-  [(path) => path === "/console/profile", routeModules.consoleProfile],
+  [
+    (path) => path === "/console/profile" || path === "/console/security",
+    routeModules.consoleProfile,
+  ],
   [(path) => path === "/console/promo", routeModules.consolePromo],
   [(path) => path === "/console/coupons", routeModules.consoleCoupons],
-  [(path) => path === "/console/finance", routeModules.consoleFinance],
+  [
+    (path) => path === "/console/finance" || path === "/console/recharge",
+    routeModules.consoleFinance,
+  ],
   [(path) => path === "/cart", routeModules.consoleCart],
   [(path) => path === "/order/confirm", routeModules.consoleOrderConfirm],
   [
@@ -121,6 +128,21 @@ const routeLoaders: Array<
       path === "/console/tickets/create" ||
       /^\/console\/tickets\/[^/]+$/.test(path),
     routeModules.consoleTickets,
+  ],
+  [
+    (path) =>
+      [
+        "/console/invoices",
+        "/console/invoices/list",
+        "/console/invoices/titles",
+        "/console/invoices/addresses",
+        "/console/transactions",
+        "/console/messages",
+        "/console/logs",
+        "/console/api",
+        "/console/help",
+      ].includes(path),
+    routeModules.consoleMenuPlaceholder,
   ],
   [
     (path) =>
@@ -186,7 +208,18 @@ const routeLoaders: Array<
   ],
 ];
 
+const prefetchedRoutes = new Map<() => Promise<unknown>, Promise<unknown>>();
+
 export function prefetchRoute(target: string): Promise<unknown> {
   const path = new URL(target, window.location.origin).pathname;
-  return routeLoaders.find(([test]) => test(path))?.[1]() ?? Promise.resolve();
+  const loader = routeLoaders.find(([test]) => test(path))?.[1];
+  if (!loader) return Promise.resolve();
+  const existing = prefetchedRoutes.get(loader);
+  if (existing) return existing;
+  const pending = loader().catch((error) => {
+    prefetchedRoutes.delete(loader);
+    throw error;
+  });
+  prefetchedRoutes.set(loader, pending);
+  return pending;
 }

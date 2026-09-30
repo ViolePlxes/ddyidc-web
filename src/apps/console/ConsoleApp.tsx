@@ -136,6 +136,11 @@ const TicketDetailPage = lazy(() =>
     .consoleTickets()
     .then((module) => ({ default: module.TicketDetailPage })),
 );
+const MenuPlaceholder = lazy(() =>
+  routeModules
+    .consoleMenuPlaceholder()
+    .then((module) => ({ default: module.MenuPlaceholder })),
+);
 const GroupBuyActivities = lazy(() =>
   routeModules
     .consoleGroupBuy()
@@ -467,6 +472,16 @@ export function ConsoleApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/console/invoices" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/list" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/titles" element={<LazyRoute kind="form"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/addresses" element={<LazyRoute kind="form"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/transactions" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/messages" element={<LazyRoute kind="cards"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/logs" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/api" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/help" element={<LazyRoute kind="cards"><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/security" element={<LazyRoute kind="form"><Profile /></LazyRoute>} />
             <Route
               path="/console/groupbuy"
               element={
@@ -544,6 +559,14 @@ export function ConsoleApp() {
             <Route element={<RequireMobile />}>
               <Route
                 path="/console/finance"
+                element={
+                  <LazyRoute kind="table">
+                    <Finance />
+                  </LazyRoute>
+                }
+              />
+              <Route
+                path="/console/recharge"
                 element={
                   <LazyRoute kind="table">
                     <Finance />

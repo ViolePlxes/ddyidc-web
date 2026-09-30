@@ -91,13 +91,10 @@ function ScrollRestoration() {
 
   useLayoutEffect(() => {
     const scrollContainer = document.querySelector<HTMLElement>("[data-dashboard-scroll]");
-    const scrollTop = scrollPositions.get(location.key) ?? 0;
-    if (navigationType === "POP") {
+    const scrollTop = scrollPositions.get(location.key);
+    if (navigationType === "POP" && scrollTop !== undefined) {
       if (scrollContainer) scrollContainer.scrollTo({ top: scrollTop });
       else window.scrollTo({ top: scrollTop });
-    } else {
-      if (scrollContainer) scrollContainer.scrollTo({ top: 0 });
-      else window.scrollTo({ top: 0 });
     }
     return () => {
       scrollPositions.set(
