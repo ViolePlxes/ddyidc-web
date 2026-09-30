@@ -1,4 +1,5 @@
-import { Banner, Button, ClipboardText, Input, LayerCard } from "@cloudflare/kumo";
+import { Banner, Button, ClipboardText, Input, LayerCard, Table } from "@cloudflare/kumo";
+import { pointsApi } from "../../../shared/api/points";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CopyIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -13,12 +14,15 @@ import { formatMoney } from "../../../shared/utils/format";
 export function Promo() {
   const [customCode, setCustomCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [referralPage, setReferralPage] = useState(1);
   const queryClient = useQueryClient();
   const config = useQuery({ queryKey: ["marketing", "public-config"], queryFn: consoleApi.marketingConfig });
   const invite = useQuery({ queryKey: ["promo", "invite"], queryFn: consoleApi.invite });
   const overview = useQuery({ queryKey: ["promo", "overview"], queryFn: consoleApi.promoOverview });
   const earnings = useQuery({ queryKey: ["promo", "earnings"], queryFn: consoleApi.earnings });
   const records = useQuery({ queryKey: ["promo", "records"], queryFn: () => consoleApi.rewardRecords() });
+  const children = useQuery({ queryKey: ["points", "referrals", referralPage], queryFn: () => pointsApi.referrals(referralPage) });
+  const rules = useQuery({ queryKey: ["points", "public-rules"], queryFn: pointsApi.rules });
   const create = useMutation({
     mutationFn: () => consoleApi.createInvite(customCode.trim()),
     onSuccess: async () => { setCustomCode(""); await queryClient.invalidateQueries({ queryKey: ["promo"] }); },
@@ -63,6 +67,16 @@ export function Promo() {
           )}
           {create.error ? <Banner variant="error" title="优惠码生成失败" description={getApiMessage(create.error)} /> : null}
           <MetricGrid metrics={metrics} />
+          <LayerCard className="shadow-none grid gap-3 p-5">
+            <h2 className="font-semibold text-kumo-strong">积分推广奖励</h2>
+            <p className="text-sm text-kumo-subtle">邀请注册、好友首充和消费奖励自动计入积分账户，可在积分商城兑换余额。当前规则由后台配置。</p>
+            {rules.data?.filter(r=>["invite","invite_first_recharge","invite_order"].includes(r.event)).map(r=><p key={r.id}>{r.name}：{r.type==="ratio"?`每消费1元返 ${r.ratio/100} 积分`:`${r.pointsFixed} 积分`}</p>)}
+            {rules.error?<Banner variant="error" title="奖励规则读取失败" description={getApiMessage(rules.error)}/>:null}
+          </LayerCard>
+          <PageState loading={children.isLoading} error={children.error?getApiMessage(children.error):null} empty={!children.isLoading&&!children.data?.list.length} emptyTitle="暂无邀请的用户">
+            <LayerCard className="shadow-none overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>下级用户</Table.Head><Table.Head>注册时间</Table.Head><Table.Head>消费金额</Table.Head><Table.Head>充值金额</Table.Head></Table.Row></Table.Header><Table.Body>{children.data?.list.map(c=><Table.Row key={c.userId}><Table.Cell>用户 {c.userId}</Table.Cell><Table.Cell>{new Date(c.registeredAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>¥ {c.spendYuan}</Table.Cell><Table.Cell>¥ {c.rechargeYuan}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>
+          </PageState>
+          <div className="flex justify-between"><Button variant="secondary" disabled={referralPage===1} onClick={()=>setReferralPage(referralPage-1)}>上一页</Button><span>共 {children.data?.total??0} 位下级用户</span><Button variant="secondary" disabled={referralPage*20>=(children.data?.total??0)} onClick={()=>setReferralPage(referralPage+1)}>下一页</Button></div>
           <PageState empty={!records.isLoading && !records.error && rows.length === 0} emptyTitle="暂无收益记录">
             <DataTable rows={rows} primaryLabel="收益来源" secondaryLabel="关联单号" />
           </PageState>

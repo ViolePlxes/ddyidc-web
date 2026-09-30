@@ -2,6 +2,7 @@ import { useCertificationGate } from "../../../shared/components/CertificationGa
 import { Banner, Button, LayerCard, LinkButton, Select, SensitiveInput } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { CheckoutPoints } from "../points/CheckoutPoints";
 import { useNavigate } from "react-router-dom";
 import { consoleApi, type Order } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -14,7 +15,8 @@ import { clearOrderDraft, loadOrderDraft } from "../../../shared/utils/orderDraf
 export function OrderConfirm() {
   const certification = useCertificationGate();
   const [draft] = useState(loadOrderDraft);
-  const [couponId, setCouponId] = useState("none");
+  const [couponId, setCouponId] = useState("auto");
+  const [pointsBusy, setPointsBusy] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -31,7 +33,7 @@ export function OrderConfirm() {
         specId: draft.selectedSpec?.id,
         durationMonth: draft.durationMonth,
         quantity: draft.quantity,
-        userCouponId: couponId === "none" ? undefined : couponId,
+        userCouponId: couponId === "auto" ? [...(coupons.data ?? [])].sort((a,b)=>(b.previewDiscount??0)-(a.previewDiscount??0))[0]?.id : couponId === "none" ? undefined : couponId,
         configOptions: Object.fromEntries(
           draft.configOptions.map(({ id, ...option }) => [id, option]),
         ),
@@ -48,6 +50,7 @@ export function OrderConfirm() {
   });
   const couponItems = useMemo(
     () => ({
+      auto: "自动匹配最优惠的可用券",
       none: "不使用优惠券",
       ...Object.fromEntries((coupons.data ?? []).map((coupon) => [coupon.id, `${coupon.name}（预计优惠 ¥${((coupon.previewDiscount ?? 0) / 100).toFixed(2)}）`])),
     }),
@@ -112,6 +115,7 @@ export function OrderConfirm() {
           {draft.password ? <div className="mt-4 grid gap-2"><SensitiveInput label="本次实例密码" value={draft.password} readOnly /><p className="text-sm text-kumo-subtle">密码仅保存在当前页面内存中；刷新页面后会重新生成，请以本次确认的密码为准。</p></div> : null}
         </LayerCard>
         <LayerCard className="shadow-none grid gap-5 p-5">
+          <CheckoutPoints amountYuan={draft.totalYuan} onRedeemed={setCouponId} onBusy={setPointsBusy}/>
           <Select
             label="优惠券"
             value={couponId}
@@ -121,12 +125,13 @@ export function OrderConfirm() {
           />
           <div className="border-t border-kumo-line pt-4">
             <div className="flex justify-between">
-              <span>应付金额</span>
-              <strong className="text-2xl text-kumo-strong">¥{draft.totalYuan.toFixed(2)}</strong>
+              <span>预计应付金额</span>
+              <strong className="text-2xl text-kumo-strong">¥{Math.max(0,draft.totalYuan-((couponId==="auto"?Math.max(0,...(coupons.data??[]).map(c=>c.previewDiscount??0)):(coupons.data??[]).find(c=>c.id===couponId)?.previewDiscount??0)/100)).toFixed(2)}</strong>
             </div>
           </div>
           {create.error ? <Banner variant="error" title="创建订单失败" description={getApiMessage(create.error)} /> : null}
           <Button
+            disabled={pointsBusy || coupons.isLoading || coupons.isFetching || Boolean(coupons.error)}
             loading={create.isPending || certification.busy}
             onClick={() => void certification.run(() => create.mutate())}
           >

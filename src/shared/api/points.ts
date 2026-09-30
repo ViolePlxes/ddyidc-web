@@ -2,11 +2,12 @@ import axios, { type AxiosInstance } from "axios";
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
 
 export interface PageData<T> { list: T[]; total: number; page: number; pageSize: number }
-export interface PointsStatus { enabled: boolean; showMall: boolean; showSignin: boolean; showTasks: boolean }
+export interface PointsStatus { enabled: boolean; showMall: boolean; showSignin: boolean; showTasks: boolean; checkoutEnabled:boolean; checkoutPointsPerYuan:number; checkoutCouponDays:number }
 export interface PointsAccount { userId: string; username?: string; balance: number; frozen: number; totalEarned: number; totalUsed: number; status: boolean; riskTag?: RiskTag }
 export interface PointsRecord { id: string; type: "gain"|"deduct"; source: string; event: string; change: number; balanceAfter: number; remark: string; createdAt: string }
 export interface Milestone { days: number; points: number }
-export interface PointsSettings extends PointsStatus { id: string; pointsExpireDays: number; refundMode: "none"|"full"|"ratio"; refundInsufficient: "cut_to_zero"|"none"; rechargeRefundDeduct: boolean; signinMode: "normal"|"choose"; signinStablePoints: number; signinLuckyMin: number; signinLuckyMax: number; streakRewardEnabled: boolean; streakResetOnBreak: boolean; streakMaxMode: "keep"|"reset"; streakMilestones: Milestone[] }
+export interface ReferralChild { userId: string; registeredAt: string; spendYuan: string; rechargeYuan: string }
+export interface PointsSettings extends PointsStatus { id: string; pointsExpireDays: number; refundMode: "none"|"full"|"ratio"; refundInsufficient: "cut_to_zero"|"none"; rechargeRefundDeduct: boolean; signinMode: "normal"|"choose"; signinProgressive: boolean; signinStablePoints: number; signinLuckyMin: number; signinLuckyMax: number; streakRewardEnabled: boolean; streakResetOnBreak: boolean; streakMaxMode: "keep"|"reset"; streakMilestones: Milestone[] }
 export interface Signin { id: string; signinDate: string; mode: string; points: number; streak: number; createdAt: string }
 export interface SigninCalendar { account: PointsAccount; currentStreak: number; monthCount: number; totalCount: number; signedDates: string[]; entries: Signin[]; settings: PointsSettings; nextMilestone?: Milestone }
 export interface PointsTask { id: string; name: string; code: string; description: string; targetEvent: string; taskType: "once"|"daily"|"weekly"|"monthly"; category: "newbie"|"daily"|"growth"; points: number; targetValue: number; enabled: boolean; sort: number; progress: number; claimStatus: "progress"|"claimable"|"claimed" }
@@ -25,6 +26,9 @@ const page=<T>(client:AxiosInstance,path:string,params?:Record<string,unknown>)=
 export async function probePoints(scope:"public"|"admin"):Promise<PointsStatus|false>{try{return await unwrap((scope==="admin"?adminRequest:userRequest).get<ApiEnvelope<PointsStatus>>(scope==="admin"?"/points/settings":"/points/status"))}catch(error){if(axios.isAxiosError(error)&&error.response?.status===404)return false;throw error}}
 
 export const pointsApi={
+  checkoutCoupon:(points:number,requestId:string)=>unwrap(userRequest.post<ApiEnvelope<{points:number;userCouponId:string;amountYuan:string}>>("/points/checkout-coupon",{points,requestId})),
+  activity:()=>unwrap(userRequest.post<ApiEnvelope<{updated:boolean}>>("/points/activity")),
+  referrals:(page=1)=>unwrap(userRequest.get<ApiEnvelope<PageData<ReferralChild>>>("/points/referrals",{params:{page,pageSize:20}})),
   status:()=>unwrap(userRequest.get<ApiEnvelope<PointsStatus>>("/points/status")),
   account:()=>unwrap(userRequest.get<ApiEnvelope<PointsAccount>>("/points/account")),
   records:(params?:Record<string,unknown>)=>page<PointsRecord>(userRequest,"/points/records",params),
@@ -33,7 +37,7 @@ export const pointsApi={
   tasks:(category="all")=>unwrap(userRequest.get<ApiEnvelope<PointsTask[]>>("/points/tasks",{params:{category}})),
   claimTask:(id:string)=>unwrap(userRequest.post<ApiEnvelope<PointsAccount>>(`/points/tasks/${id}/claim`)),
   goods:(params?:Record<string,unknown>)=>page<PointsGoods>(userRequest,"/points/goods",params),
-  categories:()=>unwrap(adminRequest.get<ApiEnvelope<PointsCategory[]>>("/points/categories")),
+  categories:()=>unwrap(userRequest.get<ApiEnvelope<PointsCategory[]>>("/points/categories")),
   exchange:(id:string,input:{quantity:number;recipient?:Record<string,string>})=>unwrap(userRequest.post<ApiEnvelope<PointsOrder>>(`/points/goods/${id}/exchange`,input)),
   orders:(params?:Record<string,unknown>)=>page<PointsOrder>(userRequest,"/points/orders",params),
   rules:()=>unwrap(userRequest.get<ApiEnvelope<PointsRule[]>>("/points/rules")),

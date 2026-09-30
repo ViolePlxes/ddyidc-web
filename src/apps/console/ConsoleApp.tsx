@@ -17,7 +17,8 @@ import {
   CloudArrowDownIcon,
   CloudCheckIcon,
 } from "@phosphor-icons/react";
-import { lazy } from "react";
+import { lazy, useEffect } from "react";
+import { pointsApi } from "../../shared/api/points";
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { useQuery } from "@tanstack/react-query";
@@ -245,6 +246,11 @@ function UserDashboard() {
   const groupBuy = useGroupBuyAvailability("public");
   const marketplace = useMarketplaceAvailability("public");
   const points = usePointsAvailability("public");
+  useEffect(() => {
+    if (user && points.data && points.data.enabled) {
+      void pointsApi.activity().catch(() => { /* Tasks retry activity on their own page. */ });
+    }
+  }, [user?.id, points.data && points.data.enabled]);
   const cdnsell = useCdnsellAvailability("public");
   const groupBuyCounts = useQuery({
     queryKey: ["groupbuy", "tab-counts"],

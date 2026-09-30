@@ -205,6 +205,7 @@ const PointsAccounts = lazy(() => routeModules.adminPoints().then((module)=>({de
 const PointsGoodsAdmin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsGoodsAdmin})));
 const PointsOrdersAdmin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsOrdersAdmin})));
 const PointsPlugin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsPlugin})));
+const AdminPointsCoupons = lazy(() => import("./points/Coupons").then(module=>({default:module.AdminPointsCoupons})));
 const CdnAdminOverview = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnAdminOverview})));
 const CdnUpstream = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnUpstream})));
 const CdnCapabilities = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCapabilities})));
@@ -731,6 +732,7 @@ export function AdminApp() {
             <Route path="/admin/points/goods" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
             <Route path="/admin/points/orders" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
             <Route path="/admin/points/plugin" element={<PointsGate scope="admin"><LazyRoute kind="form"><PointsPlugin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/coupons" element={<LazyRoute kind="table"><AdminPointsCoupons /></LazyRoute>} />
             <Route path="/admin/cdnsell" element={<CdnsellGate scope="admin"><LazyRoute kind="dashboard"><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
             <Route path="/admin/cdnsell/upstream" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnUpstream /></LazyRoute></CdnsellGate>} />
             <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCapabilities /></LazyRoute></CdnsellGate>} />

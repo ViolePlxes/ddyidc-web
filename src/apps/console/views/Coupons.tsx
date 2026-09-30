@@ -12,7 +12,7 @@ import { formatMoney } from "../../../shared/utils/format";
 const statusValues: Record<string, number> = { available: 0, used: 1, expired: 2 };
 
 function couponValue(type: number, faceValue: number, discountRate: number) {
-  return type === 1 ? formatMoney(faceValue) : `${discountRate} 折`;
+  return type === 1 ? formatMoney(faceValue) : `${discountRate * 10} 折`;
 }
 
 export function Coupons() {
