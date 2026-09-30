@@ -75,6 +75,9 @@ export function DashboardLayout({
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
+  const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
+  const contentWidth = isProductCatalog ? "wide" : layoutWidth.width;
+  const contentContainerClassName = isProductCatalog ? "w-full" : layoutWidth.containerClassName;
   const standalonePaths = ["/console", "/console/products", "/admin"];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
@@ -253,8 +256,8 @@ export function DashboardLayout({
         </Surface>
         <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
           <div
-            data-layout-width={layoutWidth.width}
-            className={`${layoutWidth.containerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            data-layout-width={contentWidth}
+            className={`${contentContainerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
