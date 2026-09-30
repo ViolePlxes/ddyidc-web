@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
-import { ContentFade } from "../components/ContentFade";
+import { ContentFade, ContentPending } from "../components/ContentFade";
 
 export function LazyRoute({ children }: { children: ReactNode }) {
-  return <Suspense fallback={null}><ContentFade>{children}</ContentFade></Suspense>;
+  return <Suspense fallback={<ContentPending />}><ContentFade>{children}</ContentFade></Suspense>;
 }

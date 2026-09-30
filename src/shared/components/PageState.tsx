@@ -7,7 +7,7 @@ import {
 import { PackageIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ContentSkeleton, type SkeletonKind } from "./skeletons";
-import { ContentFade, isProductListPath } from "./ContentFade";
+import { ContentFade, isProductListPath, useContentLoading } from "./ContentFade";
 import { useLocation } from "react-router-dom";
 
 const skeletonKinds: readonly SkeletonKind[] = ["products", "catalog"];
@@ -37,6 +37,7 @@ export function PageState({
 }) {
   const [showSkeleton, setShowSkeleton] = useState(false);
   const catalog = isProductListPath(useLocation().pathname);
+  useContentLoading(loading && !catalog);
 
   useEffect(() => {
     if (loading && catalog) {
