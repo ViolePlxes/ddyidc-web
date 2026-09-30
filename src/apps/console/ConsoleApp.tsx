@@ -48,9 +48,8 @@ import { PointsGate, usePointsAvailability } from "../../shared/router/PointsGat
 import { CdnsellGate, useCdnsellAvailability } from "../../shared/router/CdnsellGate";
 
 const BindMobile = lazy(() =>
-  routeModules
-    .portalPublic()
-    .then((module) => ({ default: module.BindMobile })),
+  import("../portal/views/SocialMobileBinding")
+    .then((module) => ({ default: module.MobileBindingPage })),
 );
 const Cart = lazy(() =>
   routeModules.consoleCart().then((module) => ({ default: module.Cart })),
