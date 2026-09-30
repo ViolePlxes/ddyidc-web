@@ -50,7 +50,6 @@ export function GroupBuyAdminLeaders() {
       <PageHeader title="拼团成员" description="查看团长进度、成员明细、退款状态和公开设置。" />
       <PageState
         loading={leaders.isLoading}
-        skeleton="table"
         error={leaders.error ? getApiMessage(leaders.error) : null}
         empty={!leaders.isLoading && !leaders.data?.list.length}
         emptyTitle="暂无拼团记录"
@@ -117,7 +116,6 @@ export function GroupBuyAdminLeaders() {
           </div>
           <PageState
             loading={detail.isLoading}
-            skeleton="table"
             error={detail.error ? getApiMessage(detail.error) : null}
             empty={!detail.isLoading && !detail.data?.members.length}
             emptyTitle="暂无成员"

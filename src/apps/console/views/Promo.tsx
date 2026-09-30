@@ -51,7 +51,7 @@ export function Promo() {
   return (
     <>
       <PageHeader title="我的推广" description="优惠码、推广数据与收益均来自实时营销接口。" />
-      <PageState loading={loading} skeleton="dashboard" error={error ? getApiMessage(error) : null}>
+      <PageState loading={loading} error={error ? getApiMessage(error) : null}>
         <div className="grid gap-5">
           {inviteCode ? (
             <LayerCard className="shadow-none flex flex-wrap items-center justify-between gap-4 p-5">

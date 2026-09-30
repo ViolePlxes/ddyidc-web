@@ -46,7 +46,7 @@ export function AdminHome() {
         title="管理后台"
         description="查看全站经营指标和待处理事项。"
       />
-      <PageState loading={dashboard.isLoading} skeleton="dashboard" error={dashboard.error ? getApiMessage(dashboard.error) : null}>
+      <PageState loading={dashboard.isLoading} error={dashboard.error ? getApiMessage(dashboard.error) : null}>
         {data ? <div className="grid gap-6">
           <MetricGrid metrics={metrics} />
           <section className="grid gap-3">

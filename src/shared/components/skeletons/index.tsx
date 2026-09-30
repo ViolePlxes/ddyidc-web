@@ -1,7 +1,6 @@
 import { LayerCard, Sidebar, SkeletonLine, Surface, Table } from "@cloudflare/kumo";
 import { catalogColumns, catalogLayout } from "../../utils/productCatalog";
 
-const lineWidths = ["w-32", "w-24", "w-20", "w-28", "w-16", "w-12"] as const;
 
 export function PageHeaderSkeleton() {
   return (
@@ -9,44 +8,6 @@ export function PageHeaderSkeleton() {
       <SkeletonLine className="h-7 w-48" />
       <SkeletonLine className="h-4 w-80 max-w-full" />
     </div>
-  );
-}
-
-export function TableSkeleton({
-  columns = 5,
-  rows = 10,
-}: {
-  columns?: number;
-  rows?: number;
-}) {
-  return (
-    <LayerCard className="shadow-none overflow-x-auto p-0" role="status" aria-label="正在加载表格数据">
-      <Table>
-        <Table.Header variant="compact">
-          <Table.Row>
-            {Array.from({ length: columns }, (_, column) => (
-              <Table.Head key={column}>
-                <SkeletonLine className={`h-4 ${lineWidths[column % lineWidths.length]}`} />
-              </Table.Head>
-            ))}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {Array.from({ length: rows }, (_, row) => (
-            <Table.Row key={row}>
-              {Array.from({ length: columns }, (_, column) => (
-                <Table.Cell key={column}>
-                  <SkeletonLine
-                    blockHeight={40}
-                    className={`h-4 ${lineWidths[(row + column) % lineWidths.length]}`}
-                  />
-                </Table.Cell>
-              ))}
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
-    </LayerCard>
   );
 }
 
@@ -83,62 +44,6 @@ export function ProductListSkeleton() {
         <SkeletonLine className="h-6 w-36" />
         <CardGridSkeleton />
       </section>
-    </div>
-  );
-}
-
-export function MetricSkeleton({ count = 4 }: { count?: number }) {
-  return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
-      {Array.from({ length: count }, (_, index) => (
-        <LayerCard key={index} className="shadow-none grid min-h-36 gap-3 p-5">
-          <SkeletonLine className="h-4 w-24" />
-          <SkeletonLine className="h-9 w-20" />
-          <SkeletonLine className="h-4 w-32" />
-        </LayerCard>
-      ))}
-    </section>
-  );
-}
-
-export function ChartSkeleton() {
-  return (
-    <LayerCard className="shadow-none grid gap-4 p-5" role="status" aria-label="正在加载趋势图">
-      <SkeletonLine className="h-6 w-40" />
-      <div className="grid h-[280px] grid-cols-12 items-end gap-2 border-b border-l border-kumo-line p-4" aria-hidden="true">
-        {[35, 48, 42, 64, 55, 72, 68, 82, 66, 76, 88, 80].map((height, index) => (
-          <SkeletonLine key={index} className="w-full" blockHeight={height * 2} />
-        ))}
-      </div>
-    </LayerCard>
-  );
-}
-
-export function FormSkeleton({ rows = 6 }: { rows?: number }) {
-  return (
-    <LayerCard className="shadow-none grid gap-5 p-5" role="status" aria-label="正在加载表单">
-      {Array.from({ length: rows }, (_, index) => (
-        <div key={index} className="grid gap-2 sm:grid-cols-[12rem_1fr] sm:items-center">
-          <SkeletonLine className="h-4 w-28" />
-          <SkeletonLine className="h-10 w-full" />
-        </div>
-      ))}
-      <SkeletonLine className="h-9 w-28 justify-self-end" />
-    </LayerCard>
-  );
-}
-
-export function DetailSkeleton() {
-  return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" role="status" aria-label="正在加载详情">
-      <FormSkeleton rows={7} />
-      <LayerCard className="shadow-none grid gap-5 p-5" aria-hidden="true">
-        <SkeletonLine className="h-4 w-24" />
-        <SkeletonLine className="h-9 w-36" />
-        <SkeletonLine className="h-4 w-full" />
-        <SkeletonLine className="h-10 w-full" />
-        <SkeletonLine className="h-10 w-full" />
-      </LayerCard>
     </div>
   );
 }
@@ -227,40 +132,13 @@ export function ProductConfigSkeleton({ externalBill = false }: { externalBill?:
   );
 }
 
-export function DashboardSkeleton() {
-  return (
-    <div className="grid gap-6" role="status" aria-label="正在加载概览数据">
-      <MetricSkeleton />
-      <ChartSkeleton />
-      <TableSkeleton columns={4} rows={5} />
-    </div>
-  );
-}
-
-export type SkeletonKind = "dashboard" | "table" | "cards" | "products" | "catalog" | "detail" | "product" | "form" | "chart";
+export type SkeletonKind = "products" | "catalog";
 
 export function ContentSkeleton({ kind }: { kind: SkeletonKind }) {
-  if (kind === "dashboard") return <DashboardSkeleton />;
-  if (kind === "table") return <TableSkeleton />;
-  if (kind === "cards") return <CardGridSkeleton />;
-  if (kind === "products") return <ProductListSkeleton />;
-  if (kind === "catalog") return <ProductCatalogSkeleton />;
-  if (kind === "detail") return <DetailSkeleton />;
-  if (kind === "product") return <ProductConfigSkeleton />;
-  if (kind === "form") return <FormSkeleton />;
-  return <ChartSkeleton />;
+  return kind === "catalog" ? <ProductCatalogSkeleton /> : <ProductListSkeleton />;
 }
 
-export function RouteSkeleton({ kind }: { kind: SkeletonKind }) {
-  return (
-    <div className="grid gap-6" role="status" aria-label="正在加载页面">
-      <PageHeaderSkeleton />
-      <ContentSkeleton kind={kind} />
-    </div>
-  );
-}
-
-export function AppShellSkeleton({ kind = "table" }: { kind?: SkeletonKind }) {
+export function AppShellSkeleton({ kind = "products" }: { kind?: SkeletonKind }) {
   return (
     <Sidebar.Provider defaultOpen collapsible="icon" className="h-svh max-h-svh overflow-hidden">
       <Sidebar aria-label="正在加载主导航" className="[--sidebar-bg:var(--color-kumo-canvas)]">

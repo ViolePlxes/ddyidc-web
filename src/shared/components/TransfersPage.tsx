@@ -29,7 +29,7 @@ export function TransfersPage({ admin = false }: { admin?: boolean }) {
   {(save.error || settings.error) && <Banner variant="error" title={getApiMessage(save.error || settings.error)} />}
   {message && <Banner title={message} />}
   {!admin && <Tabs value={tab} onValueChange={setTab} tabs={[{ value: "all", label: "全部记录" }, { value: "pending", label: "本页待我接收" }]} />}
-  <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !rows.length} emptyTitle="暂无转让记录">
+  <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !rows.length} emptyTitle="暂无转让记录">
    <LayerCard className="overflow-x-auto"><Table><Table.Header><Table.Row>{["实例 / 转让编号", "发起人 → 接收人", "来源 / 关联交易", "状态", "时间", ...(admin ? ["审计 / 风控"] : ["操作"])].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header><Table.Body>{rows.map(row => <Table.Row key={row.id}>
     <Table.Cell><Link to={admin ? `/admin/customers/${row.toCustomerId}` : `/console/instances/${row.instanceId}`}>{row.instanceId}</Link><p className="text-sm text-kumo-subtle">{row.id}</p></Table.Cell>
     <Table.Cell>#{row.fromCustomerId} → #{row.toCustomerId}</Table.Cell><Table.Cell>{row.source === "direct" ? "直连转让" : row.source === "marketplace_refund" ? "市场退款返还" : "市场成交"}<p>{row.marketOrderId !== "0" ? row.marketOrderId : "—"}</p></Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{new Date(row.updatedAt).toLocaleString()}</Table.Cell>

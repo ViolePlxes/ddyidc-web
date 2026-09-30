@@ -49,7 +49,7 @@ export function ReceiptReviews() {
     </div>
     {reconcile.error ? <Banner variant="error" title="渠道核对失败" description={getApiMessage(reconcile.error)} /> : null}
     {reconcile.data ? <Banner title="渠道查询已完成" description={`返回状态：${reconcile.data.status}。仅验真的成功收款进入本地状态处理，不会再次扣款。`} /> : null}
-    <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无待核对收款">
+    <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无待核对收款">
       <Table><Table.Header><Table.Row>{["支付单", "业务 / 客户", "渠道 / 金额", "原因", "状态", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
         <Table.Body>{query.data?.map(row => <Table.Row key={row.paymentId}>
           <Table.Cell>{row.payNo}</Table.Cell><Table.Cell>{row.businessId} / {row.customerId}</Table.Cell>

@@ -70,7 +70,6 @@ export function MarketplaceAdminDashboard() {
       />
       <PageState
         loading={q.isLoading}
-        skeleton="dashboard"
         error={q.error ? getApiMessage(q.error) : null}
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -160,7 +159,6 @@ export function MarketplaceAdminListings() {
       </LayerCard>
       <PageState
         loading={q.isLoading}
-        skeleton="table"
         error={q.error ? getApiMessage(q.error) : null}
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无挂牌"
@@ -275,7 +273,6 @@ export function MarketplaceAdminOrders() {
       <Result message={message} />
       <PageState
         loading={q.isLoading}
-        skeleton="table"
         error={q.error ? getApiMessage(q.error) : null}
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无交易订单"
@@ -381,7 +378,6 @@ export function MarketplaceAdminFlows() {
       </LayerCard>
       <PageState
         loading={q.isLoading}
-        skeleton="table"
         error={q.error ? getApiMessage(q.error) : null}
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无流水"
@@ -448,7 +444,6 @@ export function MarketplaceAdminWithdrawals() {
       <Result message={message} />
       <PageState
         loading={q.isLoading}
-        skeleton="table"
         error={q.error ? getApiMessage(q.error) : null}
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无提现申请"
@@ -531,7 +526,6 @@ export function MarketplaceAdminReports() {
       />
       <PageState
         loading={q.isLoading}
-        skeleton="table"
         error={q.error ? getApiMessage(q.error) : null}
         empty={!q.isLoading && !q.data?.list.length}
         emptyTitle="暂无举报"
@@ -656,7 +650,6 @@ export function MarketplaceAdminSettings() {
       <Result message={message} />
       <PageState
         loading={q.isLoading}
-        skeleton="form"
         error={q.error ? getApiMessage(q.error) : null}
       >
         <div className="grid gap-5">

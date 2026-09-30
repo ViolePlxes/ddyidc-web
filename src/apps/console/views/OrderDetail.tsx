@@ -53,7 +53,6 @@ export function OrderDetail() {
       />
       <PageState
         loading={query.isLoading}
-        skeleton="detail"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.error && !order}
         emptyTitle="订单不存在"

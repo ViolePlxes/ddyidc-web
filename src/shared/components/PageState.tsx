@@ -7,8 +7,10 @@ import {
 import { PackageIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ContentSkeleton, type SkeletonKind } from "./skeletons";
+import { ContentFade, isProductListPath } from "./ContentFade";
+import { useLocation } from "react-router-dom";
 
-const skeletonKinds: readonly SkeletonKind[] = ["dashboard", "table", "cards", "products", "catalog", "detail", "product", "form", "chart"];
+const skeletonKinds: readonly SkeletonKind[] = ["products", "catalog"];
 
 function isSkeletonKind(value: SkeletonKind | ReactNode): value is SkeletonKind {
   return typeof value === "string" && skeletonKinds.includes(value as SkeletonKind);
@@ -21,7 +23,7 @@ export function PageState({
   error,
   emptyTitle = "暂无数据",
   emptyDescription = "当前条件下没有可显示的记录。",
-  skeleton = "table",
+  skeleton = "products",
   skeletonDelayMs = 300,
 }: {
   children: ReactNode;
@@ -34,9 +36,10 @@ export function PageState({
   skeletonDelayMs?: number;
 }) {
   const [showSkeleton, setShowSkeleton] = useState(false);
+  const catalog = isProductListPath(useLocation().pathname);
 
   useEffect(() => {
-    if (loading) {
+    if (loading && catalog) {
       const timer = window.setTimeout(() => setShowSkeleton(true), skeletonDelayMs);
       return () => window.clearTimeout(timer);
     }
@@ -44,9 +47,10 @@ export function PageState({
       const timer = window.setTimeout(() => setShowSkeleton(false), 100);
       return () => window.clearTimeout(timer);
     }
-  }, [loading, showSkeleton, skeletonDelayMs]);
+  }, [loading, catalog, showSkeleton, skeletonDelayMs]);
 
-  if (loading) {
+  if (loading && !catalog) return null;
+  if (loading && catalog) {
     if (!showSkeleton) {
       return <div role="status" aria-label="正在加载页面数据" aria-busy="true" />;
     }
@@ -54,7 +58,7 @@ export function PageState({
   }
   if (empty) {
     return (
-      <div>
+      <ContentFade>
         <LayerCard className="shadow-none">
           <Empty className="bg-kumo-base"
             icon={<PackageIcon />}
@@ -62,12 +66,12 @@ export function PageState({
             description={emptyDescription}
           />
         </LayerCard>
-      </div>
+      </ContentFade>
     );
   }
   if (error) {
     return (
-      <div>
+      <ContentFade>
         <Banner
           variant="error"
           icon={<WarningCircleIcon />}
@@ -79,8 +83,8 @@ export function PageState({
             </Button>
           }
         />
-      </div>
+      </ContentFade>
     );
   }
-  return <div>{children}</div>;
+  return <ContentFade>{children}</ContentFade>;
 }

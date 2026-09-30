@@ -57,7 +57,6 @@ function MarketTab() {
       </LayerCard>
       <PageState
         loading={query.isLoading}
-        skeleton="products"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无在售产品"
@@ -148,7 +147,6 @@ function SellTab() {
         {step === 1 ? (
           <PageState
             loading={products.isLoading}
-            skeleton="table"
             error={products.error ? getApiMessage(products.error) : null}
             empty={!products.isLoading && !products.data?.length}
             emptyTitle="暂无可出售的云产品"
@@ -288,7 +286,6 @@ function MyListingsTab() {
       <Notice message={message} />
       <PageState
         loading={query.isLoading}
-        skeleton="table"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无挂牌记录"
@@ -389,7 +386,6 @@ function OrdersTab() {
       <Notice message={message} />
       <PageState
         loading={query.isLoading}
-        skeleton="table"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无交易订单"
@@ -637,7 +633,6 @@ function WantsTab() {
       </LayerCard>
       <PageState
         loading={query.isLoading}
-        skeleton="table"
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无我的求购"
       >

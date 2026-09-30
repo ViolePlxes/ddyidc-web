@@ -15,7 +15,7 @@ export function useGroupBuyAvailability(scope: "public" | "admin") {
 
 export function GroupBuyGate({ scope, children }: { scope: "public" | "admin"; children: ReactNode }) {
   const query = useGroupBuyAvailability(scope);
-  if (query.isLoading) return <PageState loading skeleton="detail"><span /></PageState>;
+  if (query.isLoading) return <PageState loading><span /></PageState>;
   if (!query.data) return <LayerCard className="shadow-none grid gap-2 p-8"><strong className="text-xl text-kumo-strong">404</strong><p className="text-kumo-subtle">页面不存在或拼团模块当前未启用。</p></LayerCard>;
   return children;
 }

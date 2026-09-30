@@ -322,7 +322,7 @@ export function ConsoleApp() {
           <Route
             path="/console/instance/:instanceId/vnc"
             element={
-              <LazyRoute kind="detail">
+              <LazyRoute>
                 <VncConsole />
               </LazyRoute>
             }
@@ -331,7 +331,7 @@ export function ConsoleApp() {
             <Route
               path="/bind-mobile"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <BindMobile />
                 </LazyRoute>
               }
@@ -341,7 +341,7 @@ export function ConsoleApp() {
             <Route
               path="/console"
               element={
-                <LazyRoute kind="dashboard">
+                <LazyRoute>
                   <ConsoleHome />
                 </LazyRoute>
               }
@@ -349,7 +349,7 @@ export function ConsoleApp() {
             <Route
               path="/console/components"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <ComponentsPage />
                 </LazyRoute>
               }
@@ -357,7 +357,7 @@ export function ConsoleApp() {
             <Route
               path="/console/products"
               element={
-                <LazyRoute kind="catalog">
+                <LazyRoute>
                   <ConsoleProducts />
                 </LazyRoute>
               }
@@ -365,7 +365,7 @@ export function ConsoleApp() {
             <Route
               path="/console/products/:id"
               element={
-                <LazyRoute kind="product">
+                <LazyRoute>
                   <ConsoleProductDetail />
                 </LazyRoute>
               }
@@ -373,7 +373,7 @@ export function ConsoleApp() {
             <Route
               path="/console/instances"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <InstanceList />
                 </LazyRoute>
               }
@@ -381,7 +381,7 @@ export function ConsoleApp() {
             <Route
               path="/console/instances/:instanceId"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <InstanceConsole />
                 </LazyRoute>
               }
@@ -389,7 +389,7 @@ export function ConsoleApp() {
             <Route
               path="/user/productList.htm"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <InstanceList />
                 </LazyRoute>
               }
@@ -397,7 +397,7 @@ export function ConsoleApp() {
             <Route
               path="/user/instance/:instanceId.htm"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <InstanceConsole />
                 </LazyRoute>
               }
@@ -405,7 +405,7 @@ export function ConsoleApp() {
             <Route
               path="/console/orders"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <OrderList />
                 </LazyRoute>
               }
@@ -413,7 +413,7 @@ export function ConsoleApp() {
             <Route
               path="/console/orders/:id"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <OrderDetail />
                 </LazyRoute>
               }
@@ -421,18 +421,18 @@ export function ConsoleApp() {
             <Route
               path="/console/payment/result"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <PaymentResult />
                 </LazyRoute>
               }
             />
-            <Route path="/console/video-bindings" element={<LazyRoute kind="cards"><PointsGate scope="public"><VideoBindings /></PointsGate></LazyRoute>} />
-            <Route path="/console/transfers" element={<LazyRoute kind="table"><TransfersPage /></LazyRoute>} />
+            <Route path="/console/video-bindings" element={<LazyRoute><PointsGate scope="public"><VideoBindings /></PointsGate></LazyRoute>} />
+            <Route path="/console/transfers" element={<LazyRoute><TransfersPage /></LazyRoute>} />
  <Route
-              path="/console/certification" element={<LazyRoute kind="form"><Certification /></LazyRoute>} />
+              path="/console/certification" element={<LazyRoute><Certification /></LazyRoute>} />
             <Route path="/console/profile"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <Profile />
                 </LazyRoute>
               }
@@ -440,7 +440,7 @@ export function ConsoleApp() {
             <Route
               path="/console/promo"
               element={
-                <LazyRoute kind="dashboard">
+                <LazyRoute>
                   <Promo />
                 </LazyRoute>
               }
@@ -448,7 +448,7 @@ export function ConsoleApp() {
             <Route
               path="/console/coupons"
               element={
-                <LazyRoute kind="cards">
+                <LazyRoute>
                   <Coupons />
                 </LazyRoute>
               }
@@ -456,7 +456,7 @@ export function ConsoleApp() {
             <Route
               path="/console/tickets"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <TicketList />
                 </LazyRoute>
               }
@@ -464,7 +464,7 @@ export function ConsoleApp() {
             <Route
               path="/console/tickets/create"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <TicketCreate />
                 </LazyRoute>
               }
@@ -472,26 +472,26 @@ export function ConsoleApp() {
             <Route
               path="/console/tickets/:id"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <TicketDetailPage />
                 </LazyRoute>
               }
             />
-            <Route path="/console/invoices" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/invoices/list" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/invoices/titles" element={<LazyRoute kind="form"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/invoices/addresses" element={<LazyRoute kind="form"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/transactions" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/messages" element={<LazyRoute kind="cards"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/logs" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/api" element={<LazyRoute kind="table"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/help" element={<LazyRoute kind="cards"><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/security" element={<LazyRoute kind="form"><Profile /></LazyRoute>} />
+            <Route path="/console/invoices" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/list" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/titles" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/invoices/addresses" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/transactions" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/messages" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/logs" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/api" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/help" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/security" element={<LazyRoute><Profile /></LazyRoute>} />
             <Route
               path="/console/groupbuy"
               element={
                 <GroupBuyGate scope="public">
-                  <LazyRoute kind="products">
+                  <LazyRoute>
                     <GroupBuyActivities />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -501,7 +501,7 @@ export function ConsoleApp() {
               path="/console/groupbuy/activities/:id"
               element={
                 <GroupBuyGate scope="public">
-                  <LazyRoute kind="product">
+                  <LazyRoute>
                     <GroupBuyActivityDetail />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -511,7 +511,7 @@ export function ConsoleApp() {
               path="/console/groupbuy/groups/:id"
               element={
                 <GroupBuyGate scope="public">
-                  <LazyRoute kind="detail">
+                  <LazyRoute>
                     <GroupBuyGroupDetail />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -521,7 +521,7 @@ export function ConsoleApp() {
               path="/console/groupbuy/my"
               element={
                 <GroupBuyGate scope="public">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <GroupBuyMine />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -531,7 +531,7 @@ export function ConsoleApp() {
               path="/console/groupbuy/share/:inviteCode"
               element={
                 <GroupBuyGate scope="public">
-                  <LazyRoute kind="detail">
+                  <LazyRoute>
                     <GroupBuyShare />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -541,31 +541,31 @@ export function ConsoleApp() {
               path="/console/marketplace"
               element={
                 <MarketplaceGate scope="public" allowExisting>
-                  <LazyRoute kind="dashboard">
+                  <LazyRoute>
                     <MarketplaceConsole />
                   </LazyRoute>
                 </MarketplaceGate>
               }
             />
-            <Route path="/console/points" element={<PointsGate scope="public"><LazyRoute kind="dashboard"><PointsHome /></LazyRoute></PointsGate>} />
-            <Route path="/console/points/signin" element={<PointsGate scope="public" feature="signin"><LazyRoute kind="dashboard"><PointsSignin /></LazyRoute></PointsGate>} />
-            <Route path="/console/points/tasks" element={<PointsGate scope="public" feature="tasks"><LazyRoute kind="cards"><PointsTasks /></LazyRoute></PointsGate>} />
-            <Route path="/console/points/mall" element={<PointsGate scope="public" feature="mall"><LazyRoute kind="products"><PointsMall /></LazyRoute></PointsGate>} />
-            <Route path="/console/points/orders" element={<PointsGate scope="public" feature="mall"><LazyRoute kind="table"><PointsOrders /></LazyRoute></PointsGate>} />
-            <Route path="/console/cdnsell" element={<CdnsellGate scope="public"><LazyRoute kind="dashboard"><CdnOverview /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/packages" element={<CdnsellGate scope="public"><LazyRoute kind="products"><CdnPackages /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/usage" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnUsage /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/domains" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnDomains /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/domains/:id" element={<CdnsellGate scope="public"><LazyRoute kind="detail"><CdnDomainPage /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/certs" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnCertificates /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/refresh" element={<CdnsellGate scope="public"><LazyRoute kind="form"><CdnRefresh /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/logs" element={<CdnsellGate scope="public"><LazyRoute kind="table"><CdnLogs /></LazyRoute></CdnsellGate>} />
-            <Route path="/console/cdnsell/ipcheck" element={<CdnsellGate scope="public"><LazyRoute kind="form"><CdnIPCheck /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/points" element={<PointsGate scope="public"><LazyRoute><PointsHome /></LazyRoute></PointsGate>} />
+            <Route path="/console/points/signin" element={<PointsGate scope="public" feature="signin"><LazyRoute><PointsSignin /></LazyRoute></PointsGate>} />
+            <Route path="/console/points/tasks" element={<PointsGate scope="public" feature="tasks"><LazyRoute><PointsTasks /></LazyRoute></PointsGate>} />
+            <Route path="/console/points/mall" element={<PointsGate scope="public" feature="mall"><LazyRoute><PointsMall /></LazyRoute></PointsGate>} />
+            <Route path="/console/points/orders" element={<PointsGate scope="public" feature="mall"><LazyRoute><PointsOrders /></LazyRoute></PointsGate>} />
+            <Route path="/console/cdnsell" element={<CdnsellGate scope="public"><LazyRoute><CdnOverview /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/packages" element={<CdnsellGate scope="public"><LazyRoute><CdnPackages /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/usage" element={<CdnsellGate scope="public"><LazyRoute><CdnUsage /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/domains" element={<CdnsellGate scope="public"><LazyRoute><CdnDomains /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/domains/:id" element={<CdnsellGate scope="public"><LazyRoute><CdnDomainPage /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/certs" element={<CdnsellGate scope="public"><LazyRoute><CdnCertificates /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/refresh" element={<CdnsellGate scope="public"><LazyRoute><CdnRefresh /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/logs" element={<CdnsellGate scope="public"><LazyRoute><CdnLogs /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/ipcheck" element={<CdnsellGate scope="public"><LazyRoute><CdnIPCheck /></LazyRoute></CdnsellGate>} />
             <Route element={<RequireMobile />}>
               <Route
                 path="/console/finance"
                 element={
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <Finance />
                   </LazyRoute>
                 }
@@ -573,7 +573,7 @@ export function ConsoleApp() {
               <Route
                 path="/console/recharge"
                 element={
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <Finance />
                   </LazyRoute>
                 }
@@ -581,7 +581,7 @@ export function ConsoleApp() {
               <Route
                 path="/cart"
                 element={
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <Cart />
                   </LazyRoute>
                 }
@@ -589,7 +589,7 @@ export function ConsoleApp() {
               <Route
                 path="/order/confirm"
                 element={
-                  <LazyRoute kind="detail">
+                  <LazyRoute>
                     <OrderConfirm />
                   </LazyRoute>
                 }

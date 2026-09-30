@@ -8,7 +8,6 @@ import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
-import { TableSkeleton } from "../../../shared/components/skeletons";
 import { useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
 
@@ -78,7 +77,7 @@ export function Finance() {
       </section>
       <section className="grid gap-3">
         <h2 className="text-lg font-semibold text-kumo-strong">充值记录</h2>
-        <PageState loading={query.isLoading} skeleton={<TableSkeleton columns={5} />} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无充值记录">
+        <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无充值记录">
           <div className="grid gap-3">
             <LayerCard className="shadow-none overflow-x-auto p-0">
               <Table>

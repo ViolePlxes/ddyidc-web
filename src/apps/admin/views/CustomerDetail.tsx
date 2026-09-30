@@ -691,7 +691,6 @@ export function AdminCustomerDetail() {
       </div>
       <PageState
         loading={customer.isLoading || (tab === "profile" && profile.isLoading)}
-        skeleton="detail"
         error={
           customer.error
             ? getApiMessage(customer.error)

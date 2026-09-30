@@ -31,7 +31,7 @@ export function VideoBindings({admin=false}:{admin?:boolean}) {
   {!admin&&result&&<Banner title={result==='bound'?'授权绑定成功，请关注官方账号等待确认':'授权未完成，请重新尝试或联系管理员核对应用权限'} variant={result==='bound'?'default':'error'}/>}
   {!admin&&<div className="flex gap-4"><Link to="/console/points">积分明细</Link><Link to="/console/points/tasks">任务中心</Link></div>}
   {admin&&<Tabs value={tab} onValueChange={setTab} tabs={[{value:'platforms',label:'平台配置'},{value:'bindings',label:'绑定记录'}]}/>}
-  <PageState loading={platforms.isLoading||rows.isLoading} error={platforms.error?getApiMessage(platforms.error):rows.error?getApiMessage(rows.error):null} skeleton="cards">
+  <PageState loading={platforms.isLoading||rows.isLoading} error={platforms.error?getApiMessage(platforms.error):rows.error?getApiMessage(rows.error):null}>
   {(!admin||tab==='platforms')&&<div className="grid gap-4 lg:grid-cols-2">{platforms.data?.map(p=>{const bound=rows.data?.list.find(b=>b.platform===p.code);const rewards=rules.data?.filter(r=>r.enabled&&r.event===p.event)??[];return <LayerCard key={p.code} className="grid gap-4 p-5">
    <div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2"><VideoCameraIcon aria-hidden="true" size={20}/>{p.name}</h2><span>{p.enabled?(p.ready?'已开启':'已开启 · 配置后可用'):'未开放'}</span></div>
    <p>{p.capability}</p>

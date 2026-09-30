@@ -90,8 +90,8 @@ export function SalesApp() {
         <Route path="/sales/login" element={<SalesLogin />} />
         <Route element={<SalesGuard />}>
           <Route element={<SalesDashboard />}>
-            <Route path="/sales" element={<LazyRoute kind="dashboard"><SalesHome /></LazyRoute>} />
-            <Route path="/sales/customers" element={<LazyRoute kind="table"><SalesHome /></LazyRoute>} />
+            <Route path="/sales" element={<LazyRoute><SalesHome /></LazyRoute>} />
+            <Route path="/sales/customers" element={<LazyRoute><SalesHome /></LazyRoute>} />
           </Route>
         </Route>
         <Route path="*" element={<ForbiddenPage loginPath="/sales/login" />} />

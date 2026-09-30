@@ -50,7 +50,7 @@ export function Coupons() {
             <Dialog.Trigger render={<Button disabled={!config.data?.couponSelfClaim}>领券中心</Button>} />
             <Dialog className="grid max-h-[80vh] gap-5 overflow-y-auto p-6">
               <div className="flex justify-between"><div><Dialog.Title className="text-xl font-semibold">领券中心</Dialog.Title><Dialog.Description className="text-kumo-subtle">仅展示当前账号可领取的真实优惠券。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} /></div>
-              <PageState loading={center.isLoading} skeleton="cards" error={center.error ? getApiMessage(center.error) : null} empty={!center.isLoading && !center.error && (center.data?.length ?? 0) === 0} emptyTitle="暂无可领优惠券">
+              <PageState loading={center.isLoading} error={center.error ? getApiMessage(center.error) : null} empty={!center.isLoading && !center.error && (center.data?.length ?? 0) === 0} emptyTitle="暂无可领优惠券">
                 <div className="grid gap-3" data-animate-list>
                   {(center.data ?? []).map((coupon) => (
                     <LayerCard key={coupon.id} className="shadow-none flex items-center justify-between gap-4 p-4">
@@ -77,7 +77,7 @@ export function Coupons() {
         value={tab}
         onValueChange={(value) => { setTab(value); setPage(1); }}
       />
-      <PageState loading={coupons.isLoading} skeleton="cards" error={coupons.error ? getApiMessage(coupons.error) : null} empty={!coupons.isLoading && !coupons.error && rows.length === 0} emptyTitle="暂无优惠券">
+      <PageState loading={coupons.isLoading} error={coupons.error ? getApiMessage(coupons.error) : null} empty={!coupons.isLoading && !coupons.error && rows.length === 0} emptyTitle="暂无优惠券">
         <div className="grid gap-4">
           <section className="grid gap-4 md:grid-cols-2" data-animate-list>
             {rows.map((coupon) => (

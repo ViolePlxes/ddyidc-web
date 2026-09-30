@@ -54,7 +54,7 @@ export function GroupBuyMarketplace() {
   return (
     <>
       <PageHeader title="拼团活动" description="2、3、5 人团可选，满员后自动生成订单并开通。" />
-      <PageState loading={query.isLoading} skeleton="products" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && (query.data?.list.length ?? 0) === 0} emptyTitle="暂无进行中的拼团活动">
+      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && (query.data?.list.length ?? 0) === 0} emptyTitle="暂无进行中的拼团活动">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{query.data?.list.map((activity) => <ActivityCard key={activity.id} activity={activity} />)}</div>
       </PageState>
     </>
@@ -67,7 +67,7 @@ export function GroupBuyPublicShare() {
   const query = useQuery({ queryKey: ["groupbuy", "share", inviteCode], queryFn: () => groupBuyApi.publicShare(inviteCode), enabled: Boolean(inviteCode) });
   const data = query.data;
   return (
-    <PageState loading={query.isLoading} skeleton="detail" error={query.error ? getApiMessage(query.error) : null}>
+    <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {data ? <div className="mx-auto grid max-w-3xl gap-6">
         <PageHeader title={`${data.activity.productName} 拼团分享`} description={data.activity.slogan || "好友正在等你参团。"} />
         <LayerCard className="shadow-none grid gap-5 p-6">

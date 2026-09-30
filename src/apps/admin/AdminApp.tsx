@@ -451,7 +451,7 @@ export function AdminApp() {
             <Route
               path="/admin"
               element={
-                <LazyRoute kind="dashboard">
+                <LazyRoute>
                   <AdminHome />
                 </LazyRoute>
               }
@@ -459,7 +459,7 @@ export function AdminApp() {
             <Route
               path="/admin/products"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminProducts />
                 </LazyRoute>
               }
@@ -467,7 +467,7 @@ export function AdminApp() {
             <Route
               path="/admin/products/groups"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <ProductGroups />
                 </LazyRoute>
               }
@@ -475,7 +475,7 @@ export function AdminApp() {
             <Route
               path="/admin/orders"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminOrders />
                 </LazyRoute>
               }
@@ -483,7 +483,7 @@ export function AdminApp() {
             <Route
               path="/admin/customers"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminCustomers />
                 </LazyRoute>
               }
@@ -491,24 +491,24 @@ export function AdminApp() {
             <Route
               path="/admin/customers/:id/:tab?"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <AdminCustomerDetail />
                 </LazyRoute>
               }
             />
-            <Route path="/admin/customers/:customerId/instances/:instanceId" element={<LazyRoute kind="detail"><AdminInstanceDetail /></LazyRoute>} />
-            <Route path="/admin/customers/:customerId/instances/:instanceId/vnc" element={<LazyRoute kind="detail"><AdminInstanceVnc /></LazyRoute>} />
-            <Route path="/admin/video-bindings" element={<LazyRoute kind="cards"><VideoBindings admin /></LazyRoute>} />
-            <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
- <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
-            <Route path="/admin/backups" element={<LazyRoute kind="form"><AdminBackups /></LazyRoute>} />
-            <Route path="/admin/todos/:kind?" element={<LazyRoute kind="table"><AdminTodos /></LazyRoute>} />
-            <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
-            <Route path="/admin/social-login" element={<LazyRoute kind="form"><SocialLoginSettings /></LazyRoute>} />
+            <Route path="/admin/customers/:customerId/instances/:instanceId" element={<LazyRoute><AdminInstanceDetail /></LazyRoute>} />
+            <Route path="/admin/customers/:customerId/instances/:instanceId/vnc" element={<LazyRoute><AdminInstanceVnc /></LazyRoute>} />
+            <Route path="/admin/video-bindings" element={<LazyRoute><VideoBindings admin /></LazyRoute>} />
+            <Route path="/admin/transfers" element={<LazyRoute><TransfersPage admin /></LazyRoute>} />
+ <Route path="/admin/certifications" element={<LazyRoute><Certifications /></LazyRoute>} />
+            <Route path="/admin/backups" element={<LazyRoute><AdminBackups /></LazyRoute>} />
+            <Route path="/admin/todos/:kind?" element={<LazyRoute><AdminTodos /></LazyRoute>} />
+            <Route path="/admin/navigation" element={<LazyRoute><Navigation /></LazyRoute>} />
+            <Route path="/admin/social-login" element={<LazyRoute><SocialLoginSettings /></LazyRoute>} />
             <Route
               path="/admin/system"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <AdminSystem />
                 </LazyRoute>
               }
@@ -516,7 +516,7 @@ export function AdminApp() {
             <Route
               path="/admin/updates"
               element={
-                <LazyRoute kind="dashboard">
+                <LazyRoute>
                   <AdminUpdates />
                 </LazyRoute>
               }
@@ -524,7 +524,7 @@ export function AdminApp() {
             <Route
               path="/admin/tickets"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminTicketList />
                 </LazyRoute>
               }
@@ -532,7 +532,7 @@ export function AdminApp() {
             <Route
               path="/admin/tickets/:id"
               element={
-                <LazyRoute kind="detail">
+                <LazyRoute>
                   <AdminTicketDetail />
                 </LazyRoute>
               }
@@ -540,7 +540,7 @@ export function AdminApp() {
             <Route
               path="/admin/tickets/types"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <TicketTypes />
                 </LazyRoute>
               }
@@ -548,7 +548,7 @@ export function AdminApp() {
             <Route
               path="/admin/tickets/statuses"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <TicketStatuses />
                 </LazyRoute>
               }
@@ -556,7 +556,7 @@ export function AdminApp() {
             <Route
               path="/admin/tickets/prereplies"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <TicketPrereplies />
                 </LazyRoute>
               }
@@ -564,7 +564,7 @@ export function AdminApp() {
             <Route
               path="/admin/upstream/suppliers"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <UpstreamSuppliers />
                 </LazyRoute>
               }
@@ -572,7 +572,7 @@ export function AdminApp() {
             <Route
               path="/admin/upstream/products"
               element={
-                <LazyRoute kind="dashboard">
+                <LazyRoute>
                   <UpstreamProducts />
                 </LazyRoute>
               }
@@ -580,7 +580,7 @@ export function AdminApp() {
             <Route
               path="/admin/upstream/orders"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <UpstreamOrders />
                 </LazyRoute>
               }
@@ -588,7 +588,7 @@ export function AdminApp() {
             <Route
               path="/admin/marketing/invites"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminInvites />
                 </LazyRoute>
               }
@@ -596,7 +596,7 @@ export function AdminApp() {
             <Route
               path="/admin/marketing/rewards"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminRewards />
                 </LazyRoute>
               }
@@ -604,7 +604,7 @@ export function AdminApp() {
             <Route
               path="/admin/marketing/sales"
               element={
-                <LazyRoute kind="table">
+                <LazyRoute>
                   <AdminSales />
                 </LazyRoute>
               }
@@ -612,7 +612,7 @@ export function AdminApp() {
             <Route
               path="/admin/marketing/config"
               element={
-                <LazyRoute kind="form">
+                <LazyRoute>
                   <AdminMarketingConfig />
                 </LazyRoute>
               }
@@ -621,7 +621,7 @@ export function AdminApp() {
               path="/admin/marketing/groupbuy/activities"
               element={
                 <GroupBuyGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <GroupBuyAdminActivities />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -631,7 +631,7 @@ export function AdminApp() {
               path="/admin/marketing/groupbuy/leaders"
               element={
                 <GroupBuyGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <GroupBuyAdminLeaders />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -641,7 +641,7 @@ export function AdminApp() {
               path="/admin/marketing/groupbuy/settings"
               element={
                 <GroupBuyGate scope="admin">
-                  <LazyRoute kind="form">
+                  <LazyRoute>
                     <GroupBuyAdminSettings />
                   </LazyRoute>
                 </GroupBuyGate>
@@ -651,7 +651,7 @@ export function AdminApp() {
               path="/admin/marketplace"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="dashboard">
+                  <LazyRoute>
                     <MarketplaceAdminDashboard />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -661,7 +661,7 @@ export function AdminApp() {
               path="/admin/marketplace/dashboard"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="dashboard">
+                  <LazyRoute>
                     <MarketplaceAdminDashboard />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -671,7 +671,7 @@ export function AdminApp() {
               path="/admin/marketplace/listings"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <MarketplaceAdminListings />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -681,7 +681,7 @@ export function AdminApp() {
               path="/admin/marketplace/orders"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <MarketplaceAdminOrders />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -691,7 +691,7 @@ export function AdminApp() {
               path="/admin/marketplace/flows"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <MarketplaceAdminFlows />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -701,7 +701,7 @@ export function AdminApp() {
               path="/admin/marketplace/withdrawals"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <MarketplaceAdminWithdrawals />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -711,7 +711,7 @@ export function AdminApp() {
               path="/admin/marketplace/reports"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="table">
+                  <LazyRoute>
                     <MarketplaceAdminReports />
                   </LazyRoute>
                 </MarketplaceGate>
@@ -721,25 +721,25 @@ export function AdminApp() {
               path="/admin/marketplace/settings"
               element={
                 <MarketplaceGate scope="admin">
-                  <LazyRoute kind="form">
+                  <LazyRoute>
                     <MarketplaceAdminSettings />
                   </LazyRoute>
                 </MarketplaceGate>
               }
             />
-            <Route path="/admin/points" element={<PointsGate scope="admin"><LazyRoute kind="dashboard"><PointsDashboard /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/accounts" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsAccounts /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/goods" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/orders" element={<PointsGate scope="admin"><LazyRoute kind="table"><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/plugin" element={<PointsGate scope="admin"><LazyRoute kind="form"><PointsPlugin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/coupons" element={<LazyRoute kind="table"><AdminPointsCoupons /></LazyRoute>} />
-            <Route path="/admin/cdnsell" element={<CdnsellGate scope="admin"><LazyRoute kind="dashboard"><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/upstream" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnUpstream /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCapabilities /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/products" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/customers" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><CdnCustomers /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/domains" element={<CdnsellGate scope="admin"><LazyRoute kind="table"><AdminCdnDomains /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/config-center" element={<CdnsellGate scope="admin"><LazyRoute kind="form"><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/points" element={<PointsGate scope="admin"><LazyRoute><PointsDashboard /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/accounts" element={<PointsGate scope="admin"><LazyRoute><PointsAccounts /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/goods" element={<PointsGate scope="admin"><LazyRoute><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/orders" element={<PointsGate scope="admin"><LazyRoute><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/plugin" element={<PointsGate scope="admin"><LazyRoute><PointsPlugin /></LazyRoute></PointsGate>} />
+            <Route path="/admin/points/coupons" element={<LazyRoute><AdminPointsCoupons /></LazyRoute>} />
+            <Route path="/admin/cdnsell" element={<CdnsellGate scope="admin"><LazyRoute><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/upstream" element={<CdnsellGate scope="admin"><LazyRoute><CdnUpstream /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute><CdnCapabilities /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/products" element={<CdnsellGate scope="admin"><LazyRoute><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/customers" element={<CdnsellGate scope="admin"><LazyRoute><CdnCustomers /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/domains" element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnDomains /></LazyRoute></CdnsellGate>} />
+            <Route path="/admin/cdnsell/config-center" element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
           </Route>
         </Route>
         <Route path="*" element={<ForbiddenPage loginPath="/admin/login" />} />

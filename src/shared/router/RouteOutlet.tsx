@@ -1,9 +1,10 @@
 import { Outlet } from "react-router-dom";
+import { ContentFade } from "../components/ContentFade";
 
 export function RouteOutlet({ className }: { className: string }) {
   return (
-    <div className={className}>
+    <ContentFade className={className}>
       <Outlet />
-    </div>
+    </ContentFade>
   );
 }

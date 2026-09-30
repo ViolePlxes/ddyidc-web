@@ -160,7 +160,6 @@ export function MarketplaceHome() {
       </LayerCard>
       <PageState
         loading={query.isLoading}
-        skeleton="products"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无在售产品"
@@ -242,7 +241,6 @@ export function MarketplaceListingDetail() {
   return (
     <PageState
       loading={query.isLoading}
-      skeleton="product"
       error={query.error ? getApiMessage(query.error) : null}
     >
       {row ? (

@@ -9,7 +9,6 @@ import { userRequest, getApiMessage, type ApiEnvelope } from "../../../shared/ap
 import { readRememberedProfile, saveRefreshSession, type RefreshPayload } from "../../../shared/api/refreshSession";
 import { PhoneCountrySelect } from "../../../shared/components/PhoneCountrySelect";
 import { PageHeader } from "../../../shared/components/PageHeader";
-import { FormSkeleton } from "../../../shared/components/skeletons";
 import { useAuthStore } from "../../../shared/stores/auth";
 import type { AuthPayload } from "../../../shared/types/auth";
 
@@ -17,7 +16,7 @@ import type { AuthPayload } from "../../../shared/types/auth";
 // with their original generated password enter the first-password form below.
 export function MobileBindingPage() {
   const profile = useQuery({ queryKey: ["social-initial-profile"], queryFn: socialAuthApi.profile, retry: false, staleTime: 0 });
-  if (profile.isLoading) return <FormSkeleton rows={4} />;
+  if (profile.isLoading) return null;
   if (profile.error) return <Banner variant="error" title="读取账号状态失败" description={getApiMessage(profile.error)} />;
   return profile.data?.initialPasswordRequired ? <SocialInitialMobileForm /> : <IdentityForm mode="bind" />;
 }

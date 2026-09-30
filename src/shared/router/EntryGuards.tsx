@@ -4,34 +4,22 @@ import { LockKeyIcon } from "@phosphor-icons/react";
 import { Outlet, useLocation } from "react-router-dom";
 import { hasForeignSession } from "../api/sessionProbe";
 import type { AuthUser, UserRole } from "../types/auth";
-import { AppShellSkeleton, FormSkeleton } from "../components/skeletons";
-
-function SessionSkeleton() {
-  const location = useLocation();
-  if (location.pathname.includes("login") || location.pathname === "/register") {
-    return (
-      <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
-        <div className="w-full max-w-md"><FormSkeleton rows={2} /></div>
-      </main>
-    );
-  }
-  const kind = location.pathname === "/console/products" ? "catalog" : location.pathname.endsWith("/products") ? "products" : location.pathname === "/console" || location.pathname === "/admin" || location.pathname === "/sales" ? "dashboard" : "table";
-  return <AppShellSkeleton kind={kind} />;
-}
+import { AppShellSkeleton } from "../components/skeletons";
 
 export function SessionBoundary({
   initialized,
   restoreSession,
   clearSession,
   unauthorizedEvent,
-  skeleton = true,
+  catalogPlaceholder = true,
 }: {
   initialized: boolean;
   restoreSession: () => Promise<void>;
   clearSession: () => void;
   unauthorizedEvent: string;
-  skeleton?: boolean;
+  catalogPlaceholder?: boolean;
 }) {
+  const location = useLocation();
   useEffect(() => {
     void restoreSession();
     window.addEventListener(unauthorizedEvent, clearSession);
@@ -39,7 +27,7 @@ export function SessionBoundary({
   }, [clearSession, restoreSession, unauthorizedEvent]);
 
   if (!initialized) {
-    return skeleton ? <SessionSkeleton /> : null;
+    return catalogPlaceholder && location.pathname === "/console/products" ? <AppShellSkeleton kind="catalog" /> : null;
   }
   return <Outlet />;
 }
@@ -78,7 +66,7 @@ export function EntryGuard({
   if (user && user.role !== role) return <ForbiddenPage loginPath={loginPath} />;
   if (user) return <Outlet />;
   if (foreignSession) return <ForbiddenPage loginPath={loginPath} />;
-  return <AppShellSkeleton kind="table" />;
+  return null;
 }
 
 export function ForbiddenPage({ loginPath }: { loginPath: string }) {
@@ -100,5 +88,5 @@ export function ForbiddenPage({ loginPath }: { loginPath: string }) {
 
 export function ExternalRedirect({ to }: { to: string }) {
   useEffect(() => window.location.replace(to), [to]);
-  return <AppShellSkeleton kind="table" />;
+  return null;
 }

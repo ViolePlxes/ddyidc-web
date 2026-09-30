@@ -39,14 +39,14 @@ export function SalesHome() {
   return (
     <>
       <PageHeader title="销售工作台" description="仅展示当前销售账号获授权的真实客户字段。" />
-      <PageState loading={query.isLoading} skeleton="dashboard" error={query.error ? getApiMessage(query.error) : null}>
+      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
         {query.data ? <MetricGrid metrics={metrics} /> : null}
       </PageState>
       <LayerCard className="shadow-none flex flex-wrap items-end gap-3 p-5">
         <Input className="max-w-md flex-1" label="搜索客户" placeholder="客户账号、邮箱或手机号…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>
-      <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无授权客户">
+      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无授权客户">
         <DataTable rows={rows} primaryLabel="客户" secondaryLabel="可见手机号" amountLabel="可见成交额" withPagination page={page} onPageChange={setPage} perPage={pageSize} totalCount={query.data?.total ?? 0} showActions={false} />
       </PageState>
     </>

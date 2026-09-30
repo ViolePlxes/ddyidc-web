@@ -79,7 +79,7 @@ function UserSessionBoundary() {
       restoreSession={state.restoreSession}
       clearSession={state.clearSession}
       unauthorizedEvent="ddyidc:user-unauthorized"
-      skeleton={false}
+      catalogPlaceholder={false}
     />
   );
 }
@@ -87,13 +87,13 @@ function UserSessionBoundary() {
 export function PortalApp() {
   return (
     <Routes>
-      <Route path="/auth/social/complete" element={<LazyRoute kind="form"><SocialComplete /></LazyRoute>} />
+      <Route path="/auth/social/complete" element={<LazyRoute><SocialComplete /></LazyRoute>} />
       <Route element={<UserSessionBoundary />}>
         <Route element={<PortalLayout />}>
           <Route
             path="/"
             element={
-              <LazyRoute kind="detail" skeleton={false}>
+              <LazyRoute>
                 <PortalHome />
               </LazyRoute>
             }
@@ -101,7 +101,7 @@ export function PortalApp() {
           <Route
             path="/products"
             element={
-              <LazyRoute kind="products" skeleton={false}>
+              <LazyRoute>
                 <PublicProducts />
               </LazyRoute>
             }
@@ -109,7 +109,7 @@ export function PortalApp() {
           <Route
             path="/products/:id"
             element={
-              <LazyRoute kind="product" skeleton={false}>
+              <LazyRoute>
                 <PublicProductDetail />
               </LazyRoute>
             }
@@ -117,7 +117,7 @@ export function PortalApp() {
           <Route
             path="/about"
             element={
-              <LazyRoute kind="detail" skeleton={false}>
+              <LazyRoute>
                 <About />
               </LazyRoute>
             }
@@ -125,7 +125,7 @@ export function PortalApp() {
           <Route
             path="/reset-password"
             element={
-              <LazyRoute kind="form" skeleton={false}>
+              <LazyRoute>
                 <ResetPassword />
               </LazyRoute>
             }
@@ -134,7 +134,7 @@ export function PortalApp() {
             path="/groupbuy"
             element={
               <GroupBuyGate scope="public">
-                <LazyRoute kind="products" skeleton={false}>
+                <LazyRoute>
                   <GroupBuyMarketplace />
                 </LazyRoute>
               </GroupBuyGate>
@@ -144,7 +144,7 @@ export function PortalApp() {
             path="/groupbuy/share/:inviteCode"
             element={
               <GroupBuyGate scope="public">
-                <LazyRoute kind="detail" skeleton={false}>
+                <LazyRoute>
                   <GroupBuyPublicShare />
                 </LazyRoute>
               </GroupBuyGate>
@@ -154,7 +154,7 @@ export function PortalApp() {
             path="/marketplace"
             element={
               <MarketplaceGate scope="public">
-                <LazyRoute kind="products" skeleton={false}>
+                <LazyRoute>
                   <MarketplaceHome />
                 </LazyRoute>
               </MarketplaceGate>
@@ -164,7 +164,7 @@ export function PortalApp() {
             path="/marketplace/listing/:id"
             element={
               <MarketplaceGate scope="public">
-                <LazyRoute kind="product" skeleton={false}>
+                <LazyRoute>
                   <MarketplaceListingDetail />
                 </LazyRoute>
               </MarketplaceGate>
@@ -174,7 +174,7 @@ export function PortalApp() {
         <Route
           path="/login"
           element={
-            <LazyRoute kind="form" skeleton={false}>
+            <LazyRoute>
               <LoginPage />
             </LazyRoute>
           }
@@ -182,7 +182,7 @@ export function PortalApp() {
         <Route
           path="/register"
           element={
-            <LazyRoute kind="form" skeleton={false}>
+            <LazyRoute>
               <RegisterPage />
             </LazyRoute>
           }
@@ -190,7 +190,7 @@ export function PortalApp() {
         <Route
           path="/terms/:kind"
           element={
-            <LazyRoute kind="form" skeleton={false}>
+            <LazyRoute>
               <AgreementPlaceholder />
             </LazyRoute>
           }

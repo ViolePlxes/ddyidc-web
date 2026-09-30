@@ -47,10 +47,10 @@ export function UpstreamOrders() {
         <Select aria-label="上游订单状态" value={status} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} items={{ all: "全部状态", paid: "已付款", unpaid: "未付款" }} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>
-      <PageState loading={query.isLoading} skeleton="dashboard" error={query.error ? getApiMessage(query.error) : null}>
+      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
         {data ? <MetricGrid metrics={metrics} /> : null}
       </PageState>
-      <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无上游订单">
+      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无上游订单">
         <DataTable rows={rows} primaryLabel="客户 / 商品" secondaryLabel="订单号" withPagination page={page} onPageChange={setPage} perPage={pageSize} totalCount={data?.total ?? 0} showActions={false} />
       </PageState>
     </>

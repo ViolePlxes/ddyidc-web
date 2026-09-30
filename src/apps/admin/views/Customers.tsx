@@ -473,7 +473,6 @@ export function AdminCustomers() {
       </LayerCard>
       <PageState
         loading={query.isLoading}
-        skeleton="table"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.error && (query.data?.items?.length ?? 0) === 0}
         emptyTitle="暂无客户"

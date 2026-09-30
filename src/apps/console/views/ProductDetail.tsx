@@ -20,7 +20,6 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
       />
       <PageState
         loading={productQuery.isLoading}
-        skeleton="product"
         error={productQuery.error ? getApiMessage(productQuery.error) : null}
         empty={!productQuery.isLoading && !productQuery.error && !product}
         emptyTitle="商品不存在或已下架"
@@ -34,7 +33,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
                 description={getApiMessage(orderPageQuery.error)}
               />
             ) : null}
-            <PageState loading={orderPageQuery.isLoading && product.supplierId !== "0"} skeleton="product">
+            <PageState loading={orderPageQuery.isLoading && product.supplierId !== "0"}>
               <ProductConfig product={product} orderPage={orderPageQuery.data} />
             </PageState>
           </div>

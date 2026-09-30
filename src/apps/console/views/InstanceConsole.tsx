@@ -124,7 +124,7 @@ export function ReinstallDialog({
             {review ? "请再次核对镜像与端口，确认后将开始重装系统。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
           </Dialog.Description>
         </div>
-        {images.isLoading ? <PageState loading skeleton="form"><></></PageState> : null}
+        {images.isLoading ? <PageState loading><></></PageState> : null}
         {images.error ? <Banner variant="error" title="镜像列表加载失败" description={getApiMessage(images.error)} /> : null}
         {!images.isLoading && !images.error && groups.length === 0 ? (
           <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
@@ -218,7 +218,7 @@ export function InstanceConsole() {
     <Input label="新密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
   </ActionDialog>;
   return (
-    <PageState loading={detail.isLoading} skeleton="detail" error={detail.error ? getApiMessage(detail.error) : null}
+    <PageState loading={detail.isLoading} error={detail.error ? getApiMessage(detail.error) : null}
       empty={!detail.isLoading && !detail.error && !instance} emptyTitle="实例不存在">
       {instance ? <div className="grid gap-5">
         <header className="flex flex-wrap items-center justify-between gap-4">

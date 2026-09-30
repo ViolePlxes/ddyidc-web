@@ -127,7 +127,6 @@ export function InstanceList() {
       </div>
       <PageState
         loading={query.isLoading}
-        skeleton="table"
         error={query.error ? getApiMessage(query.error) : null}
         empty={!query.isLoading && !query.error && instances.length === 0}
         emptyTitle={category ? `暂无${category.label}实例` : "暂无产品实例"}

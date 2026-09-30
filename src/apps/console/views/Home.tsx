@@ -80,7 +80,7 @@ export function ConsoleHome() {
           <Button variant="ghost" shape="square" aria-label="刷新指标" icon={<ArrowClockwiseIcon />} loading={overview.isFetching} onClick={() => void overview.refetch()} />
         </div>
       </div>
-      <PageState loading={overview.isLoading} skeleton="dashboard" error={overview.error ? getApiMessage(overview.error) : null}>
+      <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
         <div className="grid gap-4 sm:grid-cols-2">
           {metrics.map(m => <LayerCard key={m.key} className="grid min-w-0 gap-3 p-5 shadow-none">
             <div className="flex items-center justify-between"><Text>{m.title}</Text><DropdownMenu>

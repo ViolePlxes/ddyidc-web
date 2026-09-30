@@ -96,7 +96,7 @@ export function OrderConfirm() {
   return (
     <>
       {certification.feedback}<PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
-      <PageState loading={coupons.isLoading} skeleton="detail" error={coupons.error ? getApiMessage(coupons.error) : null}>
+      <PageState loading={coupons.isLoading} error={coupons.error ? getApiMessage(coupons.error) : null}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <LayerCard className="shadow-none p-5">
           <DefinitionList

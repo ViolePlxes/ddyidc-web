@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
-import type { SkeletonKind } from "../components/skeletons";
+import { ContentFade } from "../components/ContentFade";
 
-export function LazyRoute({ children }: { children: ReactNode; kind: SkeletonKind; skeleton?: boolean }) {
-  return <Suspense fallback={null}>{children}</Suspense>;
+export function LazyRoute({ children }: { children: ReactNode }) {
+  return <Suspense fallback={null}><ContentFade>{children}</ContentFade></Suspense>;
 }

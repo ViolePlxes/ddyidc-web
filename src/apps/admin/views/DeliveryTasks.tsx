@@ -25,7 +25,7 @@ export function DeliveryTasks() {
   return <LayerCard className="grid gap-4 p-4">
     <div className="flex items-center justify-between"><h2>支付后业务任务</h2><Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>刷新</Button></div>
     <p>任务在支付事务内登记。外部结果不确定或执行中断时暂停，需核对远端订单与本地记录，不能直接重复采购。</p>
-    <PageState loading={query.isLoading} skeleton="table" error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无业务任务">
+    <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无业务任务">
       <Table><Table.Header><Table.Row>{["任务", "业务 ID", "状态", "执行次数", "下次执行", "处理说明", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
         <Table.Body>{query.data?.map(row => <Table.Row key={row.id}><Table.Cell>{row.taskKey}</Table.Cell><Table.Cell>{row.businessId}</Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.attempt}</Table.Cell><Table.Cell>{row.availableAt || "不自动重试"}</Table.Cell><Table.Cell><p>{row.safeError || "—"}</p>{row.reviewNote ? <p>最近核对：{row.reviewNote}</p> : null}</Table.Cell><Table.Cell><Button variant="secondary" disabled={row.status !== "unknown"} onClick={() => { reconcile.reset(); setReason(""); setRemoteInstanceId(""); setSelected(row); }}>核对事实</Button></Table.Cell></Table.Row>)}</Table.Body>
       </Table>

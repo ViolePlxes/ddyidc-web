@@ -28,7 +28,7 @@ export function MarketplaceGate({
   const query = useMarketplaceAvailability(scope);
   if (query.isLoading)
     return (
-      <PageState loading skeleton="detail">
+      <PageState loading>
         <span />
       </PageState>
     );
