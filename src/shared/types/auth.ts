@@ -11,6 +11,11 @@ export interface AuthUser {
 }
 
 export interface AuthPayload {
+  refreshable?: boolean;
+  access_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  refresh_expires_in?: number;
   user: AuthUser;
   needBindMobile?: boolean;
 }

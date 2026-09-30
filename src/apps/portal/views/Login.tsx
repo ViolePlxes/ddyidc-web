@@ -36,7 +36,7 @@ export function LoginPage() {
     if (!account.trim() || !password) { setError("请输入账号和密码"); return; }
     setError("");
     try {
-      await signIn(account.trim(), password);
+      await signIn(account.trim(), password, rememberMe);
       try {
         if (rememberMe) localStorage.setItem(rememberedAccountKey, account.trim());
         else localStorage.removeItem(rememberedAccountKey);
@@ -61,7 +61,7 @@ export function LoginPage() {
           </div>
           <Input id="login-password" aria-label="密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
         </div>
-        <Checkbox label={<span title="仅记住登录账号，不保存密码">记住我</span>} checked={rememberMe} onCheckedChange={(checked) => {
+        <Checkbox label={<span title="保持登录 30 天，活跃访问时自动续期">记住我</span>} checked={rememberMe} onCheckedChange={(checked) => {
           setRememberMe(checked === true);
           if (checked !== true) { try { localStorage.removeItem(rememberedAccountKey); } catch { /* Storage is optional. */ } }
         }} />

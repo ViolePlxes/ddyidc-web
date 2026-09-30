@@ -9,7 +9,7 @@ interface AuthState {
   loading: boolean;
   setSession: (user: AuthUser, needBindMobile?: boolean) => void;
   restoreSession: () => Promise<void>;
-  signIn: (account: string, password: string) => Promise<AuthUser>;
+  signIn: (account: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   clearSession: () => void;
 }
@@ -44,10 +44,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: false });
     }
   },
-  signIn: async (account, password) => {
+  signIn: async (account, password, rememberMe = false) => {
     set({ loading: true });
     try {
-      const payload = await authApi.login(account, password);
+      const payload = await authApi.login(account, password, rememberMe);
       set({
         user: payload.user,
         needBindMobile: payload.needBindMobile ?? false,

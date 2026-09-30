@@ -1,5 +1,6 @@
 import { neutralCustomerResponse, neutralCustomerText } from "../utils/customerCopy";
 import axios, { AxiosError } from "axios";
+import { renewUserSession, refreshSessionAvailable } from "./refreshSession";
 
 export interface ApiEnvelope<T> {
   code: number;
@@ -18,12 +19,27 @@ function createRequest(baseURL: string, unauthorizedEvent: string, customerFacin
   });
   client.interceptors.response.use(
     (response) => { if (customerFacing) response.data = neutralCustomerResponse(response.data); return response; },
-    (error: AxiosError<ApiEnvelope<unknown>>) => {
+    async (error: AxiosError<ApiEnvelope<unknown>>) => {
       if (customerFacing && error.response) error.response.data = neutralCustomerResponse(error.response.data);
       if (
         error.response?.status === 401 &&
         !error.config?.url?.includes("/auth/login")
       ) {
+        const config = error.config as (typeof error.config & { sessionRetried?: boolean });
+        if (csrfKind === "user" && config && !config.sessionRetried && !config.url?.includes("/auth/register") && !config.url?.includes("/auth/reset-password") && refreshSessionAvailable()) {
+          config.sessionRetried = true;
+          try {
+            await renewUserSession();
+            // Axios must re-read the newly signed CSRF cookie on replay.
+            config.headers.delete("X-CSRF-Token");
+          } catch (refreshError) {
+            if (!axios.isAxiosError(refreshError) || refreshError.response?.status === 401) {
+              window.dispatchEvent(new CustomEvent(unauthorizedEvent));
+            }
+            return Promise.reject(refreshError);
+          }
+          return client.request(config);
+        }
         window.dispatchEvent(new CustomEvent(unauthorizedEvent));
       }
       return Promise.reject(error);
