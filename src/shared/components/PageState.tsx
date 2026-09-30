@@ -59,6 +59,7 @@ export function PageState({
   if (empty) {
     return (
       <ContentFade>
+        <div>
         <LayerCard className="shadow-none">
           <Empty className="bg-kumo-base"
             icon={<PackageIcon />}
@@ -66,12 +67,14 @@ export function PageState({
             description={emptyDescription}
           />
         </LayerCard>
+        </div>
       </ContentFade>
     );
   }
   if (error) {
     return (
       <ContentFade>
+        <div>
         <Banner
           variant="error"
           icon={<WarningCircleIcon />}
@@ -83,8 +86,9 @@ export function PageState({
             </Button>
           }
         />
+        </div>
       </ContentFade>
     );
   }
-  return <ContentFade>{children}</ContentFade>;
+  return <ContentFade><div>{children}</div></ContentFade>;
 }
