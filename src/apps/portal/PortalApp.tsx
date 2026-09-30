@@ -1,5 +1,6 @@
 import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { readRememberedProfile } from "../../shared/api/refreshSession";
 import { PortalLayout } from "../../layouts/PortalLayout";
 import { SessionBoundary } from "../../shared/router/EntryGuards";
 import { useAuthStore } from "../../shared/stores/auth";
@@ -11,6 +12,7 @@ import { MarketplaceGate } from "../../shared/router/MarketplaceGate";
 const LoginPage = lazy(() =>
   routeModules.portalLogin().then((module) => ({ default: module.LoginPage })),
 );
+const SocialComplete = lazy(() => import("./views/SocialComplete").then(module => ({ default: module.SocialComplete })));
 const RegisterPage = lazy(() =>
   routeModules
     .portalRegister()
@@ -67,6 +69,10 @@ const MarketplaceListingDetail = lazy(() =>
 
 function UserSessionBoundary() {
   const state = useAuthStore();
+  const location = useLocation();
+  // Login is an explicit account choice when a persistent credential exists.
+  // OAuth completion must exchange its ticket before restoring any old account.
+  if (location.pathname === "/auth/social/complete" || (location.pathname === "/login" && readRememberedProfile())) return <Outlet />;
   return (
     <SessionBoundary
       initialized={state.initialized}
@@ -81,6 +87,7 @@ function UserSessionBoundary() {
 export function PortalApp() {
   return (
     <Routes>
+      <Route path="/auth/social/complete" element={<LazyRoute kind="form"><SocialComplete /></LazyRoute>} />
       <Route element={<UserSessionBoundary />}>
         <Route element={<PortalLayout />}>
           <Route

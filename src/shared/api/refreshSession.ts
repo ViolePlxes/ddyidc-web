@@ -1,6 +1,23 @@
 import axios from "axios";
+import type { AuthUser } from "../types/auth";
 
 const refreshKey = "ddyidc-user-refresh";
+const profileKey = "ddyidc-quick-login";
+export interface RememberedProfile { id: string; name: string; avatar?: string; expiresAt: number }
+export function readRememberedProfile(): RememberedProfile | null {
+  try {
+    if (!localStorage.getItem(refreshKey)) return null;
+    const profile = JSON.parse(localStorage.getItem(profileKey) ?? "null") as RememberedProfile | null;
+    if (!profile || typeof profile.id !== "string" || typeof profile.name !== "string" || !Number.isFinite(profile.expiresAt) || profile.expiresAt <= Date.now()) return null;
+    return profile;
+  } catch { return null; }
+}
+export function rememberRefreshProfile(user: AuthUser) {
+  try {
+    const profile = readRememberedProfile();
+    if (profile) localStorage.setItem(profileKey, JSON.stringify({ id: user.id, name: user.name || user.account, avatar: user.avatar, expiresAt: profile.expiresAt } satisfies RememberedProfile));
+  } catch { /* Profile caching is optional. */ }
+}
 export interface RefreshPayload {
   access_token: string;
   refresh_token: string;
@@ -16,10 +33,17 @@ function storedRefresh() {
 export function clearRefreshSession() {
   sessionStorage.removeItem(refreshKey);
   localStorage.removeItem(refreshKey);
+  localStorage.removeItem(profileKey);
 }
-export function saveRefreshSession(payload: RefreshPayload, rememberMe: boolean) {
+export function saveRefreshSession(payload: RefreshPayload & { user?: AuthUser }, rememberMe: boolean) {
+  const previous = readRememberedProfile();
   clearRefreshSession();
   (rememberMe ? localStorage : sessionStorage).setItem(refreshKey, payload.refresh_token);
+  if (rememberMe) {
+    const user = payload.user;
+    const profile = user ? { id: user.id, name: user.name || user.account, avatar: user.avatar } : previous;
+    if (profile) localStorage.setItem(profileKey, JSON.stringify({ id: profile.id, name: profile.name, avatar: profile.avatar, expiresAt: Date.now() + payload.refresh_expires_in * 1000 } satisfies RememberedProfile));
+  }
 }
 
 let pending: Promise<void> | null = null;

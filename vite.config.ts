@@ -117,12 +117,16 @@ export default defineConfig({
     port: 3100,
     strictPort: true,
     proxy: {
+      "/auth/github/callback": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: false },
+      "/auth/qq/callback": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: false },
       "/api": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: false, ws: true },
       "/admin/v1": { target: process.env.DDYIDC_API_TARGET || "http://localhost:8080", changeOrigin: false, ws: true },
     },
   },
   preview: {
     proxy: {
+      "/auth/github/callback": { target: "http://localhost:8080", changeOrigin: false },
+      "/auth/qq/callback": { target: "http://localhost:8080", changeOrigin: false },
       "/api": { target: "http://localhost:8080", changeOrigin: false, ws: true },
       "/admin/v1": { target: "http://localhost:8080", changeOrigin: false, ws: true },
     },
