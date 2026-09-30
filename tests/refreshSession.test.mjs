@@ -54,3 +54,25 @@ test("remember-me storage, single-flight rotation, cross-tab lock, failure and l
   await assert.rejects(api.renewUserSession());
   assert.equal(api.refreshSessionAvailable(), false);
 });
+
+test("quick login stores only the last profile, preserves it on rotation and hides expired credentials", async () => {
+  api.clearRefreshSession();
+  api.saveRefreshSession({ ...pair("profile-token"), user: { id: "1", name: "用户一", account: "first", mobile: "13800138000", avatar: "https://avatars.example/a" } }, true);
+  assert.equal(api.readRememberedProfile().name, "用户一");
+  assert.equal(localStorage.getItem("ddyidc-quick-login").includes("13800138000"), false);
+  behavior = async () => response("profile-rotated");
+  await api.renewUserSession();
+  assert.equal(api.readRememberedProfile().name, "用户一");
+  api.rememberRefreshProfile({ id: "1", name: "新昵称", account: "first", mobile: "13900139000" });
+  assert.equal(api.readRememberedProfile().name, "新昵称");
+  api.saveRefreshSession({ ...pair("second-token"), user: { id: "2", name: "用户二", account: "second" } }, true);
+  assert.equal(api.readRememberedProfile().id, "2");
+  const cached = JSON.parse(localStorage.getItem("ddyidc-quick-login"));
+  localStorage.setItem("ddyidc-quick-login", JSON.stringify({ ...cached, expiresAt: Date.now() - 1 }));
+  assert.equal(api.readRememberedProfile(), null);
+  api.clearRefreshSession();
+  assert.equal(localStorage.getItem("ddyidc-quick-login"), null);
+  api.saveRefreshSession({ ...pair("temporary-profile"), user: { id: "3", name: "临时用户" } }, false);
+  assert.equal(api.readRememberedProfile(), null);
+  api.clearRefreshSession();
+});

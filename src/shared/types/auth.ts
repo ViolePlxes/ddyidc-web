@@ -8,6 +8,8 @@ export interface AuthUser {
   mobile?: string;
   email?: string;
   staffNo?: string;
+  avatar?: string;
+  initialPasswordRequired?: boolean;
 }
 
 export interface AuthPayload {
@@ -18,4 +20,5 @@ export interface AuthPayload {
   refresh_expires_in?: number;
   user: AuthUser;
   needBindMobile?: boolean;
+  rememberMe?: boolean;
 }

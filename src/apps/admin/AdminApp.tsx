@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { lazy } from "react";
 const AdminBackups = lazy(() => routeModules.adminBackups().then(module => ({ default: module.AdminBackups })));
+const SocialLoginSettings = lazy(() => import("./views/SocialLogin").then(module => ({ default: module.SocialLoginSettings })));
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
 import { Route, Routes } from "react-router-dom";
@@ -500,6 +501,7 @@ export function AdminApp() {
  <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
             <Route path="/admin/backups" element={<LazyRoute kind="form"><AdminBackups /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
+            <Route path="/admin/social-login" element={<LazyRoute kind="form"><SocialLoginSettings /></LazyRoute>} />
             <Route
               path="/admin/system"
               element={

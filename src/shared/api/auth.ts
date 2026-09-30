@@ -1,6 +1,6 @@
 import { userRequest, type ApiEnvelope } from "./request";
 import type { AuthPayload } from "../types/auth";
-import { clearRefreshSession, saveRefreshSession } from "./refreshSession";
+import { clearRefreshSession, saveRefreshSession, rememberRefreshProfile } from "./refreshSession";
 
 export async function login(
   account: string,
@@ -19,6 +19,14 @@ export async function login(
 export async function getSession(): Promise<AuthPayload> {
   const response = await userRequest.get<ApiEnvelope<AuthPayload>>("/auth/me");
   if (response.data.data.refreshable === false) clearRefreshSession();
+  if (response.data.data.refreshable === true) {
+    try {
+      const profile = await userRequest.get<ApiEnvelope<{ user: AuthPayload["user"]; initialPasswordRequired: boolean }>>("/auth/social/profile");
+      response.data.data.user.avatar = profile.data.data.user.avatar;
+      response.data.data.user.initialPasswordRequired = profile.data.data.initialPasswordRequired;
+      rememberRefreshProfile(response.data.data.user);
+    } catch { /* Optional avatar/profile data must not invalidate the session. */ }
+  }
   return response.data.data;
 }
 

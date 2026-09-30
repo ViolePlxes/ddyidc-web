@@ -5,12 +5,13 @@ import { Banner, Button, Input, LayerCard, Switch } from "@cloudflare/kumo";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { LoginDevices } from "../../../shared/components/LoginDevices";
+import { SocialBindings } from "../../../shared/components/SocialBindings";
 
 export function Profile() {
   const location = useLocation();
   const certification = useQuery({queryKey:["certification"],queryFn:certificationApi.info,gcTime:0});
   const user = useAuthStore((state) => state.user);
-  if (location.pathname === "/console/security") return <><PageHeader title="安全中心" description="查看登录设备，管理账号的登录权限。" /><LoginDevices /></>;
+  if (location.pathname === "/console/security") return <><PageHeader title="安全中心" description="查看登录设备，管理账号的登录权限。" /><LoginDevices /><SocialBindings /></>;
   return (
     <>
       <PageHeader title="个人中心" description="以下资料来自当前登录会话。" />
@@ -38,6 +39,7 @@ export function Profile() {
         </LayerCard>
       </div>
       <LoginDevices />
+      <SocialBindings />
     </>
   );
 }

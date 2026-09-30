@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Banner, Button } from "@cloudflare/kumo";
 import { GithubLogoIcon, ChatCircleDotsIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { startSocialLogin, type SocialProvider } from "../../../shared/api/socialAuth";
+import { getApiMessage } from "../../../shared/api/request";
 
 export const authSubmitClassName = "w-full justify-center bg-kumo-contrast! text-kumo-inverse! ring-kumo-contrast hover:opacity-90";
 
@@ -21,8 +23,9 @@ export function AuthPageShell({ title, description, children }: {
   );
 }
 
-export function SocialLoginOptions() {
+export function SocialLoginOptions({ rememberMe = false }: { rememberMe?: boolean }) {
   const [provider, setProvider] = useState("");
+  const start = (name: SocialProvider) => { void startSocialLogin(name, rememberMe).catch(error => setProvider(getApiMessage(error))); };
   return (
     <section className="grid gap-5" aria-label="社交账号登录">
       <div className="flex items-center gap-3 text-xs text-kumo-subtle">
@@ -31,11 +34,11 @@ export function SocialLoginOptions() {
         <span className="h-px flex-1 bg-kumo-line" />
       </div>
       <div className="grid gap-3">
-        <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<GithubLogoIcon />} onClick={() => setProvider("GitHub")}>使用 GitHub 继续</Button>
-        <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<ChatCircleDotsIcon />} onClick={() => setProvider("QQ")}>使用 QQ 继续</Button>
+        <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<GithubLogoIcon />} onClick={() => start("github")}>使用 GitHub 继续</Button>
+        <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<ChatCircleDotsIcon />} onClick={() => start("qq")}>使用 QQ 继续</Button>
       </div>
       <p className="text-center text-xs text-kumo-subtle">社交账号登录配置后可用</p>
-      {provider && <Banner title={`${provider} 登录配置后可用`} description="暂未接入此登录方式，请使用账号密码登录或注册。" />}
+      {provider && <Banner variant="error" title="暂未完成授权" description={provider} />}
     </section>
   );
 }
