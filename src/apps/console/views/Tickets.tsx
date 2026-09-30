@@ -62,7 +62,7 @@ export function TicketList() {
       <PageHeader
         title="工单中心"
         description={`查看处理进度与客服回复${query.data ? ` · ${query.data.unreadCount} 条未读` : ""}`}
-        actions={<LinkButton href="/console/tickets/create" icon={<PlusIcon />}>创建工单</LinkButton>}
+        actions={<><LinkButton href="/console/help" variant="secondary">支持中心</LinkButton><LinkButton href="/console/tickets/create" icon={<PlusIcon />}>创建工单</LinkButton></>}
       />
       {newMessageCount ? (
         <Banner variant="default" icon={<BellRingingIcon />} title="收到新回复" description={`有 ${newMessageCount} 条新消息已局部更新到列表。`} />

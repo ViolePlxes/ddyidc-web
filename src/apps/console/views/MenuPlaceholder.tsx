@@ -1,5 +1,6 @@
 import { Empty } from "@cloudflare/kumo";
 import { useLocation } from "react-router-dom";
+import { SupportCenter } from "./SupportCenter";
 import { PageHeader } from "../../../shared/components/PageHeader";
 
 const menuPages: Record<string, { title: string; description: string }> = {
@@ -16,6 +17,7 @@ const menuPages: Record<string, { title: string; description: string }> = {
 
 export function MenuPlaceholder() {
   const location = useLocation();
+  if (location.pathname === "/console/help") return <SupportCenter />;
   const page = menuPages[location.pathname] ?? { title: "服务中心", description: "当前暂无可展示的内容。" };
   return (
     <>
