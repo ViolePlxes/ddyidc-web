@@ -1,5 +1,5 @@
 import { useNavigation } from "../shared/hooks/useNavigation";
-import { Banner } from "@cloudflare/kumo";
+import { Badge, Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
 import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
@@ -20,6 +20,7 @@ import { RouteOutlet } from "../shared/router/RouteOutlet";
 import type { AuthUser } from "../shared/types/auth";
 
 export interface NavigationItem {
+  badge?: string;
   id?: string; target?: "_blank";
   label: string;
   href: string;
@@ -27,12 +28,14 @@ export interface NavigationItem {
 }
 
 export interface NavigationGroup {
+  badge?: string;
   id?: string; icon?: typeof HouseIcon;
   label: string;
   items: NavigationItem[];
 }
 
 const navigationCategories: Record<string, string> = {
+  待办事项: "业务管理",
   概览: "业务管理",
   商品管理: "业务管理",
   上下游: "业务管理",
@@ -176,6 +179,7 @@ export function DashboardLayout({
                       render={
                         <Sidebar.MenuButton icon={group.icon ?? group.items[0]?.icon} tooltip={group.label}>
                           {group.label}
+                          {group.badge !== undefined && <Badge variant="error" className="ml-auto shrink-0">{group.badge}</Badge>}
                           <Sidebar.MenuChevron />
                         </Sidebar.MenuButton>
                       }
@@ -191,6 +195,7 @@ export function DashboardLayout({
                           >
                             <item.icon className="mr-2 size-4 shrink-0" />
                             {item.label}
+                            {item.badge !== undefined && <Badge variant="error" className="ml-auto shrink-0">{item.badge}</Badge>}
                           </Sidebar.MenuSubButton>
                         ))}
                       </Sidebar.MenuSub>

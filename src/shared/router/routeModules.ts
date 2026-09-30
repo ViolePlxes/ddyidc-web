@@ -32,6 +32,7 @@ export const routeModules = {
   adminProducts: () => import("../../apps/admin/views/Products"),
   adminProductGroups: () => import("../../apps/admin/views/ProductGroups"),
   adminOrders: () => import("../../apps/admin/views/Orders"),
+  adminTodos: () => import("../../apps/admin/views/Todos"),
   adminCustomers: () => import("../../apps/admin/views/Customers"),
   adminCertifications: () => import("../../apps/admin/views/Certifications"),
   adminInstanceDetail: () => import("../../apps/admin/views/CustomerInstance"),

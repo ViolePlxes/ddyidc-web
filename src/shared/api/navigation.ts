@@ -1,6 +1,7 @@
 import { adminRequest, salesRequest, userRequest, type ApiEnvelope } from "./request";
 export type NavigationScope = "console" | "sales" | "admin";
 export interface NavigationNode {
+ badge?: string;
  id: string; scope: NavigationScope; parentId: string; name: string; href: string;
  icon: string; gate: string; target: "self" | "blank"; enabled: boolean; sort: number;
  createdAt: string; updatedAt: string;

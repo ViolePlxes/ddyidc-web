@@ -89,6 +89,7 @@ const AdminOrders = lazy(() =>
     .adminOrders()
     .then((module) => ({ default: module.AdminOrders })),
 );
+const AdminTodos = lazy(() => routeModules.adminTodos().then(module => ({ default: module.AdminTodos })));
 const AdminProducts = lazy(() =>
   routeModules
     .adminProducts()
@@ -500,6 +501,7 @@ export function AdminApp() {
             <Route path="/admin/transfers" element={<LazyRoute kind="table"><TransfersPage admin /></LazyRoute>} />
  <Route path="/admin/certifications" element={<LazyRoute kind="table"><Certifications /></LazyRoute>} />
             <Route path="/admin/backups" element={<LazyRoute kind="form"><AdminBackups /></LazyRoute>} />
+            <Route path="/admin/todos/:kind?" element={<LazyRoute kind="table"><AdminTodos /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute kind="table"><Navigation /></LazyRoute>} />
             <Route path="/admin/social-login" element={<LazyRoute kind="form"><SocialLoginSettings /></LazyRoute>} />
             <Route

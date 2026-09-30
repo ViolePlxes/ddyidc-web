@@ -44,10 +44,10 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
  };
  const nodes = query.data?.nodes ?? [];
  const groups: NavigationGroup[] = nodes.filter(node => node.parentId === "0").map(group => ({
-  label: group.name, id: group.id, icon: navigationIcon(group.icon),
+  label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge,
   items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({
    id: node.id, label: node.href === "/console/groupbuy" && node.name === "拼团" ? (availableItems.find(item => item.href === node.href)?.label ?? node.name) : node.name,
-   href: node.href, icon: navigationIcon(node.icon), target: node.target === "blank" ? "_blank" as const : undefined,
+   href: node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,
   })),
  }));
  return { ...query, groups };
