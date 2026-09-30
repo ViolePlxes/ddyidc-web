@@ -75,7 +75,7 @@ export function DashboardLayout({
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
-  const standalonePaths = ["/console", "/console/products"];
+  const standalonePaths = ["/console", "/console/products", "/admin"];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
 

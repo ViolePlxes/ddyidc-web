@@ -220,7 +220,7 @@ const adminGroups: NavigationGroup[] = [
   {
     label: "概览",
     items: [
-      { label: "经营概览", href: "/admin", icon: HouseIcon },
+      { label: "控制台", href: "/admin", icon: HouseIcon },
       { label: "订单管理", href: "/admin/orders", icon: ReceiptIcon },
       { label: "客户管理", href: "/admin/customers", icon: UsersIcon },
     ],
