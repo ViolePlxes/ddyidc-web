@@ -5,12 +5,12 @@ import type { TicketReply } from "../../api/tickets";
 
 export function TicketConversation({ replies, perspective, onQuote }: { replies: TicketReply[]; perspective: "Client" | "Admin"; onQuote: (reply: TicketReply) => void }) {
   return (
-    <div className="grid gap-3" aria-live="polite">
+    <div className="grid min-w-0 gap-5" aria-live="polite">
       {replies.map((reply) => {
         const mine = reply.type === perspective;
         return (
           <div key={reply.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-            <LayerCard className={`shadow-none grid w-full max-w-3xl gap-3 ${mine ? "bg-kumo-tint" : ""}`}>
+            <LayerCard className={`shadow-none grid w-full min-w-0 gap-5 p-5 sm:p-6 ${mine ? "bg-kumo-tint" : ""}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <strong className="text-sm font-medium text-kumo-strong">
                   {reply.type === "Client" ? "客户" : "管理员"}{mine ? "（我）" : ""}
@@ -58,7 +58,7 @@ export function ReplyComposer({
   onSubmit: () => void;
 }) {
   return (
-    <LayerCard className="shadow-none grid gap-4">
+    <LayerCard className="shadow-none grid min-w-0 gap-5 p-5 sm:p-6">
       {quote ? (
         <div className="flex items-start gap-3 border-l-2 border-kumo-line bg-kumo-recessed p-3">
           <ArrowBendUpLeftIcon className="mt-0.5 shrink-0 text-kumo-subtle" />
@@ -67,6 +67,7 @@ export function ReplyComposer({
         </div>
       ) : null}
       <Textarea
+        className="h-[200px] w-full"
         label="回复内容"
         value={content}
         rows={6}
