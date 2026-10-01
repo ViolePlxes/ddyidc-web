@@ -1,4 +1,10 @@
-import type { PaymentChannel, PaymentCheckout } from "../../../shared/api/payment";
+import type { AlipayCheckoutMode, PaymentChannel, PaymentCheckout } from "../../../shared/api/payment";
+
+export function walletCheckoutMode(userAgent: string, maxTouchPoints = 0): AlipayCheckoutMode {
+  const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent);
+  const desktopModeIPad = /Macintosh/i.test(userAgent) && maxTouchPoints > 1;
+  return mobile || desktopModeIPad ? "wap" : "page";
+}
 
 export function amountInCents(value: string): number | null {
   if (!/^\d{1,7}(?:\.\d{1,2})?$/.test(value.trim())) return null;
