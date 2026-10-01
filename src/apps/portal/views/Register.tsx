@@ -11,7 +11,6 @@ import { getApiMessage } from "../../../shared/api/request";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { TermsAgreement } from "../components/TermsAgreement";
-import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
 
 type RegistrationForm = {
   account: string;
@@ -23,7 +22,6 @@ type RegistrationForm = {
   email: string;
   inviteCode: string;
   salesCode: string;
-  agreedToTerms: boolean;
 };
 
 const mainlandMobilePattern = /^1[3-9]\d{9}$/;
@@ -41,13 +39,11 @@ export function RegisterPage() {
     email: "",
     inviteCode: "",
     salesCode: "",
-    agreedToTerms: false,
   });
   const [mobileError, setMobileError] = useState("");
   const [smsMessage, setSMSMessage] = useState("");
   const [smsError, setSMSError] = useState("");
   const [countdown, setCountdown] = useState(0);
-  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -96,7 +92,7 @@ export function RegisterPage() {
   if (user) return <ExternalRedirect to="/console" />;
 
   const updateText = (
-    key: Exclude<keyof RegistrationForm, "countryCode" | "agreedToTerms">,
+    key: Exclude<keyof RegistrationForm, "countryCode">,
     value: string,
   ) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -125,16 +121,6 @@ export function RegisterPage() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!validateMobile()) return;
-    if (!form.agreedToTerms) {
-      setShowAgreementDialog(true);
-      return;
-    }
-    mutation.mutate(true);
-  };
-
-  const agreeAndSubmit = () => {
-    setForm((current) => ({ ...current, agreedToTerms: true }));
-    setShowAgreementDialog(false);
     mutation.mutate(true);
   };
 
@@ -232,12 +218,6 @@ export function RegisterPage() {
               onChange={(event) => updateText("salesCode", event.target.value)}
             />
           </div>
-          <TermsAgreement
-            checked={form.agreedToTerms}
-            onCheckedChange={(agreedToTerms) =>
-              setForm((current) => ({ ...current, agreedToTerms }))
-            }
-          />
           {mutation.error ? (
             <Banner
               variant="error"
@@ -245,9 +225,12 @@ export function RegisterPage() {
               description={getApiMessage(mutation.error)}
             />
           ) : null}
-          <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={mutation.isPending}>
-            注册 <ArrowRightIcon />
-          </Button>
+          <div className="grid gap-2">
+            <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={mutation.isPending}>
+              注册 <ArrowRightIcon />
+            </Button>
+            <TermsAgreement />
+          </div>
         </form>
         <div className="text-center text-sm text-kumo-subtle">
           已有账号？{" "}
@@ -256,11 +239,6 @@ export function RegisterPage() {
           </Link>
         </div>
       <SocialLoginOptions />
-      <AgreementConsentDialog
-        open={showAgreementDialog}
-        onOpenChange={setShowAgreementDialog}
-        onAgree={agreeAndSubmit}
-      />
     </AuthPageShell>
   );
 }

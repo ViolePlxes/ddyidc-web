@@ -8,7 +8,6 @@ import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { TermsAgreement } from "../components/TermsAgreement";
-import { AgreementConsentDialog } from "../components/AgreementConsentDialog";
 import { AuthPageShell, SocialLoginOptions, authSubmitClassName } from "../components/AuthPageShell";
 
 const rememberedAccountKey = "ddyidc-remembered-account";
@@ -21,8 +20,6 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(() => Boolean(readRememberedAccount()));
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
   const [quickProfile, setQuickProfile] = useState(readRememberedProfile);
   const [quickLoading, setQuickLoading] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -67,7 +64,6 @@ export function LoginPage() {
   };
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!agreedToTerms) { setShowAgreementDialog(true); return; }
     void submitCredentials();
   };
 
@@ -97,13 +93,14 @@ export function LoginPage() {
           if (checked !== true) { try { localStorage.removeItem(rememberedAccountKey); } catch { /* Storage is optional. */ } }
         }} />
         {error && <Banner variant="error" title="登录失败" description={error} />}
-        <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={loading}>登录 <ArrowRightIcon /></Button>
+        <div className="grid gap-2">
+          <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={loading}>登录 <ArrowRightIcon /></Button>
+          <TermsAgreement />
+        </div>
       </form>
       <div className="text-center text-sm text-kumo-subtle">新用户？ <Link className="text-kumo-default hover:underline" to="/register">注册</Link></div>
       <SocialLoginOptions rememberMe={rememberMe} />
       {new URLSearchParams(location.search).has("socialError") && <Banner variant="error" title="社交登录未完成" description="授权已取消、过期或账号无法使用，请重新发起登录。" />}
-      <TermsAgreement checked={agreedToTerms} onCheckedChange={setAgreedToTerms} />
-      <AgreementConsentDialog open={showAgreementDialog} onOpenChange={setShowAgreementDialog} onAgree={() => { setAgreedToTerms(true); setShowAgreementDialog(false); void submitCredentials(); }} />
     </AuthPageShell>
   );
 }
