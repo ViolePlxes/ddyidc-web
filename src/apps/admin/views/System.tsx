@@ -29,6 +29,7 @@ import {
 } from "../../../shared/api/notifyAdmin";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
+import { BankTransferSettings } from "./BankTransferSettings";
 
 const sceneLabels: Record<string, string> = {
   register: "注册验证码",
@@ -67,6 +68,7 @@ export function AdminSystem() {
         variant="underline"
         tabs={[
           { value: "base", label: "基础设置" },
+          { value: "bank-transfer", label: "对公汇款" },
           { value: "notify", label: "通知设置" },
           { value: "templates", label: "通知模板" },
           { value: "logs", label: "发送记录" },
@@ -77,6 +79,7 @@ export function AdminSystem() {
       />
       {notice ? <Banner title="操作完成" description={notice} /> : null}
       {tab === "base" ? <BaseSettings /> : null}
+      {tab === "bank-transfer" ? <BankTransferSettings /> : null}
       {tab === "notify" ? <NotifySettings onSaved={setNotice} /> : null}
       {tab === "templates" ? <TemplateSettings onSaved={setNotice} /> : null}
       {tab === "logs" ? <NotifyLogs /> : null}
