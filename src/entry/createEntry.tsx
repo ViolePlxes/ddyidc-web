@@ -40,6 +40,7 @@ function entryScope(path: string): "portal" | "console" | "admin" | "sales" {
     path === "/cart" ||
     path === "/order/confirm" ||
     path === "/bind-mobile" ||
+    ["/wallet/recharge", "/wallet/recharge-records", "/wallet/consume-records"].includes(path) ||
     // Legacy user-center aliases are routes of ConsoleApp, not portal pages.
     path.startsWith("/user/") ||
     path === "/console" ||
