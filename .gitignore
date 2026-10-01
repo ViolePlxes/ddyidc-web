@@ -21,3 +21,4 @@ secrets/
 *.pem
 *.key
 .copy-test/
+.portal-template/

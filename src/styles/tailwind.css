@@ -1,4 +1,6 @@
 @source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@source "../../scripts/portal-template.tsx";
+@source "../../scripts/portal-theme";
 @import "@cloudflare/kumo/styles";
 @import "tailwindcss";
 
