@@ -6,13 +6,13 @@ import QRCode from "qrcode";
 import "./walletRecharge.css";
 import { consoleApi, type Recharge } from "../../../shared/api/console";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
-import { paymentApi, type PaymentChannel, type PaymentCheckout } from "../../../shared/api/payment";
+import { paymentApi, type AlipayCheckoutMode, type PaymentChannel, type PaymentCheckout } from "../../../shared/api/payment";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { useOrders, useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
-import { amountInCents, checkoutCode } from "./walletPayment";
+import { amountInCents, checkoutCode, walletCheckoutMode } from "./walletPayment";
 import { getBankTransfer } from "../../../shared/api/bankTransfer";
 
 type Channels = Record<PaymentChannel, boolean>;
@@ -52,19 +52,23 @@ export function WalletRecharge() {
   const submitLock = useRef(false);
   const create = useMutation({
     retry: false,
-    mutationFn: async ({ amountCents, method, popup }: { amountCents: number; method: PaymentChannel; popup?: Window }) => {
+    mutationFn: async ({ amountCents, method, mode, popup }: { amountCents: number; method: PaymentChannel; mode: AlipayCheckoutMode; popup?: Window }) => {
       try {
       let pending = pendingRecharge.current;
       if (!pending || pending.recharge.amount !== amountCents || pending.channel !== method) {
         pending = { recharge: await consoleApi.createRecharge(amountCents, method), channel: method };
         pendingRecharge.current = pending;
       }
-      const checkout = await paymentApi.create("recharge", pending.recharge.id, method, "page");
+      const checkout = await paymentApi.create("recharge", pending.recharge.id, method, mode);
       const code = checkoutCode(checkout, method);
       const qr = method === "wechat" ? await QRCode.toDataURL(code, { width: 280, margin: 2, errorCorrectionLevel: "L" }) : "";
       if (method === "alipay") {
-        if (!popup || popup.closed) throw new Error("支付宝支付窗口已关闭，请重新发起支付");
-        popup.location.replace(code);
+        if (mode === "wap") {
+          window.location.assign(code);
+        } else {
+          if (!popup || popup.closed) throw new Error("支付宝支付窗口已关闭，请重新发起支付");
+          popup.location.replace(code);
+        }
       }
       return { checkout, qr, payUrl: method === "alipay" ? code : undefined, amountCents, channel: method, deadline: Date.now() + 120_000 };
       } catch (error) {
@@ -123,15 +127,16 @@ export function WalletRecharge() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!cents || !channel || locked || submitLock.current) return;
-    const popup = channel === "alipay" ? window.open("about:blank", "_blank") : undefined;
-    if (channel === "alipay" && !popup) {
+    const mode = channel === "alipay" ? walletCheckoutMode(navigator.userAgent, navigator.maxTouchPoints) : "page";
+    const popup = channel === "alipay" && mode === "page" ? window.open("about:blank", "_blank") : undefined;
+    if (channel === "alipay" && mode === "page" && !popup) {
       setMessage("浏览器阻止了支付宝支付窗口，请允许本站打开新窗口后重试");
       return;
     }
     if (popup) popup.opener = null;
     submitLock.current = true;
     setAttempt(null); setMessage(""); setPollError("");
-    create.mutate({ amountCents: cents, method: channel, popup: popup ?? undefined });
+    create.mutate({ amountCents: cents, method: channel, mode, popup: popup ?? undefined });
   };
 
   return <div className="wallet-recharge-page">

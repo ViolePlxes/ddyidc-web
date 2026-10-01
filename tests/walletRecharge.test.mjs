@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-const { amountInCents, checkoutCode } = await import(process.env.WALLET_HELPER_PATH);
+const { amountInCents, checkoutCode, walletCheckoutMode } = await import(process.env.WALLET_HELPER_PATH);
+
+for (const userAgent of ["Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", "Mozilla/5.0 (Linux; Android 15) Mobile", "Mozilla/5.0 (iPad; CPU OS 18_0)"]) {
+  assert.equal(walletCheckoutMode(userAgent), "wap");
+}
+assert.equal(walletCheckoutMode("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)", 5), "wap");
+assert.equal(walletCheckoutMode("Mozilla/5.0 (Windows NT 10.0; Win64; x64)", 10), "page");
+assert.equal(walletCheckoutMode("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)", 0), "page");
 
 for (const [input, cents] of [["1", 100], ["10.01", 1001], ["50.10", 5010], [" 1000 ", 100000], ["1000000", 100000000]]) {
   assert.equal(amountInCents(input), cents);
@@ -16,4 +23,4 @@ for (const payUrl of ["http://openapi.alipay.com/gateway.do", "https://openapi.a
 const payUrl = "https://openapi.alipay.com/gateway.do?method=alipay.trade.page.pay";
 assert.equal(checkoutCode({ ...checkout, alipay: { payUrl, mode: "page" } }, "alipay"), payUrl);
 assert.throws(() => checkoutCode(checkout, "alipay"));
-console.log("Wallet amount boundaries and checkout URL validation passed.");
+console.log("Wallet mobile/desktop mode, amount boundaries and checkout URL validation passed.");
