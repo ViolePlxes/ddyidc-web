@@ -357,7 +357,7 @@ function AdminDashboard() {
   const points = usePointsAvailability("admin");
   const cdnsell = useCdnsellAvailability("admin");
   if (!user) return null;
-  let groups = groupBuy.data
+  let groups = !groupBuy.isLoading
     ? adminGroups.map((group) =>
         group.label === "营销中心"
           ? {
@@ -384,7 +384,7 @@ function AdminDashboard() {
           : group,
       )
     : adminGroups;
-  if (marketplace.data)
+  if (!marketplace.isLoading)
     groups = [
       ...groups,
       {
@@ -428,8 +428,8 @@ function AdminDashboard() {
         ],
       },
     ];
-  if(points.data&&points.data.enabled) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:"/admin/points",icon:CoinsIcon},{label:"积分账户",href:"/admin/points/accounts",icon:UsersIcon},{label:"商品管理",href:"/admin/points/goods",icon:StorefrontIcon},{label:"兑换订单",href:"/admin/points/orders",icon:ReceiptIcon},{label:"插件配置",href:"/admin/points/plugin",icon:GearIcon}]}];
-  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"域名管理",href:"/admin/cdnsell/domains",icon:StorefrontIcon},{label:"域名配置中心",href:"/admin/cdnsell/config-center",icon:GearIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
+  if(!points.isLoading) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:"/admin/points",icon:CoinsIcon},{label:"积分账户",href:"/admin/points/accounts",icon:UsersIcon},{label:"商品管理",href:"/admin/points/goods",icon:StorefrontIcon},{label:"兑换订单",href:"/admin/points/orders",icon:ReceiptIcon},{label:"插件配置",href:"/admin/points/plugin",icon:GearIcon}]}];
+  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"域名管理",href:"/admin/cdnsell/domains",icon:StorefrontIcon},{label:"域名配置中心",href:"/admin/cdnsell/config-center",icon:GearIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
   return (
     <DashboardLayout
       user={user}

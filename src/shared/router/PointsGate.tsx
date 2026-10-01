@@ -1,4 +1,4 @@
-import { LayerCard } from "@cloudflare/kumo";
+import { Banner } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { probePoints } from "../api/points";
@@ -12,6 +12,6 @@ export function PointsGate({scope,feature,children}:{scope:"public"|"admin";feat
   if(query.isLoading)return <PageState loading><span /></PageState>;
   const data=query.data;
   const visible=Boolean(data&&data.enabled&&(!feature||(feature==="mall"?data.showMall:feature==="signin"?data.showSignin:data.showTasks)));
-  if(!visible)return <LayerCard className="shadow-none grid gap-2 p-8"><strong className="text-xl text-kumo-strong">404</strong><p className="text-kumo-subtle">页面不存在或积分中心当前未启用。</p></LayerCard>;
+  if(!visible)return <><Banner title="配置后可用" description="积分中心入口已保留，请在后台完成配置并启用相应功能。" />{scope === "admin" ? children : null}</>;
   return children;
 }

@@ -1,4 +1,4 @@
-import { LayerCard } from "@cloudflare/kumo";
+import { Banner } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { probeGroupBuy } from "../api/groupbuy";
@@ -16,6 +16,6 @@ export function useGroupBuyAvailability(scope: "public" | "admin") {
 export function GroupBuyGate({ scope, children }: { scope: "public" | "admin"; children: ReactNode }) {
   const query = useGroupBuyAvailability(scope);
   if (query.isLoading) return <PageState loading><span /></PageState>;
-  if (!query.data) return <LayerCard className="shadow-none grid gap-2 p-8"><strong className="text-xl text-kumo-strong">404</strong><p className="text-kumo-subtle">页面不存在或拼团模块当前未启用。</p></LayerCard>;
+  if (!query.data) return <><Banner title="配置后可用" description="拼团入口已保留，请在后台完成配置并启用相应功能。" />{scope === "admin" ? children : null}</>;
   return children;
 }

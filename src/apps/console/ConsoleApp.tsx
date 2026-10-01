@@ -265,7 +265,7 @@ function UserDashboard() {
           ...group,
           items: [
             ...group.items,
-            ...(groupBuy.data
+            ...(!groupBuy.isLoading
               ? [
                   {
                     label: pendingGroups ? `拼团（${pendingGroups}）` : "拼团",
@@ -274,7 +274,7 @@ function UserDashboard() {
                   },
                 ]
               : []),
-            ...(marketplace.data
+            ...(!marketplace.isLoading
               ? [
                   {
                     label: "交易市场",
@@ -287,8 +287,8 @@ function UserDashboard() {
         }
       : group,
   );
-  if(points.data&&points.data.enabled){groups=[...groups,{label:"积分中心",items:[{label:"积分账户",href:"/console/points",icon:CoinsIcon},...(points.data.showSignin?[{label:"签到中心",href:"/console/points/signin",icon:CoinsIcon}]:[]),...(points.data.showTasks?[{label:"任务中心",href:"/console/points/tasks",icon:GiftIcon}]:[]),...(points.data.showMall?[{label:"积分商城",href:"/console/points/mall",icon:StorefrontIcon},{label:"我的兑换",href:"/console/points/orders",icon:ReceiptIcon}]:[])]}]}
-  if(cdnsell.data?.enabled) groups=[...groups,{label:"CDN 加速",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon},{label:"我的域名",href:"/console/cdnsell/domains",icon:StorefrontIcon},{label:"证书管理",href:"/console/cdnsell/certs",icon:ShieldCheckIcon},{label:"刷新预热",href:"/console/cdnsell/refresh",icon:ArrowsClockwiseIcon},{label:"日志下载",href:"/console/cdnsell/logs",icon:CloudArrowDownIcon},{label:"IP 诊断",href:"/console/cdnsell/ipcheck",icon:CloudCheckIcon}]}];
+  if(!points.isLoading){groups=[...groups,{label:"积分中心",items:[{label:"积分账户",href:"/console/points",icon:CoinsIcon},...((points.data && points.data.enabled ? points.data.showSignin : true)?[{label:"签到中心",href:"/console/points/signin",icon:CoinsIcon}]:[]),...((points.data && points.data.enabled ? points.data.showTasks : true)?[{label:"任务中心",href:"/console/points/tasks",icon:GiftIcon}]:[]),...((points.data && points.data.enabled ? points.data.showMall : true)?[{label:"积分商城",href:"/console/points/mall",icon:StorefrontIcon},{label:"我的兑换",href:"/console/points/orders",icon:ReceiptIcon}]:[])]}]}
+  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon},{label:"我的域名",href:"/console/cdnsell/domains",icon:StorefrontIcon},{label:"证书管理",href:"/console/cdnsell/certs",icon:ShieldCheckIcon},{label:"刷新预热",href:"/console/cdnsell/refresh",icon:ArrowsClockwiseIcon},{label:"日志下载",href:"/console/cdnsell/logs",icon:CloudArrowDownIcon},{label:"IP 诊断",href:"/console/cdnsell/ipcheck",icon:CloudCheckIcon}]}];
   return (
     <DashboardLayout
       user={user}
