@@ -135,6 +135,7 @@ export default defineConfig({
     target: "es2022",
     rollupOptions: {
       input: {
+        public: resolve(__dirname, "public.html"),
         portal: resolve(__dirname, "index.html"),
         console: resolve(__dirname, "console.html"),
         admin: resolve(__dirname, "admin.html"),
