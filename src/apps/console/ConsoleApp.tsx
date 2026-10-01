@@ -66,6 +66,9 @@ const Coupons = lazy(() =>
 const Finance = lazy(() =>
   routeModules.consoleFinance().then((module) => ({ default: module.Finance })),
 );
+const WalletRecharge = lazy(() => import("./views/WalletRecharge").then(module => ({ default: module.WalletRecharge })));
+const WalletRechargeRecords = lazy(() => import("./views/WalletRecharge").then(module => ({ default: module.WalletRechargeRecords })));
+const WalletConsumeRecords = lazy(() => import("./views/WalletRecharge").then(module => ({ default: module.WalletConsumeRecords })));
 const ConsoleHome = lazy(() =>
   routeModules
     .consoleHome()
@@ -562,6 +565,9 @@ export function ConsoleApp() {
             <Route path="/console/cdnsell/logs" element={<CdnsellGate scope="public"><LazyRoute><CdnLogs /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/ipcheck" element={<CdnsellGate scope="public"><LazyRoute><CdnIPCheck /></LazyRoute></CdnsellGate>} />
             <Route element={<RequireMobile />}>
+              <Route path="/wallet/recharge" element={<LazyRoute><WalletRecharge /></LazyRoute>} />
+              <Route path="/wallet/recharge-records" element={<LazyRoute><WalletRechargeRecords /></LazyRoute>} />
+              <Route path="/wallet/consume-records" element={<LazyRoute><WalletConsumeRecords /></LazyRoute>} />
               <Route
                 path="/console/finance"
                 element={

@@ -14,6 +14,7 @@ function entryForPath(pathname: string): string {
     pathname === "/cart" ||
     pathname === "/order/confirm" ||
     pathname === "/bind-mobile" ||
+    ["/wallet/recharge", "/wallet/recharge-records", "/wallet/consume-records"].includes(pathname) ||
     pathname === "/user/productList.htm" ||
     /^\/user\/instance\/[^/]+\.htm$/.test(pathname) ||
     pathname === "/console" ||

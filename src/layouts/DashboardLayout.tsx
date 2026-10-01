@@ -10,6 +10,7 @@ import {
   CaretDownIcon,
   CaretUpDownIcon,
   CubeIcon,
+  CreditCardIcon,
   HouseIcon,
   SignOutIcon,
   UserCircleIcon,
@@ -71,7 +72,17 @@ export function DashboardLayout({
 }) {
   const scope = user.role === "admin" ? "admin" : user.role === "sales" ? "sales" : "console";
   const navigation = useNavigation(scope, availableGroups);
-  const groups = navigation.groups;
+  const groups = [...navigation.groups];
+  if (scope === "console" && !groups.some(group => group.items.some(item => item.href === "/wallet/recharge"))) {
+    const rechargeItem = { label: "账户充值", href: "/wallet/recharge", icon: CreditCardIcon };
+    const billingIndex = groups.findIndex(group => group.label === "资源与账单");
+    const billing = groups[billingIndex];
+    if (billing) {
+      groups[billingIndex] = { ...billing, items: [...billing.items, rechargeItem] };
+    } else if (navigation.isSuccess) {
+      groups.push({ label: "资源与账单", items: [rechargeItem] });
+    }
+  }
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
