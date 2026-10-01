@@ -1,4 +1,4 @@
-import { Banner, Button, Input, LayerCard, Pagination, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Pagination, Radio, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -15,7 +15,8 @@ import { amountInCents, checkoutCode } from "./walletPayment";
 
 type Channels = Record<PaymentChannel, boolean>;
 type Attempt = { checkout: PaymentCheckout; qr: string; amountCents: number; channel: PaymentChannel; deadline: number };
-const methods = [{ value: "wechat", label: "微信" }, { value: "alipay", label: "支付宝" }] as const;
+const methods = [{ value: "alipay", label: "支付宝" }, { value: "wechat", label: "微信支付" }] as const;
+const amounts = [10, 20, 50, 100, 300, 500] as const;
 const terminalStates = new Set(["closed", "failed", "refunded", "received_review"]);
 
 async function loadChannels(): Promise<Channels> {
@@ -35,8 +36,9 @@ export function WalletRecharge() {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<PaymentChannel | null>(null);
   const channel = selected && channels.data?.[selected] ? selected : methods.find(method => channels.data?.[method.value])?.value;
-  const [amount, setAmount] = useState("100");
-  const cents = amountInCents(amount);
+  const [amountChoice, setAmountChoice] = useState("10");
+  const [amount, setAmount] = useState("");
+  const cents = amountInCents(amountChoice === "custom" ? amount : amountChoice);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [message, setMessage] = useState("");
   const [pollError, setPollError] = useState("");
@@ -123,25 +125,30 @@ export function WalletRecharge() {
       <div className="flex gap-4 text-sm"><Link to="/wallet/recharge-records" className="text-kumo-link">充值记录</Link><Link to="/wallet/consume-records" className="text-kumo-link">消费记录</Link></div>
     </LayerCard>
     {balance.error ? <Banner variant="error" title="余额读取失败" description={getApiMessage(balance.error)} /> : null}
-    <LayerCard className="grid gap-6 p-6 lg:grid-cols-2">
+    <LayerCard className={`grid gap-6 p-6${attempt || message ? " lg:grid-cols-2" : ""}`}>
       <form className="grid content-start gap-5" onSubmit={submit}>
         <h2 className="text-lg font-semibold">在线充值</h2>
-        <div role="tablist" aria-label="支付方式" className="flex gap-3">{methods.map(method => <Button type="button" key={method.value} role="tab" aria-selected={channel === method.value} variant={channel === method.value ? "primary" : "secondary"} disabled={locked || !channels.data?.[method.value]} onClick={() => setSelected(method.value)}>
-          {method.label}{!channels.data?.[method.value] ? " · 暂未开放" : ""}
-        </Button>)}</div>
+        <div className="grid gap-3">
+          <span className="text-sm text-kumo-subtle">支付金额（元）</span>
+          <div className="flex flex-wrap gap-2" aria-label="快捷充值金额">{amounts.map(value => <Button type="button" key={value} disabled={locked} aria-pressed={amountChoice === String(value)} variant={amountChoice === String(value) ? "primary" : "secondary"} onClick={() => setAmountChoice(String(value))}>{value}元</Button>)}
+            <Button type="button" disabled={locked} aria-pressed={amountChoice === "custom"} variant={amountChoice === "custom" ? "primary" : "secondary"} onClick={() => setAmountChoice("custom")}>自定义</Button>
+          </div>
+          {amountChoice === "custom" ? <Input label="自定义金额（元）" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" disabled={locked} placeholder="请输入充值金额" /> : null}
+          {amountChoice === "custom" && !cents ? <p role="alert" className="text-sm text-kumo-danger">请输入 1 至 1000000 元，最多两位小数。</p> : null}
+        </div>
+        <Radio.Group legend="支付方式" appearance="card" orientation="vertical" value={channel ?? ""} disabled={locked} onValueChange={value => { if (value === "alipay" || value === "wechat") setSelected(value); }} className="w-full">
+          {methods.map(method => <Radio.Item key={method.value} value={method.value} className="w-full" label={method.label} disabled={!channels.data?.[method.value]} description={!channels.data?.[method.value] ? "暂未开放" : undefined} />)}
+        </Radio.Group>
         {channels.isLoading ? <p role="status" className="text-sm text-kumo-subtle">正在读取支付方式…</p> : null}
         {channels.error ? <Banner variant="error" title="支付方式读取失败" description={getApiMessage(channels.error)} /> : null}
-        <Input label="充值金额（元）" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" disabled={locked} placeholder="请输入充值金额" />
-        <div className="flex flex-wrap gap-2" aria-label="快捷充值金额">{[10, 50, 100, 500, 1000].map(value => <Button type="button" key={value} disabled={locked} variant={Number(amount) === value ? "primary" : "secondary"} onClick={() => setAmount(String(value))}>{value}元</Button>)}</div>
-        {!cents ? <p role="alert" className="text-sm text-kumo-danger">请输入 1 至 1000000 元，最多两位小数。</p> : null}
-        <Button type="submit" variant="primary" loading={create.isPending} disabled={!cents || !channel || locked}>充值{cents ? ` ${formatMoney(cents)}` : ""}</Button>
+        <Button type="submit" className="w-full" variant="primary" loading={create.isPending} disabled={!cents || !channel || locked}>去支付{cents ? ` ${formatMoney(cents)}` : ""}</Button>
         {create.error ? <Banner variant="error" title="发起充值失败" description={getApiMessage(create.error)} /> : null}
       </form>
-      <section className="grid content-center justify-items-center gap-4" aria-label="扫码支付">
+      {attempt || message || pollError ? <section className="grid content-center justify-items-center gap-4" aria-label="扫码支付">
         {attempt && !stopped ? <><h2 className="text-lg font-semibold">请使用{attempt.channel === "wechat" ? "微信" : "支付宝"}扫码支付</h2><strong>{formatMoney(attempt.amountCents)}</strong><img src={attempt.qr} width={280} height={280} alt={`${attempt.channel === "wechat" ? "微信付款" : "支付宝官方收银台"}二维码`} /><p role="status" className="text-sm text-kumo-subtle">正在等待支付结果，请勿重复付款。</p></> : <><h2 className="text-lg font-semibold">扫码支付</h2><p className="text-sm text-kumo-subtle">选择金额并点击充值后，二维码将在这里显示。</p></>}
         {message ? <Banner title={message} /> : null}
         {pollError && !stopped ? <Banner variant="alert" title="支付状态暂未获取" description={pollError} /> : null}
-      </section>
+      </section> : null}
     </LayerCard>
   </>;
 }
