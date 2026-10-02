@@ -255,6 +255,9 @@ export function DashboardLayout({
                 ) : null}
               </DropdownMenu.Group>
               <DropdownMenu.Separator />
+              {scope === "console" ? <DropdownMenu.Item icon={<CaretUpDownIcon />} onClick={() => window.location.assign("/login?switchAccount=1")}>
+                切换账号
+              </DropdownMenu.Item> : null}
               <DropdownMenu.Item
                 icon={<SignOutIcon />}
                 variant="danger"

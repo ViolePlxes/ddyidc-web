@@ -1,8 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Banner, Button, Checkbox, Input } from "@cloudflare/kumo";
 import { ArrowRightIcon, UserCircleIcon } from "@phosphor-icons/react";
-import { readRememberedProfile, renewUserSession, clearRefreshSession } from "../../../shared/api/refreshSession";
-import { getSession, logout } from "../../../shared/api/auth";
+import { readRememberedProfile, renewUserSession } from "../../../shared/api/refreshSession";
+import { getSession } from "../../../shared/api/auth";
 import { Link, useLocation } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
@@ -33,7 +33,8 @@ export function LoginPage() {
     return () => { window.clearInterval(timer); window.removeEventListener("storage", update); };
   }, []);
 
-  if (user && !quickProfile) return <ExternalRedirect to={useAuthStore.getState().needBindMobile ? "/bind-mobile" : "/console"} />;
+  const switchingAccount = new URLSearchParams(location.search).get("switchAccount") === "1";
+  if (user && !quickProfile && !switchingAccount) return <ExternalRedirect to={useAuthStore.getState().needBindMobile ? "/bind-mobile" : "/console"} />;
   const redirect = new URLSearchParams(location.search).get("redirect");
   const safeRedirect = redirect && !redirect.startsWith("//") &&
     (["/cart", "/order/confirm", "/bind-mobile", "/console"].includes(redirect) || redirect.startsWith("/console/")) ? redirect : null;
@@ -69,15 +70,12 @@ export function LoginPage() {
 
   return (
     <AuthPageShell title="欢迎回来" description="请登录你的账户">
-      {quickProfile ? <div className="flex items-center gap-3">
-        <Button type="button" variant="secondary" className="h-auto min-w-0 flex-1 justify-start gap-3 p-5" loading={quickLoading} onClick={() => void quickLogin()} aria-label={`以 ${quickProfile.name} 登录`}>
+      {quickProfile ? <div className="grid gap-2">
+        <Button type="button" variant="secondary" className="h-auto w-full min-w-0 justify-start gap-3 p-5" loading={quickLoading} onClick={() => void quickLogin()} aria-label={`以 ${quickProfile.name} 登录`}>
           {quickProfile.avatar?.startsWith("https://") ? <img src={quickProfile.avatar} className="size-10 object-cover" alt="" referrerPolicy="no-referrer" /> : <UserCircleIcon className="size-10" />}
           <span className="truncate">{quickProfile.name}</span>
         </Button>
-        <Button type="button" variant="ghost" className="shrink-0 underline" disabled={quickLoading} onClick={() => {
-          setQuickLoading(true);
-          void logout().then(() => { clearRefreshSession(); useAuthStore.getState().clearSession(); setQuickProfile(null); setAccount(""); setPassword(""); }).catch(next => setError(getApiMessage(next))).finally(() => setQuickLoading(false));
-        }}>切换其他账号</Button>
+        <Link className="text-right text-xs text-kumo-subtle hover:underline" to="/login?switchAccount=1" onClick={() => { setAccount(""); setPassword(""); }}>切换账号</Link>
       </div> : null}
       <form className="grid gap-5" onSubmit={submit}>
         <Input label="Email" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="username" placeholder="邮箱、账号或手机号" required autoFocus />

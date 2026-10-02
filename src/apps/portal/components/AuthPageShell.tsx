@@ -37,7 +37,6 @@ export function SocialLoginOptions({ rememberMe = false }: { rememberMe?: boolea
         <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<GithubLogoIcon />} onClick={() => start("github")}>使用 GitHub 继续</Button>
         <Button type="button" variant="secondary" size="lg" className="w-full justify-start" icon={<ChatCircleDotsIcon />} onClick={() => start("qq")}>使用 QQ 继续</Button>
       </div>
-      <p className="text-center text-xs text-kumo-subtle">社交账号登录配置后可用</p>
       {provider && <Banner variant="error" title="暂未完成授权" description={provider} />}
     </section>
   );

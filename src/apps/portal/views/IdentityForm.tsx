@@ -8,6 +8,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { userRequest, getApiMessage, type ApiEnvelope } from "../../../shared/api/request";
 import type { AuthPayload } from "../../../shared/types/auth";
 import { useAuthStore } from "../../../shared/stores/auth";
+import { AuthPageShell, authSubmitClassName } from "../components/AuthPageShell";
 
 export function IdentityForm({ mode }: { mode: "bind" | "reset" }) {
   const [country, setCountry] = useState<CountryCode>("CN");
@@ -52,10 +53,7 @@ export function IdentityForm({ mode }: { mode: "bind" | "reset" }) {
     if (!binding && password !== confirmation) { setValidation("两次密码输入不一致"); return; }
     save.mutate();
   };
-  return <div className="mx-auto grid w-full max-w-lg gap-6 py-10">
-    <PageHeader title={binding ? "绑定手机号" : "找回密码"} description={binding ? "验证当前密码及手机后完成首次绑定。" : "验证已绑定手机号后设置新密码，原有登录将失效。"} />
-    <LayerCard className="grid gap-4 p-6">
-      {save.isSuccess ? <><Banner title={binding ? "手机号已绑定" : "密码已重置，请重新登录"} /><Link to={binding ? "/console" : "/login"}>{binding ? "进入用户中心" : "返回登录"}</Link></> : <form className="grid gap-4" onSubmit={submit}>
+  const content = save.isSuccess ? <><Banner title={binding ? "手机号已绑定" : "密码已重置，请重新登录"} /><Link to={binding ? "/console" : "/login"}>{binding ? "进入用户中心" : "返回登录"}</Link></> : <form className="grid gap-4" onSubmit={submit}>
         <PhoneCountrySelect value={country} onChange={(value, code) => { setCountry(value); setCountryCode(code); }} />
         <Input label={binding ? "手机号" : "已绑定手机号"} value={mobile} onChange={e => setMobile(e.target.value)} inputMode="tel" autoComplete="tel-national" required />
         <div className="flex items-end gap-2"><Input label="短信验证码" value={smsCode} onChange={e => setCode(e.target.value)} maxLength={6} inputMode="numeric" autoComplete="one-time-code" required /><Button type="button" variant="secondary" disabled={countdown > 0 || save.isPending} loading={send.isPending} onClick={() => send.mutate()}>{countdown ? `${countdown}秒后重发` : "获取验证码"}</Button></div>
@@ -63,8 +61,8 @@ export function IdentityForm({ mode }: { mode: "bind" | "reset" }) {
         {!binding ? <Input label="确认新密码" type="password" value={confirmation} onChange={e => setConfirmation(e.target.value)} autoComplete="new-password" minLength={6} maxLength={20} required /> : null}
         {send.isSuccess ? <Banner title="验证码已发送，请注意查收" /> : null}
         {validation || save.error || send.error ? <Banner variant="error" title="未完成操作" description={validation || getApiMessage(save.error ?? send.error)} /> : null}
-        <Button type="submit" loading={save.isPending} disabled={send.isPending}>{binding ? "完成绑定" : "重置密码"}</Button>
-      </form>}
-    </LayerCard>
-  </div>;
+        <Button type="submit" variant={binding ? "secondary" : "primary"} className={binding ? authSubmitClassName : undefined} loading={save.isPending} disabled={send.isPending}>{binding ? "完成绑定" : "重置密码"}</Button>
+      </form>;
+  if (binding) return <AuthPageShell title="绑定手机号" description="验证当前密码及手机后完成首次绑定。">{content}</AuthPageShell>;
+  return <div className="mx-auto grid w-full max-w-lg gap-6 py-10"><PageHeader title="找回密码" description="验证已绑定手机号后设置新密码，原有登录将失效。" /><LayerCard className="grid gap-4 p-6">{content}</LayerCard></div>;
 }

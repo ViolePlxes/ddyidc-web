@@ -8,8 +8,15 @@ export async function startSocialLogin(provider: SocialProvider, rememberMe = fa
   const response = await userRequest.post<ApiEnvelope<{ url: string }>>(`/auth/social/${provider}/start`, { mode, rememberMe, password }, { headers: { "X-Social-Request": "1" } });
   window.location.assign(response.data.data.url);
 }
-export async function completeSocialLogin(): Promise<AuthPayload> {
-  const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/social/complete", {}, { headers: { "X-Social-Request": "1" } });
+export type SocialCompletion = AuthPayload | { accountChoiceRequired: true };
+export async function completeSocialLogin(): Promise<SocialCompletion> {
+  const response = await userRequest.post<ApiEnvelope<SocialCompletion>>("/auth/social/complete", {}, { headers: { "X-Social-Request": "1" } });
+  const payload = response.data.data;
+  if (!("accountChoiceRequired" in payload)) saveRefreshSession(payload as AuthPayload & RefreshPayload, payload.rememberMe === true);
+  return payload;
+}
+export async function chooseSocialAccount(input: { mode: "bind" | "register"; countryCode: string; mobile: string; password: string; smsCode?: string; agreedToTerms?: boolean }): Promise<AuthPayload> {
+  const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/social/resolve", input, { headers: { "X-Social-Request": "1" } });
   const payload = response.data.data;
   saveRefreshSession(payload as AuthPayload & RefreshPayload, payload.rememberMe === true);
   return payload;
