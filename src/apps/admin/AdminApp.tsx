@@ -217,7 +217,6 @@ const AdminCdnConfigCenter = lazy(() => routeModules.adminCdnsell().then((module
 const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 
 const Navigation = lazy(() => routeModules.adminNavigation().then(module => ({ default: module.Navigation })));
-const PortalContent = lazy(() => import("./views/PortalContent").then(module => ({ default: module.PortalContent })));
 const adminGroups: NavigationGroup[] = [
   {
     label: "概览",
@@ -238,7 +237,6 @@ const adminGroups: NavigationGroup[] = [
     label: "系统设置",
     items: [
       { label: "系统配置", href: "/admin/system", icon: GearIcon },
-      { label: "门户首页配置", href: "/admin/portal", icon: HouseIcon },
       { label: "更新中心", href: "/admin/updates", icon: ArrowsClockwiseIcon },
       { label: "数据库备份", href: "/admin/backups", icon: CloudArrowDownIcon },
     ],
@@ -506,7 +504,6 @@ export function AdminApp() {
             <Route path="/admin/backups" element={<LazyRoute><AdminBackups /></LazyRoute>} />
             <Route path="/admin/todos/:kind?" element={<LazyRoute><AdminTodos /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute><Navigation /></LazyRoute>} />
-            <Route path="/admin/portal" element={<LazyRoute><PortalContent /></LazyRoute>} />
             <Route path="/admin/social-login" element={<LazyRoute><SocialLoginSettings /></LazyRoute>} />
             <Route
               path="/admin/system"

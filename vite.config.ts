@@ -30,16 +30,6 @@ function entryRewrite(): Plugin {
     name: "ddyidc-entry-rewrite",
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
-        const publicPath = new URL(request.url || "/", "http://localhost").pathname;
-        if (request.method === "GET" && (publicPath === "/" || /^\/(products|about|news|pages)(\/|$)/.test(publicPath) || ["/robots.txt", "/sitemap.xml", "/llms.txt"].includes(publicPath))) {
-          try {
-            const upstream = await fetch(`${process.env.DDYIDC_API_TARGET || "http://localhost:8080"}/api/v1/portal/document?path=${encodeURIComponent(publicPath)}`);
-            response.statusCode = upstream.status;
-            for (const name of ["content-type", "cache-control", "etag", "x-portal-revision"]) { const value = upstream.headers.get(name); if (value) response.setHeader(name, value); }
-            response.end(Buffer.from(await upstream.arrayBuffer()));
-          } catch { response.statusCode = 503; response.end("门户静态页面暂时不可用"); }
-          return;
-        }
         if (
           request.method !== "GET" ||
           !String(request.headers.accept ?? "").includes("text/html") ||
