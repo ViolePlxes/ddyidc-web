@@ -8,6 +8,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { TrendChart } from "../../../shared/components/TrendChart";
 import { formatDate, formatMoney, orderStatusCode } from "../../../shared/utils/format";
+import { ServerMonitor } from "../components/ServerMonitor";
 
 function toOrderRow(order: AdminOrderRow) {
   return {
@@ -49,6 +50,7 @@ export function AdminHome() {
       <PageState loading={dashboard.isLoading} error={dashboard.error ? getApiMessage(dashboard.error) : null}>
         {data ? <div className="grid gap-6">
           <MetricGrid metrics={metrics} />
+          <ServerMonitor />
           <section className="grid gap-3">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-kumo-strong">运行观察</h2>
