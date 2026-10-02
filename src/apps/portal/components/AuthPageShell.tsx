@@ -7,11 +7,11 @@ import { getApiMessage } from "../../../shared/api/request";
 
 export const authSubmitClassName = "w-full justify-center bg-kumo-contrast! text-kumo-inverse! ring-kumo-contrast hover:opacity-90";
 
-export function AuthPageShell({ title, description, children }: {
-  title: string; description: string; children: ReactNode;
+export function AuthPageShell({ title, description, children, unstyledBackground = false }: {
+  title: string; description: string; children: ReactNode; unstyledBackground?: boolean;
 }) {
   return (
-    <main data-mode="light" className="flex min-h-svh items-center justify-center bg-kumo-base px-6 py-12 text-kumo-default">
+    <main data-mode="light" className={`flex ${unstyledBackground ? "min-h-[calc(100svh-4rem)]" : "min-h-svh bg-kumo-base"} items-center justify-center px-6 py-12 text-kumo-default`}>
       <div className="grid w-full max-w-[400px] gap-7">
         <header className="grid gap-2">
           <h1 className="text-3xl font-semibold text-kumo-strong">{title}</h1>

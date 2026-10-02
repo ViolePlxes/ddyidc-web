@@ -1,5 +1,6 @@
 import { Button, Link, Surface } from "@cloudflare/kumo";
 import { CloudIcon, ShoppingCartIcon } from "@phosphor-icons/react";
+import { useLocation } from "react-router-dom";
 import { useAuthStore } from "../shared/stores/auth";
 import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
@@ -8,12 +9,13 @@ import { useGroupBuyAvailability } from "../shared/router/GroupBuyGate";
 import { useMarketplaceAvailability } from "../shared/router/MarketplaceGate";
 
 export function PortalLayout() {
+  const mobileBinding = useLocation().pathname === "/bind-mobile";
   const user = useAuthStore((state) => state.user);
   const layoutWidth = useLayoutWidth(user);
   const groupBuy = useGroupBuyAvailability("public");
   const marketplace = useMarketplaceAvailability("public");
   return (
-    <div className="min-h-svh bg-kumo-recessed">
+    <div data-mobile-binding={mobileBinding || undefined} data-mode={mobileBinding ? "light" : undefined} className={mobileBinding ? "min-h-svh" : "min-h-svh bg-kumo-recessed"}>
       <Surface className="border-b border-kumo-line">
         <div className={`${layoutWidth.containerClassName} flex min-h-16 flex-wrap items-center justify-between gap-4 px-4 py-2 md:px-6`}>
           <Link
@@ -43,7 +45,7 @@ export function PortalLayout() {
           </nav>
         </div>
       </Surface>
-      <main data-layout-width={layoutWidth.width} className={`${layoutWidth.containerClassName} p-4 md:p-6 lg:p-8`}>
+      <main data-layout-width={layoutWidth.width} className={mobileBinding ? undefined : `${layoutWidth.containerClassName} p-4 md:p-6 lg:p-8`}>
         <RouteOutlet className="grid gap-6" />
       </main>
     </div>

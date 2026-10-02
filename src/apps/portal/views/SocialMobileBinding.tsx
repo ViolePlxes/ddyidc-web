@@ -64,7 +64,7 @@ export function SocialInitialMobileForm({ pendingRegistration = false, onBack }:
     if (password !== confirmation) { setValidation("两次密码输入不一致"); return; }
     save.mutate();
   };
-  return <AuthPageShell title={pendingRegistration ? "辅助注册新账号" : "绑定手机号"} description="验证手机号并设置登录密码后进入用户中心。">
+  return <AuthPageShell unstyledBackground={!pendingRegistration} title={pendingRegistration ? "辅助注册新账号" : "绑定手机号"} description="验证手机号并设置登录密码后进入用户中心。">
       {save.isSuccess ? <><Banner title="手机号已绑定" /><Link to="/console">进入用户中心</Link></> : <form className="grid gap-4" onSubmit={submit}>
         <PhoneCountrySelect value={country} onChange={(value, code) => { setCountry(value); setCountryCode(code); }} />
         <Input label="手机号" value={mobile} onChange={e => setMobile(e.target.value)} inputMode="tel" autoComplete="tel-national" required />
