@@ -2,12 +2,16 @@ import { Button, DropdownMenu, Empty, LayerCard, Link, Select, Text } from "@clo
 import { ArrowClockwiseIcon, CaretRightIcon, CubeIcon, DotsThreeIcon, MagnifyingGlassIcon, TicketIcon, WalletIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { consoleApi } from "../../../shared/api/console";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
 import { userTicketApi } from "../../../shared/api/tickets";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageState } from "../../../shared/components/PageState";
 import { MiniTrend } from "../../../shared/components/TrendChart";
+import { getLoginDevices } from "../../../shared/api/auth";
+import { certificationApi } from "../../../shared/api/certification";
+import { useAuthStore } from "../../../shared/stores/auth";
 
 function RecentRow({ icon, title, category, href, description }: { icon: ReactNode; title: string; category: string; href: string; description?: string }) {
   return <Link href={href} variant="plain" title={description || `${category} / ${title}`}
@@ -35,6 +39,13 @@ function RecentHeading({ title, href }: { title: string; href?: string }) {
 }
 
 export function ConsoleHome() {
+  const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
+  const certification = useQuery({ queryKey: ["console", "home-certification", user?.id], queryFn: certificationApi.info, enabled: !!user, gcTime: 0 });
+  const devices = useQuery({ queryKey: ["console", "home-devices", user?.id], queryFn: getLoginDevices, enabled: !!user, gcTime: 0 });
+  const certifiedName = certification.data?.status === 2 ? certification.data.record?.name.trim() : "";
+  const displayName = certifiedName && !certifiedName.startsWith("*") ? Array.from(certifiedName)[0] : user?.account || user?.name || "用户";
+  const loginIp = devices.data?.find(device => device.current)?.ip;
   const [days, setDays] = useState("7");
   const overview = useQuery({ queryKey: ["console", "overview", days], queryFn: () => getConsoleOverview(Number(days)), refetchInterval: 60_000 });
   const services = useQuery({ queryKey: ["console", "recent-services"], queryFn: () => consoleApi.userInstances({ page: 1, pageSize: 5 }) });
@@ -47,9 +58,12 @@ export function ConsoleHome() {
   ];
   return <div className="mx-auto grid w-full max-w-5xl gap-10 pb-8">
     <section className="grid gap-8 pt-6 md:pt-10">
-      <div className="text-center"><Text as="h1" variant="heading1">今天，从这里开始。</Text></div>
-      <Button variant="secondary" className="h-12 w-full justify-start gap-3" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
-        <span className="flex-1 text-left">搜索</span><kbd>Ctrl K</kbd>
+      <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2">
+        <Text as="h1" variant="heading" size="lg">{displayName}，欢迎您</Text>
+        <span className="text-sm text-kumo-subtle">当前登录 IP：{loginIp || (devices.isPending ? "读取中…" : "暂无记录")}</span>
+      </div>
+      <Button variant="outline" className="h-12 w-full justify-start gap-3 hover:bg-kumo-tint" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
+        <span className="flex-1 text-left text-kumo-subtle">搜索页面、产品和服务…</span><kbd className="text-xs text-kumo-subtle">Ctrl K</kbd>
       </Button>
       <div className="grid gap-8 md:grid-cols-3">
         <section aria-label="快捷入口" className="min-w-0">
@@ -82,14 +96,18 @@ export function ConsoleHome() {
       </div>
       <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {metrics.map(m => <LayerCard key={m.key} className="grid min-w-0 gap-3 p-5 shadow-none">
-            <div className="flex items-center justify-between"><Text>{m.title}</Text><DropdownMenu>
-              <DropdownMenu.Trigger render={<Button variant="ghost" shape="square" aria-label={`${m.title}选项`} icon={<DotsThreeIcon />} />} />
-              <DropdownMenu.Content><DropdownMenu.LinkItem href={m.href}>查看明细</DropdownMenu.LinkItem><DropdownMenu.Item onClick={() => void overview.refetch()}>刷新数据</DropdownMenu.Item></DropdownMenu.Content>
-            </DropdownMenu></div>
-            <Text as="p" variant="heading1">{m.value}</Text>
+          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 gap-3 p-5 shadow-none hover:ring-kumo-focus/25 focus-within:ring-kumo-focus/25 motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:hover:-translate-y-1">
+            <Link href={m.href} variant="plain" aria-label={`查看${m.title}`} className="absolute inset-0 z-10" />
+            <div className="flex items-center justify-between gap-3"><Text>{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
+            <Text as="p" variant="heading" size="lg">{m.value}</Text>
+            {m.key === "balance" ? <div className="relative z-20 flex flex-wrap gap-2">
+              <Button variant="primary" size="sm" onClick={() => navigate("/wallet/recharge")}>充值</Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate("/wallet/consume-records")}>明细</Button>
+            </div> : null}
             <span className="text-sm text-kumo-subtle">{m.hint}</span>
-            <MiniTrend title={m.hint} money={m.key === "balance"} values={(overview.data?.series[m.key] ?? []).map(p => [p.time, p.value])} />
+            <div className="relative z-20 cursor-pointer" onClick={() => navigate(m.href)}>
+              <MiniTrend title={m.hint} money={m.key === "balance"} values={(overview.data?.series[m.key] ?? []).map(p => [p.time, p.value])} />
+            </div>
           </LayerCard>)}
         </div>
       </PageState>

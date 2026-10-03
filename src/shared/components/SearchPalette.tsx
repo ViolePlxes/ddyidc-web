@@ -69,7 +69,7 @@ export function SearchPalette({
             <Sidebar.MenuButton
               icon={MagnifyingGlassIcon}
               tooltip="快速搜索"
-              className="mb-3 ring ring-kumo-line transition-[margin] duration-(--sidebar-animation-duration) group-data-[state=collapsed]/sidebar:mb-0 group-data-[state=collapsed]/sidebar:ring-transparent"
+              className={`mb-3 ring ring-kumo-line transition-[margin] duration-(--sidebar-animation-duration) group-data-[state=collapsed]/sidebar:mb-0 group-data-[state=collapsed]/sidebar:ring-transparent ${customer ? "hover:ring-kumo-focus/25 focus-visible:ring-kumo-focus/25" : ""}`}
               onClick={() => setOpen(true)}
             >
               快速搜索…
@@ -78,8 +78,8 @@ export function SearchPalette({
         </Sidebar.Group>
       ) : (
         <Button
-          variant="secondary"
-          className="max-w-xl flex-1 justify-start text-kumo-subtle"
+          variant={customer ? "outline" : "secondary"}
+          className={`max-w-xl flex-1 justify-start text-kumo-subtle ${customer ? "hover:bg-kumo-tint" : ""}`}
           icon={<MagnifyingGlassIcon />}
           onClick={() => setOpen(true)}
         >
