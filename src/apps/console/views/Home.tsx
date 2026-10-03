@@ -59,7 +59,9 @@ export function ConsoleHome() {
   return <div className="mx-auto grid w-full max-w-5xl gap-10 pb-8">
     <section className="grid gap-8 pt-6 md:pt-10">
       <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2">
+        {certification.data?.status === 2 && user ? <span className="text-sm text-kumo-subtle">ID：{user.id}</span> : null}
         <Text as="h1" variant="heading" size="lg">{displayName}，欢迎您</Text>
+        {certification.data && certification.data.status !== 2 ? <Button variant="outline" size="sm" onClick={() => navigate("/console/certification")}>去实名认证<CaretRightIcon aria-hidden size={12} /></Button> : null}
         <span className="text-sm text-kumo-subtle">当前登录 IP：{loginIp || (devices.isPending ? "读取中…" : "暂无记录")}</span>
       </div>
       <Button variant="outline" className="h-12 w-full justify-start gap-3 hover:bg-kumo-tint" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
