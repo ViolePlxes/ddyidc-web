@@ -10,6 +10,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
+import { HistoricalRecords } from "./HistoricalRecords";
 
 export function Finance() {
   const balance = useQuery({ queryKey: ["console", "overview", "7"], queryFn: () => getConsoleOverview(7) });
@@ -90,6 +91,8 @@ export function Finance() {
           </div>
         </PageState>
       </section>
+      <HistoricalRecords kind="balance" />
+      <HistoricalRecords kind="payment" />
     </>
   );
 }

@@ -8,6 +8,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge } from "../../../shared/components/StatusBadge";
 import { useOrders } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, orderStatusCode } from "../../../shared/utils/format";
+import { HistoricalRecords } from "./HistoricalRecords";
 
 const statusValues: Record<string, number | undefined> = {
   all: undefined,
@@ -81,6 +82,7 @@ export function OrderList() {
           ) : null}
         </div>
       </PageState>
+      <HistoricalRecords kind="orders" />
     </>
   );
 }
