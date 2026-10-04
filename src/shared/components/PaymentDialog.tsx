@@ -1,5 +1,5 @@
 import { Banner, Button, Dialog, LayerCard } from "@cloudflare/kumo";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
@@ -53,6 +53,20 @@ export function PaymentDialog({
   onPaid,
 }: PaymentDialogProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const queryClient = useQueryClient();
+  const [balancePaid, setBalancePaid] = useState(false);
+  const balancePayment = useMutation({
+    mutationFn: () => paymentApi.payBalance(businessId),
+    onSuccess: async () => {
+      setBalancePaid(true);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["console", "overview"] }),
+        queryClient.invalidateQueries({ queryKey: ["orders"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance"] }),
+      ]);
+      await onPaid?.();
+    },
+  });
   const [checkout, setCheckout] = useState<PaymentCheckout>();
   const [qrImage, setQrImage] = useState<string>();
   const [qrError, setQrError] = useState(false);
@@ -154,11 +168,11 @@ export function PaymentDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger render={<Button disabled={disabled}>{triggerLabel}</Button>} />
+      <Dialog.Trigger render={<Button disabled={disabled}>{businessType === "order" && triggerLabel === "在线支付" ? "支付订单" : triggerLabel}</Button>} />
       <Dialog className="grid gap-5 p-6">
         <div className="flex justify-between gap-4">
           <div className="grid gap-2">
-            <Dialog.Title className="text-xl font-semibold">在线支付</Dialog.Title>
+            <Dialog.Title className="text-xl font-semibold">{businessType === "order" ? "支付订单" : "在线支付"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               应付 {formatMoney(amountCents)}。到账状态只以服务端验签结果为准。
             </Dialog.Description>
@@ -166,10 +180,10 @@ export function PaymentDialog({
           <Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} />
         </div>
 
-        {!checkout ? (
+        {!checkout && !balancePaid ? (
           <LayerCard className="shadow-none grid gap-2 p-5">
             <strong className="text-kumo-strong">选择支付方式</strong>
-            <span className="text-sm text-kumo-subtle">支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。</span>
+            <span className="text-sm text-kumo-subtle">{businessType === "order" ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
           </LayerCard>
         ) : null}
         {checkout?.wechat && currentState === "pending" && !expired ? (
@@ -193,6 +207,8 @@ export function PaymentDialog({
           : null}
         {pollingStopped ? <Banner variant="alert" title="仍在等待结果" description="尚未收到支付异步通知，可刷新状态或稍后在订单中查看。" /> : null}
         {create.error ? <Banner variant="error" title="创建支付失败" description={getApiMessage(create.error)} /> : null}
+        {balancePayment.error ? <Banner variant="error" title="余额支付失败" description={getApiMessage(balancePayment.error)} /> : null}
+        {balancePaid ? <Banner title="余额支付成功" description="订单已支付，后续服务由系统处理。" /> : null}
         {status.error ? <Banner variant="error" title="查询支付状态失败" description={getApiMessage(status.error)} /> : null}
         {close.error ? <Banner variant="error" title="关闭支付单失败" description={getApiMessage(close.error)} /> : null}
 
@@ -201,8 +217,8 @@ export function PaymentDialog({
             ? <Button variant="secondary" loading={close.isPending} onClick={() => close.mutate()}>关闭支付单</Button>
             : null}
           {pollingStopped ? <Button variant="secondary" loading={status.isFetching} onClick={() => void status.refetch()}>刷新支付状态</Button> : null}
-          {!checkout ? <><Button disabled={create.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
-          <Dialog.Close render={<Button variant="secondary">{currentState === "paid" ? "完成" : "稍后处理"}</Button>} />
+          {!checkout && !balancePaid ? <>{businessType === "order" ? <Button variant="primary" disabled={create.isPending} loading={balancePayment.isPending} onClick={() => balancePayment.mutate()}>确认余额支付 {formatMoney(amountCents)}</Button> : null}<Button disabled={create.isPending || balancePayment.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button disabled={balancePayment.isPending} loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
+          <Dialog.Close render={<Button variant="secondary">{currentState === "paid" || balancePaid ? "完成" : "稍后处理"}</Button>} />
         </div>
       </Dialog>
     </Dialog.Root>

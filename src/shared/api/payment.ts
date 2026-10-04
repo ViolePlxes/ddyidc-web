@@ -28,6 +28,7 @@ function unwrap<T>(request: Promise<AxiosResponse<ApiEnvelope<T>>>) {
 }
 
 export const paymentApi = {
+  payBalance: (orderId: string) => unwrap(userRequest.post<ApiEnvelope<{ id: string; status: number }>>(`/orders/${orderId}/pay`, { method: "balance" })),
   create: (businessType: PaymentBusinessType, businessId: string, channel: PaymentChannel, mode: AlipayCheckoutMode) =>
     businessType === "marketplace" ? unwrap(userRequest.post<ApiEnvelope<PaymentCheckout>>(`/marketplace/orders/${businessId}/pay`,{method:channel,mode})) : businessType === "order"
       ? unwrap(userRequest.post<ApiEnvelope<PaymentCheckout>>(`/payment/order/${businessId}/create`, { channel, mode }))

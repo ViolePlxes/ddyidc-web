@@ -13,7 +13,7 @@ import { cycleLabels, formatMoney, orderStatusCode } from "../../../shared/utils
 
 const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付" };
 const orderMessages: Record<number, { title: string; description: string }> = {
-  1: { title: "等待在线支付", description: "支持支付宝收银台与微信扫码支付，到账状态以服务端确认结果为准。" },
+  1: { title: "等待支付", description: "支持账户余额、支付宝与微信支付，支付状态以服务端确认结果为准。" },
   2: { title: "订单已支付", description: "服务正在处理交付，请在产品列表查看开通结果。" },
   3: { title: "订单已取消", description: "本订单不会继续交付。如取消前已打开收银台，请勿继续付款；已到账款项将进入核对流程。" },
   4: { title: "订单已退款", description: "退款状态已由服务端确认，到账情况请查看原付款渠道。" },
