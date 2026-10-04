@@ -14,11 +14,13 @@ export function InstanceCredentials({instance,customerId}:{instance:InstanceDeta
  useEffect(()=>{
   let active=true;
   setState(undefined);
+	if(instance.readOnly){setState({identity,password:''});return()=>{active=false};}
   void instanceManagementApi(instance.id,customerId).credentials().then(result=>{
    if(active)setState({identity,password:result.password});
   }).catch(error=>{if(active)setState({identity,error:getApiMessage(error)})});
   return ()=>{active=false};
  },[identity,instance,customerId,retry]);
+	if(instance.readOnly)return <span>当前查询模式暂不显示密码</span>;
  if(state?.identity!==identity)return <span role="status">正在读取密码…</span>;
  if(state.error)return <div className="grid gap-2"><p role="alert">{state.error}</p><Button size="sm" variant="secondary" onClick={()=>setRetry(x=>x+1)}>重新读取密码</Button></div>;
  return state.password ? <SensitiveInput key={`${identity}:${retry}`} aria-label="实例密码" value={state.password} readOnly/> : <span>服务未提供密码，请通过重置密码设置。</span>;
@@ -39,7 +41,7 @@ export function InstanceRemark({instance,customerId}:{instance:InstanceDetail;cu
    void client.invalidateQueries({queryKey:['admin','customer-records',customerId,'products'],refetchType:'none'});
   }
  }});
- if(!editing)return <div className="flex flex-wrap items-center gap-2"><span className="min-w-0 break-words whitespace-pre-wrap">{savedRemark||'未填写备注'}</span><Button size="sm" variant="secondary" aria-label="编辑实例备注" onClick={()=>{setValue(savedRemark);save.reset();setEditing(true)}}>编辑</Button></div>;
+ if(!editing)return <div className="flex flex-wrap items-center gap-2"><span className="min-w-0 break-words whitespace-pre-wrap">{savedRemark||'未填写备注'}</span><Button size="sm" variant="secondary" disabled={instance.readOnly} aria-label="编辑实例备注" onClick={()=>{setValue(savedRemark);save.reset();setEditing(true)}}>编辑</Button></div>;
  return <div className="grid gap-2"><Textarea aria-label="实例备注" rows={2} maxLength={1000} value={value} disabled={save.isPending} onChange={e=>setValue(e.target.value)}/><span className="text-xs text-kumo-subtle">{Array.from(value).length}/1000</span>{save.error&&<p role="alert">{getApiMessage(save.error)}</p>}<div className="flex gap-2"><Button size="sm" loading={save.isPending} onClick={()=>save.mutate(value)}>保存备注</Button><Button size="sm" variant="secondary" disabled={save.isPending} onClick={()=>setEditing(false)}>取消</Button></div></div>;
 }
 
@@ -63,6 +65,7 @@ export function InstanceRenewal({instance,customerId}:{instance:InstanceDetail;c
  const create=useMutation({mutationFn:()=>api.renew(cycle)});const refresh=async()=>{await client.invalidateQueries({queryKey:customerId?['admin','customer-instance',customerId,instance.id]:['instances',instance.id]})};
  const pay=useMutation({mutationFn:()=>api.pay(create.data!.orderId),onSettled:refresh});
  const auto=useMutation({mutationFn:api.auto,onSuccess:refresh});
+ if(instance.readOnly)return <Banner variant="secondary" title="当前仅开放信息查询，续费与自动续费暂未开放"/>;
  if(instance.status===6||instance.powerStatus==='deleted')return <Banner title="实例已删除，不支持续费"/>;
  return <div className="grid gap-3"><Switch label="自动余额续费" checked={instance.autoRenew||false} disabled={auto.isPending} onCheckedChange={v=>auto.mutate(v)}/><p className="text-xs text-kumo-subtle">开启后，到期前 3 天按当前周期创建订单，余额充足时自动支付续费。余额不足不扣款。</p>{auto.error&&<Banner variant="error" title={getApiMessage(auto.error)}/>}
  <Dialog.Root open={open} onOpenChange={v=>{if(!create.isPending&&!pay.isPending)setOpen(v)}}><Button variant="secondary" size="sm" onClick={()=>{setOpen(true);pay.reset();create.reset();setCycle('')}}>续费</Button><Dialog className="grid gap-4 p-6"><Dialog.Title>实例续费</Dialog.Title><Dialog.Description>报价来自当前服务，创建订单后可选择支付方式。请核对周期和金额。</Dialog.Description>

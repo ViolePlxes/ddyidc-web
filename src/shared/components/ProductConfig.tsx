@@ -213,9 +213,9 @@ export function ProductConfig({
 }) {
   const navigate = useNavigate();
   const options = useMemo(() => orderPage?.configOptions ?? product.configOptions ?? [], [orderPage, product.configOptions]);
-  const cycles = useMemo(() => orderPage?.cycles?.some((item) => item.billingcycle in cycleMonths)
+  const cycles = useMemo(() => !product.readOnly && orderPage?.cycles?.some((item) => item.billingcycle in cycleMonths)
     ? orderPage.cycles.filter((item) => item.billingcycle in cycleMonths)
-    : [{ billingcycle: product.cycle || "monthly", label: cycleLabels[product.cycle] ?? product.cycle ?? "月付", price: product.price, setupFee: 0 }], [orderPage, product.cycle, product.price]);
+    : [{ billingcycle: product.cycle || "monthly", label: cycleLabels[product.cycle] ?? product.cycle ?? "月付", price: product.price, setupFee: 0 }], [orderPage, product.cycle, product.price, product.readOnly]);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [selectedSpecId, setSelectedSpecId] = useState(product.specs[0]?.id ?? "");
   const [cycle, setCycle] = useState(cycles[0]?.billingcycle ?? "monthly");
@@ -284,6 +284,7 @@ export function ProductConfig({
     };
   }), [options, selected]);
   const optionPrice = options.reduce((sum, option) => {
+	if (product.readOnly) return 0;
     const value = selected[option.id] ?? initialValue(option);
     if (selectedSpec?.priceMode === "fixed" && (option.field === "cpu" || option.field === "memory")) return sum;
     return sum + (option.optionType === "qty" ? quantityOptionPrice(option, value) : (option.options.find((item) => item.id === value)?.price ?? 0));
@@ -346,8 +347,8 @@ export function ProductConfig({
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
           <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
-      <Button disabled={billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
+      <Button disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
     </LayerCard>
   );
   return (
