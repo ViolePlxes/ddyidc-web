@@ -128,7 +128,7 @@ function IntegratedProductCatalog() {
   const productsQuery = useProducts();
   const products = productsQuery.data?.items ?? [];
   const groups = productsQuery.data?.groups ?? [];
-  const [selectedGroup, setSelectedGroup] = useState("all");
+  const [selectedGroupId, setSelectedGroup] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 10;
   const [selectedSecondaryId, setSelectedSecondaryId] = useState("");
@@ -136,6 +136,7 @@ function IntegratedProductCatalog() {
   const [billTarget, setBillTarget] = useState<HTMLDivElement | null>(null);
   const [stepsTarget, setStepsTarget] = useState<HTMLDivElement | null>(null);
   const primaryGroups = useMemo(() => buildPrimaryGroups(products, groups), [groups, products]);
+  const selectedGroup = primaryGroups.has(selectedGroupId) ? selectedGroupId : (primaryGroups.keys().next().value ?? "all");
   const children = secondaryGroups(groups, selectedGroup);
   const secondary = children.find((group) => group.id === selectedSecondaryId) ?? children[0];
   const visibleProducts = secondary ? products.filter((product) => belongsToGroup(product, secondary)) : [];
@@ -170,14 +171,15 @@ function IntegratedProductCatalog() {
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
                 <strong>一级分类</strong>
                 <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
-                  tabs={[{ value: "all", label: "全部" }, ...Array.from(primaryGroups, ([value, label]) => ({ value, label }))]}
+                  tabs={Array.from(primaryGroups, ([value, label]) => ({ value, label }))}
                   value={selectedGroup} onValueChange={(value) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); }}
                 /></div>
               </div>
-              <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
+              <div className="grid min-w-0 gap-3">
                 <strong>二级分类</strong>
-                <div className="min-w-0 overflow-x-auto">{children.length ? <Tabs variant="segmented"
-                  tabs={children.map((group) => ({ value: group.id, label: selectedGroup === "all" ? `${primaryGroups.get(group.parentId)} / ${group.name}` : group.name }))}
+                <div className="min-w-0">{children.length ? <Tabs variant="segmented"
+                  listClassName="h-auto flex-wrap gap-y-1 overflow-x-visible overflow-y-visible"
+                  tabs={children.map((group) => ({ value: group.id, label: group.name, className: "min-h-8 max-w-full whitespace-normal break-words text-left" }))}
                   value={secondary?.id ?? ""} onValueChange={(value) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); }}
                 /> : <span>当前一级分类暂无二级分类，请切换其他分类。</span>}</div>
               </div>
