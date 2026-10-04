@@ -286,13 +286,13 @@ export function ProductConfig({
   const optionPrice = options.reduce((sum, option) => {
 	if (product.readOnly) return 0;
     const value = selected[option.id] ?? initialValue(option);
-    if (selectedSpec?.priceMode === "fixed" && (option.field === "cpu" || option.field === "memory")) return sum;
+    if (!isUpstreamProduct(product) && selectedSpec?.priceMode === "fixed" && (option.field === "cpu" || option.field === "memory")) return sum;
     return sum + (option.optionType === "qty" ? quantityOptionPrice(option, value) : (option.options.find((item) => item.id === value)?.price ?? 0));
   }, 0);
   const monthlyReference = cycles.find((item) => item.billingcycle === "monthly")?.price ?? product.price;
   const cycleDiscount = selectedCycle && monthlyReference > 0 ? selectedCycle.price / (monthlyReference * durationMonth) : 1;
   const monthlySpecPrice = selectedSpec?.price ?? product.price;
-  const periodBase = (!selectedSpec || selectedSpec.priceMode === "upstream") && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
+  const periodBase = (isUpstreamProduct(product) || !selectedSpec || selectedSpec.priceMode === "upstream") && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
   const unitPrice = periodBase + optionPrice * durationMonth + (selectedCycle?.setupFee ?? 0);
   const total = unitPrice * quantity;
   const nextRenewal = (periodBase + optionPrice * durationMonth) * quantity;
