@@ -26,6 +26,8 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
       >
         {product ? (
           <div className="grid gap-4">
+			{product.readOnly ? <Banner variant="secondary" title={product.infoSource === "upstream" ? "已获取实时商品信息" : "当前显示已保存的商品信息"} description="当前仅开放规格查询，购买暂未开放。" /> : null}
+			{product.warning ? <Banner variant="alert" title="商品信息提示" description={product.warning} /> : null}
             {product.supplierId !== "0" && orderPageQuery.error ? (
               <Banner
                 variant="error"

@@ -237,6 +237,7 @@ export function InstanceConsole() {
           { value: "settings", label: "设置" }, { value: "logs", label: "日志" }, { value: "billing", label: "财务" },
         ]} />
         {instance.warning ? <Banner variant="alert" title="实例信息提示" description={instance.warning} /> : null}
+		{instance.readOnly ? <Banner variant="secondary" title={instance.infoSource === "upstream" ? "已获取实时实例信息" : "当前显示已保存的实例信息"} description="当前仅开放信息查询，机器操作和自动任务尚未开启。" /> : null}
         {notice ? <Banner title="操作结果" description={notice} /> : null}
         {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
         {activeTab === "overview" ? <div className="grid items-start gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">

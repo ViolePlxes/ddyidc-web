@@ -1,4 +1,4 @@
-import { Badge, Button, LayerCard, Link, Surface } from "@cloudflare/kumo";
+import { Badge, Banner, Button, LayerCard, Link, Surface } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { Route, Routes, useParams } from "react-router-dom";
 import type { ProductDetail, ProductSummary } from "../../shared/api/console";
@@ -77,6 +77,9 @@ function Product() {
     <PageHeader title={product?.name || "产品介绍"} description="产品选购与配置在控制台完成。" />
     <PageState loading={query.isLoading} error={query.error?.message} empty={query.isSuccess && !product} emptyTitle="产品不存在或已下架">
       {product && <LayerCard className="grid gap-5 p-6">
+		{product.readOnly && <Banner variant="secondary" title={product.infoSource === "upstream" ? "已获取实时商品信息" : "当前显示已保存的商品信息"} description="当前仅开放规格查询，购买暂未开放。" />}
+		{product.warning && <Banner variant="alert" title="商品信息提示" description={product.warning} />}
+		{Object.entries(product.config ?? {}).length > 0 && <dl className="grid gap-2">{Object.entries(product.config ?? {}).map(([name,value]) => <div key={name} className="flex flex-wrap gap-2"><dt>{name}</dt><dd>{value}</dd></div>)}</dl>}
         <p className="whitespace-pre-wrap text-kumo-subtle">{textDescription(product)}</p>
         <p className="text-lg text-kumo-strong">¥{product.price.toFixed(2)} 起 / {cycleLabels[product.cycle] || product.cycle}</p>
         {product.specs?.length > 0 && <div className="grid gap-3">{product.specs.map(spec => <p key={spec.id} className="text-kumo-subtle">{spec.name} · {spec.vcpu} vCPU · {spec.memory}</p>)}</div>}

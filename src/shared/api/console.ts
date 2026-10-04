@@ -86,6 +86,9 @@ export interface CatalogProduct extends ProductSummary {
 }
 
 export interface ProductDetail extends CatalogProduct {
+	infoSource?: "local" | "snapshot" | "upstream";
+	warning?: string;
+	readOnly?: boolean;
   catalogSpec?: ProductSpec;
   upstreamStock?: string | number | null;
   config: Record<string, string>;
@@ -318,6 +321,9 @@ export interface InstanceEvent {
 }
 
 export interface InstanceDetail extends InstanceListItem {
+	infoSource?: "snapshot" | "upstream";
+	queriedAt?: string;
+	readOnly?: boolean;
  username?:string; port?:string; portIsDefault?:boolean; remark?:string; upstreamOrderId?:string; upstreamOrderNo?:string; invoiceId?:string; firstPayment?:string; renewalAmount?:string; autoRenew?:boolean;
   orderId: string;
   orderNo?: string;
