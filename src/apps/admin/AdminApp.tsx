@@ -53,6 +53,7 @@ const AdminCustomers = lazy(() =>
     .adminCustomers()
     .then((module) => ({ default: module.AdminCustomers })),
 );
+const AdminInstances = lazy(() => import('./views/Instances').then(module => ({default: module.AdminInstances})));
 const Certifications = lazy(() => routeModules.adminCertifications().then(module => ({default: module.Certifications})));
 const AdminInstanceDetail = lazy(() => routeModules.adminInstanceDetail().then(module => ({default: module.CustomerInstance})));
 const AdminInstanceVnc = lazy(() => routeModules.adminInstanceDetail().then(module => ({default: module.CustomerInstanceVnc})));
@@ -224,6 +225,7 @@ const adminGroups: NavigationGroup[] = [
       { label: "控制台", href: "/admin", icon: HouseIcon },
       { label: "订单管理", href: "/admin/orders", icon: ReceiptIcon },
       { label: "客户管理", href: "/admin/customers", icon: UsersIcon },
+      { label: "产品列表", href: "/admin/instances", icon: PackageIcon },
     ],
   },
   {
@@ -496,6 +498,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/admin/instances" element={<LazyRoute><AdminInstances /></LazyRoute>} />
             <Route path="/admin/customers/:customerId/instances/:instanceId" element={<LazyRoute><AdminInstanceDetail /></LazyRoute>} />
             <Route path="/admin/customers/:customerId/instances/:instanceId/vnc" element={<LazyRoute><AdminInstanceVnc /></LazyRoute>} />
             <Route path="/admin/video-bindings" element={<LazyRoute><VideoBindings admin /></LazyRoute>} />

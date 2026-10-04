@@ -21,7 +21,7 @@ export function CustomerInstanceVnc(){
  return token?<VncConsole customerId={customerId} instanceId={instanceId} token={token}/>:<Banner variant="error" title="远程会话无效，请返回产品详情重新发起连接"/>;
 }
 export function CustomerInstance(){
- const {customerId='',instanceId=''}=useParams();const navigate=useNavigate();const client=useQueryClient();
+ const {customerId='',instanceId=''}=useParams();const navigate=useNavigate();const client=useQueryClient();const [search]=useSearchParams();
  const api=useMemo(()=>adminInstanceApi(customerId,instanceId),[customerId,instanceId]);
  const key=['admin','customer-instance',customerId,instanceId];
  const query=useQuery({queryKey:key,queryFn:api.detail,retry:false});
@@ -32,7 +32,7 @@ export function CustomerInstance(){
    for(let page=2;rows.length<first.total;page++){const next=await customerDetailApi.records(customerId,'products',page,false);if(!next.items?.length)break;rows.push(...next.items)}return rows;
  }});
  const monitor=useQuery({queryKey:['admin-instance-monitor',customerId,instanceId],queryFn:api.monitor,staleTime:Infinity,refetchOnMount:"always",refetchOnWindowFocus:false,refetchOnReconnect:false,refetchInterval:false,enabled:!!query.data?.capabilities.traffic,retry:false});
- const [tab,setTab]=useState('overview');const [password,setPassword]=useState('');const [notice,setNotice]=useState('');
+ const [tab,setTab]=useState(search.get('tab')==='logs'?'logs':'overview');const [password,setPassword]=useState('');const [notice,setNotice]=useState('');
  const busy=useRef(false);const remoteWindow=useRef<Window|null>(null);
  const action=useMutation({mutationFn:api.action,onSuccess:async(result,input)=>{
    if(input.action!=="remote")live.afterAction(input.action);
@@ -52,7 +52,8 @@ export function CustomerInstance(){
  const reset=<ActionDialog label="重置密码" title="重置实例密码" description="密码至少 12 位，包含大小写字母和数字。此操作会改变实例登录凭据。" disabled={!caps?.resetPassword} loading={action.isPending} onConfirm={()=>submit({action:'reset_password',password})}><Input label="新密码" type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/></ActionDialog>;
  const reinstall=<ReinstallDialog key={instanceId} instanceId={instanceId} currentPort={query.data?.port} scope={`admin-${customerId}`} loadImages={api.images} disabled={!caps?.reinstall} loading={action.isPending} onConfirm={submit}/>;
  const config=(fields:string[],names:string[]=[])=>item?configValue(item,fields,names):'—';
- const listPath=`/admin/customers/${customerId}/products`;
+ const requestedReturn=search.get('returnTo')||'';
+ const listPath=/^\/admin\/instances(?:\?[^#]*)?$/.test(requestedReturn)?requestedReturn:`/admin/customers/${customerId}/products`;
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href="/admin/customers">客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`/admin/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
   <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`/admin/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
