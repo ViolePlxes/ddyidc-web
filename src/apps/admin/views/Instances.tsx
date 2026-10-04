@@ -11,9 +11,9 @@ import { cycleLabels } from '../../../shared/utils/format';
 const views=[['all','全部'],['running','运行中'],['suspended','暂停'],['due','即将到期'],['expired','已到期'],['abnormal','异常'],['terminated','已终止']] as const;
 const statusNames:Record<number,string>={1:'待开通',2:'开通中',3:'运行中',4:'已停机',5:'已过期',6:'已终止'};
 const powerNames:Record<string,string>={running:'开机',stopped:'关机',suspended:'暂停',fault:'异常',deleted:'已删除',expired:'到期',starting:'开机中',stopping:'关机中',rebooting:'重启中',reinstalling:'重装中',operating:'处理中'};
-const columns=[['identity','实例 ID / 编号'],['product','商品 / 标识'],['customer','客户'],['ip','IP 地址'],['status','状态'],['expires','到期时间'],['amount','续费金额 / 周期'],['remark','用户备注'],['supplier','供应商'],['created','开通 / 创建时间'],['order','订单号'],['resource','资源 ID'],['synced','最后同步'],['auto','自动续费'],['system','配置 / 机房 / 系统']] as const;
+const columns=[['identity','实例 ID / 编号'],['product','商品 / 标识'],['customer','客户'],['realName','真实姓名 / 用户 ID'],['ip','IP 地址'],['status','状态'],['expires','到期时间'],['amount','续费金额 / 周期'],['supplier','供应商'],['created','开通 / 创建时间'],['order','订单号'],['resource','资源 ID'],['synced','最后同步'],['auto','自动续费'],['system','配置 / 机房 / 系统']] as const;
 type Column=typeof columns[number][0];
-const defaults:Column[]=['identity','product','customer','ip','status','expires','amount','remark','supplier'];
+const defaults:Column[]=['identity','product','customer','realName','ip','status','expires','amount','supplier'];
 function stored<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}}
 function date(value:string|null|undefined){return value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'—'}
 function asLocal(value:string){if(!value)return '';const d=new Date(value);if(Number.isNaN(d.getTime()))return '';const offset=d.getTimezoneOffset()*60000;return new Date(d.getTime()-offset).toISOString().slice(0,16)}
@@ -22,7 +22,7 @@ export function AdminInstances(){
  const user=useAdminAuthStore(s=>s.user);const key=`ddyidc:admin-instances:${user?.id||''}`;
  const [search,setSearch]=useSearchParams();const client=useQueryClient();
  const [input,setInput]=useState(search.get('search')||'');const [advanced,setAdvanced]=useState(false);
- const [visible,setVisible]=useState<Column[]>(()=>{const saved=stored<unknown>(`${key}:columns`,defaults);return Array.isArray(saved)?[...new Set<Column>(['identity',...saved.filter((c):c is Column=>columns.some(([id])=>id===c))])]:defaults});
+ const [visible,setVisible]=useState<Column[]>(()=>{const saved=stored<unknown>(`${key}:columns`,defaults);return Array.isArray(saved)?[...new Set<Column>(['identity',...saved.map(c=>c==='remark'?'realName':c).filter((c):c is Column=>columns.some(([id])=>id===c))])]:defaults});
  const [selected,setSelected]=useState<string[]>([]);const [editing,setEditing]=useState<ManagedInstance>();const [remark,setRemark]=useState('');const [confirmSync,setConfirmSync]=useState(false);const [taskId,setTaskId]=useState('');
  const [syncRequest,setSyncRequest]=useState('');const [notice,setNotice]=useState('');
  const params=Object.fromEntries(search);const page=Math.max(1,Number(search.get('page')||1));const size=Math.min(100,Math.max(1,Number(search.get('pageSize')||20)));const view=search.get('view')||'all';
@@ -45,14 +45,14 @@ export function AdminInstances(){
  const returnTo=`/admin/instances${queryString?'?'+queryString:''}`;
  const detail=(r:ManagedInstance,logs=false)=>`/admin/customers/${encodeURIComponent(r.customerId)}/instances/${encodeURIComponent(r.id)}?returnTo=${encodeURIComponent(returnTo)}${logs?'&tab=logs':''}`;
  function cell(r:ManagedInstance,c:Column):ReactNode{switch(c){
-  case 'identity':return <div className="grid gap-1"><span>{r.id}</span><span className="text-xs text-kumo-subtle">{r.instanceNo}</span></div>;
+  case 'identity':return <div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={detail(r)}>{r.id}</Link><span className="text-xs text-kumo-subtle">{r.instanceNo}</span></div>;
   case 'product':return <div className="grid gap-1"><span>{r.productName}</span><span className="text-xs text-kumo-subtle">{r.hostname||'—'}</span></div>;
-  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={`/admin/customers/${r.customerId}`}>{r.username||r.customerId}</Link><span className="text-xs text-kumo-subtle">ID：{r.customerId}</span><span className="text-xs">{r.phone||r.email||'—'}</span></div>;
+  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={`/admin/customers/${r.customerId}`}>{r.username||r.customerId}</Link><span className="text-xs">{r.phone||r.email||'—'}</span></div>;
   case 'ip':return <div className="grid gap-1"><span>{r.primaryIp||'—'}</span>{r.ips.filter(ip=>ip!==r.primaryIp).length>0&&<details><summary className="cursor-pointer text-xs text-kumo-link">附加 IP（{r.ips.filter(ip=>ip!==r.primaryIp).length}）</summary>{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><p key={ip}>{ip}</p>)}</details>}</div>;
   case 'status':return <div className="grid gap-1"><Badge variant={r.status===3?'success':r.status===6?'secondary':'warning'}>{statusNames[r.status]||'未知'}</Badge><span className="text-xs text-kumo-subtle">{powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}（缓存）</span>{r.errorCount>0&&<Link className="text-xs text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
   case 'expires':return date(r.expiresAt);
   case 'amount':return <div className="grid gap-1"><span>{r.renewalAmount===null?'价格未记录':`¥${r.renewalAmount}`}</span><span className="text-xs text-kumo-subtle">{cycleLabels[r.cycle]||r.cycle||'—'}</span></div>;
-  case 'remark':return <span className="block max-w-48 whitespace-pre-wrap break-words">{r.remark||'—'}</span>;
+  case 'realName':return <span>{r.realName?.trim()||r.customerId}</span>;
   case 'supplier':return r.supplierName||'—';case 'created':return <div className="grid gap-1"><span>{date(r.activatedAt)}</span><span className="text-xs text-kumo-subtle">创建 {date(r.createdAt)}</span></div>;
   case 'order':return r.orderNo||'—';case 'resource':return r.upstreamInstanceId||'—';case 'synced':return date(r.lastSyncedAt);case 'auto':return r.autoRenew?'开启':'关闭';case 'system':return <div className="grid gap-1"><span>{r.operatingSystem||'—'}</span>{r.config.map((c,i)=><span key={`${c.field}-${i}`} className="text-xs text-kumo-subtle">{({cpu:'CPU',memory:'内存',system_disk:'系统盘',data_disk:'数据盘',bandwidth:'带宽',region:'地区',data_center:'机房',network:'线路',defense:'防御'} as Record<string,string>)[c.field]||c.field}：{c.value}</span>)}</div>;
  }}
