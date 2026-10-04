@@ -14,13 +14,11 @@ export function InstanceCredentials({instance,customerId}:{instance:InstanceDeta
  useEffect(()=>{
   let active=true;
   setState(undefined);
-	if(instance.readOnly){setState({identity,password:''});return()=>{active=false};}
   void instanceManagementApi(instance.id,customerId).credentials().then(result=>{
    if(active)setState({identity,password:result.password});
   }).catch(error=>{if(active)setState({identity,error:getApiMessage(error)})});
   return ()=>{active=false};
  },[identity,instance,customerId,retry]);
-	if(instance.readOnly)return <span>当前查询模式暂不显示密码</span>;
  if(state?.identity!==identity)return <span role="status">正在读取密码…</span>;
  if(state.error)return <div className="grid gap-2"><p role="alert">{state.error}</p><Button size="sm" variant="secondary" onClick={()=>setRetry(x=>x+1)}>重新读取密码</Button></div>;
  return state.password ? <SensitiveInput key={`${identity}:${retry}`} aria-label="实例密码" value={state.password} readOnly/> : <span>服务未提供密码，请通过重置密码设置。</span>;
