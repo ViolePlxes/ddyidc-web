@@ -156,7 +156,7 @@ function ProductOptionControl({
   );
 }
 
-function SpecTable({ specs, selectedId, onSelect, catalogSelection }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean }) {
+function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePrice }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean; referencePrice?: number }) {
   return (
     <LayerCard className="shadow-none overflow-hidden p-0">
       <div className="grid gap-1 p-5">
@@ -183,7 +183,7 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection }: { specs: P
                   <Table.Cell>{spec.processorModel || "—"}</Table.Cell><Table.Cell>{spec.processorFrequency || "—"}</Table.Cell>
                   <Table.Cell>{spec.defense || "—"}</Table.Cell><Table.Cell>{spec.upstreamBandwidth || "—"}</Table.Cell>
                   <Table.Cell>{spec.downstreamRate || "—"}</Table.Cell><Table.Cell>{spec.stock === null ? "库存充足" : `${spec.stock} 台`}</Table.Cell>
-                  <Table.Cell><strong className="text-kumo-strong">¥{spec.price.toFixed(2)}/月</strong></Table.Cell>
+                  <Table.Cell><strong className="text-kumo-strong">¥{(referencePrice ?? spec.price).toFixed(2)}/月</strong></Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>
@@ -358,7 +358,7 @@ export function ProductConfig({
         className={`${externalBill ? "grid items-start gap-6" : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"}${billLoading ? " pointer-events-none" : ""}`}
       >
         <div className="grid gap-5">
-        {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} /> : null}
+        {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} referencePrice={isUpstreamProduct(product) ? product.price : undefined} /> : null}
         {!catalogSelection && selectedSpec ? (
           <LayerCard className="shadow-none p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}

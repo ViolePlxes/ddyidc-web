@@ -120,7 +120,7 @@ function CatalogProductRow({ product, selected }: { product: CatalogProduct; sel
       <Table.Cell>{spec?.upstreamBandwidth || "—"}</Table.Cell>
       <Table.Cell>{spec?.downstreamRate || "—"}</Table.Cell>
       <Table.Cell>{stock === null || stock === undefined || stock === "" ? "—" : stock}</Table.Cell>
-      <Table.Cell>¥{(spec?.price ?? product.price).toFixed(2)} / {cycleLabels[product.cycle] || product.cycle || "周期以配置为准"} 起</Table.Cell>
+      <Table.Cell>¥{(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)} / {cycleLabels[product.cycle] || product.cycle || "周期以配置为准"} 起</Table.Cell>
     </Table.Row>
   );
 }
