@@ -378,7 +378,7 @@ function OrdersTab() {
   const receipt=useMutation({mutationFn:marketplaceApi.confirm,onSuccess:()=>{setMessage("确认收货成功，卖家收入已结算到账户余额。");void refresh();},onError:(e)=>setMessage(getApiMessage(e))});
  const refund = useMutation({
     mutationFn: marketplaceApi.refund,
-    onSuccess: () => refresh(),
+    onSuccess: () => { setMessage("退款申请已提交，等待后台核算和审核。"); return refresh(); },
     onError: (e) => setMessage(getApiMessage(e)),
   });
   return (
@@ -414,6 +414,7 @@ function OrdersTab() {
                   <Table.Cell>{money(r.fee)}</Table.Cell>
                   <Table.Cell>
                     <MarketplaceStatusBadge status={r.status} />
+                    {r.refundPending ? <p className="text-xs text-kumo-subtle">退款待后台审核，暂停确认收货和结算</p> : null}
 {r.status==="paid"&&r.settleAt&&<p className="text-xs text-kumo-subtle">自动收货：{new Date(r.settleAt).toLocaleString()}</p>}
                   </Table.Cell>
                   <Table.Cell>
@@ -426,11 +427,12 @@ function OrdersTab() {
                       ) : null}
                       {r.status === "paid" && r.buyerId===String(user?.id) ? (
  <>
- <ConfirmAction title="确认收货" description="确认已接收实例后，平台将结算卖家收入。" loading={receipt.isPending} onConfirm={() => receipt.mutate(r.id)}>确认收货</ConfirmAction>
+ <ConfirmAction title="确认收货" description="确认已接收实例后，平台将结算卖家收入。" disabled={r.refundPending} loading={receipt.isPending} onConfirm={() => receipt.mutate(r.id)}>确认收货</ConfirmAction>
                         <Button
                           variant="destructive"
                           loading={refund.isPending}
-                        onClick={() => window.confirm("确认申请退款？成功后产品归属和资金将一并回滚。") && refund.mutate(r.id)}
+                          disabled={r.refundPending}
+                        onClick={() => window.confirm("确认提交退款申请？后台核算并审核后，退款只会退入账户余额。") && refund.mutate(r.id)}
                         >
                           申请退款
                         </Button>
@@ -449,6 +451,7 @@ function OrdersTab() {
 }
 
 function WalletTab() {
+  const [account,setAccount]=useState("");const [withdrawalRequest,setWithdrawalRequest]=useState(()=>crypto.randomUUID());
   const client = useQueryClient();
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
@@ -465,9 +468,9 @@ function WalletTab() {
     queryFn: () => marketplaceApi.withdrawals({ pageSize: 20 }),
   });
   const withdraw = useMutation({
-    mutationFn: () => marketplaceApi.withdraw(amount),
+    mutationFn: () => marketplaceApi.withdraw(amount,account,withdrawalRequest),
     onSuccess: () => {
-      setMessage("提现申请已提交。");
+      setMessage("提现申请已提交，审核通过后等待实际汇款。");setAccount("");setWithdrawalRequest(crypto.randomUUID());
       setAmount("");
       void client.invalidateQueries({ queryKey: ["marketplace", "wallet"] });
       void client.invalidateQueries({
@@ -502,9 +505,10 @@ function WalletTab() {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
+        <Input label="收款账户与户名" value={account} maxLength={256} autoComplete="off" onChange={e=>setAccount(e.target.value)} />
         <Button
           loading={withdraw.isPending}
-          disabled={Number(amount) <= 0}
+          disabled={Number(amount) <= 0||!account.trim()}
           onClick={() => window.confirm(`确认申请提现 ${money(amount)}？`) && withdraw.mutate()}
         >
           申请提现

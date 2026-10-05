@@ -15,7 +15,7 @@ import {
   SignOutIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { SearchPalette } from "../shared/components/SearchPalette";
 import { RouteOutlet } from "../shared/router/RouteOutlet";
 import type { AuthUser } from "../shared/types/auth";
@@ -84,6 +84,8 @@ export function DashboardLayout({
     }
   }
   const location = useLocation();
+  const requestedReturn: unknown = (location.state as { todoReturn?: unknown } | null)?.todoReturn;
+  const todoReturn = location.pathname.startsWith("/admin/") && typeof requestedReturn === "string" && /^\/admin\/todos(?:\/[a-z-]+)?(?:\?[^#]*)?$/.test(requestedReturn) ? requestedReturn : null;
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
   const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
@@ -273,6 +275,7 @@ export function DashboardLayout({
             data-layout-width={contentWidth}
             className={`${contentContainerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
+            {todoReturn ? <div className="mb-3"><Link to={todoReturn}><Button variant="secondary">返回待办列表</Button></Link></div> : null}
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
         </main>

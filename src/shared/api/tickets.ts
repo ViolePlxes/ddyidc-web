@@ -176,6 +176,8 @@ export const adminTicketApi = {
   receive: (id: string) => unwrap(adminRequest.put<ApiEnvelope<{ received: boolean }>>(`/tickets/${id}/receive`)),
   resolve: (id: string) => unwrap(adminRequest.put<ApiEnvelope<{ resolved: boolean }>>(`/tickets/${id}/resolved`)),
   close: (id: string) => unwrap(adminRequest.put<ApiEnvelope<{ closed: boolean }>>(`/tickets/${id}/close`)),
+  reopen: (id: string, input: { reason: string; requestId: string; expectedUpdatedAt: string }) =>
+    unwrap(adminRequest.put<ApiEnvelope<{ reopened: boolean }>>(`/tickets/${id}/reopen`, input)),
   forward: (id: string, input: { forwardAdminId?: string; ticketTypeId?: string; notes: string }) =>
     unwrap(adminRequest.post<ApiEnvelope<{ forwarded: boolean }>>(`/tickets/${id}/forward`, input)),
   logs: async (id: string) => (await unwrap(adminRequest.get<ApiEnvelope<{ list: TicketLog[] }>>(`/tickets/${id}/log`))).list,

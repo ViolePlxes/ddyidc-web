@@ -1,24 +1,69 @@
-import { Badge, Button, Empty, LayerCard, Text } from "@cloudflare/kumo";
+import { Badge, Button, Dialog, Empty, Input, LayerCard, Pagination, Select, Table, Text } from "@cloudflare/kumo";
 import { ListChecksIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
-import { getAdminTodos } from "../../../shared/api/adminTodos";
+import { useEffect, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { getAdminTodos, getTodoEntry, getTodoItems, type TodoEntry } from "../../../shared/api/adminTodos";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
+import { TodoMarketWithdrawal } from "./TodoMarketWithdrawal";
+import { TodoWithdrawalReview } from "./TodoWithdrawalReview";
+import { TodoSettings } from "./TodoSettings";
+import { TodoOfflineReview } from "./TodoOfflineReview";
+import { TodoInviteReview } from "./TodoInviteReview";
+import { TodoProductProblems } from "./TodoProductProblems";
+import { TodoExpiryReminder } from "./TodoExpiryReminder";
+import { TodoAuditHistory } from "./TodoAuditHistory";
+import { TodoRefundApplication } from "./TodoRefundApplication";
+import { TodoRefundReview } from "./TodoRefundReview";
+import { DefinitionList } from "../../../shared/components/DataTable";
+import { adminTicketApi } from "../../../shared/api/tickets";
 
+const sources: Record<string, string> = { application:"产品退款申请", ticket: "工单", certification: "实名认证", invite: "注册优惠码", marketplace: "交易市场", payment: "支付收款", offline: "线下转账", balance: "账户余额", instance: "产品" };
+const states: Record<string, string> = {application_pending:"退款申请待审核",approved_refund:"审核通过，处理中", pending: "待审核", approved: "待汇款", processing: "处理中", unknown: "待核查", review: "待核查", refund_pending: "待审核退款", failed: "处理失败", refunded:"已退款", paid:"已汇款", rejected:"已拒绝", complete:"已完成", completed:"已完成" };
+const kinds = ["tickets", "refunds", "certifications", "withdrawals", "recommendations", "provisioning", "offline-transfers", "manual-products", "expiring"];
+function status(kind: string, value: string) {
+  if (kind === "recommendations") return ({"0":"待审核","1":"已启用","2":"已禁用","3":"已驳回"} as Record<string,string>)[value]??"未知状态，请核对";
+  if (kind === "certifications") return ({"0":"未提交","1":"待审核","2":"已通过","3":"已拒绝"} as Record<string,string>)[value]??"未知状态，请核对";
+  if (kind === "provisioning" || kind === "expiring") return ({ "1": "待开通", "2": "开通中", "3": "运行中", "4": "已停机", "5":"异常", "6":"已删除" } as Record<string, string>)[value] ?? value;
+  if (kind === "tickets") return "未完结";
+  return states[value] ?? value;
+}
+function waiting(value: string, sampledAt: string) { const minutes = Math.max(0, Math.floor((Date.parse(sampledAt) - Date.parse(value)) / 60_000)); if (!Number.isFinite(minutes)) return "—"; return minutes < 60 ? `${minutes} 分钟` : minutes < 1440 ? `${Math.floor(minutes / 60)} 小时` : `${Math.floor(minutes / 1440)} 天`; }
+function date(value: string) { return value ? new Date(value).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"}) : "—"; }
 export function AdminTodos() {
   const { kind } = useParams();
+  const [params, setParams] = useSearchParams();
+  const [selected, setSelected] = useState<TodoEntry | undefined>(()=>({id:params.get("record")??"",source:params.get("source")??"",customerId:"",customerName:"",title:"",number:"",status:"",amount:"",orderId:"",instanceId:"",createdAt:"",updatedAt:"",href:""}));
+  useEffect(()=>{const id=params.get("record");const source=params.get("source");setSelected(id&&source?{id,source,customerId:"",customerName:"",title:"",number:"",status:"",amount:"",orderId:"",instanceId:"",createdAt:"",updatedAt:"",href:""}:undefined);},[kind,params.get("record")]);
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const pageSize = [20, 50, 100].includes(Number(params.get("pageSize"))) ? Number(params.get("pageSize")) : 20;
   const query = useQuery({ queryKey: ["admin-todos"], queryFn: getAdminTodos, refetchInterval: 30_000, retry: false });
+  const valid = Boolean(kind && kinds.includes(kind));
+  const ticketStatuses=useQuery({queryKey:["admin","tickets","statuses"],queryFn:adminTicketApi.statuses,enabled:kind==="tickets"});
+  const sourceOptions=Object.fromEntries(Object.entries(sources).filter(([source])=>kind==="refunds"?["payment","marketplace","application"].includes(source):kind==="withdrawals"?["balance","marketplace"].includes(source):kind==="tickets"?source==="ticket":kind==="certifications"?source==="certification":kind==="recommendations"?source==="invite":kind==="offline-transfers"?source==="offline":source==="instance"));
+  const statusOptions:Record<string,string>=kind==="tickets"?Object.fromEntries((ticketStatuses.data??[]).map(s=>[s.id,s.name])):kind==="certifications"?{"0":"未提交","1":"待审核","2":"已通过","3":"已拒绝"}:kind==="recommendations"?{"0":"待审核","1":"已启用","2":"已禁用","3":"已驳回"}:kind==="provisioning"||kind==="expiring"?{"1":"待开通","2":"开通中","3":"运行中","4":"已停机","5":"异常","6":"已删除"}:{...states,paid:"已汇款",rejected:"已拒绝",refunded:"已退款"};
+  const history=params.get("view")==="history"; const historical=kinds.includes(kind??"");
+  const filters = { view: history?"history":"pending", page, pageSize,minAmount:params.get("minAmount")??"",maxAmount:params.get("maxAmount")??"",channel:params.get("channel")??"", keyword: params.get("keyword") ?? "", customerId: params.get("customerId") ?? "", status: params.get("status") ?? "", source: params.get("source") ?? "",createdFrom:params.get("createdFrom")??"",createdTo:params.get("createdTo")??"" };
+  const items = useQuery({ queryKey: ["admin-todo-items", kind, filters], queryFn: () => getTodoItems(kind!, filters), enabled: valid, refetchInterval: selected?.id ? false : 30_000, retry: false });
+  const detail = useQuery({ queryKey: ["admin-todo-entry", kind, selected?.source, selected?.id,selected?.updatedAt,filters.view], queryFn: () => getTodoEntry(kind!, selected!.id, selected!.source,filters.view), enabled: Boolean(selected?.id && valid), retry: false });
   const item = query.data?.items.find(row => row.key === kind);
+  const patch = (key: string, value: string) => { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); if (key !== "page") next.delete("page"); setParams(next, { replace: true }); };
+  const row = detail.isFetching ? undefined : detail.data;
   return <>
-    <PageHeader title={item?.name ?? "待办事项"} description="汇总当前待处理数量，每30秒自动更新。" actions={<Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>刷新</Button>} />
-    <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
-      {item ? <LayerCard className="grid gap-5 p-5 shadow-none">
-        <div className="flex items-center gap-3"><Text variant="heading">{item.name}</Text><Badge variant="error">{item.count ?? "—"}</Badge></div>
-        <Text variant="secondary">{item.description}</Text>
-        <Empty icon={<ListChecksIcon />} title={item.state === "unavailable" ? "统计暂不可用" : item.count ? "待办明细待开放" : "暂无数据"} description={item.state === "unavailable" ? "暂时无法读取该业务统计，请稍后刷新。" : item.count ? "当前已接入真实数量，本页明细列表后续补齐，请从对应业务菜单处理。" : item.state === "placeholder" ? "功能开发完成后接入业务数据。" : "当前没有该类待处理事项。"} />
-      </LayerCard> : <Empty icon={<ListChecksIcon />} title="请选择待办分类" description="从左侧待办事项菜单选择分类。" />}
-    </PageState>
+    <PageHeader title={item?.name ?? "待办事项"} description="查看真实待办，进入详情处理。数量每30秒更新。" actions={<Button variant="secondary" loading={query.isFetching || items.isFetching} onClick={() => { void query.refetch(); if (valid) void items.refetch(); }}>刷新</Button>} />
+    {!kind ? <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
+      <Text variant="secondary">总计 {query.data?.complete ? "" : "已知"}待办 {query.data?.total ?? "—"} 项。同一对象可能出现在不同分类。</Text>
+      <div className="grid gap-4 md:grid-cols-3">{query.data?.items.map(entry => <LayerCard key={entry.key} className="grid gap-3 p-5"><Text variant="heading">{entry.name}</Text><Badge>{entry.count ?? "统计暂不可用"}</Badge>{entry.oldestAt ? <Text variant="secondary">最早等待 {date(entry.oldestAt)} · {waiting(entry.oldestAt, query.data.sampledAt)}</Text> : null}{entry.state==="config_required"?<Text variant="secondary">申请入口配置后可用，已有待办仍可核对</Text>:null}<Text variant="secondary">{entry.description}</Text><Link to={`/admin/todos/${entry.key}`}><Button variant="secondary">查看待办</Button></Link></LayerCard>)}</div>
+      <Text variant="secondary">更新于 {date(query.data?.sampledAt ?? "")}</Text><TodoSettings />
+    </PageState> : !valid ? <Empty icon={<ListChecksIcon />} title="待办分类不存在" description="请从侧栏选择现有待办分类。" /> : <>
+      <LayerCard className="flex flex-wrap items-end gap-3 p-4"><Input label="关键词" value={filters.keyword} maxLength={100} placeholder="编号、客户或事项" onChange={event => patch("keyword", event.target.value)} /><Input label="客户 ID" value={filters.customerId} onChange={event => patch("customerId", event.target.value)} /><Select label="来源" value={filters.source||"all"} items={{all:"全部来源",...sourceOptions}} onValueChange={v=>patch("source",v==="all"?"":v??"")} /><Select label="状态" value={filters.status||"all"} items={{all:"全部状态",...statusOptions}} onValueChange={v=>patch("status",v==="all"?"":v??"")} />{["refunds","withdrawals","offline-transfers"].includes(kind!)?<><Input label="金额下限（元）" inputMode="decimal" value={filters.minAmount} onChange={e=>patch("minAmount",e.target.value)}/><Input label="金额上限（元）" inputMode="decimal" value={filters.maxAmount} onChange={e=>patch("maxAmount",e.target.value)}/><Select label="支付或汇款渠道" value={filters.channel||"all"} items={kind==="withdrawals"?{all:"全部渠道",manual:"人工汇款"}:kind==="offline-transfers"?{all:"全部渠道",offline:"线下转账"}:{all:"全部渠道",alipay:"支付宝",wechat:"微信",offline:"线下转账"}} onValueChange={v=>patch("channel",v==="all"?"":v??"")}/></>:null}<Input label="创建日期从" type="date" value={filters.createdFrom} onChange={e=>patch("createdFrom",e.target.value)}/><Input label="创建日期至" type="date" value={filters.createdTo} onChange={e=>patch("createdTo",e.target.value)}/><Select label="每页条数" value={String(pageSize)} items={{"20":"20条","50":"50条","100":"100条"}} onValueChange={v=>patch("pageSize",v??"20")}/><Button variant="secondary" onClick={() => setParams({})}>清除筛选</Button>{historical?<Button variant="secondary" onClick={()=>patch("view",history?"pending":"history")}>{history?"查看待办":"查看全部历史"}</Button>:null}</LayerCard>
+      <PageState loading={items.isLoading} error={items.error ? getApiMessage(items.error) : null} empty={!items.isLoading && !items.error && !items.data?.items.length} emptyTitle={history?"暂无历史事项":"暂无待处理事项"}>
+        <LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row>{["事项 / 编号", "客户", "来源", "阶段", "金额", "创建时间 / 等待时长", "最近待办处理人", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header><Table.Body>{items.data?.items.map(entry => <Table.Row key={`${entry.source}:${entry.id}`}><Table.Cell><p>{entry.title}</p><Text variant="secondary">{entry.number}</Text></Table.Cell><Table.Cell>{entry.customerName}<p>{entry.customerId}</p></Table.Cell><Table.Cell>{sources[entry.source] ?? entry.source}</Table.Cell><Table.Cell><Badge>{kind==="tickets"?(ticketStatuses.data?.find(s=>s.id===entry.status)?.name??"未知工单状态"):status(kind!, entry.status)}</Badge></Table.Cell><Table.Cell>{entry.amount ? `¥${entry.amount}` : "—"}</Table.Cell><Table.Cell>{date(entry.createdAt)}<div><Text variant="secondary">{history ? "历史记录已归档" : `已等待 ${waiting(entry.createdAt, items.data?.sampledAt ?? "")}`}</Text></div></Table.Cell><Table.Cell>{entry.lastAdminId === "0" ? "系统任务" : entry.lastAdminId || "暂无本入口操作"}</Table.Cell><Table.Cell><Button variant="secondary" onClick={() => setSelected(entry)}>查看详情</Button></Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>
+      </PageState>
+      {(items.data?.total ?? 0) > 0 ? <Pagination page={page} setPage={value => patch("page", String(value))} perPage={pageSize} totalCount={items.data?.total ?? 0} /> : null}<Text variant="secondary">共 {items.data?.total ?? "—"} 项 · 更新于 {date(items.data?.sampledAt ?? "")}{items.data?.cutoffAt?` · 预警截止 ${date(items.data.cutoffAt)}（北京时间）`:""}</Text>
+    </>}
+    <Dialog.Root open={Boolean(selected?.id)} onOpenChange={open => { if (!open) setSelected(undefined); }}><Dialog className="grid max-h-[85vh] gap-4 overflow-y-auto p-6"><Dialog.Title>待办详情</Dialog.Title><Dialog.Description>核对业务对象后进入对应业务页面处理，操作沿用业务权限与安全校验。</Dialog.Description><PageState loading={detail.isLoading} error={detail.error ? getApiMessage(detail.error) : null}>{row ? <DefinitionList rows={[{ label: "事项", value: row.title }, { label: "编号", value: row.number }, { label: "客户", value: `${row.customerName} · ${row.customerId}` }, { label: "来源 / 阶段", value: `${sources[row.source]} · ${status(kind ?? "", row.status)}` }, { label: "金额", value: row.amount ? `¥${row.amount}` : "—" }, { label: "订单 ID", value: row.orderId || "—" }, { label: "实例 ID", value: row.instanceId || "—" }, { label: "创建时间", value: date(row.createdAt) }, { label: "更新时间", value: date(row.updatedAt) }]} /> : null}</PageState>{!history && row?.source === "marketplace" && row.actions?.includes("review_withdrawal") && kind === "withdrawals" ? <TodoMarketWithdrawal row={row} onDone={() => setSelected(undefined)} /> : null}{!history&&row&&row.actions?.includes("verify_manual_refund")&&kind==="refunds"&&row.source!=="application"?<TodoRefundReview row={row} onDone={()=>setSelected(undefined)}/>:null}{row?.source==="application"&&(history||row.actions?.includes("review_refund_application"))?<TodoRefundApplication row={row} readOnly={history} onDone={()=>setSelected(undefined)}/>:null}{row && kind?<TodoAuditHistory kind={kind} source={row.source} id={row.id}/>:null}{row?.source==="instance"&&kind==="expiring"?<TodoExpiryReminder id={row.id} history={history}/>:null}{row?.source === "instance" && kind!=="expiring"?<TodoProductProblems id={row.id} readOnly={history||!row.actions?.includes("inspect_product")}/>:null}{!history && row?.source === "invite" && row.actions?.includes("review_invite") ? <TodoInviteReview row={row} onDone={() => setSelected(undefined)} /> : null}{!history && row?.source === "balance" && row.actions?.includes("review_withdrawal") ? <TodoWithdrawalReview id={row.id} onDone={() => setSelected(undefined)} /> : null}{!history && row?.source === "offline" && row.actions?.includes("review_offline") ? <TodoOfflineReview id={row.id} onDone={() => setSelected(undefined)} /> : null}<div className="flex justify-end gap-3"><Button variant="secondary" onClick={() => setSelected(undefined)}>关闭</Button>{row?.href && row.actions?.includes("open_business") ? <Link to={row.href} state={{ todoReturn: `/admin/todos/${kind}?${params}` }}><Button>进入业务处理</Button></Link> : null}</div></Dialog></Dialog.Root>
   </>;
 }

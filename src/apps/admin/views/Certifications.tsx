@@ -41,6 +41,7 @@ const auditLabels: Record<string, string> = {
   unlock: "解除限制",
   unlock_failed: "解除失败",
   view_detail: "查看资料",
+  view_original: "查看原始资料",
   view_file: "查看证件",
   settings: "修改设置",
 };
@@ -191,9 +192,10 @@ function Detail({
   close: () => void;
   changed: () => void;
 }) {
+  const [reveal, setReveal] = useState(false);
   const query = useQuery({
-    queryKey: ["certification-detail", id],
-    queryFn: () => api.detail(id),
+    queryKey: ["certification-detail", id, reveal],
+    queryFn: () => api.detail(id, reveal),
     gcTime: 0,
     retry: false,
   });
@@ -215,7 +217,7 @@ function Detail({
       <Dialog size="xl" className="grid max-h-[85vh] gap-4 overflow-y-auto p-6">
         <Dialog.Title>实名认证详情</Dialog.Title>
         <Dialog.Description>
-          完整资料仅用于人工审核，查看和审核操作均会记录审计。
+          资料默认脱敏。原始资料仅用于人工审核，查看和审核操作均会记录审计。
         </Dialog.Description>
         {(error || query.error) && (
           <Banner variant="error" title={error || getApiMessage(query.error)} />
@@ -227,6 +229,7 @@ function Detail({
                 ? "待认证"
                 : statuses[record.status]}
             </Badge>
+            <Button variant="secondary" disabled={query.isFetching} onClick={() => { setImage(""); setReveal(!reveal); }}>{reveal ? "隐藏原始资料" : "查看原始资料"}</Button>
             <dl className="grid gap-2">
               {[
                 ["客户ID", record.customerId],
@@ -409,7 +412,7 @@ export function Certifications() {
   const [keyword, setKeyword] = useState("");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [detail, setDetail] = useState("");
+  const [detail, setDetail] = useState(params.get("record") ?? "");
   const query = useQuery({
     queryKey: [
       "certification-list",

@@ -68,6 +68,8 @@ export interface ListingProduct {
   remainingDays: number;
 }
 export interface MarketplaceOrder {
+	refundApplicationId?: string;
+	refundPending?: boolean;
   id: string;
   orderNo: string;
   listingId: string;
@@ -302,10 +304,10 @@ export const marketplaceApi = {
     page<Flow>(userRequest, "/marketplace/flows", params),
   withdrawals: (params?: Record<string, unknown>) =>
     page<Withdrawal>(userRequest, "/marketplace/withdrawals", params),
-  withdraw: (amount: string) =>
+  withdraw: (amount: string, account: string, requestId: string) =>
     unwrap(
       userRequest.post<ApiEnvelope<Withdrawal>>("/marketplace/withdrawals", {
-        amount,
+        amount, account, requestId,
       }),
     ),
   createWant: (input: Partial<Want>) =>
@@ -366,10 +368,10 @@ export const marketplaceAdminApi = {
     page<Flow>(adminRequest, "/marketplace/flows", params),
   withdrawals: (params?: Record<string, unknown>) =>
     page<Withdrawal>(adminRequest, "/marketplace/withdrawals", params),
-  auditWithdrawal: (id: string, approved: boolean, remark = "") =>
+  auditWithdrawal: (id: string, approved: boolean, remark: string, expectedUpdatedAt: string, requestId: string, confirmLarge = false) =>
     unwrap(
       adminRequest.post(`/marketplace/withdrawals/${id}/audit`, {
-        approved,
+        approved, expectedUpdatedAt, requestId, confirmLarge,
         remark,
       }),
     ),

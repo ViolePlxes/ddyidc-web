@@ -10,6 +10,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
+import { BalanceWithdrawals } from "../../../shared/components/BalanceWithdrawals";
 import { HistoricalRecords } from "./HistoricalRecords";
 
 export function Finance() {
@@ -91,6 +92,7 @@ export function Finance() {
           </div>
         </PageState>
       </section>
+      <BalanceWithdrawals />
       <HistoricalRecords kind="balance" />
       <HistoricalRecords kind="payment" />
     </>

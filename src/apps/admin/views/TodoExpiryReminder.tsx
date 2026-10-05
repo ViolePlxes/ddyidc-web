@@ -1,0 +1,11 @@
+import { Banner, Button, Input, Table } from "@cloudflare/kumo";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { adminRequest,type ApiEnvelope,getApiMessage } from "../../../shared/api/request";
+interface Reminder {Channel:string;Status:string;Error:string;BusinessID:string;CreatedAt:string}
+export function TodoExpiryReminder({id,history}:{id:string;history:boolean}){
+ const cache=useQueryClient();const [reason,setReason]=useState("");const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+ const query=useQuery({queryKey:["todo-expiry-reminders",id],queryFn:async()=>(await adminRequest.get<ApiEnvelope<Reminder[]>>(`/todos/products/${id}/expiry-reminders`)).data.data});
+ const send=useMutation({mutationFn:async()=> (await adminRequest.post<ApiEnvelope<{delivered:boolean}>>(`/todos/products/${id}/expiry-reminders`,{reason,requestId})).data.data,onSuccess:async()=>{await Promise.all([cache.invalidateQueries({queryKey:["todo-expiry-reminders",id]}),cache.invalidateQueries({queryKey:["todo-audits","expiring","instance",id]})]);setRequestId(crypto.randomUUID());}});
+ return <div className="grid gap-3"><h3>到期提醒记录</h3>{query.error?<Banner variant="error" title={getApiMessage(query.error)}/>:null}<Table><Table.Header><Table.Row><Table.Head>渠道</Table.Head><Table.Head>结果</Table.Head><Table.Head>时间</Table.Head></Table.Row></Table.Header><Table.Body>{query.data?.map((r,i)=><Table.Row key={i}><Table.Cell>{r.Channel==="email"?"邮件":"短信"}</Table.Cell><Table.Cell>{r.Status==="success"?"已发送":r.Status==="failed"?"失败或结果待核查":r.Status}<p>{r.Error}</p></Table.Cell><Table.Cell>{new Date(r.CreatedAt).toLocaleString("zh-CN")}</Table.Cell></Table.Row>)}</Table.Body></Table>{!history?<><Input label="人工发送提醒依据" maxLength={256} value={reason} onChange={e=>setReason(e.target.value)}/><Button loading={send.isPending} disabled={!reason.trim()||send.isSuccess} onClick={()=>send.mutate()}>发送本到期周期提醒</Button></>:null}{send.isSuccess?<Banner title={send.data?.delivered?"提醒已发送":"存在本周期提醒请求，未重复发送"}/>:null}{send.error?<Banner variant="error" title={getApiMessage(send.error)}/>:null}</div>;
+}

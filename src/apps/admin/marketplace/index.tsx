@@ -1,3 +1,4 @@
+import { Link, useSearchParams } from "react-router-dom";
 import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
 import {
   Badge,
@@ -29,7 +30,7 @@ const statusLabel: Record<string, string> = {
   locked: "锁定",
   sold: "已售",
   paid: "待确认收货",
- refund_pending:"原路退款处理中",
+ refund_pending:"待后台审核退款",
   settled: "已结算",
   refunded: "已退款",
   rejected: "已拒绝",
@@ -252,16 +253,18 @@ export function MarketplaceAdminListings() {
 }
 
 export function MarketplaceAdminOrders() {
+  const todoCache = useQueryClient();
+  const [params,setParams]=useSearchParams();const record=params.get("record")??"";
   const key = ["admin", "marketplace", "orders"];
   const refresh = useRefresh(key);
   const [message, setMessage] = useState("");
   const q = useQuery({
-    queryKey: key,
-    queryFn: () => marketplaceAdminApi.orders({ pageSize: 100 }),
+    queryKey: [...key,record],
+    queryFn: () => marketplaceAdminApi.orders({ pageSize: 100,record:record||undefined }),
   });
   const refund = useMutation({
     mutationFn: marketplaceAdminApi.refund,
-    onSuccess: () => refresh(),
+    onSuccess: async () => { setMessage("退款申请已提交，请在退款待办核算并审核。"); await Promise.all([refresh(),todoCache.invalidateQueries({queryKey:["admin-todos"]}),todoCache.invalidateQueries({queryKey:["admin-todo-items"]})]); },
     onError: (e) => setMessage(getApiMessage(e)),
   });
   return (
@@ -270,6 +273,7 @@ export function MarketplaceAdminOrders() {
         title="交易订单"
         description="核对买卖双方、费用和成交状态。"
       />
+      {record?<div className="flex items-center gap-3"><span>已定位交易订单：{record}</span><Button variant="secondary" onClick={()=>setParams({})}>清除对象定位</Button></div>:null}
       <Result message={message} />
       <PageState
         loading={q.isLoading}
@@ -302,15 +306,17 @@ export function MarketplaceAdminOrders() {
                     <Badge variant="outline">
                       {statusLabel[r.status] ?? r.status}
                     </Badge>
+                    {r.refundPending ? <p className="text-xs text-kumo-subtle">退款待后台审核</p> : null}
                   </Table.Cell>
                   <Table.Cell>
                     {r.status === "paid" ? (
                       <Button
                         variant="destructive"
                         loading={refund.isPending}
+                        disabled={r.refundPending}
                         onClick={() => refund.mutate(r.id)}
                       >
-                        人工退款
+                        提交退款审核
                       </Button>
                     ) : (
                       "—"
@@ -419,29 +425,19 @@ export function MarketplaceAdminFlows() {
 
 export function MarketplaceAdminWithdrawals() {
   const key = ["admin", "marketplace", "withdrawals"];
-  const refresh = useRefresh(key);
-  const [message, setMessage] = useState("");
+
+
   const q = useQuery({
     queryKey: key,
     queryFn: () => marketplaceAdminApi.withdrawals({ pageSize: 100 }),
-  });
-  const audit = useMutation({
-    mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
-      marketplaceAdminApi.auditWithdrawal(
-        id,
-        approved,
-        approved ? "审核通过" : "审核拒绝",
-      ),
-    onSuccess: () => refresh(),
-    onError: (e) => setMessage(getApiMessage(e)),
   });
   return (
     <>
       <PageHeader
         title="提现审核"
-        description="审核卖家提现申请，拒绝时自动退回可用余额。"
+        description="核对收款账户、审核与实际汇款；拒绝申请退回冻结金额。"
       />
-      <Result message={message} />
+
       <PageState
         loading={q.isLoading}
         error={q.error ? getApiMessage(q.error) : null}
@@ -469,32 +465,11 @@ export function MarketplaceAdminWithdrawals() {
                   </Table.Cell>
                   <Table.Cell>
                     <Badge variant="outline">
-                      {statusLabel[r.status] ?? r.status}
+                      {r.status==="approved"?"待实际汇款":statusLabel[r.status] ?? r.status}
                     </Badge>
                   </Table.Cell>
                   <Table.Cell>
-                    {r.status === "pending" ? (
-                      <div className="flex gap-2">
-                        <Button
-                          loading={audit.isPending}
-                          onClick={() =>
-                            audit.mutate({ id: r.id, approved: true })
-                          }
-                        >
-                          通过
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={() =>
-                            audit.mutate({ id: r.id, approved: false })
-                          }
-                        >
-                          拒绝
-                        </Button>
-                      </div>
-                    ) : (
-                      "—"
-                    )}
+                    {["pending","approved","processing","unknown"].includes(r.status) ? <Link to={`/admin/todos/withdrawals?record=${r.id}&source=marketplace`}><Button variant="secondary">核对并处理</Button></Link> : "—"}
                   </Table.Cell>
                 </Table.Row>
               ))}

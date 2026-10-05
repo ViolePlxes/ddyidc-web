@@ -8,7 +8,7 @@ const labels: Record<string, string> = {
   locked: "交易锁定",
   sold: "已售出",
   paid: "待确认收货",
- refund_pending:"原路退款处理中",
+ refund_pending:"待后台审核退款",
   settled: "已完成",
   refunded: "已退款",
   rejected: "已拒绝",
@@ -41,6 +41,7 @@ export function marketplaceFlowLabel(type: string): string {
   const labels: Record<string, string> = {
     buyer_paid: "买家付款", seller_pending: "卖家待结算", settled_to_balance: "结算至主账户",
     platform_commission: "平台佣金收益", settled: "交易结算", refund_reversed: "退款回滚",
+    refund_retained: "退款后已使用费用结算", refund_retained_to_balance: "退款后已使用费用入余额",
     withdraw: "提现", withdraw_reject: "提现拒绝退回", withdraw_hold: "申请提现冻结",
   };
   return labels[type] ?? type;

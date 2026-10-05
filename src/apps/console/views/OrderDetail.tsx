@@ -7,11 +7,13 @@ import { DefinitionList } from "../../../shared/components/DataTable";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
+import { RefundApplication } from "../../../shared/components/RefundApplication";
+import { OfflineTransferForm } from "../../../shared/components/OfflineTransferForm";
 import { StatusBadge } from "../../../shared/components/StatusBadge";
 import { useOrder } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels, formatMoney, orderStatusCode } from "../../../shared/utils/format";
 
-const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付" };
+const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付", 4: "线下转账" };
 const orderMessages: Record<number, { title: string; description: string }> = {
   1: { title: "等待支付", description: "支持账户余额、支付宝与微信支付，支付状态以服务端确认结果为准。" },
   2: { title: "订单已支付", description: "服务正在处理交付，请在产品列表查看开通结果。" },
@@ -116,6 +118,8 @@ export function OrderDetail() {
               >
                 取消订单
               </Button>
+              {order.status === 1 && order.payAmount > 0 ? <OfflineTransferForm orderId={order.id} amountCents={order.payAmount} /> : null}
+              {[2,4,5,6].includes(order.status)?<RefundApplication orderId={order.id}/>:null}
               {cancel.error ? <Banner variant="error" title="取消失败" description={getApiMessage(cancel.error)} /> : null}
             </LayerCard>
           </div>

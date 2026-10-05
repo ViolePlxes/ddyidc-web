@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,11 +14,12 @@ const inviteStatuses = { all: "全部状态", "0": "待审核", "1": "已启用"
 const rewardStatuses = { all: "全部状态", "0": "待结算", "1": "已结算", "2": "已冻结", "3": "已回收" };
 
 export function AdminInvites() {
+  const [params] = useSearchParams();
   const client = useQueryClient();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
-  const [draftKeyword, setDraftKeyword] = useState("");
-  const [keyword, setKeyword] = useState("");
+  const [draftKeyword, setDraftKeyword] = useState(() => params.get("keyword") ?? "");
+  const [keyword, setKeyword] = useState(() => params.get("keyword") ?? "");
   const [message, setMessage] = useState("");
   const pageSize = 10;
   const query = useQuery({

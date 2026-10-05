@@ -97,7 +97,7 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 export const adminOverviewApi = {
   operations: () => unwrap(adminRequest.get<ApiEnvelope<OperationsSnapshot>>("/operations")),
   dashboard: () => unwrap(adminRequest.get<ApiEnvelope<AdminDashboard>>("/dashboard")),
-  orders: (params: { page: number; pageSize: number; status?: string; keyword?: string }) =>
+  orders: (params: { page: number; pageSize: number; status?: string; keyword?: string; record?:string }) =>
     unwrap(adminRequest.get<ApiEnvelope<AdminPage<AdminOrderRow>>>("/orders", { params })),
   customers: (params: { page: number; pageSize: number; status?: string; keyword?: string }) =>
     unwrap(adminRequest.get<ApiEnvelope<AdminCustomerPage>>("/customers", { params })),

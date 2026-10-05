@@ -29,7 +29,10 @@ export function Promo() {
   });
   const data = overview.data;
   const summary = earnings.data;
-  const inviteCode = invite.data?.invite?.code || data?.inviteCode;
+  const currentInvite = invite.data?.invite;
+  const inviteCode = currentInvite?.code || data?.inviteCode;
+  const canApply = !currentInvite || currentInvite.status === 2 || currentInvite.status === 3;
+  const inviteStatus = currentInvite ? ({ 0: "待审核", 1: "已通过", 2: "已停用", 3: "已驳回" }[currentInvite.status] ?? "状态未知") : "状态读取中";
   const link = data?.promoLinkPath ? `${window.location.origin}${data.promoLinkPath}` : "";
   const metrics = [
     { label: "已推广客户", value: String(data?.registrations ?? 0), hint: `一级 ${invite.data?.stats.level1 ?? 0} · 二级 ${invite.data?.stats.level2 ?? 0} · 三级 ${invite.data?.stats.level3 ?? 0}` },
@@ -55,16 +58,17 @@ export function Promo() {
         <div className="grid gap-5">
           {inviteCode ? (
             <LayerCard className="shadow-none flex flex-wrap items-center justify-between gap-4 p-5">
-              <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属优惠码</span><ClipboardText text={inviteCode} /></div>
-              <Button variant="secondary" icon={<CopyIcon />} disabled={!link} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制分享链接"}</Button>
+              <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属优惠码 · {inviteStatus}</span><ClipboardText text={inviteCode} />{currentInvite?.rejectReason ? <p className="text-sm text-kumo-subtle">审核说明：{currentInvite.rejectReason}</p> : null}</div>
+              <Button variant="secondary" icon={<CopyIcon />} disabled={!link || currentInvite?.status !== 1} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制分享链接"}</Button>
             </LayerCard>
-          ) : (
+          ) : null}
+          {canApply ? (
             <LayerCard className="shadow-none grid gap-4 p-5">
               <Input label="自定义优惠码（可选）" value={customCode} onChange={(event) => setCustomCode(event.target.value)} disabled={!config.data?.inviteEnabled} />
-              <Button className="justify-self-start" loading={create.isPending} disabled={!config.data?.inviteEnabled} onClick={() => create.mutate()}>生成优惠码</Button>
+              <Button className="justify-self-start" loading={create.isPending} disabled={!config.data?.inviteEnabled} onClick={() => create.mutate()}>{currentInvite ? "重新申请优惠码" : "生成优惠码"}</Button>
               {!config.data?.inviteEnabled ? <Banner variant="alert" title="优惠码申请已关闭" description="营销公共配置当前未开放优惠码申请。" /> : null}
             </LayerCard>
-          )}
+          ) : null}
           {create.error ? <Banner variant="error" title="优惠码生成失败" description={getApiMessage(create.error)} /> : null}
           <MetricGrid metrics={metrics} />
           <LayerCard className="shadow-none grid gap-3 p-5">

@@ -126,14 +126,14 @@ export const certificationAdminApi = {
         }>
       >("/certifications/search", input),
     ),
-  detail: (id: string) =>
+  detail: (id: string, reveal = false) =>
     unwrap(
       adminRequest.get<
         ApiEnvelope<{
           record: CertificationRecord;
           audits: CertificationAudit[];
         }>
-      >(`/certifications/${id}`),
+      >(`/certifications/${id}`, { params: { reveal } }),
     ),
   review: (id: string, action: "pass" | "reject" | "unlock", reason: string) =>
     unwrap(adminRequest.post(`/certifications/${id}/${action}`, { reason })),

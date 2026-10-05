@@ -1,4 +1,4 @@
-import { Badge, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Badge, Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { groupBuyAdminApi } from "../../../shared/api/groupbuy";
@@ -16,6 +16,7 @@ function statusLabel(status: number) {
 export function GroupBuyAdminLeaders() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>();
+  const [refundMessage, setRefundMessage] = useState("");
   const leaders = useQuery({
     queryKey: ["admin", "groupbuy", "leaders"],
     queryFn: () => groupBuyAdminApi.leaders({ pageSize: 100 }),
@@ -28,7 +29,10 @@ export function GroupBuyAdminLeaders() {
   const refund = useMutation({
     mutationFn: groupBuyAdminApi.refund,
     onSuccess: async () => {
+      setRefundMessage("退款申请已提交，请到待处理退款中核算费用并审核，当前未退入余额。");
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-todos"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-todo-items"] }),
         queryClient.invalidateQueries({ queryKey: ["admin", "groupbuy", "leaders"] }),
         queryClient.invalidateQueries({ queryKey: ["admin", "groupbuy", "leader", selectedId] }),
       ]);
@@ -48,6 +52,7 @@ export function GroupBuyAdminLeaders() {
   return (
     <div className="space-y-6">
       <PageHeader title="拼团成员" description="查看团长进度、成员明细、退款状态和公开设置。" />
+      {refundMessage ? <Banner title={refundMessage} /> : null}
       <PageState
         loading={leaders.isLoading}
         error={leaders.error ? getApiMessage(leaders.error) : null}
@@ -61,7 +66,7 @@ export function GroupBuyAdminLeaders() {
                 <Table.Head>团长</Table.Head>
                 <Table.Head>优惠码</Table.Head>
                 <Table.Head>进度</Table.Head>
-                <Table.Head>实付（分）</Table.Head>
+                <Table.Head>实付（元）</Table.Head>
                 <Table.Head>状态</Table.Head>
                 <Table.Head>操作</Table.Head>
               </Table.Row>
@@ -72,7 +77,7 @@ export function GroupBuyAdminLeaders() {
                   <Table.Cell>{record.memberName || record.clientId}</Table.Cell>
                   <Table.Cell>{record.inviteCode}</Table.Cell>
                   <Table.Cell>{record.currentNum}/{record.needNum}</Table.Cell>
-                  <Table.Cell>{record.payAmount}</Table.Cell>
+                  <Table.Cell>¥{(record.payAmount / 100).toFixed(2)}</Table.Cell>
                   <Table.Cell>
                     <Badge variant={record.status === 1 ? "warning" : record.status === 2 ? "success" : "secondary"}>
                       {statusLabel(record.status)}
@@ -94,7 +99,7 @@ export function GroupBuyAdminLeaders() {
                         loading={refund.isPending}
                         onClick={() => refund.mutate(record.id)}
                       >
-                        整团退款
+                        申请整团退款
                       </Button>
                     </div>
                   </Table.Cell>
@@ -110,7 +115,7 @@ export function GroupBuyAdminLeaders() {
           <div className="flex items-center justify-between gap-3 p-4">
             <div>
               <h2 className="text-lg font-semibold">成员明细</h2>
-              <p className="text-sm text-kumo-subdued">团号 #{selectedId}；团长退款会处理整个拼团。</p>
+              <p className="text-sm text-kumo-subdued">团号 #{selectedId}；团长申请将提交整个拼团的退款审核，审核前不会退入余额。</p>
             </div>
             <Button variant="secondary" onClick={() => setSelectedId(undefined)}>关闭</Button>
           </div>
@@ -125,7 +130,7 @@ export function GroupBuyAdminLeaders() {
                 <Table.Row>
                   <Table.Head>成员</Table.Head>
                   <Table.Head>角色</Table.Head>
-                  <Table.Head>实付（分）</Table.Head>
+                  <Table.Head>实付（元）</Table.Head>
                   <Table.Head>状态</Table.Head>
                   <Table.Head>订单 / 主机</Table.Head>
                   <Table.Head>操作</Table.Head>
@@ -136,7 +141,7 @@ export function GroupBuyAdminLeaders() {
                   <Table.Row key={member.id}>
                     <Table.Cell>{member.memberName || member.clientId}</Table.Cell>
                     <Table.Cell>{member.isLeader ? "团长" : "成员"}</Table.Cell>
-                    <Table.Cell>{member.payAmount}</Table.Cell>
+                    <Table.Cell>¥{(member.payAmount / 100).toFixed(2)}</Table.Cell>
                     <Table.Cell>{statusLabel(member.status)}</Table.Cell>
                     <Table.Cell>{member.orderId ? `订单 #${member.orderId}` : member.hostId ? `主机 #${member.hostId}` : "—"}</Table.Cell>
                     <Table.Cell>
@@ -146,7 +151,7 @@ export function GroupBuyAdminLeaders() {
                         loading={refund.isPending}
                         onClick={() => refund.mutate(member.id)}
                       >
-                        {member.isLeader ? "整团退款" : "成员退款"}
+                        {member.isLeader ? "申请整团退款" : "申请成员退款"}
                       </Button>
                     </Table.Cell>
                   </Table.Row>
