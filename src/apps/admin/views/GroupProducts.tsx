@@ -90,7 +90,7 @@ export function GroupProducts({ groupId, expanded, blocked, beginSave, endSave }
   return (
     <div className="grid gap-2 p-4" id={`products-${groupId}`}>
       {sort.error ? <Banner variant="error" title="排序保存失败" description={`${getApiMessage(sort.error)}；已恢复原顺序，请刷新后重试。`} /> : null}
-      <PageState loading={products.isLoading} error={!products.data && products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && (products.data?.items.length ?? 0) === 0} emptyTitle="该分组暂无商品">
+      <PageState loading={products.isLoading} keepContent error={!products.data && products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && (products.data?.items.length ?? 0) === 0} emptyTitle="该分组暂无商品">
         <div className="overflow-x-auto">
           <div className="min-w-[900px]">
             <Table className="table-fixed"><Table.Header variant="compact"><Table.Row><Table.Head className="w-[34%]">商品</Table.Head><Table.Head className="w-[10%]">售价</Table.Head><Table.Head className="w-[10%]">周期</Table.Head><Table.Head className="w-[10%]">规格配置</Table.Head><Table.Head className="w-[10%]">状态</Table.Head><Table.Head className="w-[6%]">排序</Table.Head><Table.Head className="w-[20%]">操作</Table.Head></Table.Row></Table.Header></Table>

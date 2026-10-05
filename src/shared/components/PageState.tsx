@@ -3,12 +3,12 @@ import {
   Button,
   Empty,
   LayerCard,
+  Loader,
 } from "@cloudflare/kumo";
 import { PackageIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { ContentSkeleton, type SkeletonKind } from "./skeletons";
-import { ContentFade, isProductListPath, useContentLoading } from "./ContentFade";
-import { useLocation } from "react-router-dom";
+import { ContentFade } from "./ContentFade";
 
 const skeletonKinds: readonly SkeletonKind[] = ["products", "catalog"];
 
@@ -23,8 +23,8 @@ export function PageState({
   error,
   emptyTitle = "暂无数据",
   emptyDescription = "当前条件下没有可显示的记录。",
-  skeleton = "products",
-  skeletonDelayMs = 300,
+  skeleton,
+  keepContent = false,
 }: {
   children: ReactNode;
   loading?: boolean;
@@ -33,29 +33,13 @@ export function PageState({
   emptyTitle?: string;
   emptyDescription?: string;
   skeleton?: SkeletonKind | ReactNode;
-  skeletonDelayMs?: number;
+  keepContent?: boolean;
 }) {
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const catalog = isProductListPath(useLocation().pathname);
-  useContentLoading(loading && !catalog);
-
-  useEffect(() => {
-    if (loading && catalog) {
-      const timer = window.setTimeout(() => setShowSkeleton(true), skeletonDelayMs);
-      return () => window.clearTimeout(timer);
-    }
-    if (showSkeleton) {
-      const timer = window.setTimeout(() => setShowSkeleton(false), 100);
-      return () => window.clearTimeout(timer);
-    }
-  }, [loading, catalog, showSkeleton, skeletonDelayMs]);
-
-  if (loading && !catalog) return null;
-  if (loading && catalog) {
-    if (!showSkeleton) {
-      return <div role="status" aria-label="正在加载页面数据" aria-busy="true" />;
-    }
-    return isSkeletonKind(skeleton) ? <ContentSkeleton kind={skeleton} /> : skeleton;
+  if (loading) {
+    return <div aria-busy="true" className="grid gap-3">
+      <div role="status" className="flex items-center gap-2 text-sm text-kumo-subtle"><Loader /><span>正在加载数据…</span></div>
+      {keepContent ? children : skeleton ? (isSkeletonKind(skeleton) ? <ContentSkeleton kind={skeleton} /> : skeleton) : null}
+    </div>;
   }
   if (empty) {
     return (

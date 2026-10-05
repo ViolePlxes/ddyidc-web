@@ -5,6 +5,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { hasForeignSession } from "../api/sessionProbe";
 import type { AuthUser, UserRole } from "../types/auth";
 import { AppShellSkeleton } from "../components/skeletons";
+import { ContentPending } from "../components/ContentFade";
 
 export function SessionBoundary({
   initialized,
@@ -27,7 +28,7 @@ export function SessionBoundary({
   }, [clearSession, restoreSession, unauthorizedEvent]);
 
   if (!initialized) {
-    return catalogPlaceholder && location.pathname === "/console/products" ? <AppShellSkeleton kind="catalog" /> : null;
+    return catalogPlaceholder && location.pathname === "/console/products" ? <AppShellSkeleton kind="catalog" /> : <ContentPending />;
   }
   return <Outlet />;
 }
@@ -66,7 +67,7 @@ export function EntryGuard({
   if (user && user.role !== role) return <ForbiddenPage loginPath={loginPath} />;
   if (user) return <Outlet />;
   if (foreignSession) return <ForbiddenPage loginPath={loginPath} />;
-  return null;
+  return <ContentPending />;
 }
 
 export function ForbiddenPage({ loginPath }: { loginPath: string }) {

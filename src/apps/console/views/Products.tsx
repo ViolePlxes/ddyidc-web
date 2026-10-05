@@ -1,4 +1,4 @@
-import { Badge, Banner, Button, LayerCard, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
+import { Badge, Banner, Button, LayerCard, Loader, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
 
 import { ArrowRightIcon, PackageIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
@@ -160,7 +160,7 @@ function IntegratedProductCatalog() {
   return (
     <>
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
-      <PageState loading={productsQuery.isLoading} skeleton="catalog" skeletonDelayMs={0} error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
+      <PageState loading={productsQuery.isLoading} keepContent error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
         <div className={catalogLayout}>
           <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:h-[calc(100dvh-12rem)] xl:flex-col xl:justify-center xl:overflow-y-auto">
             <div ref={setStepsTarget} />
@@ -181,16 +181,16 @@ function IntegratedProductCatalog() {
                   listClassName="h-auto flex-wrap gap-y-1 overflow-x-visible overflow-y-visible"
                   tabs={children.map((group) => ({ value: group.id, label: group.name, className: "min-h-8 max-w-full whitespace-normal break-words text-left" }))}
                   value={secondary?.id ?? ""} onValueChange={(value) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); }}
-                /> : <span>当前一级分类暂无二级分类，请切换其他分类。</span>}</div>
+                /> : <span>{productsQuery.isLoading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>}</div>
               </div>
             </LayerCard>
 
             <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid gap-4 p-5">
               <h2>计算规格</h2>
-              {linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
+              {productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
                 <Table className="whitespace-nowrap">
                   <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
-                  <Table.Body>{pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
+                  <Table.Body>{productsQuery.isLoading ? <Table.Row><Table.Cell colSpan={catalogColumns.length}><div role="status" className="flex items-center gap-2"><Loader />正在加载计算规格…</div></Table.Cell></Table.Row> : pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
                 </Table>
               </Radio.Group> : <PageState empty
                 emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
@@ -199,16 +199,17 @@ function IntegratedProductCatalog() {
               {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} /> : null}
             </LayerCard>
 
+            {productsQuery.isLoading ? <ProductConfigSkeleton externalBill /> : null}
             {product ? <section aria-label="产品配置">
-              <PageState loading={configLoading} skeleton={<ProductConfigSkeleton externalBill />} skeletonDelayMs={0} error={configError ? getApiMessage(configError) : null}>
+              <PageState loading={configLoading} skeleton={<ProductConfigSkeleton externalBill />} error={configError ? getApiMessage(configError) : null}>
                 {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} stepsTarget={stepsTarget} catalogSelection /> : null}
               </PageState>
             </section> : null}
           </div>
           <aside className="min-w-0 xl:sticky xl:top-20" aria-label="当前应付账单">
             <div ref={setBillTarget} />
-            {!product ? <PageState empty emptyTitle="请选择计算规格" emptyDescription="选择有库存的计算规格后显示实时账单。"><span /></PageState> : null}
-            {configLoading ? <ProductBillSkeleton /> : null}
+            {!product && !productsQuery.isLoading ? <PageState empty emptyTitle="请选择计算规格" emptyDescription="选择有库存的计算规格后显示实时账单。"><span /></PageState> : null}
+            {productsQuery.isLoading || configLoading ? <ProductBillSkeleton /> : null}
             {product && configError ? <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} /> : null}
           </aside>
         </div>

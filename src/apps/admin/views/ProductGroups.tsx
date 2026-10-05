@@ -135,7 +135,7 @@ export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
     <div className="grid gap-4" inert={pending}>
       <PageHeader title={embedded ? "商品目录" : "商品分组"} description={embedded ? "展开二级分组管理商品；拖动手柄调整顺序，二级分组可跨父移动。" : "维护两级分组；拖动手柄排序，二级分组可跨父移动。"} actions={<Button icon={<PlusIcon />} onClick={() => setDialog({ parentId: "0" })}>新建一级分组</Button>} />
       {error ? <div className="grid gap-2"><Banner variant="error" title="操作失败" description={error} /><Button variant="secondary" onClick={() => void refresh()}>重新读取列表</Button></div> : null}
-      <PageState loading={roots.isLoading} error={!roots.data && roots.error ? getApiMessage(roots.error) : null} empty={!roots.isLoading && (roots.data?.list.length ?? 0) === 0} emptyTitle="暂无商品分组">
+      <PageState loading={roots.isLoading} keepContent error={!roots.data && roots.error ? getApiMessage(roots.error) : null} empty={!roots.isLoading && (roots.data?.list.length ?? 0) === 0} emptyTitle="暂无商品分组">
         <div ref={rootRef} data-sort-list="0" className="grid gap-4">
           {(roots.data?.list ?? []).map((root, rootIndex) => {
             const children = childQueries[rootIndex]?.data?.list ?? [];
@@ -153,12 +153,12 @@ export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
                     <Button variant="destructive" shape="square" icon={<TrashIcon />} aria-label="删除一级分组" onClick={() => setDeleteTarget(root)} />
                   </div>
                 </div>
-                <PageState loading={childQueries[rootIndex]?.isLoading} error={!childQueries[rootIndex]?.data && childQueries[rootIndex]?.error ? getApiMessage(childQueries[rootIndex]?.error) : null}>
+                <PageState loading={childQueries[rootIndex]?.isLoading} keepContent error={!childQueries[rootIndex]?.data && childQueries[rootIndex]?.error ? getApiMessage(childQueries[rootIndex]?.error) : null}>
                   <div className="overflow-x-auto p-2">
                     <div className="min-w-[1000px]">
                       <Table className="table-fixed"><Table.Header variant="compact"><Table.Row><Table.Head className="w-[28%]">二级分组</Table.Head><Table.Head className="w-[12%]">状态</Table.Head><Table.Head className="w-[8%]">商品数</Table.Head><Table.Head className="w-[8%]">排序</Table.Head><Table.Head className="w-[44%]">操作</Table.Head></Table.Row></Table.Header></Table>
                       <SortableList scope="children" listId={root.id} crossList disabled={disabled} onDrop={drop}>
-                        {children.length === 0 ? <p className="p-4 text-sm text-kumo-subtle">拖入二级分组，或点击“新建子级”</p> : null}
+                        {children.length === 0 && !childQueries[rootIndex]?.isLoading ? <p className="p-4 text-sm text-kumo-subtle">拖入二级分组，或点击“新建子级”</p> : null}
                         {children.map((child, index) => (
                           <LayerCard key={child.id} className="shadow-none sort-item overflow-hidden p-0" data-sort-id={child.id}>
                             <Table className="table-fixed"><Table.Body><Table.Row>

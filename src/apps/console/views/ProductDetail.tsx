@@ -4,6 +4,7 @@ import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
+import { ProductConfigSkeleton } from "../../../shared/components/skeletons";
 import { useOrderPage, useProduct } from "../../../shared/hooks/useConsoleData";
 
 export function ConsoleProductDetail({ publicView = false }: { publicView?: boolean }) {
@@ -20,6 +21,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
       />
       <PageState
         loading={productQuery.isLoading}
+        skeleton={<ProductConfigSkeleton />}
         error={productQuery.error ? getApiMessage(productQuery.error) : null}
         empty={!productQuery.isLoading && !productQuery.error && !product}
         emptyTitle="商品不存在或已下架"
@@ -35,7 +37,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
                 description={getApiMessage(orderPageQuery.error)}
               />
             ) : null}
-            <PageState loading={orderPageQuery.isLoading && product.supplierId !== "0"}>
+            <PageState loading={orderPageQuery.isLoading && product.supplierId !== "0"} skeleton={<ProductConfigSkeleton />}>
               <ProductConfig product={product} orderPage={orderPageQuery.data} />
             </PageState>
           </div>
