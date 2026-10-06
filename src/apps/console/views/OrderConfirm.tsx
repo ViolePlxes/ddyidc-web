@@ -1,5 +1,5 @@
 import { useCertificationGate } from "../../../shared/components/CertificationGate";
-import { Banner, Button, LayerCard, LinkButton, Select, SensitiveInput } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, LinkButton, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { CheckoutPoints } from "../points/CheckoutPoints";
@@ -10,11 +10,14 @@ import { DefinitionList } from "../../../shared/components/DataTable";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
-import { clearOrderDraft, loadOrderDraft } from "../../../shared/utils/orderDraft";
+import { clearOrderDraft, loadOrderDraft, saveOrderDraft } from "../../../shared/utils/orderDraft";
+import { InstancePasswordInput } from "../../../shared/components/InstancePasswordInput";
+import { instancePasswordIssues } from "../../../shared/utils/instancePassword";
 
 export function OrderConfirm() {
   const certification = useCertificationGate();
-  const [draft] = useState(loadOrderDraft);
+  const [draft, setDraft] = useState(loadOrderDraft);
+  const passwordIssues = draft?.configOptions.length ? instancePasswordIssues(draft.password) : [];
   const [couponId, setCouponId] = useState("auto");
   const [pointsBusy, setPointsBusy] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order>();
@@ -28,6 +31,7 @@ export function OrderConfirm() {
   const create = useMutation({
     mutationFn: async () => {
       if (!draft) throw new Error("订单配置已失效，请重新选择商品");
+      if (passwordIssues.length) throw new Error(passwordIssues.join("；"));
       return consoleApi.createOrder({
         productId: draft.productId,
         specId: draft.selectedSpec?.id,
@@ -106,13 +110,13 @@ export function OrderConfirm() {
               ...draft.configOptions.map((item) => ({ label: item.displayName, value: item.displayValue })),
               ...(draft.hostname ? [{ label: "主机名", value: draft.hostname }] : []),
               ...(draft.password
-                ? [{ label: "实例密码", value: "已生成，将加密写入订单快照" }]
+                ? [{ label: "实例密码", value: "已设置，将加密写入订单快照" }]
                 : []),
               { label: "购买周期", value: draft.cycleLabel },
               { label: "数量", value: `${draft.quantity} 台` },
             ]}
           />
-          {draft.password ? <div className="mt-4 grid gap-2"><SensitiveInput label="本次实例密码" value={draft.password} readOnly /><p className="text-sm text-kumo-subtle">密码仅保存在当前页面内存中；刷新页面后会重新生成，请以本次确认的密码为准。</p></div> : null}
+          {draft.configOptions.length ? <div className="mt-4 grid gap-2"><InstancePasswordInput label="本次实例密码" value={draft.password} onChange={(value) => { const next = { ...draft, password: value }; setDraft(next); saveOrderDraft(next); }} /><p className="text-sm text-kumo-subtle">密码只在页面内存中保留；刷新后会替换为随机密码，请重新检查并确认。</p></div> : null}
         </LayerCard>
         <LayerCard className="shadow-none grid gap-5 p-5">
           <CheckoutPoints amountYuan={draft.totalYuan} onRedeemed={setCouponId} onBusy={setPointsBusy}/>
@@ -131,7 +135,7 @@ export function OrderConfirm() {
           </div>
           {create.error ? <Banner variant="error" title="创建订单失败" description={getApiMessage(create.error)} /> : null}
           <Button
-            disabled={pointsBusy || coupons.isLoading || coupons.isFetching || Boolean(coupons.error)}
+            disabled={passwordIssues.length > 0 || pointsBusy || coupons.isLoading || coupons.isFetching || Boolean(coupons.error)}
             loading={create.isPending || certification.busy}
             onClick={() => void certification.run(() => create.mutate())}
           >

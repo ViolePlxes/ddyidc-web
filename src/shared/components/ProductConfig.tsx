@@ -3,13 +3,12 @@ import {
   Badge,
   Banner,
   Button,
-  SensitiveInput,
   LayerCard,
   Radio,
   Table,
   Tabs,
 } from "@cloudflare/kumo";
-import { ArrowsClockwiseIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
+import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +20,9 @@ import type {
   ProductSpec,
 } from "../api/console";
 import { useCartStore } from "../stores/cart";
+import { InstancePasswordInput } from "./InstancePasswordInput";
 import { generatePassword } from "../utils/credentials";
+import { instancePasswordIssues } from "../utils/instancePassword";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
@@ -222,6 +223,7 @@ export function ProductConfig({
   const [quantity, setQuantity] = useState(1);
 
   const [password, setPassword] = useState(generatePassword);
+  const passwordIssues = options.length ? instancePasswordIssues(password) : [];
   const [imageGroup, setImageGroup] = useState("");
   const certification = useCertificationGate();
   const addCart = useCartStore((state) => state.add);
@@ -347,8 +349,8 @@ export function ProductConfig({
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
           <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
-      <Button disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
+      <Button disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
     </LayerCard>
   );
   return (
@@ -387,7 +389,7 @@ export function ProductConfig({
         <LayerCard id={anchor("purchase")} className="scroll-mt-4 shadow-none grid gap-5 p-5">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
 <div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
-          {options.length ? <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><SensitiveInput label="自动生成密码" value={password} readOnly /><Button variant="secondary" shape="square" icon={<ArrowsClockwiseIcon />} aria-label="重新生成密码" onClick={() => setPassword(generatePassword())} /></div> : null}
+          {options.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
         </LayerCard>
 
         {certification.feedback}<Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
