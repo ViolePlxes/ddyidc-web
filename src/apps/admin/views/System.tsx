@@ -47,6 +47,8 @@ const sceneLabels: Record<string, string> = {
 };
 
 const testParams: Record<string, string> = {
+  server_count: "2",
+  earliest_expiry: "2026-10-09 09:00",
   code: "123456",
   minutes: "5",
   order_no: "DDY-TEST",
