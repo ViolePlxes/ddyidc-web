@@ -1,4 +1,6 @@
 import { Badge } from "../../../shared/components/Badge";
+import { TodoCountBadge } from "../../../shared/components/TodoCountBadge";
+import { useAdminTodos } from "../../../shared/hooks/useAdminTodos";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { DateRangeField } from "../../../shared/components/DateField";
@@ -7,7 +9,7 @@ import { ListChecksIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { getAdminTodos, getTodoEntry, getTodoItems, type TodoEntry } from "../../../shared/api/adminTodos";
+import { getTodoEntry, getTodoItems, type TodoEntry } from "../../../shared/api/adminTodos";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
@@ -44,7 +46,7 @@ export function AdminTodos() {
   useEffect(()=>{const id=params.get("record");const source=params.get("source");setSelected(id&&source?{id,source,customerId:"",customerName:"",title:"",number:"",status:"",amount:"",orderId:"",instanceId:"",createdAt:"",updatedAt:"",href:""}:undefined);},[kind,params.get("record")]);
   const page = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = [20, 50, 100].includes(Number(params.get("pageSize"))) ? Number(params.get("pageSize")) : 20;
-  const query = useQuery({ queryKey: ["admin-todos"], queryFn: getAdminTodos, refetchInterval: 30_000, retry: false });
+  const query = useAdminTodos();
   const valid = Boolean(kind && kinds.includes(kind));
   const ticketStatuses=useQuery({queryKey:["admin","tickets","statuses"],queryFn:adminTicketApi.statuses,enabled:kind==="tickets"});
   const sourceOptions=Object.fromEntries(Object.entries(sources).filter(([source])=>kind==="refunds"?["payment","marketplace","application"].includes(source):kind==="withdrawals"?["balance","marketplace"].includes(source):kind==="tickets"?source==="ticket":kind==="certifications"?source==="certification":kind==="recommendations"?source==="invite":kind==="offline-transfers"?source==="offline":kind==="manual-products"?["instance","order"].includes(source):source==="instance"));
@@ -61,7 +63,7 @@ export function AdminTodos() {
     <PageHeader title={item?.name ?? "待办事项"} description={kind==="manual-products"?"完成后直接标记清除待办；重新获取与待办目标完整符合时显示正常。数量每30秒更新。":kind==="expiring"?"展示未来三天（72小时）内到期的有效产品。数量每30秒更新。":"查看真实待办，进入详情处理。数量每30秒更新。"} actions={<Button variant="secondary" loading={query.isFetching || items.isFetching} onClick={() => { void query.refetch(); if (valid) void items.refetch(); }}>刷新</Button>} />
     {!kind ? <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       <Text variant="secondary">总计 {query.data?.complete ? "" : "已知"}待办 {query.data?.total ?? "—"} 项。同一对象可能出现在不同分类。</Text>
-      <div className="grid gap-4 md:grid-cols-3">{query.data?.items.map(entry => <LayerCard key={entry.key} className="grid gap-3 p-5"><Text variant="heading">{entry.name}</Text><Badge>{entry.count ?? "统计暂不可用"}</Badge>{entry.oldestAt ? <Text variant="secondary">最早等待 {date(entry.oldestAt)} · {waiting(entry.oldestAt, query.data.sampledAt)}</Text> : null}{entry.state==="config_required"?<Text variant="secondary">申请入口配置后可用，已有待办仍可核对</Text>:null}<Text variant="secondary">{entry.description}</Text><Link to={`/admin/todos/${entry.key}`}><Button variant="secondary">查看待办</Button></Link></LayerCard>)}</div>
+      <div className="grid gap-4 md:grid-cols-3">{query.data?.items.map(entry => <LayerCard key={entry.key} className="grid gap-3 p-5"><Text variant="heading">{entry.name}</Text><TodoCountBadge count={entry.count}/>{entry.oldestAt ? <Text variant="secondary">最早等待 {date(entry.oldestAt)} · {waiting(entry.oldestAt, query.data.sampledAt)}</Text> : null}{entry.state==="config_required"?<Text variant="secondary">申请入口配置后可用，已有待办仍可核对</Text>:null}<Text variant="secondary">{entry.description}</Text><Link to={`/admin/todos/${entry.key}`}><Button variant="secondary">查看待办</Button></Link></LayerCard>)}</div>
       <Text variant="secondary">更新于 {date(query.data?.sampledAt ?? "")}</Text><TodoSettings />
     </PageState> : !valid ? <Empty icon={<ListChecksIcon />} title="待办分类不存在" description="请从侧栏选择现有待办分类。" /> : <>
       <LayerCard className="flex flex-wrap items-end gap-3 p-4"><Input label="关键词" value={filters.keyword} maxLength={100} placeholder="编号、客户或事项" onChange={event => patch("keyword", event.target.value)} /><Input label="客户 ID" value={filters.customerId} onChange={event => patch("customerId", event.target.value)} /><Select label="来源" value={filters.source||"all"} items={{all:"全部来源",...sourceOptions}} onValueChange={v=>patch("source",v==="all"?"":v??"")} /><Select label="状态" value={filters.status||"all"} items={{all:"全部状态",...statusOptions}} onValueChange={v=>patch("status",v==="all"?"":v??"")} />{["refunds","withdrawals","offline-transfers"].includes(kind!)?<><Input label="金额下限（元）" inputMode="decimal" value={filters.minAmount} onChange={e=>patch("minAmount",e.target.value)}/><Input label="金额上限（元）" inputMode="decimal" value={filters.maxAmount} onChange={e=>patch("maxAmount",e.target.value)}/><Select label="支付或汇款渠道" value={filters.channel||"all"} items={kind==="withdrawals"?{all:"全部渠道",manual:"人工汇款"}:kind==="offline-transfers"?{all:"全部渠道",offline:"线下转账"}:{all:"全部渠道",alipay:"支付宝",wechat:"微信",offline:"线下转账"}} onValueChange={v=>patch("channel",v==="all"?"":v??"")}/></>:null}<DateRangeField label="创建日期范围" from={filters.createdFrom} to={filters.createdTo} onValueChange={(from,to)=>{const next=new URLSearchParams(params);for(const [key,value] of [["createdFrom",from],["createdTo",to]]){if(value)next.set(key!,value!);else next.delete(key!);}next.delete("page");setParams(next,{replace:true});}}/><Select label="每页条数" value={String(pageSize)} items={{"20":"20条","50":"50条","100":"100条"}} onValueChange={v=>patch("pageSize",v??"20")}/><Button variant="secondary" onClick={() => setParams({})}>清除筛选</Button>{historical?<Button variant="secondary" onClick={()=>patch("view",history?"pending":"history")}>{history?"查看待办":"查看全部历史"}</Button>:null}</LayerCard>

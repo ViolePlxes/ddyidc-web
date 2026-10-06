@@ -1,4 +1,4 @@
-import { Badge } from "../shared/components/Badge";
+import { TodoCountBadge } from "../shared/components/TodoCountBadge";
 import { useNavigation } from "../shared/hooks/useNavigation";
 import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
@@ -196,7 +196,7 @@ export function DashboardLayout({
                       render={
                         <Sidebar.MenuButton icon={group.icon ?? group.items[0]?.icon} tooltip={group.label}>
                           {group.label}
-                          {group.badge !== undefined && <Badge variant="error" className="ml-auto shrink-0">{group.badge}</Badge>}
+                          {group.badge !== undefined && <TodoCountBadge count={group.badge} className="ml-auto shrink-0" />}
                           <Sidebar.MenuChevron />
                         </Sidebar.MenuButton>
                       }
@@ -212,7 +212,7 @@ export function DashboardLayout({
                           >
                             <item.icon className="mr-2 size-4 shrink-0" />
                             {item.label}
-                            {item.badge !== undefined && <Badge variant="error" className="ml-auto shrink-0">{item.badge}</Badge>}
+                            {item.badge !== undefined && <TodoCountBadge count={item.badge} className="ml-auto shrink-0" />}
                           </Sidebar.MenuSubButton>
                         ))}
                       </Sidebar.MenuSub>

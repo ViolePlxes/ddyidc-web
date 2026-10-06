@@ -5,6 +5,8 @@ import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-quer
 import { navigationApi, type NavigationScope } from "../api/navigation";
 import { navigationIcon } from "../utils/navigationIcons";
 import type { NavigationGroup } from "../../layouts/DashboardLayout";
+import { useAdminTodos } from './useAdminTodos';
+import { withTodoCounts } from '../utils/todoCounts';
 
 const signal = "ddyidc:navigation-changed";
 export async function navigationChanged(client: QueryClient) {
@@ -43,6 +45,7 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
   return known ? availableItems.some(item => item.href === path) : availableItems.some(item => plugin(item.href) === module);
  };
  const nodes = query.data?.nodes ?? [];
+ const todos = useAdminTodos(scope === 'admin' && nodes.some(node => node.badge !== undefined && node.href.startsWith('/admin/todos')));
  const groups: NavigationGroup[] = nodes.filter(node => node.parentId === "0").map(group => ({
   label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge,
   items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({
@@ -50,5 +53,5 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
    href: node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,
   })),
  }));
- return { ...query, groups };
+ return { ...query, groups: scope === 'admin' ? withTodoCounts(groups, todos.data) : groups };
 }
