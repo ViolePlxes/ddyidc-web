@@ -1,6 +1,6 @@
 import { Banner, Button, Input, LayerCard, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode";
 import "./walletRecharge.css";
@@ -18,7 +18,6 @@ import { getBankTransfer } from "../../../shared/api/bankTransfer";
 type Channels = Record<PaymentChannel, boolean>;
 type Attempt = { checkout: PaymentCheckout; qr: string; payUrl?: string; amountCents: number; channel: PaymentChannel; deadline: number };
 const methods = [{ value: "alipay", label: "支付宝" }, { value: "wechat", label: "微信支付" }] as const;
-const blackButtonStyle = { "--kumo-button-emphasis-bg": "#0f1115", "--kumo-button-emphasis-ring": "#0f1115", "--kumo-button-emphasis-gradient-start": "#0f1115", "--kumo-button-emphasis-gradient-end": "#0f1115" } as CSSProperties;
 const amounts = [10, 20, 50, 100, 300, 500] as const;
 const terminalStates = new Set(["closed", "failed", "refunded", "received_review"]);
 
@@ -170,13 +169,13 @@ export function WalletRecharge() {
         {channels.error ? <Banner variant="error" title="支付方式读取失败" description={getApiMessage(channels.error)} /> : null}
         <div className="grid gap-3">
           <span className="text-sm text-kumo-subtle">支付金额（元）</span>
-          <div className="flex flex-wrap gap-2" aria-label="快捷充值金额">{amounts.map(value => <Button type="button" className="wallet-amount" size="sm" style={blackButtonStyle} key={value} disabled={locked} aria-pressed={amountChoice === String(value)} variant={amountChoice === String(value) ? "primary" : "secondary"} onClick={() => setAmountChoice(String(value))}>¥{value}</Button>)}
-            <Button type="button" className="wallet-amount" size="sm" style={blackButtonStyle} disabled={locked} aria-pressed={amountChoice === "custom"} variant={amountChoice === "custom" ? "primary" : "secondary"} onClick={() => setAmountChoice("custom")}>自定义</Button>
+          <div className="flex flex-wrap gap-2" aria-label="快捷充值金额">{amounts.map(value => <Button type="button" className="wallet-amount" size="sm" key={value} disabled={locked} aria-pressed={amountChoice === String(value)} variant={amountChoice === String(value) ? "primary" : "secondary"} onClick={() => setAmountChoice(String(value))}>¥{value}</Button>)}
+            <Button type="button" className="wallet-amount" size="sm" disabled={locked} aria-pressed={amountChoice === "custom"} variant={amountChoice === "custom" ? "primary" : "secondary"} onClick={() => setAmountChoice("custom")}>自定义</Button>
           </div>
           {amountChoice === "custom" ? <Input className="wallet-custom-amount" label="自定义金额（元）" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" disabled={locked} placeholder="请输入充值金额" /> : null}
           {amountChoice === "custom" && !cents ? <p role="alert" className="text-sm text-kumo-danger">请输入 1 至 1000000 元，最多两位小数。</p> : null}
         </div>
-        <Button type="submit" className="wallet-pay-button w-full justify-center" style={blackButtonStyle} variant="primary" loading={create.isPending} disabled={!cents || !channel || locked}>去支付{cents ? ` ${formatMoney(cents)}` : ""}</Button>
+        <Button type="submit" className="wallet-pay-button w-full justify-center" variant="primary" loading={create.isPending} disabled={!cents || !channel || locked}>去支付{cents ? ` ${formatMoney(cents)}` : ""}</Button>
         {create.error ? <Banner variant="error" title="发起充值失败" description={getApiMessage(create.error)} /> : null}
       </form>
       {attempt || message || pollError ? <section className="grid content-center justify-items-center gap-4" aria-label="支付状态">

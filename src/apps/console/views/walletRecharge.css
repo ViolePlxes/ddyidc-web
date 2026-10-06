@@ -1,30 +1,11 @@
-/* Page-scoped reference styling requested for the local approval preview. */
-.wallet-recharge-page { display: grid; gap: 24px; width: 100%; max-width: 936px; margin-inline: auto; }
-.wallet-recharge-page h1 { font-size: 24px; line-height: 32px; }
-.wallet-recharge-tabs { width: fit-content; }
-.wallet-recharge-tabs [role="tablist"] { min-height: 30px; padding: 2px; border-radius: 10px; }
-.wallet-recharge-tabs [role="tab"] { height: 26px; padding: 4px 12px; font-size: 14px; }
-.wallet-recharge-balance, .wallet-recharge-form, .wallet-recharge-notes { width: 100%; max-width: 600px; }
-.wallet-recharge-form { display: grid; align-content: start; gap: 24px; }
-.wallet-recharge-form .wallet-custom-amount { width: 100%; min-width: 0; border: 1px solid var(--color-kumo-line); --tw-ring-inset: inset; }
-.wallet-recharge-form .wallet-custom-amount:focus { border-color: var(--color-kumo-focus); }
-.wallet-recharge-form [data-kumo-part="legend"] { font-size: 14px; color: var(--color-kumo-subtle); }
-.wallet-recharge-form [data-kumo-component="Radio"][data-kumo-part="item-label"] {
-  width: 100%; min-height: 44px; padding: 9px 10px; border: 1px solid var(--color-kumo-line);
-  border-radius: 10px; background: transparent; align-items: center;
-}
-.wallet-recharge-form .wallet-payment-method:has([data-checked]) { border-color: #0f1115; box-shadow: none; background: transparent; }
-.wallet-payment-method img { display: block; width: auto; height: 24px; }
-.wallet-payment-method [data-kumo-part="item"] { position: absolute; opacity: 0; }
-.wallet-payment-method:focus-within { outline: none; }
-.wallet-payment-method:has([data-kumo-part="item"]:focus-visible) { border-color: var(--color-kumo-focus); }
-.wallet-transfer { width: 100%; max-width: 600px; display: grid; gap: 24px; }
-.wallet-transfer dl { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 20px 16px; font-size: 14px; }
+/* Layout only. Kumo components own control padding, radii and focus states. */
+.wallet-recharge-page { display: grid; gap: 1.5rem; width: 100%; max-width: 58.5rem; margin-inline: auto; }
+.wallet-recharge-tabs { width: fit-content; max-width: 100%; }
+.wallet-recharge-balance, .wallet-recharge-form, .wallet-recharge-notes { width: 100%; max-width: 37.5rem; min-width: 0; }
+.wallet-recharge-form { display: grid; align-content: start; gap: 1.5rem; }
+.wallet-payment-method img { display: block; width: auto; height: 1.5rem; max-width: 100%; }
+.wallet-transfer { width: 100%; max-width: 37.5rem; display: grid; gap: 1.5rem; }
+.wallet-transfer dl { display: grid; grid-template-columns: minmax(0, 5.25rem) minmax(0, 1fr); gap: 1rem; }
 .wallet-transfer dt { color: var(--color-kumo-subtle); }
 .wallet-transfer dd { overflow-wrap: anywhere; }
-.wallet-recharge-form .wallet-amount { height: 32px; padding-inline: 12px; font-size: 14px; font-weight: 400; line-height: 14px; border-radius: 8px; box-shadow: none; --tw-ring-shadow: 0 0 transparent; }
-.wallet-recharge-form [aria-label="快捷充值金额"] { gap: 12px; }
-.wallet-recharge-form .wallet-amount[aria-pressed="false"] { background: var(--color-kumo-tint); }
-.wallet-recharge-form .wallet-pay-button { height: 36px; margin-top: 10px; padding-inline: 14px; border-radius: 10px; }
-.wallet-recharge-notes { margin-top: 24px; font-size: 14px; line-height: 22px; }
-.wallet-recharge-notes h2 { font-weight: 600; }
+.wallet-recharge-notes { display: grid; gap: 0.75rem; }

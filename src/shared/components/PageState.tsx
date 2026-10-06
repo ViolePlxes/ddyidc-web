@@ -75,5 +75,5 @@ export function PageState({
       </ContentFade>
     );
   }
-  return <ContentFade><div>{children}</div></ContentFade>;
+  return <ContentFade className="grid min-w-0 gap-6">{children}</ContentFade>;
 }

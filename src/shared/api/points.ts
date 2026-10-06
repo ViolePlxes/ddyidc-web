@@ -38,7 +38,7 @@ export const pointsApi={
   claimTask:(id:string)=>unwrap(userRequest.post<ApiEnvelope<PointsAccount>>(`/points/tasks/${id}/claim`)),
   goods:(params?:Record<string,unknown>)=>page<PointsGoods>(userRequest,"/points/goods",params),
   categories:()=>unwrap(userRequest.get<ApiEnvelope<PointsCategory[]>>("/points/categories")),
-  exchange:(id:string,input:{quantity:number;recipient?:Record<string,string>})=>unwrap(userRequest.post<ApiEnvelope<PointsOrder>>(`/points/goods/${id}/exchange`,input)),
+  exchange:(id:string,input:{quantity:number;recipient?:Record<string,string>;requestId:string})=>unwrap(userRequest.post<ApiEnvelope<PointsOrder>>(`/points/goods/${id}/exchange`,input)),
   orders:(params?:Record<string,unknown>)=>page<PointsOrder>(userRequest,"/points/orders",params),
   rules:()=>unwrap(userRequest.get<ApiEnvelope<PointsRule[]>>("/points/rules")),
 };
@@ -49,12 +49,13 @@ const resource=<T extends {id?:string}>(path:string)=>({
   remove:(id:string)=>unwrap(adminRequest.delete<ApiEnvelope<{deleted:boolean}>>(`${path}/${id}`)),
 });
 export const pointsAdminApi={
+  eventTasks:()=>unwrap(adminRequest.get<ApiEnvelope<Array<{key:string;userId:string;event:string;status:'pending'|'done'|'retry';attempts:number;error:string;availableAt:string}>>>("/points/event-tasks")),
   settings:()=>unwrap(adminRequest.get<ApiEnvelope<PointsSettings>>("/points/settings")),
   saveSettings:(value:PointsSettings)=>unwrap(adminRequest.put<ApiEnvelope<PointsSettings>>("/points/settings",value)),
   stats:()=>unwrap(adminRequest.get<ApiEnvelope<PointsStats>>("/points/stats")),
   accounts:(params?:Record<string,unknown>)=>page<PointsAccount>(adminRequest,"/points/accounts",params),
   setAccountStatus:(id:string,status:boolean)=>unwrap(adminRequest.post<ApiEnvelope<{updated:boolean}>>(`/points/accounts/${id}/status`,{status})),
-  grant:(userIds:string[],points:number,remark:string)=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/grant",{userIds,points,remark})),
+  grant:(userIds:string[],points:number,remark:string,requestId:string)=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/grant",{userIds,points,remark,requestId})),
   trigger:(userIds:string[],event:string,amountCents=0,remark="")=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/trigger",{userIds,event,amountCents,remark})),
   rules:resource<PointsRule>("/points/rules"), tasks:resource<PointsTask>("/points/tasks"), goods:resource<PointsGoods>("/points/goods"), categories:resource<PointsCategory>("/points/categories"),
   orders:(params?:Record<string,unknown>)=>page<PointsOrder>(adminRequest,"/points/orders",params),
