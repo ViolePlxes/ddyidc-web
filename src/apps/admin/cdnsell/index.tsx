@@ -1,6 +1,7 @@
+import { Badge } from "../../../shared/components/Badge";
 import { localDateTime } from "../../../shared/utils/localDate";
 import { DateRangeField } from "../../../shared/components/DateField";
-import { Badge, Banner, Button, Input, LayerCard, Switch, Table, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Switch, Table, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { cdnsellAdminApi, type CdnProduct, type UpstreamAccount, type UpstreamPackage } from "../../../shared/api/cdnsell";

@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, LayerCard, LinkButton, Switch, Table, Tabs } from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { Banner, Button, LayerCard, LinkButton, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CopyIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useState } from "react";

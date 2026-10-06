@@ -1,5 +1,6 @@
+import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Badge, Banner, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Textarea,  } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";

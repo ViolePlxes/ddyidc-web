@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, LayerCard, Link, Surface } from "@cloudflare/kumo";
+import { Badge } from "../../shared/components/Badge";
+import { Banner, Button, LayerCard, Link, Surface } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { Route, Routes, useParams } from "react-router-dom";
 import type { ProductDetail, ProductSummary } from "../../shared/api/console";

@@ -19,3 +19,5 @@
 - 日期范围统一使用 `DateField.tsx` 导出的 `DateRangeField`，基于 Kumo `DatePicker mode="range"`，禁止起止两个独立单日期日历。桌面双月、手机单月；起止值一次应用，筛选支持清空及单侧范围，业务有效期必须完整；日期时间保留端点时刻、精度及原接口时区。
 
 - 机器生命周期和电源状态通过 `MachineStatusBadge` 统一展示：运行绿色、操作/开通中蓝色、停机/暂停/待核查橙色、故障/到期红色、删除灰色。只用 Kumo Badge 原生色彩变体，不修改状态判定和操作权限。
+
+- 所有应用 Badge 统一复用 `src/shared/components/Badge.tsx`，使用 Kumo `appearance="dot"`；仅使用原生支持的 success / warning / error / neutral 圆点，不自绘圆点。

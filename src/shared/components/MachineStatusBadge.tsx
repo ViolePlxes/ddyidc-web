@@ -1,5 +1,4 @@
-import { Badge } from '@cloudflare/kumo';
-
+import { Badge } from "./Badge";
 /** Presentation only: lifecycle codes and power states keep their existing meanings. */
 export function machineStatusVariant(status: string | number) {
   const value = String(status).toLowerCase();

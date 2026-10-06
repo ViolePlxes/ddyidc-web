@@ -1,4 +1,4 @@
-import { Badge } from "@cloudflare/kumo";
+import { Badge } from "./Badge";
 import { MachineStatusBadge } from './MachineStatusBadge';
 
 const statusMap = {

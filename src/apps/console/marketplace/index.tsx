@@ -1,19 +1,10 @@
+import { Badge } from "../../../shared/components/Badge";
 import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
 import { ConfirmAction } from "../../../shared/components/ConfirmAction";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { useMarketplaceAvailability } from "../../../shared/router/MarketplaceGate";
-import {
-  Badge,
-  Banner,
-  Button,
-  Input,
-  LayerCard,
-  Switch,
-  Table,
-  Tabs,
-  Textarea,
-} from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";

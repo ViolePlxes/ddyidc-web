@@ -1,16 +1,5 @@
-import {
-  Badge,
-  Banner,
-  Button,
-  Input,
-  LayerCard,
-  Loader,
-  Select,
-  Switch,
-  Table,
-  Tabs,
-  Textarea,
-} from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {

@@ -1,7 +1,8 @@
+import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { DateRangeField } from "../../../shared/components/DateField";
-import { Badge, Button, Empty, Input, LayerCard, Pagination, Select, Table, Text } from "@cloudflare/kumo";
+import { Button, Empty, Input, LayerCard, Pagination, Select, Table, Text } from "@cloudflare/kumo";
 import { ListChecksIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";

@@ -1,5 +1,6 @@
+import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Badge, Banner, Button, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tooltip,  } from "@cloudflare/kumo";
+import { Banner, Button, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tooltip } from "@cloudflare/kumo";
 import {
   CaretDownIcon,
   PlusIcon,

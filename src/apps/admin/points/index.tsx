@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, Input, LayerCard, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { Banner, Button, Input, LayerCard, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { pointsAdminApi, type PointsCategory, type PointsGoods, type PointsRule, type PointsSettings, type PointsTask, type RiskRule, type RiskTag } from "../../../shared/api/points";

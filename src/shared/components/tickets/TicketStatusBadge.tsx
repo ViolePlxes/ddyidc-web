@@ -1,4 +1,4 @@
-import { Badge } from "@cloudflare/kumo";
+import { Badge } from "../Badge";
 import type { TicketStatus } from "../../api/tickets";
 
 function statusVariant(status: TicketStatus): "primary" | "secondary" | "destructive" | "outline" | "beta" {

@@ -1,5 +1,4 @@
-import { Badge } from "@cloudflare/kumo";
-
+import { Badge } from "./Badge";
 const labels: Record<string, string> = {
   pending: "待处理",
   pending_pay: "待支付",

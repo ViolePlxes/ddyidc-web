@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { groupBuyAdminApi } from "../../../shared/api/groupbuy";

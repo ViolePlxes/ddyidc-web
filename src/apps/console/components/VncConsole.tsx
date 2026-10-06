@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, LayerCard } from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { Banner, Button, LayerCard } from "@cloudflare/kumo";
 import RFB from "@novnc/novnc";
 import { useEffect, useRef, useState } from "react";
 

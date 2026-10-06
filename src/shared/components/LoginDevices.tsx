@@ -1,6 +1,7 @@
+import { Badge } from "./Badge";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
 import { getLoginDevices, revokeLoginDevice } from "../api/auth";
 import { getApiMessage } from "../api/request";
 import { clearRefreshSession } from "../api/refreshSession";

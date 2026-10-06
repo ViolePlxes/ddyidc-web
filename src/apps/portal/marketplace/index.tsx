@@ -1,12 +1,6 @@
+import { Badge } from "../../../shared/components/Badge";
 import { ConfirmAction } from "../../../shared/components/ConfirmAction";
-import {
-  Badge,
-  Banner,
-  Button,
-  Input,
-  LayerCard,
-  Select,
-} from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select } from "@cloudflare/kumo";
 import {
   HeartIcon,
   ShareNetworkIcon,

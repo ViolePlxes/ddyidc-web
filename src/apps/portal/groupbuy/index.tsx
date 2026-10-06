@@ -1,4 +1,5 @@
-import { Badge, LayerCard, LinkButton } from "@cloudflare/kumo";
+import { Badge } from "../../../shared/components/Badge";
+import { LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { ClockIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router-dom";

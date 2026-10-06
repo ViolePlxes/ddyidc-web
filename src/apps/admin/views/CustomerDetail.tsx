@@ -1,9 +1,10 @@
+import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { ImportInstanceDialog } from "./ImportInstanceDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";
-import { Badge, Banner, Breadcrumbs, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Text, Textarea,  } from "@cloudflare/kumo";
+import { Banner, Breadcrumbs, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Text, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   parsePhoneNumberFromString,

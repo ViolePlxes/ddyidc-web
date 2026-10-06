@@ -1,5 +1,6 @@
+import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
-import { Badge, Button, LayerCard, Switch, Tabs } from "@cloudflare/kumo";
+import { Button, LayerCard, Switch, Tabs } from "@cloudflare/kumo";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 export function ComponentsPage() {

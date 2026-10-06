@@ -1,5 +1,6 @@
+import { Badge } from "../shared/components/Badge";
 import { useNavigation } from "../shared/hooks/useNavigation";
-import { Badge, Banner } from "@cloudflare/kumo";
+import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
 import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";

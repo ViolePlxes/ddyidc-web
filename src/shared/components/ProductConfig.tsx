@@ -1,13 +1,6 @@
+import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import {
-  Badge,
-  Banner,
-  Button,
-  LayerCard,
-  Radio,
-  Table,
-  Tabs,
-} from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Radio, Table, Tabs } from "@cloudflare/kumo";
 import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";

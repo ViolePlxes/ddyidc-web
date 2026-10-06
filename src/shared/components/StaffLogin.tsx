@@ -1,5 +1,6 @@
+import { Badge } from "./Badge";
 import { FormEvent, useState } from "react";
-import { Badge, Button, Input, LayerCard } from "@cloudflare/kumo";
+import { Button, Input, LayerCard } from "@cloudflare/kumo";
 import { ShieldCheckIcon } from "@phosphor-icons/react";
 import { useLocation } from "react-router-dom";
 import { getApiMessage } from "../api/request";

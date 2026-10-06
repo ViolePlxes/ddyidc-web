@@ -1,8 +1,9 @@
+import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { localDateTime } from "../../../shared/utils/localDate";
 import { DateRangeField } from "../../../shared/components/DateField";
-import { Badge, Banner, Button, Checkbox, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
