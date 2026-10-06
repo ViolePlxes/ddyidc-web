@@ -1,5 +1,6 @@
+import { Dialog } from "./Dialog";
 import { VideoCameraIcon } from '@phosphor-icons/react';
-import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs, Textarea } from '@cloudflare/kumo';
+import { Banner, Button, Input, LayerCard, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';

@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog, LayerCard } from "@cloudflare/kumo";
+import { Dialog } from "./Dialog";
+import { Banner, Button, LayerCard } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
@@ -169,9 +170,9 @@ export function PaymentDialog({
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger render={<Button disabled={disabled}>{businessType !== "recharge" && triggerLabel === "在线支付" ? "支付订单" : triggerLabel}</Button>} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog size="lg" className="grid gap-5 p-6">
         <div className="flex justify-between gap-4">
-          <div className="grid gap-2">
+          <div className="grid min-w-0 gap-2">
             <Dialog.Title className="text-xl font-semibold">{businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               应付 {formatMoney(amountCents)}。支付结果以服务端核对并确认的状态为准。
@@ -189,7 +190,7 @@ export function PaymentDialog({
         {checkout?.wechat && currentState === "pending" && !expired ? (
           <LayerCard className="grid justify-items-center gap-3 p-5">
             <strong>请使用微信扫码支付 {formatMoney(amountCents)}</strong>
-            {qrImage ? <img src={qrImage} width={280} height={280} alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
+            {qrImage ? <img src={qrImage} width={280} height={280} className="h-auto max-w-full" alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
             {qrError ? <Banner variant="error" title="二维码生成失败" description="请关闭后重新打开支付窗口。" /> : null}
           </LayerCard>
         ) : null}
@@ -212,7 +213,7 @@ export function PaymentDialog({
         {status.error ? <Banner variant="error" title="查询支付状态失败" description={getApiMessage(status.error)} /> : null}
         {close.error ? <Banner variant="error" title="关闭支付单失败" description={getApiMessage(close.error)} /> : null}
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end [&>button]:w-full sm:[&>button]:w-auto">
           {checkout && businessType === "order" && currentState === "pending"
             ? <Button variant="secondary" loading={close.isPending} onClick={() => close.mutate()}>关闭支付单</Button>
             : null}

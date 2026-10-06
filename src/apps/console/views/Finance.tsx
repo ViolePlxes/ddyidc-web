@@ -1,5 +1,6 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
-import { Banner, Button, Dialog, Input, LayerCard, Pagination, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Pagination, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";

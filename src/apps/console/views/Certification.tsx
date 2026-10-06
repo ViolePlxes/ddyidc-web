@@ -1,13 +1,6 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { AlipayCertification } from "../../../shared/components/AlipayCertification";
-import {
-  Badge,
-  Banner,
-  Button,
-  Dialog,
-  Input,
-  LayerCard,
-  Select,
-} from "@cloudflare/kumo";
+import { Badge, Banner, Button, Input, LayerCard, Select,  } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { CountryCode } from "libphonenumber-js";

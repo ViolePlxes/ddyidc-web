@@ -1,4 +1,5 @@
-import { Button, Dialog } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Button } from "@cloudflare/kumo";
 
 type AgreementConsentDialogProps = {
   open: boolean;

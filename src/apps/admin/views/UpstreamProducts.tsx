@@ -1,4 +1,5 @@
-import { Banner, Button, Checkbox, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Banner, Button, Checkbox, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { ArrowsClockwiseIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";

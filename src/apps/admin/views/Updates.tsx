@@ -1,5 +1,6 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { ArrowsClockwiseIcon, GitBranchIcon } from "@phosphor-icons/react";
-import { Badge, Banner, Button, Dialog, LayerCard, Loader, Meter, Table } from "@cloudflare/kumo";
+import { Badge, Banner, Button, LayerCard, Loader, Meter, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {

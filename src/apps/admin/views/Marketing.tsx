@@ -1,5 +1,6 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { useSearchParams } from "react-router-dom";
-import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";

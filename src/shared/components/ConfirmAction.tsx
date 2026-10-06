@@ -1,4 +1,5 @@
-import { Button, Dialog } from "@cloudflare/kumo";
+import { Dialog } from "./Dialog";
+import { Button } from "@cloudflare/kumo";
 import { useState, type ReactNode } from "react";
 
 export function ConfirmAction({ children, title, description, onConfirm, loading, disabled }: {

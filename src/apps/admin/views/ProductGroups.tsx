@@ -1,8 +1,9 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { GroupProducts } from "./GroupProducts";
 import { DragHandle, SortableList } from "../../../shared/components/SortableTableBody";
 import { useSortableList, type ListDrop } from "../../../shared/hooks/useSortableList";
 import { invalidateCatalog, publishCatalogChange } from "../../../shared/utils/catalogCache";
-import { Banner, Button, Checkbox, Dialog, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, FolderPlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";

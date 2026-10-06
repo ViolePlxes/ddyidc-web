@@ -1,8 +1,9 @@
+import { Dialog } from "../../../shared/components/Dialog";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
-import { Banner, Button, Dialog, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";

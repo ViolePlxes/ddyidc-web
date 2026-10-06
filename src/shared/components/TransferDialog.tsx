@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog, Input } from "@cloudflare/kumo";
+import { Dialog } from "./Dialog";
+import { Banner, Button, Input } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";

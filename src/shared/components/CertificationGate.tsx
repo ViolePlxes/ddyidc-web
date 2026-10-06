@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog } from "@cloudflare/kumo";
+import { Dialog } from "./Dialog";
+import { Banner, Button } from "@cloudflare/kumo";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { certificationApi } from "../api/certification";

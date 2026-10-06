@@ -1,4 +1,5 @@
-import { Button, Dialog, Input, Select, Switch } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Button, Input, Select, Switch } from "@cloudflare/kumo";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { DataTable, type DataRow } from "../../../shared/components/DataTable";
 import { PageHeader } from "../../../shared/components/PageHeader";

@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, Dialog, Input, LayerCard, Pagination, Tabs } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Badge, Banner, Button, Input, LayerCard, Pagination, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";

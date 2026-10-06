@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog, LayerCard, Switch, Table, Tabs } from "@cloudflare/kumo";
+import { Dialog } from "./Dialog";
+import { Banner, Button, LayerCard, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";

@@ -1,13 +1,5 @@
-import {
-  Banner,
-  Button,
-  Dialog,
-  Input,
-  Pagination,
-  Select,
-  Table,
-  Textarea,
-} from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Banner, Button, Input, Pagination, Select, Table, Textarea,  } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";

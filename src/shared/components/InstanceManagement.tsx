@@ -1,6 +1,7 @@
+import { Dialog } from "./Dialog";
 import { DateField } from "./DateField";
 import { localDateTime } from "../utils/localDate";
-import { Banner, Button, Dialog, Input, Select, SensitiveInput, Switch, Textarea } from '@cloudflare/kumo';
+import { Banner, Button, Input, Select, SensitiveInput, Switch, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';

@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog, Input, LayerCard, LinkButton, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowsLeftRightIcon, CheckCircleIcon, HandPalmIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";

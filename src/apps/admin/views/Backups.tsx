@@ -1,4 +1,5 @@
-import { Badge, Banner, Button, Dialog, Input, LayerCard, Loader, Pagination, Select, Switch, Table } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Badge, Banner, Button, Input, LayerCard, Loader, Pagination, Select, Switch, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { backupAdmin, type BackupInput, type BackupJob } from "../../../shared/api/backupAdmin";

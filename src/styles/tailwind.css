@@ -34,3 +34,91 @@ body:has([data-mobile-binding="true"]) {
   color-scheme: light;
 }
 
+/* Layout only: Kumo owns all modal colors, typography, borders and shadows. */
+.ddy-dialog {
+  --dialog-gutter: 1rem;
+  top: max(var(--dialog-gutter), env(safe-area-inset-top));
+  max-width: calc(100vw - 2 * var(--dialog-gutter));
+  max-height: calc(100vh - 2 * var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 2 * var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
+}
+
+.ddy-dialog > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ddy-dialog :where(div, form, section, article, fieldset) {
+  min-width: 0;
+}
+
+.ddy-dialog .grid {
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.ddy-dialog :where(p, dd, dt, h2, h3) {
+  overflow-wrap: anywhere;
+}
+
+.ddy-dialog :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+.ddy-dialog .flex.justify-end,
+.ddy-dialog .flex.justify-between:has(> button):not(:has(h2)) {
+  flex-wrap: wrap;
+}
+
+.ddy-dialog button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ddy-dialog .flex > button {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.kumo-popover-popup {
+  max-width: calc(100vw - 2rem);
+  max-height: min(calc(100dvh - 2rem), var(--available-height, calc(100dvh - 2rem)));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+[role="menu"] {
+  max-width: min(calc(100vw - 2rem), var(--available-width, calc(100vw - 2rem)));
+}
+
+[role="menuitem"],
+[role="menuitemcheckbox"],
+[role="menuitemradio"] {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+  .ddy-dialog {
+    --dialog-gutter: 2rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .ddy-dialog {
+    padding: 1rem;
+  }
+
+  .ddy-dialog button {
+    white-space: normal;
+    height: auto;
+    min-height: 2.5rem;
+    padding-block: 0.5rem;
+  }
+}
+

@@ -1,4 +1,5 @@
-import { Banner, Button, Dialog, Input, LayerCard, Table } from "@cloudflare/kumo";
+import { Dialog } from "../../../shared/components/Dialog";
+import { Banner, Button, Input, LayerCard, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
