@@ -40,6 +40,7 @@ const sceneLabels: Record<string, string> = {
   order: "下单成功",
   activation: "开通成功",
   expiry: "到期提醒",
+  expiry_digest: "汇总到期提醒",
   recharge: "充值到账",
   ticket_reply: "工单回复",
   ticket_new: "新工单提醒",
@@ -265,7 +266,7 @@ function NotifyLogs() {
               <Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell>
               <Table.Cell><div className="grid"><span>{sceneLabels[log.scene] ?? log.scene}</span><span className="text-xs text-kumo-subtle">{log.channel}</span></div></Table.Cell>
               <Table.Cell>{log.target}</Table.Cell>
-              <Table.Cell><Badge variant={log.status === "success" ? "success" : "error"}>{log.status === "success" ? "成功" : "失败"}</Badge></Table.Cell>
+              <Table.Cell><Badge variant={log.status === "success" ? "success" : log.status === "failed" ? "error" : "outline"}>{({success:"成功",failed:"失败",submitted:"服务商已接收",unknown:"结果待核对",pending:"等待重试"} as Record<string,string>)[log.status] ?? log.status}</Badge></Table.Cell>
               <Table.Cell><span className="text-sm text-kumo-subtle">{log.requestId || log.error || "—"}</span></Table.Cell>
             </Table.Row>
           ))}

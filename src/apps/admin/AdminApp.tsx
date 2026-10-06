@@ -101,6 +101,7 @@ const ProductGroups = lazy(() =>
     .adminProductGroups()
     .then((module) => ({ default: module.ProductGroups })),
 );
+const NotificationTasks = lazy(() => import('./views/NotificationTasks').then(module => ({ default: module.NotificationTasks })));
 const AdminSystem = lazy(() =>
   routeModules
     .adminSystem()
@@ -239,6 +240,7 @@ const adminGroups: NavigationGroup[] = [
     label: "系统设置",
     items: [
       { label: "系统配置", href: "/admin/system", icon: GearIcon },
+      { label: "通知任务", href: "/admin/notification-tasks", icon: GearIcon },
       { label: "更新中心", href: "/admin/updates", icon: ArrowsClockwiseIcon },
       { label: "数据库备份", href: "/admin/backups", icon: CloudArrowDownIcon },
     ],
@@ -505,6 +507,7 @@ export function AdminApp() {
             <Route path="/admin/transfers" element={<LazyRoute><TransfersPage admin /></LazyRoute>} />
  <Route path="/admin/certifications" element={<LazyRoute><Certifications /></LazyRoute>} />
             <Route path="/admin/backups" element={<LazyRoute><AdminBackups /></LazyRoute>} />
+            <Route path="/admin/notification-tasks" element={<LazyRoute><NotificationTasks /></LazyRoute>} />
             <Route path="/admin/todos/:kind?" element={<LazyRoute><AdminTodos /></LazyRoute>} />
             <Route path="/admin/navigation" element={<LazyRoute><Navigation /></LazyRoute>} />
             <Route path="/admin/social-login" element={<LazyRoute><SocialLoginSettings /></LazyRoute>} />
