@@ -438,7 +438,7 @@ export function AdminCustomers() {
       <LayerCard className="shadow-none grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
         <Input
           aria-label="客户关键词"
-          placeholder="账号、姓名、邮箱或手机号…"
+          placeholder="用户 ID、账号、姓名、邮箱或手机号…"
           value={draftKeyword}
           onChange={(event) => setDraftKeyword(event.target.value)}
         />

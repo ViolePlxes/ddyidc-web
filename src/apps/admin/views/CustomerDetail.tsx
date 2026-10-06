@@ -637,7 +637,7 @@ export function AdminCustomerDetail() {
           <div className="grid gap-2">
             <Input
               aria-label="搜索切换用户"
-              placeholder="搜索姓名、手机号或邮箱"
+              placeholder="搜索用户 ID、姓名、手机号或邮箱"
               value={keyword}
               onChange={(e) => {
                 setKeyword(e.target.value);
