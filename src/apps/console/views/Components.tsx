@@ -1,3 +1,4 @@
+import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Badge, Button, LayerCard, Switch, Tabs } from "@cloudflare/kumo";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
@@ -12,7 +13,7 @@ export function ComponentsPage() {
         <div className="flex flex-wrap gap-2">
           <Button>主操作</Button>
           <Button variant="secondary">次操作</Button>
-          <Badge variant="success">运行中</Badge>
+          {["running","stopped","provisioning","fault","expired","deleted"].map(status=><MachineStatusBadge key={status} status={status}/>)}
           <Badge variant="warning">待处理</Badge>
           <Badge variant="error">失败</Badge>
         </div>

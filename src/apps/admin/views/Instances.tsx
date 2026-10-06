@@ -1,3 +1,4 @@
+import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { localDateTime } from "../../../shared/utils/localDate";
 import { DateRangeField } from "../../../shared/components/DateField";
@@ -51,7 +52,7 @@ export function AdminInstances(){
   case 'product':return <div className="grid gap-1"><span>{r.productName}</span><span className="text-xs text-kumo-subtle">{r.hostname||'—'}</span></div>;
   case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={`/admin/customers/${r.customerId}`}>{r.username||r.customerId}</Link><span className="text-xs">{r.phone||r.email||'—'}</span></div>;
   case 'ip':return <div className="grid gap-1"><span>{r.primaryIp||'—'}</span>{r.ips.filter(ip=>ip!==r.primaryIp).length>0&&<details><summary className="cursor-pointer text-xs text-kumo-link">附加 IP（{r.ips.filter(ip=>ip!==r.primaryIp).length}）</summary>{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><p key={ip}>{ip}</p>)}</details>}</div>;
-  case 'status':return <div className="grid gap-1"><Badge variant={r.status===3?'success':r.status===6?'secondary':'warning'}>{statusNames[r.status]||'未知'}</Badge><span className="text-xs text-kumo-subtle">{powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}（缓存）</span>{r.errorCount>0&&<Link className="text-xs text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
+  case 'status':return <div className="grid gap-1"><MachineStatusBadge status={r.status} label={statusNames[r.status]||'未知'}/><div className="flex flex-wrap items-center gap-1"><MachineStatusBadge status={r.powerStatus} label={powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}/><span className="text-xs text-kumo-subtle">（缓存）</span></div>{r.errorCount>0&&<Link className="text-xs text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
   case 'expires':return date(r.expiresAt);
   case 'amount':return <div className="grid gap-1"><span>{r.renewalAmount===null?'价格未记录':`¥${r.renewalAmount}`}</span><span className="text-xs text-kumo-subtle">{cycleLabels[r.cycle]||r.cycle||'—'}</span></div>;
   case 'realName':return <span>{r.realName?.trim()||r.customerId}</span>;

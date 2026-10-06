@@ -1,3 +1,4 @@
+import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { ImportInstanceDialog } from "./ImportInstanceDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
@@ -148,9 +149,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
                   cells = [
                     <Link className="text-kumo-link hover:underline" to={`/admin/customers/${id}/instances/${r.id}`}>{r.name || r.number}</Link>,
                     r.number,
-                    <Badge variant="secondary">
-                      {productLabels[r.status] ?? r.status}
-                    </Badge>,
+                    <MachineStatusBadge status={r.status} label={String(productLabels[r.status] ?? r.status)} />,
                     <span className="inline-block max-w-xs whitespace-pre-wrap break-words">{r.remark || "—"}</span>,
                     r.ip || "—",
                     r.activated_at ? formatDate(r.activated_at) : "—",

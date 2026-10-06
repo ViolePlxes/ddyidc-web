@@ -1,4 +1,5 @@
 import { Badge } from "@cloudflare/kumo";
+import { MachineStatusBadge } from './MachineStatusBadge';
 
 const statusMap = {
   pending: { label: "待支付", variant: "info" },
@@ -19,5 +20,8 @@ export type StatusCode = keyof typeof statusMap;
 
 export function StatusBadge({ status }: { status: StatusCode }) {
   const item = statusMap[status];
+  if (['running', 'stopped', 'destroyed', 'suspended', 'expired', 'provisioning'].includes(status)) {
+    return <MachineStatusBadge status={status} label={item.label} />;
+  }
   return <Badge variant={item.variant}>{item.label}</Badge>;
 }
