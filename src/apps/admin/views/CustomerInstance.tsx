@@ -10,11 +10,13 @@ import type { InstanceActionInput } from '../../../shared/api/console';
 import { getApiMessage } from '../../../shared/api/request';
 import { PageState } from '../../../shared/components/PageState';
 import { formatDate, cycleLabels } from '../../../shared/utils/format';
-import { ActionDialog, ReinstallDialog } from '../../console/views/InstanceConsole';
+import { InstanceSecurityGroups } from "../../../shared/components/InstanceSecurityGroups";
+import { InstanceUpgrade } from "../../../shared/components/InstanceUpgrade";
+import { ActionDialog, RescueDialog, ReinstallDialog } from '../../console/views/InstanceConsole';
 import { CopyValue, InfoGroup, InstanceMonitoring, configValue } from '../../console/views/instanceDetails';
 import { VncConsole } from '../../console/components/VncConsole';
 
-const actions:Record<string,string>={remark:'修改备注',edit:'修改实例',credentials:'查看登录信息',auto_renew:'自动续费设置',renew:'实例续费',import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
+const actions:Record<string,string>={hard_stop:'硬关机',hard_reboot:'硬重启',rescue:'进入救援系统',exit_rescue:'退出救援系统',upgrade:'产品升降配',security_group:'安全组操作',remark:'修改备注',edit:'修改实例',credentials:'查看登录信息',auto_renew:'自动续费设置',renew:'实例续费',import:'导入实例',start:'开机',stop:'关机',reboot:'重启',reset_password:'重置密码',reinstall:'重装系统',remote:'VNC'};
 export function CustomerInstanceVnc(){
  const {customerId='',instanceId=''}=useParams();const [search]=useSearchParams();
  const token=search.get('token')||'';
@@ -57,7 +59,7 @@ export function CustomerInstance(){
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href="/admin/customers">客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`/admin/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
   <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`/admin/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
-  <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
+  <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'upgrade',label:'产品升级降级'},{value:'security',label:'安全组'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
   <PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null}>
    {item&&<>
     {item.warning&&<Banner variant="alert" title="实时信息提示" description={item.warning}/>}
@@ -75,12 +77,14 @@ export function CustomerInstance(){
      ]}/><LayerCard className="grid gap-4 p-5"><h2 className="text-lg font-semibold">续费管理</h2><InstanceRenewal key={item.id} instance={item} customerId={customerId}/></LayerCard></div>
      <div className="grid gap-5"><LayerCard className="grid gap-4 p-5"><h2 className="text-lg font-semibold">实例操作</h2><p className="text-sm text-kumo-subtle">支持的操作由实例能力决定，执行结果与操作人员记录到实例日志。</p><div className="flex flex-wrap gap-2">
       {(['start','stop','reboot'] as const).map(op=><ActionDialog key={op} label={actions[op]??op} title={`确认${actions[op]}`} description={op==='start'?'将启动该实例。':'操作可能中断客户业务，请确认后继续。'} disabled={!caps?.[op]} loading={action.isPending} onConfirm={()=>submit({action:op})}/>)}
-      {reset}{reinstall}<Button variant="secondary" disabled={!caps?.remote||action.isPending} onClick={()=>submit({action:'remote'})}>VNC</Button>
+      <ActionDialog label="硬关机" title="确认硬关机" description="将强制切断电源，未保存数据可能丢失，请确认可以中断业务。" disabled={!caps?.hardStop || live.busy} loading={action.isPending} onConfirm={()=>submit({action:'hard_stop'})}/><ActionDialog label="硬重启" title="确认硬重启" description="将强制断电重启，可能导致未保存数据丢失或文件系统损坏。" disabled={!caps?.hardReboot || live.busy} loading={action.isPending} onConfirm={()=>submit({action:'hard_reboot'})}/><RescueDialog disabled={!caps?.rescue || live.busy} loading={action.isPending} onConfirm={submit}/><ActionDialog label="退出救援系统" title="确认退出救援" description="将重启实例并恢复正常系统启动。" disabled={!caps?.exitRescue || live.busy} loading={action.isPending} onConfirm={()=>submit({action:'exit_rescue'})}/>{reset}{reinstall}<Button variant="secondary" disabled={!caps?.remote||action.isPending} onClick={()=>submit({action:'remote'})}>VNC</Button>
      </div>{!Object.values(caps??{}).some(Boolean)&&<p className="text-sm text-kumo-subtle">配置后可用：当前实例没有已就绪的操作通道。</p>}</LayerCard>
      <InfoGroup title="登录与系统" rows={[{label:'公网 IP',value:<CopyValue value={item.primaryIp} label="公网 IP"/>},{label:'系统',value:item.currentImageName||item.operatingSystem||'—'},{label:'密码',value:<InstanceCredentials key={instanceId} instance={item} customerId={customerId}/>},{label:item.portIsDefault?'端口（默认）':'端口',value:item.port?<CopyValue value={item.port} label="端口"/>:'服务未提供有效端口'},{label:'用户名',value:item.username?<CopyValue value={item.username} label="用户名"/>:'服务未提供'}]}/>
      <InfoGroup title="资源规格" columns={3} rows={[{label:'CPU',value:config(['cpu'],['CPU','vCPU'])},{label:'内存',value:config(['memory'],['内存'])},{label:'系统盘',value:config(['system_disk'],['系统盘'])},{label:'数据盘',value:config(['data_disk'],['数据盘'])},{label:'带宽',value:config(['bandwidth'],['带宽'])},{label:'网络类型',value:config(['network'],['网络类型'])}]}/></div>
     </div>}
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
+    {tab==='upgrade'&&<InstanceUpgrade instance={item} customerId={customerId}/>}
+    {tab==='security'&&<InstanceSecurityGroups instanceId={item.id} customerId={customerId}/>}
     {tab==='monitor'&&<InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error?getApiMessage(monitor.error):undefined}/>}
     {tab==='logs'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>状态</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header><Table.Body>{item.events.length?item.events.map(e=><Table.Row key={e.id}><Table.Cell>{formatDate(e.createdAt)}</Table.Cell><Table.Cell>{actions[e.type]||e.type}</Table.Cell><Table.Cell>{e.status===1?'处理中':e.status===2?'成功':'失败'}</Table.Cell><Table.Cell>{e.type==='import'?'已拉取真实实例信息并完成绑定':e.message||'—'}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
    </>}

@@ -16,7 +16,7 @@ export function useInstanceStatus(instanceId:string,customerId:string|undefined,
  const query=useQuery({queryKey:key,queryFn:({signal})=>instanceManagementApi(instanceId,customerId).status(signal),enabled,retry:false,refetchInterval:false,refetchOnWindowFocus:false,refetchOnReconnect:false});
  useEffect(()=>{setTimeoutMessage('');return()=>{run.current?.abort();run.current=null}},[instanceId,customerId]);
  const afterAction=(action:string)=>{
-  const power=({start:'starting',stop:'stopping',reboot:'rebooting',reinstall:'reinstalling'} as Record<string,string>)[action];
+  const power=({start:'starting',stop:'stopping',hard_stop:'stopping',reboot:'rebooting',hard_reboot:'rebooting',rescue:'rebooting',exit_rescue:'rebooting',reinstall:'reinstalling'} as Record<string,string>)[action];
   if(!power)return;
   run.current?.abort();
   const controller=new AbortController();run.current=controller;

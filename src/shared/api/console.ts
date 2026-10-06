@@ -301,6 +301,9 @@ export interface InstanceConfigItem {
 }
 
 export interface InstanceCapabilities {
+  hardStop?: boolean;
+  hardReboot?: boolean;
+  rescue?: boolean; exitRescue?: boolean;
   start: boolean;
   stop: boolean;
   reboot: boolean;
@@ -382,11 +385,11 @@ export interface InstanceMonitor {
 }
 
 export interface InstanceActionInput {
-  action: "start" | "stop" | "reboot" | "reinstall" | "reset_password" | "remote" | "destroy";
+  action: "start" | "stop" | "reboot" | "hard_stop" | "hard_reboot" | "rescue" | "exit_rescue" | "reinstall" | "reset_password" | "remote" | "destroy";
   password?: string;
   imageId?: string;
   port?: string;
-  formatDataDisk?: boolean;
+  formatDataDisk?: boolean; rescueSystem?: string; force?: boolean;
 }
 
 export interface InstanceActionResult {

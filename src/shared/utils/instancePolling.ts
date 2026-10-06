@@ -7,7 +7,7 @@ export async function pollInstanceOperation<T extends OperationStatus>(
   limits = { attempts: 20, duration: 5 * 60_000, interval: 5_000 },
   now = Date.now,
 ) {
-  const target = action === 'stop' ? 'stopped' : 'running';
+  const target = (action === 'stop' || action === 'hard_stop') ? 'stopped' : 'running';
   const expiresAt = now() + limits.duration;
   const expire = () => {
     if (!controller.signal.aborted) { callbacks.timeout(); controller.abort(); }

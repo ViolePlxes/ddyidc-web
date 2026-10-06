@@ -2,11 +2,12 @@ import { Banner, Button, Input, Switch } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
+import { MachineRefundDialog } from "./MachineRefundDialog";
 import { DefinitionList } from "../../../shared/components/DataTable";
 import type { TodoEntry } from "../../../shared/api/adminTodos";
 interface Fees { setup: string; installation: string; handling: string; gift: string; traffic: string; valueAdded: string; evidence: string }
 interface Calculation { policy: string; appliedAt: string; paidAmount: string; unusedServiceAmount: string; refundAmount: string; fees: Fees; periods: { instanceId: string; startAt?: string; endAt?: string; unstarted: boolean; totalDays: number; usedDays: number; remainingDays: number; partialDayDeductionDays: number; unusedServiceAmount: string }[] }
-interface Application { id: string; amount: string; reason: string; status: number; updatedAt: string; reviewReason: string; request?: { source: string; snapshot: { paidAmount: string; balancePaid: string; warnings: string[] } }; calculation?: Calculation }
+interface Application { id: string; amount: string; reason: string; status: number; updatedAt: string; reviewReason: string; request?: { source: string; snapshot: { paidAmount: string; balancePaid: string; warnings: string[]; periods?: { instanceId: string; renewalId?: string; unstarted: boolean }[] } }; calculation?: Calculation }
 const feeLabels = { setup: "一次性开通费（不退）", installation: "安装费（不退）", handling: "手续费（不退）", gift: "本次服务使用的赠送余额（不退）", traffic: "已产生的流量费", valueAdded: "增值服务费" } as const;
 const emptyFees: Fees = { setup: "", installation: "", handling: "", gift: "", traffic: "", valueAdded: "", evidence: "" };
 export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: TodoEntry; onDone: () => void; readOnly?: boolean }) {
@@ -15,13 +16,14 @@ export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: 
   const preview = useMutation({ mutationFn: async () => (await adminRequest.post<ApiEnvelope<Calculation>>(`/todos/refund-applications/${row.id}/preview`, fees)).data.data, onSuccess: (calculation) => { setQuote(calculation); setConfirmLarge(false); setRequestId(crypto.randomUUID()); } });
   const review = useMutation({ mutationFn: async (action: string) => adminRequest.post(`/todos/refund-applications/${row.id}/review`, { action, reason, requestId, fees, expectedAmount: quote?.refundAmount ?? "", confirmLarge, expectedUpdatedAt: query.data?.updatedAt }), onSuccess: async () => { await Promise.all([cache.invalidateQueries({ queryKey: ["todo-refund-application", row.id] }), cache.invalidateQueries({ queryKey: ["admin-todos"] }), cache.invalidateQueries({ queryKey: ["admin-todo-items"] })]); onDone(); } });
   const calculation = quote ?? query.data?.calculation;
+  const machine = query.data?.request?.source === "order" && Boolean(query.data.request.snapshot.periods?.length) && query.data.request.snapshot.periods!.every(period => period.instanceId !== "0" && !period.unstarted && (!period.renewalId || period.renewalId === "0"));
   const feesComplete = Object.keys(feeLabels).every((key) => /^(0|[1-9]\d*)(\.\d{1,2})?$/.test(fees[key as keyof typeof feeLabels])) && Boolean(fees.evidence.trim());
   const locked = readOnly || query.data?.status !== 0 || !query.data.request || Boolean(query.data.request.snapshot.warnings.length);
   return <div className="grid gap-3">{query.error ? <Banner variant="error" title={getApiMessage(query.error)} /> : null}{query.data ? <><p>申请原因：{query.data.reason}</p>{query.data.reviewReason ? <p>审核说明：{query.data.reviewReason}</p> : null}
     <Banner title="只退账户余额，必须后台审核" description="以申请时间核算未使用服务费，不足一天按一天扣费。核算和审核不会调用微信、支付宝或其他外部退款接口。" />
     {query.data.request ? <p>原实付总额：¥{query.data.request.snapshot.paidAmount} · 其中余额抵扣：¥{query.data.request.snapshot.balancePaid}</p> : <Banner title="历史记录需核查" description="此记录缺少费用与服务周期快照，不能按旧原路退款流程完成。" />}
     {query.data.request?.snapshot.warnings.map((warning) => <Banner key={warning} variant="error" title={warning} />)}
-    {!readOnly && query.data.status === 0 ? <>{(Object.entries(feeLabels) as [keyof typeof feeLabels, string][]).map(([key, label]) => <Input key={key} label={`${label}（元，无费用请明确填 0）`} value={fees[key]} disabled={locked || review.isPending} onChange={(event) => { setFees((current) => ({ ...current, [key]: event.target.value })); setQuote(undefined); setConfirmLarge(false); setRequestId(crypto.randomUUID()); }} />)}
+    {!readOnly && query.data.status === 0 && machine ? <div className="flex flex-wrap gap-3"><MachineRefundDialog row={row} action="direct_balance" onDone={onDone} /><MachineRefundDialog row={row} action="upstream" onDone={onDone} /></div> : !readOnly && query.data.status === 0 ? <>{(Object.entries(feeLabels) as [keyof typeof feeLabels, string][]).map(([key, label]) => <Input key={key} label={`${label}（元，无费用请明确填 0）`} value={fees[key]} disabled={locked || review.isPending} onChange={(event) => { setFees((current) => ({ ...current, [key]: event.target.value })); setQuote(undefined); setConfirmLarge(false); setRequestId(crypto.randomUUID()); }} />)}
       <Input label="原始账单、赠送余额来源和费用核验依据" value={fees.evidence} maxLength={400} disabled={locked || review.isPending} onChange={(event) => { setFees((current) => ({ ...current, evidence: event.target.value })); setQuote(undefined); }} />
       <Button variant="secondary" loading={preview.isPending} disabled={locked || !feesComplete || review.isPending} onClick={() => preview.mutate()}>核算可退金额</Button>
       <Input label="审核依据或拒绝原因" maxLength={255} value={reason} onChange={(event) => setReason(event.target.value)} />

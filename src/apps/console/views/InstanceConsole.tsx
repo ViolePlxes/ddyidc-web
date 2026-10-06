@@ -1,3 +1,5 @@
+import { InstanceUpgrade } from '../../../shared/components/InstanceUpgrade';
+import { InstanceSecurityGroups } from '../../../shared/components/InstanceSecurityGroups';
 import { Dialog } from "../../../shared/components/Dialog";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
@@ -13,7 +15,8 @@ import { PageState } from "../../../shared/components/PageState";
 
 const eventLabels: Record<string, string> = {
   remark: "修改备注",
- edit:"修改实例",credentials:"查看登录信息",auto_renew:"自动续费设置",renew:"实例续费",
+ edit:"修改实例",credentials:"查看登录信息",auto_renew:"自动续费设置",renew:"实例续费",upgrade:"实例升降配",
+  hard_stop: "硬关机", hard_reboot: "硬重启", rescue: "进入救援系统", exit_rescue: "退出救援系统",
   start: "开机", stop: "关机", reboot: "重启", reinstall: "重装系统",
   reset_password: "重置密码", remote: "远程连接", destroy: "销毁实例",
 };
@@ -51,6 +54,26 @@ export function ActionDialog({
       </Dialog>
     </Dialog.Root>
   );
+}
+
+export function RescueDialog({ disabled, loading, onConfirm }: { disabled?: boolean; loading?: boolean; onConfirm: (input: InstanceActionInput) => void }) {
+  const [open, setOpen] = useState(false);
+  const [system, setSystem] = useState("2");
+  const [password, setPassword] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const valid = password.length >= 12 && password.length <= 128 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  return <Dialog.Root open={open} onOpenChange={(value) => { setOpen(value); if (!value) { setPassword(""); setConfirmed(false); } }}>
+    <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>救援系统</Button>} />
+    <Dialog className="grid gap-5 p-6">
+      <Dialog.Title>进入救援系统</Dialog.Title>
+      <Dialog.Description>将重启实例进入临时救援环境，中断当前业务。完成修复后，请退出救援系统恢复正常启动。</Dialog.Description>
+      <Select label="救援系统" value={system} items={{ "2": "Linux", "1": "Windows" }} onValueChange={value => setSystem(String(value))} />
+      <Input label="临时救援密码" type="password" value={password} autoComplete="new-password" onChange={event => setPassword(event.target.value)} />
+      <p className="text-sm text-kumo-subtle">至少 12 位，包含大小写字母和数字。临时密码仅用于本次救援，请妥善保存。</p>
+      <Switch label="我确认可以重启并中断业务" checked={confirmed} onCheckedChange={setConfirmed} />
+      <div className="flex flex-wrap justify-end gap-3"><Dialog.Close render={<Button variant="secondary">取消</Button>} /><Button disabled={!valid || !confirmed} loading={loading} onClick={() => { onConfirm({ action: "rescue", rescueSystem: system, password, force: true }); setOpen(false); setPassword(""); setConfirmed(false); }}>进入救援</Button></div>
+    </Dialog>
+  </Dialog.Root>;
 }
 
 export function ReinstallDialog({
@@ -229,7 +252,7 @@ export function InstanceConsole() {
             <ActionDialog label="开机" title="确认开机" description="确认后将启动此实例。" disabled={!capabilities?.start || (live.data?.status ?? instance.status) === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
             <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
-            <Button variant="secondary" disabled>硬关机（未开放）</Button><Button variant="secondary" disabled>硬重启（未开放）</Button><Button variant="secondary" disabled>救援系统（未开放）</Button>
+            <ActionDialog label="硬关机" title="确认硬关机" description="将强制切断实例电源，未保存的数据可能丢失。仅在正常关机无效时使用。" disabled={!capabilities?.hardStop || live.busy || (live.data?.status ?? instance.status) === 4} loading={action.isPending} onConfirm={() => submit({ action: "hard_stop" })} /><ActionDialog label="硬重启" title="确认硬重启" description="将强制断电并重新启动，可能导致未保存的数据丢失或文件系统损坏。请确认可以中断业务。" disabled={!capabilities?.hardReboot || live.busy} loading={action.isPending} onConfirm={() => submit({ action: "hard_reboot" })} /><RescueDialog disabled={!capabilities?.rescue || live.busy} loading={action.isPending} onConfirm={submit} /><ActionDialog label="退出救援系统" title="确认退出救援系统" description="将重启实例并恢复正常系统启动。请确认救援操作已完成。" disabled={!capabilities?.exitRescue || live.busy} loading={action.isPending} onConfirm={() => submit({ action: "exit_rescue" })} />
             <Button variant="secondary" disabled={!capabilities?.remote || action.isPending} onClick={() => submit({ action: "remote" })}>VNC</Button>
           </div>
         </header>
@@ -269,7 +292,8 @@ export function InstanceConsole() {
           <InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error ? getApiMessage(monitor.error) : undefined} />
         </div> : null}
         {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
-        {activeTab === "upgrade" || activeTab === "security" ? <LayerCard className="grid gap-2 p-6"><h2 className="text-lg font-semibold">{activeTab === "upgrade" ? "产品升级降级" : "安全组"}</h2><p className="text-kumo-subtle">功能开发中，当前尚无可用接口。</p></LayerCard> : null}
+        {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} /> : null}
+        {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
           <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
                       <LayerCard className="shadow-none overflow-x-auto p-0">
