@@ -1,11 +1,9 @@
-import { Banner, Button, ClipboardText, Input, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, ClipboardText, Input, LayerCard, Tabs, Badge } from "@cloudflare/kumo";
 import { pointsApi } from "../../../shared/api/points";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CopyIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { consoleApi } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
-import { DataTable, type DataRow } from "../../../shared/components/DataTable";
 import { MetricGrid } from "../../../shared/components/MetricGrid";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
@@ -13,14 +11,16 @@ import { formatMoney } from "../../../shared/utils/format";
 
 export function Promo() {
   const [customCode, setCustomCode] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [view, setView] = useState("customers");
+  const [search, setSearch] = useState("");
+  const [rewardPage, setRewardPage] = useState(1);
   const [referralPage, setReferralPage] = useState(1);
   const queryClient = useQueryClient();
   const config = useQuery({ queryKey: ["marketing", "public-config"], queryFn: consoleApi.marketingConfig });
   const invite = useQuery({ queryKey: ["promo", "invite"], queryFn: consoleApi.invite });
   const overview = useQuery({ queryKey: ["promo", "overview"], queryFn: consoleApi.promoOverview });
   const earnings = useQuery({ queryKey: ["promo", "earnings"], queryFn: consoleApi.earnings });
-  const records = useQuery({ queryKey: ["promo", "records"], queryFn: () => consoleApi.rewardRecords() });
+  const records = useQuery({ queryKey: ["promo", "records", rewardPage], queryFn: () => consoleApi.rewardRecords(rewardPage, 20) });
   const children = useQuery({ queryKey: ["points", "referrals", referralPage], queryFn: () => pointsApi.referrals(referralPage) });
   const rules = useQuery({ queryKey: ["points", "public-rules"], queryFn: pointsApi.rules });
   const create = useMutation({
@@ -33,21 +33,17 @@ export function Promo() {
   const inviteCode = currentInvite?.code || data?.inviteCode;
   const canApply = !currentInvite || currentInvite.status === 2 || currentInvite.status === 3;
   const inviteStatus = currentInvite ? ({ 0: "待审核", 1: "已通过", 2: "已停用", 3: "已驳回" }[currentInvite.status] ?? "状态未知") : "状态读取中";
-  const link = data?.promoLinkPath ? `${window.location.origin}${data.promoLinkPath}` : "";
+  const link = data?.promoLinkPath ? new URL(data.promoLinkPath, window.location.origin).href : "";
   const metrics = [
-    { label: "已推广客户", value: String(data?.registrations ?? 0), hint: `一级 ${invite.data?.stats.level1 ?? 0} · 二级 ${invite.data?.stats.level2 ?? 0} · 三级 ${invite.data?.stats.level3 ?? 0}` },
-    { label: "待结算收益", value: formatMoney(summary?.pending ?? 0), hint: "来自真实奖励记录" },
-    { label: "累计收益", value: formatMoney(summary?.total ?? 0), hint: `已结算 ${formatMoney(summary?.settled ?? 0)}` },
+    { label: "已推广客户", value: String(data?.registrations ?? 0), hint: "" },
+    { label: "已结算收益", value: formatMoney(summary?.settled ?? 0), hint: "仅统计成功结算的奖励" },
     { label: "推广消费", value: formatMoney(data?.spendTotal ?? 0), hint: `推广充值 ${formatMoney(data?.rechargeTotal ?? 0)}` },
   ];
-  const rows: DataRow[] = (records.data?.list ?? []).map((record) => ({
-    id: record.id,
-    primary: record.bizType === 2 ? `充值奖励 · ${record.username}` : `订单奖励 · ${record.username}`,
-    secondary: record.orderNo,
-    meta: `${record.createdAt} · ${record.level} 级`,
-    amount: formatMoney(record.amount),
-    status: record.status === 1 ? "paid" : "pending",
-  }));
+  const visibleCustomers = (children.data?.list ?? []).filter(c => c.userId.includes(search.trim()));
+  const visibleRewards = (records.data?.list ?? []).filter(r => r.status === 1 && r.userId.includes(search.trim()));
+  const page = view === "customers" ? referralPage : rewardPage;
+  const total = view === "customers" ? children.data?.total ?? 0 : records.data?.total ?? 0;
+  const setPage = view === "customers" ? setReferralPage : setRewardPage;
   const loading = invite.isLoading || overview.isLoading || earnings.isLoading || records.isLoading;
   const error = invite.error ?? overview.error ?? earnings.error ?? records.error;
 
@@ -57,9 +53,9 @@ export function Promo() {
       <PageState loading={loading} error={error ? getApiMessage(error) : null}>
         <div className="grid gap-5">
           {inviteCode ? (
-            <LayerCard className="shadow-none flex flex-wrap items-center justify-between gap-4 p-5">
+            <LayerCard className="shadow-none grid min-w-0 gap-4 p-5 md:grid-cols-[auto_minmax(0,1fr)]">
               <div className="grid gap-1"><span className="text-sm text-kumo-subtle">专属优惠码 · {inviteStatus}</span><ClipboardText text={inviteCode} />{currentInvite?.rejectReason ? <p className="text-sm text-kumo-subtle">审核说明：{currentInvite.rejectReason}</p> : null}</div>
-              <Button variant="secondary" icon={<CopyIcon />} disabled={!link || currentInvite?.status !== 1} onClick={() => { void navigator.clipboard.writeText(link); setCopied(true); }}>{copied ? "已复制" : "复制分享链接"}</Button>
+              <div className="grid min-w-0 content-start gap-1"><span className="text-sm text-kumo-subtle">分享链接</span>{link && currentInvite?.status === 1 ? <ClipboardText text={link} className="w-full min-w-0" /> : <span className="text-sm text-kumo-subtle">优惠码通过审核并启用后可分享</span>}</div>
             </LayerCard>
           ) : null}
           {canApply ? (
@@ -77,13 +73,26 @@ export function Promo() {
             {rules.data?.filter(r=>["invite","invite_first_recharge","invite_order"].includes(r.event)).map(r=><p key={r.id}>{r.name}：{r.type==="ratio"?`每消费1元返 ${r.ratio/100} 积分`:`${r.pointsFixed} 积分`}</p>)}
             {rules.error?<Banner variant="error" title="奖励规则读取失败" description={getApiMessage(rules.error)}/>:null}
           </LayerCard>
-          <PageState loading={children.isLoading} error={children.error?getApiMessage(children.error):null} empty={!children.isLoading&&!children.data?.list.length} emptyTitle="暂无邀请的用户">
-            <LayerCard className="shadow-none overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>下级用户</Table.Head><Table.Head>注册时间</Table.Head><Table.Head>消费金额</Table.Head><Table.Head>充值金额</Table.Head></Table.Row></Table.Header><Table.Body>{children.data?.list.map(c=><Table.Row key={c.userId}><Table.Cell>用户 {c.userId}</Table.Cell><Table.Cell>{new Date(c.registeredAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>¥ {c.spendYuan}</Table.Cell><Table.Cell>¥ {c.rechargeYuan}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>
-          </PageState>
-          <div className="flex justify-between"><Button variant="secondary" disabled={referralPage===1} onClick={()=>setReferralPage(referralPage-1)}>上一页</Button><span>共 {children.data?.total??0} 位下级用户</span><Button variant="secondary" disabled={referralPage*20>=(children.data?.total??0)} onClick={()=>setReferralPage(referralPage+1)}>下一页</Button></div>
-          <PageState empty={!records.isLoading && !records.error && rows.length === 0} emptyTitle="暂无收益记录">
-            <DataTable rows={rows} primaryLabel="收益来源" secondaryLabel="关联单号" />
-          </PageState>
+          <LayerCard>
+            <LayerCard.Secondary>推广客户与收益</LayerCard.Secondary>
+            <LayerCard.Primary>
+              <div className="mb-2 flex flex-wrap items-center gap-3">
+                <Input size="sm" aria-label="筛选用户ID" placeholder="筛选本页用户 ID…" value={search} onChange={e=>setSearch(e.target.value)} className="min-w-0 flex-1" />
+                <Tabs variant="segmented" size="sm" tabs={[{value:"customers",label:"邀请客户"},{value:"rewards",label:"已结算收益"}]} value={view} onValueChange={v=>{setView(v);setSearch("");}} />
+              </div>
+              <PageState loading={view === "customers" ? children.isLoading : records.isLoading} error={children.error ? getApiMessage(children.error) : null} empty={view === "customers" ? !visibleCustomers.length : !visibleRewards.length} emptyTitle={view === "customers" ? "暂无匹配的邀请客户" : "暂无已结算收益"}>
+                <div className="overflow-x-auto text-sm">
+                  <div className="min-w-max">
+                    <div className="grid grid-cols-[minmax(12rem,1fr)_auto_auto] gap-x-4 border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle">
+                      <span>用户 ID</span><span className="w-28 text-right">收益金额</span><span className="w-40 text-right">结算时间</span>
+                    </div>
+                    {view === "customers" ? visibleCustomers.map(c=><div key={c.userId} className="grid grid-cols-[minmax(12rem,1fr)_auto_auto] items-center gap-x-4 border-b border-kumo-hairline px-1 py-2.5 last:border-0"><span className="truncate font-medium text-kumo-default">{c.userId}</span><span className="w-28 text-right text-kumo-subtle">—</span><span className="w-40 text-right text-kumo-subtle">—</span></div>) : visibleRewards.map(r=><div key={r.id} className="grid grid-cols-[minmax(12rem,1fr)_auto_auto] items-center gap-x-4 border-b border-kumo-hairline px-1 py-2.5 last:border-0"><span className="truncate font-medium text-kumo-default">{r.userId}</span><span className="flex w-28 justify-end"><Badge variant="success">{formatMoney(r.amount)}</Badge></span><span className="w-40 text-right text-kumo-subtle">{r.settledAt ? new Date(r.settledAt).toLocaleString("zh-CN") : "—"}</span></div>)}
+                  </div>
+                </div>
+              </PageState>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-kumo-subtle"><span>共 {total} 条 · 本页显示 {view === "customers" ? visibleCustomers.length : visibleRewards.length} 条</span><div className="flex gap-2"><Button size="sm" variant="secondary" disabled={page===1} onClick={()=>setPage(page-1)}>上一页</Button><Button size="sm" variant="secondary" disabled={page*20>=total} onClick={()=>setPage(page+1)}>下一页</Button></div></div>
+            </LayerCard.Primary>
+          </LayerCard>
         </div>
       </PageState>
     </>

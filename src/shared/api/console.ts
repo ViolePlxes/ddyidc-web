@@ -215,6 +215,7 @@ export interface Earnings {
 }
 
 export interface RewardRecord {
+  userId: string;
   id: string;
   orderId: string;
   orderNo: string;
