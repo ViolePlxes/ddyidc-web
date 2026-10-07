@@ -77,7 +77,12 @@ const detailWaiters: Array<() => void> = [];
 async function loadRowDetail(id: string) {
   if (detailRequests >= 2) await new Promise<void>((resolve) => detailWaiters.push(resolve));
   else detailRequests += 1;
-  try { return await consoleApi.instance(id); }
+  try {
+    await instanceManagementApi(id).status();
+    const detail = await consoleApi.instance(id);
+    if (detail.infoSource !== "upstream") throw new Error(detail.warning || "最新信息暂时不可用");
+    return detail;
+  }
   finally { const next = detailWaiters.shift(); if (next) next(); else detailRequests -= 1; }
 }
 function expiryLabel(value?: string) {
@@ -95,26 +100,25 @@ function ProductRow({ instance }: { instance: InstanceListItem }) {
   const [savedRemark, setSavedRemark] = useState(instance.remark ?? "");
   const savingRemark = useRef(false);
   useEffect(() => setSavedRemark(instance.remark ?? ""), [instance.remark]);
-  const detail = useQuery({ queryKey: ["instances", instance.id], queryFn: () => loadRowDetail(instance.id), staleTime: instanceStaleTime, gcTime: instanceCacheTime, retry: false, refetchOnWindowFocus: false, enabled: ![1,2,6].includes(instance.status) });
   const save = useMutation({ onMutate: () => { savingRemark.current = true; }, onSettled: () => { savingRemark.current = false; }, mutationFn: () => instanceManagementApi(instance.id).remark(remark), onSuccess: () => {
     setSavedRemark(remark.trim()); setEditing(false);
     void client.invalidateQueries({ queryKey: ["instances", "product-list"] });
     void client.invalidateQueries({ queryKey: ["instances", "filter-list"] });
     void client.invalidateQueries({ queryKey: ["instances", instance.id], exact: true, refetchType: "none" });
   }});
-  const data = detail.data;
+  const data = instance;
   const port = data?.port?.trim();
   const address = instance.primaryIp ? (port ? `${instance.primaryIp.includes(":") ? `[${instance.primaryIp}]` : instance.primaryIp}:${port}` : instance.primaryIp) : undefined;
-  const system = data?.operatingSystem || data?.currentImageName;
+  const system = data.operatingSystem;
   const SystemIcon = /windows/i.test(system ?? "") ? WindowsLogoIcon : /linux|ubuntu|debian|centos|alma|rocky|fedora|arch|suse/i.test(system ?? "") ? LinuxLogoIcon : DesktopIcon;
-  const missing = detail.isLoading ? "加载中…" : detail.error ? "读取失败" : "未提供";
+  const missing = "未同步";
   return <div role="row" className={`${productColumns} border-b border-kumo-hairline px-1 py-2.5 last:border-b-0`}>
     <div role="cell" className="grid min-w-0 gap-1"><Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><span className="break-all text-xs text-kumo-subtle">{data?.hostname || instance.name}</span></div>
     <div role="cell"><StatusBadge status={instanceStatus(instance)} /></div>
     <div role="cell">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</div>
     <div role="cell" className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-xs text-kumo-subtle">{expiryLabel(instance.expiresAt)}</span></div>
     <div role="cell" className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-xs text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div>
-    <div role="cell" className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span>{detail.error && <Button variant="ghost" size="sm" onClick={() => void detail.refetch()}>重试</Button>}</div>
+    <div role="cell" className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div>
     <div role="cell">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-xs text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-xs text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</div>
     <div role="cell"><Link href={`/user/instance/${instance.id}.htm`} variant="plain">管理</Link></div>
   </div>;
@@ -165,6 +169,17 @@ export function InstanceList() {
   const instances = localFilter
     ? filteredInstances.slice((page - 1) * instancePageSize, page * instancePageSize)
     : filteredInstances;
+  const refresh = useMutation({
+    mutationFn: async () => {
+      const rows = instances.filter(instance => ![1, 2, 6].includes(instance.status));
+      const results = await Promise.allSettled(rows.map(instance => loadRowDetail(instance.id)));
+      if (results.some(result => result.status === "rejected")) throw new Error("部分产品获取失败，请稍后重试");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["instances", "product-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["instances", "filter-list"] });
+    },
+  });
   const title = category?.label ?? "产品列表";
 
   return (
@@ -174,12 +189,14 @@ export function InstanceList() {
         <LayerCard.Primary>
           <div className="mb-2 flex min-w-0 flex-wrap items-center gap-3">
             <Input size="sm" aria-label="搜索实例" placeholder="按实例名或 IP 搜索" className="min-w-0 w-full sm:w-auto sm:flex-1" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
+            <Button size="sm" variant="secondary" disabled={refresh.isPending || !instances.length} onClick={() => refresh.mutate()}>{refresh.isPending ? "获取中…" : "获取最新信息"}</Button>
             <div className="max-w-full overflow-x-auto">
               <Tabs variant="segmented" size="sm" aria-label="产品状态分类" value={status} onValueChange={(value) => { setStatus(value as InstanceFilter); setPage(1); }} tabs={[
                 { value: "all", label: "全部" }, { value: "active", label: "已激活" }, { value: "pending", label: "待开通" }, { value: "suspended", label: "已暂停" },
               ]} />
             </div>
           </div>
+          {refresh.error && <p role="alert" className="mb-2 text-sm text-kumo-danger">{getApiMessage(refresh.error)}</p>}
           <div className="-mx-1 min-w-0 overflow-x-auto text-sm" role="table" aria-label="产品列表">
             <div className="min-w-[900px]">
               <div role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle`}>

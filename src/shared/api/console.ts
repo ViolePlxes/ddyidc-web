@@ -280,6 +280,12 @@ export interface ResourceRecord {
 }
 
 export interface InstanceListItem {
+  readOnly?: boolean;
+  hostname?: string;
+  port?: string;
+  operatingSystem?: string;
+  renewalAmount?: string;
+  lastSyncedAt?: string;
   remark?: string;
   id: string;
   name: string;
