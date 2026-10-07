@@ -10,13 +10,13 @@ export function TicketConversation({ replies, perspective, onQuote }: { replies:
         const mine = reply.type === perspective;
         return (
           <div key={reply.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-            <LayerCard className={`shadow-none grid w-full min-w-0 gap-5 p-5 sm:p-6 ${mine ? "bg-kumo-tint" : ""}`}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <LayerCard className="w-full min-w-0">
+              <LayerCard.Secondary className="flex flex-wrap items-center justify-between gap-2">
                 <strong className="text-sm font-medium text-kumo-strong">
                   {reply.type === "Client" ? "客户" : "管理员"}{mine ? "（我）" : ""}
                 </strong>
                 <span className="text-xs text-kumo-subtle">{new Date(reply.createdAt).toLocaleString("zh-CN")}</span>
-              </div>
+              </LayerCard.Secondary><LayerCard.Primary className="gap-4">
               {reply.quote ? (
                 <div className="border-l-2 border-kumo-line bg-kumo-recessed p-3 text-sm text-kumo-subtle">
                   <span className="font-medium">引用{reply.quote.type === "Client" ? "客户" : "管理员"}：</span>
@@ -30,7 +30,7 @@ export function TicketConversation({ replies, perspective, onQuote }: { replies:
                   引用回复
                 </Button>
               </div>
-            </LayerCard>
+            </LayerCard.Primary></LayerCard>
           </div>
         );
       })}
@@ -58,7 +58,7 @@ export function ReplyComposer({
   onSubmit: () => void;
 }) {
   return (
-    <LayerCard className="shadow-none grid min-w-0 gap-5 p-5 sm:p-6">
+    <LayerCard className="grid min-w-0 gap-5 p-4 sm:p-4">
       {quote ? (
         <div className="flex items-start gap-3 border-l-2 border-kumo-line bg-kumo-recessed p-3">
           <ArrowBendUpLeftIcon className="mt-0.5 shrink-0 text-kumo-subtle" />

@@ -15,7 +15,7 @@ function capacity(used: number, total: number) { const unit = total >= 1024 ** 4
 function bytes(value: number) { return `${(value / 1024 ** 3).toFixed(value < 1024 ** 3 ? 2 : 1)} GiB`; }
 
 function MonitorCard({ title, value, hint, details, options, dark }: { title: string; value: string; hint: string; details: ReactNode; options: KumoChartOption | null; dark: boolean }) {
-  return <Tooltip content={<div className="grid max-h-80 max-w-sm gap-2 overflow-auto text-sm">{details}</div>} render={<LayerCard tabIndex={0} aria-label={`${title}：${value}，悬浮或聚焦查看详情`} className="grid min-w-0 gap-2 p-5 shadow-none">
+  return <Tooltip content={<div className="grid max-h-80 max-w-sm gap-2 overflow-auto text-sm">{details}</div>} render={<LayerCard tabIndex={0} aria-label={`${title}：${value}，悬浮或聚焦查看详情`} className="grid min-w-0 gap-2 p-4">
     <span className="text-sm text-kumo-subtle">{title}</span>
     <strong className="text-xl font-semibold text-kumo-strong">{value}</strong>
     {options ? <Chart echarts={echarts} options={options} height={128} isDarkMode={dark} /> : <div className="flex h-32 items-center justify-center text-sm text-kumo-subtle">暂无采样数据</div>}

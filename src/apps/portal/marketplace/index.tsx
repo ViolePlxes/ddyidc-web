@@ -31,7 +31,7 @@ function ListingCard({ row, refundEnabled, feeRate }: { row: Listing; refundEnab
   const belowRenewal = Number(row.originalRenewalPrice) > 0 && Number(row.price) < Number(row.originalRenewalPrice);
   const summary = Object.values(row.configSnapshot ?? {}).filter((value) => typeof value === "string" || typeof value === "number").slice(0, 3).join(" · ");
   return (
-    <LayerCard className="shadow-none flex min-h-72 flex-col gap-4 p-5">
+    <LayerCard className="flex min-h-72 flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <span className="grid size-10 place-items-center bg-kumo-control text-kumo-brand">
           <StorefrontIcon />
@@ -126,9 +126,9 @@ export function MarketplaceHome() {
         />
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[["出售中", status.data?.onSale ?? 0], ["已成交", status.data?.sold ?? 0], ["求购", status.data?.wants ?? 0], ["平台手续费率", `${status.data?.feeRate ?? "0"}%`]].map(([label, value]) => <LayerCard key={String(label)} className="shadow-none grid gap-1 p-5"><span className="text-sm text-kumo-subtle">{label}</span><strong className="text-2xl text-kumo-strong">{value}</strong></LayerCard>)}
+        {[["出售中", status.data?.onSale ?? 0], ["已成交", status.data?.sold ?? 0], ["求购", status.data?.wants ?? 0], ["平台手续费率", `${status.data?.feeRate ?? "0"}%`]].map(([label, value]) => <LayerCard key={String(label)} className="grid gap-1 p-4"><span className="text-sm text-kumo-subtle">{label}</span><strong className="text-2xl text-kumo-strong">{value}</strong></LayerCard>)}
       </div>
-      <LayerCard className="shadow-none grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <LayerCard className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">
         <Input
           label="搜索产品、配置"
           value={keyword}
@@ -174,7 +174,7 @@ export function MarketplaceHome() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {wants.data.list.map((want) => (
-              <LayerCard key={want.id} className="shadow-none grid gap-3 p-5">
+              <LayerCard key={want.id} className="grid gap-3 p-4">
                 <div className="flex justify-between">
                   <strong className="text-kumo-strong">{want.title}</strong>
                   <Badge variant="outline">求购</Badge>
@@ -249,10 +249,10 @@ export function MarketplaceListingDetail() {
             }
           />
           {message ? <Banner variant="default" title={message} /> : null}
-          {showAgreement ? <LayerCard className="shadow-none grid gap-3 p-5"><div className="flex items-center justify-between"><h2 className="font-semibold text-kumo-strong">交易规则协议</h2><Button variant="ghost" onClick={() => setShowAgreement(false)}>关闭</Button></div><p className="whitespace-pre-wrap text-sm text-kumo-subtle">{agreement.data?.agreement || "正在加载协议…"}</p></LayerCard> : null}
+          {showAgreement ? <LayerCard ><LayerCard.Secondary><div className="flex items-center justify-between"><h2 className="font-semibold text-kumo-strong">交易规则协议</h2><Button variant="ghost" onClick={() => setShowAgreement(false)}>关闭</Button></div></LayerCard.Secondary><LayerCard.Primary className="grid gap-3"><p className="whitespace-pre-wrap text-sm text-kumo-subtle">{agreement.data?.agreement || "正在加载协议…"}</p></LayerCard.Primary></LayerCard> : null}
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-5">
-              <LayerCard className="shadow-none grid gap-5 p-5">
+              <LayerCard className="grid gap-5 p-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="success">站内归属转移</Badge>
                   <Badge variant="outline">{row.region || "区域不限"}</Badge>
@@ -287,8 +287,8 @@ export function MarketplaceListingDetail() {
                   </p>
                 </div>
               </LayerCard>
-              <LayerCard className="shadow-none grid gap-3 p-5">
-                <h2 className="font-semibold text-kumo-strong">价格变动</h2>
+              <LayerCard >
+                <LayerCard.Secondary><h2 className="font-semibold text-kumo-strong">价格变动</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
                 {row.priceHistory?.length ? (
                   row.priceHistory.map((p) => (
                     <div
@@ -306,9 +306,9 @@ export function MarketplaceListingDetail() {
                 ) : (
                   <p className="text-sm text-kumo-subtle">暂无调价记录</p>
                 )}
-              </LayerCard>
+              </LayerCard.Primary></LayerCard>
             </div>
-            <LayerCard className="shadow-none grid content-start gap-4 p-5">
+            <LayerCard className="grid content-start gap-4 p-4">
               <div>
                 <span className="text-sm text-kumo-subtle">转让价格</span>
                 <p className="text-3xl font-semibold text-kumo-strong">

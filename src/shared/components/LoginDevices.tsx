@@ -25,8 +25,8 @@ export function LoginDevices() {
     await client.invalidateQueries({ queryKey: ["login-devices"] });
     setMessage("设备已下线");
   } });
-  return <LayerCard className="grid gap-4 p-5">
-    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-kumo-strong">安全中心 · 登录设备</h2><Button variant="secondary" onClick={() => void devices.refetch()} loading={devices.isFetching}>刷新</Button></div>
+  return <LayerCard >
+    <LayerCard.Secondary><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-kumo-strong">安全中心 · 登录设备</h2><Button variant="secondary" onClick={() => void devices.refetch()} loading={devices.isFetching}>刷新</Button></div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
     <p className="text-sm text-kumo-subtle">最多同时登录 10 台设备，超过后最早登录的设备会自动下线。下线设备后，该设备的访问与续期权限立即失效。</p>
     {(devices.error || revoke.error) && <Banner variant="error" title="操作失败" description={getApiMessage(devices.error ?? revoke.error)} />}
     {message && <Banner variant="default" title={message} />}
@@ -39,5 +39,5 @@ export function LoginDevices() {
       </Table.Row>)}</Table.Body>
     </Table></div>}
     {devices.data?.length === 0 && <p className="text-sm text-kumo-subtle">当前为既有会话或管理员代登录，重新登录后可管理此设备。</p>}
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }

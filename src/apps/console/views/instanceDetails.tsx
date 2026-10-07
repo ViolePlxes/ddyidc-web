@@ -15,12 +15,12 @@ export function CopyValue({ value, label }: { value?: string; label: string }) {
 }
 
 export function InfoGroup({ title, rows, action, columns = 1 }: { columns?: 1 | 2 | 3; title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
-  return <LayerCard className="grid min-w-0 gap-4 p-5">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div>
+  return <LayerCard className="min-w-0">
+    <LayerCard.Secondary><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
     <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3" : "grid min-w-0 content-start gap-1"}>
       <dt className="text-sm text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-sm">{row.value}</dd>
     </div>)}</dl>
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }
 
 export function expiryLabel(expiresAt?: string, now = Date.now()) {
@@ -63,9 +63,9 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
       const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
       return <section key={chart.title} aria-label={chart.title} className="grid min-w-0 content-start gap-2">
         <p className="text-xs text-kumo-subtle">{range}</p>
-        {hasData ? <TrendChart title={chart.title} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid min-h-80 content-start gap-4 p-5">
-          <h3 className="font-semibold">{chart.title}</h3><p role="status" className="text-sm text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
-        </LayerCard>}
+        {hasData ? <TrendChart title={chart.title} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="min-h-80">
+          <LayerCard.Secondary><h3 className="font-semibold">{chart.title}</h3></LayerCard.Secondary><LayerCard.Primary className="grid content-start gap-4"><p role="status" className="text-sm text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
+        </LayerCard.Primary></LayerCard>}
       </section>;
     })}</div>
   </section>;

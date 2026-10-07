@@ -62,7 +62,7 @@ export function OrderDetail() {
         {order ? (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
-              <LayerCard className="shadow-none p-5">
+              <LayerCard className="p-4">
                 <DefinitionList
                   rows={[
                     { label: "订单号", value: order.orderNo },
@@ -94,7 +94,7 @@ export function OrderDetail() {
                 description={orderMessages[order.status]?.description ?? "请刷新订单，或联系平台核对处理进度。"}
               />
             </div>
-            <LayerCard className="shadow-none grid gap-4 p-5">
+            <LayerCard className="grid gap-4 p-4">
               <span className="text-sm text-kumo-subtle">应付金额</span>
               <strong className="text-3xl text-kumo-strong">{formatMoney(order.payAmount)}</strong>
               <PaymentDialog

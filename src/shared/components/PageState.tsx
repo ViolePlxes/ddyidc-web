@@ -25,6 +25,7 @@ export function PageState({
   emptyDescription = "当前条件下没有可显示的记录。",
   skeleton,
   keepContent = false,
+  embedded = false,
 }: {
   children: ReactNode;
   loading?: boolean;
@@ -34,6 +35,7 @@ export function PageState({
   emptyDescription?: string;
   skeleton?: SkeletonKind | ReactNode;
   keepContent?: boolean;
+  embedded?: boolean;
 }) {
   if (loading) {
     return <div aria-busy="true" className="grid gap-3">
@@ -42,19 +44,8 @@ export function PageState({
     </div>;
   }
   if (empty) {
-    return (
-      <ContentFade>
-        <div>
-        <LayerCard className="shadow-none">
-          <Empty className="bg-kumo-base"
-            icon={<PackageIcon />}
-            title={emptyTitle}
-            description={emptyDescription}
-          />
-        </LayerCard>
-        </div>
-      </ContentFade>
-    );
+    const content = <Empty icon={<PackageIcon />} title={emptyTitle} description={emptyDescription} />;
+    return <ContentFade>{embedded ? content : <LayerCard>{content}</LayerCard>}</ContentFade>;
   }
   if (error) {
     return (

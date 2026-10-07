@@ -98,9 +98,9 @@ export function ConsoleHome() {
       </div>
       <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 gap-3 p-5 shadow-none hover:ring-kumo-focus/25 focus-within:ring-kumo-focus/25 motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:hover:-translate-y-1">
+          {metrics.map(m => <LayerCard key={m.key} className="group relative min-w-0">
             <Link href={m.href} variant="plain" aria-label={`查看${m.title}`} className="absolute inset-0 z-10" />
-            <div className="flex items-center justify-between gap-3"><Text>{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
+            <LayerCard.Secondary className="justify-between"><Text>{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle" /></LayerCard.Secondary><LayerCard.Primary className="gap-3">
             <Text as="p" variant="heading" size="lg">{m.value}</Text>
             {m.key === "balance" ? <div className="relative z-20 flex flex-wrap gap-2">
               <Button variant="primary" size="sm" onClick={() => navigate("/wallet/recharge")}>充值</Button>
@@ -110,7 +110,7 @@ export function ConsoleHome() {
             <div className="relative z-20 cursor-pointer" onClick={() => navigate(m.href)}>
               <MiniTrend title={m.hint} money={m.key === "balance"} values={(overview.data?.series[m.key] ?? []).map(p => [p.time, p.value])} />
             </div>
-          </LayerCard>)}
+          </LayerCard.Primary></LayerCard>)}
         </div>
       </PageState>
       <p className="text-sm text-kumo-subtle">数量与余额为当前值，图表按服务器日期汇总；当前日期尚未结束。{overview.data ? ` 更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN")}` : ""}</p>

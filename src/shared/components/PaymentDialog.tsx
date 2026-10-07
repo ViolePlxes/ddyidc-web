@@ -182,13 +182,13 @@ export function PaymentDialog({
         </div>
 
         {!checkout && !balancePaid ? (
-          <LayerCard className="shadow-none grid gap-2 p-5">
+          <LayerCard className="grid gap-2 p-4">
             <strong className="text-kumo-strong">选择支付方式</strong>
             <span className="text-sm text-kumo-subtle">{businessType !== "recharge" ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
           </LayerCard>
         ) : null}
         {checkout?.wechat && currentState === "pending" && !expired ? (
-          <LayerCard className="grid justify-items-center gap-3 p-5">
+          <LayerCard className="grid justify-items-center gap-3 p-4">
             <strong>请使用微信扫码支付 {formatMoney(amountCents)}</strong>
             {qrImage ? <img src={qrImage} width={280} height={280} className="h-auto max-w-full" alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
             {qrError ? <Banner variant="error" title="二维码生成失败" description="请关闭后重新打开支付窗口。" /> : null}

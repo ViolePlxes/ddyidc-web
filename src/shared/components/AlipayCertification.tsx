@@ -148,8 +148,8 @@ export function AlipayCertification({
   }
   if (info.status === 2) return null;
   return (
-    <LayerCard className="grid gap-4 p-5">
-      <h2>个人认证 · 支付宝芝麻信用</h2>
+    <LayerCard >
+      <LayerCard.Secondary><h2>个人认证 · 支付宝芝麻信用</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
       {error && <Banner variant="error" title={error} />}
       {message && <p role="status">{message}</p>}
       {result?.url ? (
@@ -259,6 +259,6 @@ export function AlipayCertification({
       ) : (
         <p>通道已关闭；已发起的认证仍可查询结果。</p>
       )}
-    </LayerCard>
+    </LayerCard.Primary></LayerCard>
   );
 }

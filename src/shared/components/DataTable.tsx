@@ -54,7 +54,7 @@ export function DataTable({
 
   return (
     <div className="grid gap-3">
-      <LayerCard className="shadow-none overflow-x-auto p-0">
+      <LayerCard className="overflow-x-auto p-0">
         <Table>
           <Table.Header variant="compact">
             <Table.Row>

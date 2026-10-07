@@ -23,8 +23,8 @@ export function DeliveryTasks() {
     onSuccess: async () => { setSelected(undefined); await client.invalidateQueries({ queryKey: ["admin", "delivery-tasks"] }); },
   });
   const query = useQuery({ queryKey: ["admin", "delivery-tasks", page], queryFn: async () => (await adminRequest.get<ApiEnvelope<DeliveryTask[]>>("/payment/delivery-tasks", { params: { page } })).data.data });
-  return <LayerCard className="grid gap-4 p-4">
-    <div className="flex items-center justify-between"><h2>支付后业务任务</h2><Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>刷新</Button></div>
+  return <LayerCard >
+    <LayerCard.Secondary><div className="flex items-center justify-between"><h2>支付后业务任务</h2><Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>刷新</Button></div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
     <p>任务在支付事务内登记。外部结果不确定或执行中断时暂停，需核对远端订单与本地记录，不能直接重复采购。</p>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无业务任务">
       <Table><Table.Header><Table.Row>{["任务", "业务 ID", "状态", "执行次数", "下次执行", "处理说明", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
@@ -41,5 +41,5 @@ export function DeliveryTasks() {
         <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" disabled={reconcile.isPending} onClick={() => setSelected(undefined)}>取消</Button><Button variant="secondary" disabled={reconcile.isPending || !reason.trim()} onClick={() => reconcile.mutate("record_review")}>记录核对，保持暂停</Button><Button loading={reconcile.isPending} disabled={!reason.trim()} onClick={() => reconcile.mutate("resume")}>核对并恢复</Button></div>
       </Dialog>
     </Dialog.Root>
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }

@@ -303,10 +303,10 @@ function ProfileEditor({
   ];
   return (
     <div className="grid gap-4">
-      <LayerCard className="shadow-none grid gap-5 p-5">
-        <Text as="h2" variant="heading">
+      <LayerCard >
+        <LayerCard.Secondary><Text as="h2" variant="heading">
           账户信息
-        </Text>
+        </Text></LayerCard.Secondary><LayerCard.Primary className="grid gap-5">
         <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
           {metrics.map((m) => (
             <div key={m.label}>
@@ -381,12 +381,12 @@ function ProfileEditor({
         <p>
           短信与邮件偏好随基础资料保存。社交绑定由用户授权，暂不支持管理员代绑。
         </p>
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
       <div className="grid items-start gap-4 xl:grid-cols-3">
-        <LayerCard className="shadow-none grid gap-4 p-5 xl:col-span-2">
-          <Text as="h2" variant="heading">
+        <LayerCard className="xl:col-span-2">
+          <LayerCard.Secondary><Text as="h2" variant="heading">
             基础资料
-          </Text>
+          </Text></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <form
             className="grid gap-4"
             onSubmit={(e) => {
@@ -501,13 +501,13 @@ function ProfileEditor({
               </Button>
             </div>
           </form>
-        </LayerCard>
-        <LayerCard className="shadow-none grid gap-4 p-5">
-          <Text as="h2" variant="heading">
+        </LayerCard.Primary></LayerCard>
+        <LayerCard >
+          <LayerCard.Secondary><Text as="h2" variant="heading">
             登录记录
-          </Text>
+          </Text></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <RecordList id={customer.id} kind="logins" />
-        </LayerCard>
+        </LayerCard.Primary></LayerCard>
       </div>
       {["充值", "余额冻结", "强制变更", "变更记录"].includes(
         dialog,
@@ -696,7 +696,7 @@ export function AdminCustomerDetail() {
               />
             ) : null
           ) : ["products", "orders", "transactions"].includes(tab) ? (
-            <LayerCard className="shadow-none p-5">
+            <LayerCard className="p-4">
               {tab === "transactions" ? (
                 <CreditHistory key={id} id={id} />
               ) : (
@@ -704,12 +704,12 @@ export function AdminCustomerDetail() {
               )}
             </LayerCard>
           ) : (
-            <LayerCard className="shadow-none grid gap-3 p-5">
-              <Text as="h2" variant="heading">
+            <LayerCard >
+              <LayerCard.Secondary><Text as="h2" variant="heading">
                 {tabs.find((item) => item.value === tab)?.label}
-              </Text>
+              </Text></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
               <p>开发中</p>
-            </LayerCard>
+            </LayerCard.Primary></LayerCard>
           )
         ) : null}
       </PageState>

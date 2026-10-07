@@ -14,8 +14,8 @@ export function BankTransferSettings() {
     queryClient.setQueryData(["admin", "bank-transfer"], data);
     void queryClient.invalidateQueries({ queryKey: ["wallet", "bank-transfer"] });
   } });
-  return <LayerCard className="grid max-w-3xl gap-5 p-6">
-    <h2 className="text-lg font-semibold">对公汇款收款信息</h2>
+  return <LayerCard className="max-w-3xl">
+    <LayerCard.Secondary><h2 className="text-lg font-semibold">对公汇款收款信息</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-5">
     <p className="text-sm text-kumo-subtle">启用后向登录用户展示以下公司收款信息。汇款不会自动入账，工作人员核对到账后通过现有余额操作处理。</p>
     {query.error ? <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} /> : null}
     <form className="grid gap-5" onSubmit={event => { event.preventDefault(); save.mutate(config); }}>
@@ -26,5 +26,5 @@ export function BankTransferSettings() {
     </form>
     {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
     {save.isSuccess ? <Banner title="收款信息已保存" /> : null}
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }

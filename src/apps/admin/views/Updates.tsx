@@ -82,21 +82,21 @@ export function AdminUpdates() {
       {notice ? <Banner title="更新中心" description={notice} /> : null}
       {operationError ? <Banner variant="error" title="操作失败" description={getApiMessage(operationError)} /> : null}
       {running ? (
-        <LayerCard className="shadow-none grid gap-4 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <LayerCard >
+          <LayerCard.Secondary><div className="flex flex-wrap items-center justify-between gap-3">
             <div><h2 className="font-medium text-kumo-strong">正在更新{targetLabels[running.target]}</h2><p className="text-sm text-kumo-subtle">任务 {running.id} · {running.branch}</p></div>
             <Badge variant="warning">执行中</Badge>
-          </div>
+          </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <Meter label="任务进度" value={running.progress} customValue={`${running.progress}%`} />
           <pre className="max-h-56 overflow-auto whitespace-pre-wrap p-4 text-xs text-kumo-default">{running.log || "等待执行日志…"}</pre>
-        </LayerCard>
+        </LayerCard.Primary></LayerCard>
       ) : null}
       <div className="grid gap-5 lg:grid-cols-2">
         <VersionCard info={status.data.backend} busy={Boolean(running) || update.isPending} onUpdate={() => update.mutate("backend")} />
         <VersionCard info={status.data.frontend} busy={Boolean(running) || update.isPending} onUpdate={() => update.mutate("frontend")} />
       </div>
-      <LayerCard className="shadow-none p-0">
-        <div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-sm text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div>
+      <LayerCard >
+        <LayerCard.Secondary><div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-sm text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div></LayerCard.Secondary><LayerCard.Primary>
         <Table>
           <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>目标 / 状态</Table.Head><Table.Head>功能 / 分支</Table.Head><Table.Head>版本 / 提交变化</Table.Head><Table.Head>日志摘要 / 回滚</Table.Head></Table.Row></Table.Header>
           <Table.Body>
@@ -112,18 +112,18 @@ export function AdminUpdates() {
           </Table.Body>
         </Table>
         {!history.isLoading && (history.data?.length ?? 0) === 0 ? <div className="p-5 text-sm text-kumo-subtle">暂无更新记录。</div> : null}
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
     </>
   );
 }
 
 function VersionCard({ info, busy, onUpdate }: { info: VersionInfo; busy: boolean; onUpdate: () => void }) {
   return (
-    <LayerCard className="shadow-none grid gap-4 p-5">
-      <div className="flex items-center justify-between gap-3">
+    <LayerCard >
+      <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
         <div><h2 className="font-medium text-kumo-strong">{targetLabels[info.target]}</h2><p className="flex items-center gap-1 text-sm text-kumo-subtle"><GitBranchIcon /> {info.branch}</p></div>
         <Badge variant={info.hasUpdate ? "warning" : "success"}>{info.hasUpdate ? `落后 ${info.behind} 个提交` : "已是最新"}</Badge>
-      </div>
+      </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <div><dt className="text-kumo-subtle">当前版本</dt><dd className="font-medium text-kumo-strong">{info.currentVersion || shortCommit(info.currentCommit)}</dd></div>
         <div><dt className="text-kumo-subtle">远端版本</dt><dd className="font-medium text-kumo-strong">{info.remoteVersion || shortCommit(info.remoteCommit)}</dd></div>
@@ -140,6 +140,6 @@ function VersionCard({ info, busy, onUpdate }: { info: VersionInfo; busy: boolea
           </Dialog>
         </Dialog.Root>
       </div>
-    </LayerCard>
+    </LayerCard.Primary></LayerCard>
   );
 }

@@ -114,11 +114,11 @@ function NoticeReviews() {
 
 function BaseSettings() {
   return (
-    <LayerCard className="shadow-none grid gap-3 p-5">
-      <h2 className="font-medium text-kumo-strong">基础设置</h2>
+    <LayerCard >
+      <LayerCard.Secondary><h2 className="font-medium text-kumo-strong">基础设置</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
       <Banner variant="alert" title="尚无基础设置接口" description="当前后端未提供站点名称、客服邮箱与注册开关的读取或保存接口，因此本页不展示推测值，也不会提交无效配置。" />
       <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前访问地址</span><strong className="text-kumo-strong">{window.location.origin}</strong></div>
-    </LayerCard>
+    </LayerCard.Primary></LayerCard>
   );
 }
 
@@ -156,11 +156,11 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
 
   return (
     <div className="grid gap-5">
-      <LayerCard className="shadow-none grid gap-4 p-5">
-        <div className="flex items-center justify-between gap-3">
+      <LayerCard >
+        <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">邮件 SMTP</h2><p className="text-sm text-kumo-subtle">465 使用 SMTPS，其他端口（常用 587）自动协商 STARTTLS。</p></div>
           <Badge variant={config.mail.mock ? "warning" : "success"}>{config.mail.mock ? "待配置" : "真实通道"}</Badge>
-        </div>
+        </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="SMTP 主机" value={config.mail.host} onChange={(event) => updateMail("host", event.target.value)} />
           <Input label="端口" type="number" value={String(config.mail.port)} onChange={(event) => updateMail("port", Number(event.target.value))} />
@@ -168,13 +168,13 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
           <Input label="密码 / 授权码" type="password" value={config.mail.password} onChange={(event) => updateMail("password", event.target.value)} />
           <Input label="发件人名称" value={config.mail.fromName} onChange={(event) => updateMail("fromName", event.target.value)} />
         </div>
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
 
-      <LayerCard className="shadow-none grid gap-4 p-5">
-        <div className="flex items-center justify-between gap-3">
+      <LayerCard >
+        <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
           <div><h2 className="font-medium text-kumo-strong">阿里云短信</h2><p className="text-sm text-kumo-subtle">SendSms 2017-05-25；TemplateCode 须在阿里云控制台审核通过。</p></div>
           <Badge variant={config.sms.mock ? "warning" : "success"}>{config.sms.mock ? "待配置" : "真实通道"}</Badge>
-        </div>
+        </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="AccessKey ID" value={config.sms.accessKey} onChange={(event) => updateSMS("accessKey", event.target.value)} />
           <Input label="AccessKey Secret" type="password" value={config.sms.accessSecret} onChange={(event) => updateSMS("accessSecret", event.target.value)} />
@@ -191,10 +191,10 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
             />
           ))}
         </div>
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
 
-      <LayerCard className="shadow-none grid gap-4 p-5">
-        <h2 className="font-medium text-kumo-strong">到期提醒与通道测试</h2>
+      <LayerCard >
+        <LayerCard.Secondary><h2 className="font-medium text-kumo-strong">到期提醒与通道测试</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Switch label="启用实例到期提醒" checked={config.expiry.enabled} onCheckedChange={(enabled) => setConfig({ ...config, expiry: { ...config.expiry, enabled } })} />
           <Input label="提前提醒天数" type="number" min={1} max={30} value={String(config.expiry.daysBefore)} onChange={(event) => setConfig({ ...config, expiry: { ...config.expiry, daysBefore: Number(event.target.value) } })} />
@@ -206,7 +206,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
           <Button loading={save.isPending} onClick={() => save.mutate()}>保存通知配置</Button>
           <Button variant="secondary" loading={test.isPending} disabled={!testTarget.trim()} onClick={() => test.mutate()}>发送真实测试通知</Button>
         </div>
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
     </div>
   );
 }
@@ -227,17 +227,17 @@ function TemplateSettings({ onSaved }: { onSaved: (message: string) => void }) {
     <div className="grid gap-4">
       <Banner title="模板变量" description="使用 {{变量名}} 占位；邮件变量会在渲染时自动进行 HTML 转义。短信正文以阿里云控制台模板为准，此处内容用于变量校验与发送记录快照。" />
       {items.map((template) => (
-        <LayerCard key={template.id} className="shadow-none grid gap-4 p-5">
-          <div className="flex items-center justify-between gap-3">
+        <LayerCard key={template.id} >
+          <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
             <div><h2 className="font-medium text-kumo-strong">{sceneLabels[template.scene] ?? template.scene}</h2><p className="text-sm text-kumo-subtle">场景标识：{template.scene}</p></div>
             <Switch label="启用" checked={template.enabled} onCheckedChange={(enabled) => update(template.id, { enabled })} />
-          </div>
+          </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Select label="发送渠道" value={template.channel} onValueChange={(value) => value && update(template.id, { channel: value as NotifyChannel })} items={{ email: "仅邮件", sms: "仅短信", both: "邮件 + 短信" }} />
             <Input label="邮件标题" value={template.title} onChange={(event) => update(template.id, { title: event.target.value })} />
           </div>
           <Textarea label="模板内容" rows={4} value={template.content} onChange={(event) => update(template.id, { content: event.target.value })} />
-        </LayerCard>
+        </LayerCard.Primary></LayerCard>
       ))}
       {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
       <div><Button loading={save.isPending} onClick={() => save.mutate()}>保存全部模板</Button></div>
@@ -251,7 +251,7 @@ function NotifyLogs() {
   if (query.isLoading) return <Loader />;
   if (query.error) return <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} />;
   return (
-    <LayerCard className="shadow-none p-0">
+    <LayerCard className="p-0">
       <Table>
         <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>场景 / 通道</Table.Head><Table.Head>目标</Table.Head><Table.Head>状态</Table.Head><Table.Head>回执 / 错误</Table.Head></Table.Row></Table.Header>
         <Table.Body>

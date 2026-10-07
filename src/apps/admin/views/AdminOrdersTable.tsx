@@ -60,7 +60,7 @@ export function AdminOrdersTable({ rows, adminId }: { rows: AdminOrderRow[]; adm
     resize(index, pair * defaultLeft / (defaultLeft + (defaults[index + 1] ?? minShare)));
   };
   const finishResize = () => { drag.current = null; setResizing(false); };
-  return <LayerCard className="shadow-none min-w-0 overflow-x-auto p-0">
+  return <LayerCard className="min-w-0 overflow-x-auto p-0">
     <Table aria-label="订单列表" layout="fixed" className="w-full">
       <colgroup>{columns.map((column, index) => <col key={column.key} style={{ width: `${(widths[index] ?? 0) * 100}%` }} />)}</colgroup>
       <Table.Header variant="compact"><Table.Row>{columns.map((column, index) => (

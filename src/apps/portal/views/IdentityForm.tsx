@@ -64,5 +64,5 @@ export function IdentityForm({ mode }: { mode: "bind" | "reset" }) {
         <Button type="submit" variant={binding ? "secondary" : "primary"} className={binding ? authSubmitClassName : undefined} loading={save.isPending} disabled={send.isPending}>{binding ? "完成绑定" : "重置密码"}</Button>
       </form>;
   if (binding) return <AuthPageShell unstyledBackground title="绑定手机号" description="验证当前密码及手机后完成首次绑定。">{content}</AuthPageShell>;
-  return <div className="mx-auto grid w-full max-w-lg gap-6 py-10"><PageHeader title="找回密码" description="验证已绑定手机号后设置新密码，原有登录将失效。" /><LayerCard className="grid gap-4 p-6">{content}</LayerCard></div>;
+  return <div className="mx-auto grid w-full max-w-lg gap-6 py-10"><PageHeader title="找回密码" description="验证已绑定手机号后设置新密码，原有登录将失效。" /><LayerCard className="grid gap-4 p-4">{content}</LayerCard></div>;
 }

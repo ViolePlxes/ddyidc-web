@@ -17,7 +17,7 @@ export function SupportCenter() {
   if (selected) return (
     <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
       <PageHeader title={selected.title} actions={<LinkButton href="/console/help" variant="secondary" icon={<ArrowLeftIcon />}>返回支持中心</LinkButton>} />
-      <LayerCard className="shadow-none p-5 sm:p-6">
+      <LayerCard className="p-4 sm:p-4">
         <Empty icon={<selected.icon />} title="暂未开放" description={selected.empty} />
         <div className="mt-5 flex justify-center"><LinkButton href="/console/tickets/create">提交工单</LinkButton></div>
       </LayerCard>
@@ -29,12 +29,12 @@ export function SupportCenter() {
       <div className="grid gap-3 sm:grid-cols-6">
         {entries.map((entry, index) => (
           <Link key={entry.title} to={entry.href} className={`group min-w-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring ${index < 2 ? "sm:col-span-3" : "sm:col-span-2"}`}>
-            <LayerCard className="grid h-full gap-5 p-5 shadow-none transition-colors duration-200 group-hover:bg-kumo-tint sm:p-6">
-              <entry.icon size={24} className="text-kumo-subtle" />
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-3"><Text as="h2" variant="heading">{entry.title}</Text><ArrowRightIcon className="shrink-0 text-kumo-subtle" /></div>
-                <Text variant="secondary">{entry.description}</Text>
-              </div>
+            <LayerCard className="h-full">
+              <LayerCard.Secondary className="justify-between">
+                <div className="flex items-center gap-2"><entry.icon size={20} /><Text as="h2">{entry.title}</Text></div>
+                <ArrowRightIcon className="shrink-0" />
+              </LayerCard.Secondary>
+              <LayerCard.Primary className="flex-1"><Text variant="secondary">{entry.description}</Text></LayerCard.Primary>
             </LayerCard>
           </Link>
         ))}

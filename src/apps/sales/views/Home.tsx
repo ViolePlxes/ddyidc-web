@@ -42,7 +42,7 @@ export function SalesHome() {
       <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
         {query.data ? <MetricGrid metrics={metrics} /> : null}
       </PageState>
-      <LayerCard className="shadow-none flex flex-wrap items-end gap-3 p-5">
+      <LayerCard className="flex flex-wrap items-end gap-3 p-4">
         <Input className="max-w-md flex-1" label="搜索客户" placeholder="客户账号、邮箱或手机号…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>

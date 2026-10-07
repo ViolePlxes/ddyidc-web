@@ -26,7 +26,7 @@ export function TransfersPage({ admin = false }: { admin?: boolean }) {
  const rows = (query.data?.list ?? []).filter(row => tab !== "pending" || (row.status === "pending" && row.toCustomerId === String(user?.id)));
  return <div className="grid gap-5">
   <PageHeader title={admin ? "实例转让记录" : "实例接收中心"} description="直连转让免费；市场过户与交易号关联。原购买订单仍归付款人，过户记录保留原订单标记。" />
-  {admin ? <LayerCard className="grid gap-3 p-5"><Switch label="启用 Push 转让" checked={settings.data?.enabled ?? false} disabled={settings.isLoading || save.isPending || Boolean(settings.error)} onCheckedChange={enabled => save.mutate(enabled)} /><p>关闭后禁止新发起，已存在的待接收请求仍可确认、拒绝或取消。</p><Link to={adminPath('/admin/marketplace/settings')}>交易市场开关与佣金设置</Link></LayerCard> : <div className="flex flex-wrap gap-4"><Link to="/console/certification">实名认证</Link><Link to="/console/marketplace?tab=orders">已有市场订单</Link></div>}
+  {admin ? <LayerCard className="grid gap-3 p-4"><Switch label="启用 Push 转让" checked={settings.data?.enabled ?? false} disabled={settings.isLoading || save.isPending || Boolean(settings.error)} onCheckedChange={enabled => save.mutate(enabled)} /><p>关闭后禁止新发起，已存在的待接收请求仍可确认、拒绝或取消。</p><Link to={adminPath('/admin/marketplace/settings')}>交易市场开关与佣金设置</Link></LayerCard> : <div className="flex flex-wrap gap-4"><Link to="/console/certification">实名认证</Link><Link to="/console/marketplace?tab=orders">已有市场订单</Link></div>}
   {!settings.data?.enabled && !settings.isLoading && <Banner title="新转让暂未开放" description="已有请求可继续处理，历史记录仍可查询。" />}
   {(save.error || settings.error) && <Banner variant="error" title={getApiMessage(save.error || settings.error)} />}
   {message && <Banner title={message} />}

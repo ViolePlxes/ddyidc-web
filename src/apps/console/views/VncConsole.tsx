@@ -17,7 +17,7 @@ export function VncConsole() {
 
   if (!token || !["novnc", "kasmvnc", "guacamole"].includes(type)) {
     return (
-      <LayerCard className="shadow-none m-auto grid max-w-2xl gap-4 p-6">
+      <LayerCard className="m-auto grid max-w-2xl gap-4 p-4">
         <Banner variant="error" title="远程会话无效" description="会话参数缺失或引擎类型不受支持，请返回实例控制台重新发起连接。" />
         <Button onClick={() => navigate(`/console/instances/${instanceId}`, { replace: true })}>返回实例控制台</Button>
       </LayerCard>

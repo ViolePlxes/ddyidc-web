@@ -79,7 +79,7 @@ export function Navigation() {
   {error && !editing && <Banner variant="error" title="操作失败，顺序已恢复" description={error} />}
   <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !nodes.length} emptyTitle="暂无导航分类">
    <SortableList scope="navigation-groups" listId="0" disabled={busy} onDrop={drop => sort("0",drop.targetIds)}>
-    {children("0").map(group => {const Icon=navigationIcon(group.icon);return <LayerCard key={group.id} data-sort-id={group.id} className="sort-item grid gap-4 p-4 shadow-none">
+    {children("0").map(group => {const Icon=navigationIcon(group.icon);return <LayerCard key={group.id} data-sort-id={group.id} className="sort-item grid gap-4 p-4">
      <div className="flex flex-wrap items-center gap-2"><DragHandle scope="navigation-groups" label={`拖拽分类 ${group.name}`} disabled={busy} /><Icon size={20} /><Text variant="heading">{group.name}</Text><span className="flex-1" />{actions(group)}<Button variant="secondary" icon={<PlusIcon />} disabled={busy} onClick={() => {setError(null);setEditing({parentId:group.id});}}>新增菜单</Button></div>
      <SortableList scope={`navigation-items-${group.id}`} listId={group.id} disabled={busy} onDrop={drop => sort(group.id,drop.targetIds)}>
       {children(group.id).map(node => {const ItemIcon=navigationIcon(node.icon);return <div key={node.id} data-sort-id={node.id} className="sort-item flex flex-wrap items-center gap-3 border-b border-kumo-line py-3 last:border-0">

@@ -1,8 +1,8 @@
-import { Button, Input, LayerCard, Link, Pagination, Select, Table } from "@cloudflare/kumo";
+import { Button, Input, LayerCard, Link, Pagination, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { consoleApi } from "../../../shared/api/console";
+import { consoleApi, type InstanceListItem } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
@@ -38,19 +38,31 @@ const productCategories = {
 
 type ProductCategory = keyof typeof productCategories;
 
-async function loadInstances(status?: number) {
+async function loadInstances() {
   const pageSize = 100;
-  const first = await consoleApi.userInstances({ page: 1, pageSize, status });
+  const first = await consoleApi.userInstances({ page: 1, pageSize });
   const items = [...first.items];
   for (let page = 2; items.length < first.total; page += 1) {
-    const next = await consoleApi.userInstances({ page, pageSize, status });
+    const next = await consoleApi.userInstances({ page, pageSize });
     if (!next.items.length) break;
     items.push(...next.items);
   }
   return { ...first, items, total: items.length, page: 1, pageSize };
 }
 
-function instanceStatus(status: number): StatusCode {
+type InstanceFilter = "all" | "active" | "pending" | "suspended";
+
+function matchesFilter(instance: InstanceListItem, filter: InstanceFilter) {
+  const power = instance.powerStatus?.toLowerCase();
+  if (filter === "active") return [3, 4].includes(instance.status) && !["suspended", "deleted", "expired", "fault"].includes(power ?? "");
+  if (filter === "pending") return [1, 2].includes(instance.status);
+  if (filter === "suspended") return instance.status !== 6 && power === "suspended";
+  return true;
+}
+
+function instanceStatus(instance: InstanceListItem): StatusCode {
+  const { status } = instance;
+  if (status !== 6 && instance.powerStatus?.toLowerCase() === "suspended") return "suspended";
   if (status === 3) return "running";
   if (status === 1 || status === 2) return "provisioning";
   if (status === 4) return "stopped";
@@ -68,20 +80,16 @@ export function InstanceList() {
     : undefined;
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const queryKey = category
-    ? (["instances", "product-categories", status] as const)
-    : (["instances", "product-list", page, search, status] as const);
+  const [status, setStatus] = useState<InstanceFilter>("all");
+  const localFilter = Boolean(category) || status !== "all";
+  const queryKey = localFilter
+    ? (["instances", "filter-list"] as const)
+    : (["instances", "product-list", page, search, "all"] as const);
   const query = useQuery({
     queryKey,
-    queryFn: () => category
-      ? loadInstances(status === "all" ? undefined : Number(status))
-      : consoleApi.userInstances({
-          page,
-          pageSize: instancePageSize,
-          search: search.trim() || undefined,
-          status: status === "all" ? undefined : Number(status),
-        }),
+    queryFn: () => localFilter
+      ? loadInstances()
+      : consoleApi.userInstances({ page, pageSize: instancePageSize, search: search.trim() || undefined }),
     retry: false,
     placeholderData: keepPreviousData,
     initialData: () => queryClient.getQueryData<Awaited<ReturnType<typeof consoleApi.userInstances>>>(queryKey),
@@ -94,16 +102,17 @@ export function InstanceList() {
     setSearch("");
   }, [requestedCategory]);
   const filteredInstances = useMemo(() => {
-    if (!category) return query.data?.items ?? [];
+    if (!localFilter) return query.data?.items ?? [];
     const keyword = search.trim().toLocaleLowerCase();
     return (query.data?.items ?? []).filter((instance) => {
-      if (!category.matches(instance.productName)) return false;
+      if (category && !category.matches(instance.productName)) return false;
+      if (!matchesFilter(instance, status)) return false;
       if (!keyword) return true;
       return [instance.name, instance.productName, instance.primaryIp, instance.remark]
         .some((value) => value?.toLocaleLowerCase().includes(keyword));
     });
-  }, [category, query.data?.items, search]);
-  const instances = category
+  }, [category, localFilter, query.data?.items, search, status]);
+  const instances = localFilter
     ? filteredInstances.slice((page - 1) * instancePageSize, page * instancePageSize)
     : filteredInstances;
   const title = category?.label ?? "产品列表";
@@ -111,28 +120,25 @@ export function InstanceList() {
   return (
     <>
       <PageHeader title={title} description={category ? `查看当前账号名下的${category.label}实例。` : "查看当前账号名下的全部实例产品，并进入独立控制台。"} />
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
-        <Input
-          aria-label="搜索实例"
-          placeholder="按实例名或 IP 搜索"
-          value={search}
-          onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-        />
-        <Select
-          aria-label="实例状态"
-          value={status}
-          onValueChange={(value) => { if (value) { setStatus(value); setPage(1); } }}
-          items={{ all: "全部状态", "1": "待开通", "2": "开通中", "3": "运行中", "4": "已关机", "5": "已过期", "6": "已销毁" }}
-        />
-      </div>
-      <PageState
-        loading={query.isLoading} keepContent
+      <LayerCard>
+        <LayerCard.Secondary>{title}</LayerCard.Secondary>
+        <LayerCard.Primary>
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <Input size="sm" aria-label="搜索实例" placeholder="按实例名或 IP 搜索" className="min-w-0 w-full sm:w-auto sm:flex-1" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
+            <div className="max-w-full overflow-x-auto">
+              <Tabs variant="segmented" size="sm" aria-label="产品状态分类" value={status} onValueChange={(value) => { setStatus(value as InstanceFilter); setPage(1); }} tabs={[
+                { value: "all", label: "全部" }, { value: "active", label: "已激活" }, { value: "pending", label: "待开通" }, { value: "suspended", label: "已暂停" },
+              ]} />
+            </div>
+          </div>
+      <PageState embedded
+        loading={query.isLoading || query.isPlaceholderData} keepContent
         error={query.error ? getApiMessage(query.error) : null}
-        empty={!query.isLoading && !query.error && instances.length === 0}
+        empty={!query.isLoading && !query.isPlaceholderData && !query.error && instances.length === 0}
         emptyTitle={category ? `暂无${category.label}实例` : "暂无产品实例"}
         emptyDescription={category ? "该分类下暂无已购实例。" : "当前账号在所选条件下没有实例产品。"}
       >
-        <LayerCard className="shadow-none overflow-x-auto p-0">
+        <div className="min-w-0 overflow-x-auto">
           <Table>
             <Table.Header variant="compact">
               <Table.Row>
@@ -158,7 +164,7 @@ export function InstanceList() {
                   <Table.Cell>{instance.productName || "—"}</Table.Cell>
                   <Table.Cell className="max-w-xs whitespace-pre-wrap break-words">{instance.remark || "—"}</Table.Cell>
                   <Table.Cell>{instance.primaryIp || "—"}</Table.Cell>
-                  <Table.Cell><StatusBadge status={instanceStatus(instance.status)} /></Table.Cell>
+                  <Table.Cell><StatusBadge status={instanceStatus(instance)} /></Table.Cell>
                   <Table.Cell>{instance.createdAt}</Table.Cell>
                   <Table.Cell>
                     <span className="grid">
@@ -173,18 +179,20 @@ export function InstanceList() {
               ))}
             </Table.Body>
           </Table>
-          {(category ? filteredInstances.length : (query.data?.total ?? 0)) > instancePageSize ? (
+          {(localFilter ? filteredInstances.length : (query.data?.total ?? 0)) > instancePageSize ? (
             <div className="p-4">
               <Pagination
                 page={page}
                 setPage={setPage}
                 perPage={instancePageSize}
-                totalCount={category ? filteredInstances.length : (query.data?.total ?? 0)}
+                totalCount={localFilter ? filteredInstances.length : (query.data?.total ?? 0)}
               />
             </div>
           ) : null}
-        </LayerCard>
+        </div>
       </PageState>
+        </LayerCard.Primary>
+      </LayerCard>
     </>
   );
 }

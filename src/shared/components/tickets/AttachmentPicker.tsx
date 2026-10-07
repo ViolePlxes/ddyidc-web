@@ -39,7 +39,7 @@ export function AttachmentPicker({
         上传附件
       </Button>
       {value.length ? (
-        <LayerCard className="shadow-none p-0">
+        <LayerCard className="p-0">
           <ul className="divide-y divide-kumo-line">
             {value.map((item) => (
               <li key={item.id} className="flex items-center gap-3 p-3">

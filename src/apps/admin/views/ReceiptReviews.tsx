@@ -40,8 +40,8 @@ export function ReceiptReviews() {
     },
     onSuccess: async () => { await client.invalidateQueries({ queryKey: ["admin", "receipt-reviews"] }); },
   });
-  return <LayerCard className="grid gap-4 p-4">
-    <h2>待核对收款</h2>
+  return <LayerCard >
+    <LayerCard.Secondary><h2>待核对收款</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
     <p>已核实渠道收款但未用于履约的支付尝试。原路退款仅处理本笔收款，不改变其他已付款订单。</p>
     <div className="flex flex-wrap items-end gap-3">
       <Input label="渠道核对支付单号" value={payNo} maxLength={64} onChange={event => { setPayNo(event.target.value); reconcile.reset(); }} />
@@ -68,5 +68,5 @@ export function ReceiptReviews() {
         <div className="flex justify-end gap-2"><Button variant="secondary" disabled={refund.isPending} onClick={() => setSelected(undefined)}>取消</Button><Button loading={refund.isPending} disabled={!reason.trim()} onClick={() => refund.mutate()}>确认退回 ¥{selected?.amount}</Button></div>
       </Dialog>
     </Dialog.Root>
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }

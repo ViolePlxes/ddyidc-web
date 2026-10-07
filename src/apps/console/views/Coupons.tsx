@@ -55,7 +55,7 @@ export function Coupons() {
               <PageState loading={center.isLoading} error={center.error ? getApiMessage(center.error) : null} empty={!center.isLoading && !center.error && (center.data?.length ?? 0) === 0} emptyTitle="暂无可领优惠券">
                 <div className="grid gap-3" data-animate-list>
                   {(center.data ?? []).map((coupon) => (
-                    <LayerCard key={coupon.id} className="shadow-none flex items-center justify-between gap-4 p-4">
+                    <LayerCard key={coupon.id} className="flex items-center justify-between gap-4 p-4">
                       <div><strong className="text-kumo-strong">{coupon.name}</strong><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用 · 剩余 {coupon.remaining}</p></div>
                       <Button size="sm" loading={claim.isPending && claim.variables === coupon.id} disabled={coupon.userClaimed >= coupon.perUserLimit} onClick={() => claim.mutate(coupon.id)}>{coupon.userClaimed >= coupon.perUserLimit ? "已达上限" : "领取"}</Button>
                     </LayerCard>
@@ -69,7 +69,7 @@ export function Coupons() {
       {!config.isLoading && !config.data?.couponSelfClaim ? <Banner variant="alert" title="自主领券已关闭" description="营销公共配置当前禁止用户自主领券。" /> : null}
       {notice ? <Banner title="操作成功" description={notice} /> : null}
       {claim.error || redeem.error ? <Banner variant="error" title="优惠券操作失败" description={getApiMessage(claim.error ?? redeem.error)} /> : null}
-      <LayerCard className="shadow-none flex flex-wrap items-end gap-3 p-4">
+      <LayerCard className="flex flex-wrap items-end gap-3 p-4">
         <div className="min-w-64 flex-1"><Input label="优惠券兑换码" value={claimCode} onChange={(event) => setClaimCode(event.target.value)} placeholder="请输入兑换码" /></div>
         <Button variant="secondary" loading={redeem.isPending} disabled={!claimCode.trim()} onClick={() => redeem.mutate(claimCode.trim())}>兑换</Button>
       </LayerCard>
@@ -83,10 +83,10 @@ export function Coupons() {
         <div className="grid gap-4">
           <section className="grid gap-4 md:grid-cols-2" data-animate-list>
             {rows.map((coupon) => (
-              <LayerCard key={coupon.id} className="shadow-none grid gap-4 p-5">
-                <div className="flex justify-between gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">{coupon.name}</h2><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用</p></div><strong className="text-3xl text-kumo-brand">{couponValue(coupon.type, coupon.faceValue, coupon.discountRate)}</strong></div>
+              <LayerCard key={coupon.id} >
+                <LayerCard.Secondary><div className="flex justify-between gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">{coupon.name}</h2><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用</p></div><strong className="text-3xl text-kumo-brand">{couponValue(coupon.type, coupon.faceValue, coupon.discountRate)}</strong></div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
                 <div className="flex items-center justify-between border-t border-kumo-line pt-4"><span className="text-sm text-kumo-subtle">有效期至 {coupon.expireAt}</span><Badge variant={tab === "available" ? "success" : "secondary"}>{tab === "available" ? "可使用" : tab === "used" ? "已使用" : "已过期"}</Badge></div>
-              </LayerCard>
+              </LayerCard.Primary></LayerCard>
             ))}
           </section>
           {(coupons.data?.total ?? 0) > 10 ? <Pagination page={page} setPage={setPage} perPage={10} totalCount={coupons.data?.total ?? 0} /> : null}

@@ -46,7 +46,7 @@ function Settings() {
   const [error, setError] = useState("");
   const value = form ?? query.data;
   return (
-    <LayerCard className="grid gap-4 p-5">
+    <LayerCard className="grid gap-4 p-4">
       {query.error && (
         <Banner variant="error" title={getApiMessage(query.error)} />
       )}

@@ -102,7 +102,7 @@ export function UpstreamSuppliers() {
       {message ? <Banner variant={message.includes("失败") ? "error" : "default"} title={message} /> : null}
       {updateStatus.error ? <Banner variant="error" title="状态更新失败" description={getApiMessage(updateStatus.error)} /> : null}
       <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && suppliers.length === 0} emptyTitle="暂无供应商">
-        <LayerCard className="shadow-none overflow-x-auto p-0">
+        <LayerCard className="overflow-x-auto p-0">
           <Table>
             <Table.Header variant="compact"><Table.Row><Table.Head>供应商</Table.Head><Table.Head>系统类型</Table.Head><Table.Head>接口地址 / 账号</Table.Head><Table.Head>汇率</Table.Head><Table.Head>状态</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
             <Table.Body>

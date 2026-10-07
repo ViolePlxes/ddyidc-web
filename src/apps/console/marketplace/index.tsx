@@ -39,7 +39,7 @@ function MarketTab() {
   });
   return (
     <>
-      <LayerCard className="shadow-none p-5">
+      <LayerCard className="p-4">
         <Input
           label="搜索在售产品"
           value={keyword}
@@ -54,7 +54,7 @@ function MarketTab() {
       >
         <div className="grid gap-4 lg:grid-cols-2">
           {query.data?.list.map((r) => (
-            <LayerCard key={r.id} className="shadow-none grid gap-4 p-5">
+            <LayerCard key={r.id} className="grid gap-4 p-4">
               <div className="flex justify-between">
                 <div>
                   <strong className="text-kumo-strong">{r.productName}</strong>
@@ -125,7 +125,7 @@ function SellTab() {
   return (
     <>
       <Notice message={message} />
-      <LayerCard className="shadow-none grid gap-5 p-5">
+      <LayerCard className="grid gap-5 p-4">
         {status.data && <p className="text-sm text-kumo-subtle">成交后平台收取 {status.data.feeRate}% 佣金，按元保留两位小数四舍五入；其余金额结算至账户余额。</p>}
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3].map((n) => (
@@ -281,7 +281,7 @@ function MyListingsTab() {
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无挂牌记录"
       >
-        <LayerCard className="shadow-none overflow-x-auto p-0">
+        <LayerCard className="overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -381,7 +381,7 @@ function OrdersTab() {
         empty={!query.isLoading && !query.data?.list.length}
         emptyTitle="暂无交易订单"
       >
-        <LayerCard className="shadow-none overflow-x-auto p-0">
+        <LayerCard className="overflow-x-auto p-0">
           <Table>
             <Table.Header>
               <Table.Row>
@@ -481,7 +481,7 @@ function WalletTab() {
           ["累计收入", wallet.data?.totalIncome],
           ["累计提现", wallet.data?.totalWithdrawn],
         ].map(([label, value]) => (
-          <LayerCard key={label} className="shadow-none grid gap-1 p-5">
+          <LayerCard key={label} className="grid gap-1 p-4">
             <span className="text-sm text-kumo-subtle">{label}</span>
             <strong className="text-2xl text-kumo-strong">
               {money(value ?? "0")}
@@ -489,7 +489,7 @@ function WalletTab() {
           </LayerCard>
         ))}
       </div>
-      <LayerCard className="shadow-none grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+      <LayerCard className="grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <Input
           label="提现金额（元）"
           type="number"
@@ -505,7 +505,7 @@ function WalletTab() {
           申请提现
         </Button>
       </LayerCard>
-      <LayerCard className="shadow-none overflow-x-auto p-0">
+      <LayerCard className="overflow-x-auto p-0">
         <Table>
           <Table.Header>
             <Table.Row>
@@ -584,8 +584,8 @@ function WantsTab() {
   return (
     <>
       <Notice message={message} />
-      <LayerCard className="shadow-none grid gap-4 p-5">
-        <h2 className="font-semibold text-kumo-strong">发布求购</h2>
+      <LayerCard >
+        <LayerCard.Secondary><h2 className="font-semibold text-kumo-strong">发布求购</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Input
             label="求购标题"
@@ -625,7 +625,7 @@ function WantsTab() {
             发布求购
           </Button>
         </div>
-      </LayerCard>
+      </LayerCard.Primary></LayerCard>
       <PageState
         loading={query.isLoading}
         empty={!query.isLoading && !query.data?.list.length}
@@ -633,7 +633,7 @@ function WantsTab() {
       >
         <div className="grid gap-4 md:grid-cols-2">
           {query.data?.list.map((r) => (
-            <LayerCard key={r.id} className="shadow-none grid gap-2 p-5">
+            <LayerCard key={r.id} className="grid gap-2 p-4">
               <div className="flex justify-between">
                 <strong>{r.title}</strong>
                 <MarketplaceStatusBadge status={r.status} />
@@ -646,7 +646,7 @@ function WantsTab() {
           ))}
         </div>
       </PageState>
-      <section className="grid gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">匹配公开求购</h2><p className="text-sm text-kumo-subtle">选择一条需求并提交报价，可选填关联挂牌编号。</p></div><div className="grid gap-4 lg:grid-cols-2">{publicWants.data?.list.map((want) => <LayerCard key={want.id} className="shadow-none grid gap-3 p-5"><div className="flex justify-between"><strong>{want.title}</strong><span>{money(want.budgetMin)} – {money(want.budgetMax)}</span></div><p className="text-sm text-kumo-subtle">{want.region || "区域不限"} · {want.description}</p>{offer.wantId === want.id ? <div className="grid gap-3"><Input label="报价（元）" type="number" value={offer.price} onChange={(e) => setOffer({ ...offer, price: e.target.value })} /><Input label="关联挂牌 ID（可选）" value={offer.listingId} onChange={(e) => setOffer({ ...offer, listingId: e.target.value })} /><Textarea label="报价说明" rows={3} value={offer.message} onChange={(e) => setOffer({ ...offer, message: e.target.value })} /><div className="flex gap-2"><Button loading={submitOffer.isPending} disabled={Number(offer.price) <= 0} onClick={() => submitOffer.mutate()}>提交报价</Button><Button variant="secondary" onClick={() => setOffer({ wantId: "", listingId: "", price: "", message: "" })}>取消</Button></div></div> : <Button variant="secondary" onClick={() => setOffer({ wantId: want.id, listingId: "", price: "", message: "" })}>我要报价</Button>}</LayerCard>)}</div></section>
+      <section className="grid gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">匹配公开求购</h2><p className="text-sm text-kumo-subtle">选择一条需求并提交报价，可选填关联挂牌编号。</p></div><div className="grid gap-4 lg:grid-cols-2">{publicWants.data?.list.map((want) => <LayerCard key={want.id} className="grid gap-3 p-4"><div className="flex justify-between"><strong>{want.title}</strong><span>{money(want.budgetMin)} – {money(want.budgetMax)}</span></div><p className="text-sm text-kumo-subtle">{want.region || "区域不限"} · {want.description}</p>{offer.wantId === want.id ? <div className="grid gap-3"><Input label="报价（元）" type="number" value={offer.price} onChange={(e) => setOffer({ ...offer, price: e.target.value })} /><Input label="关联挂牌 ID（可选）" value={offer.listingId} onChange={(e) => setOffer({ ...offer, listingId: e.target.value })} /><Textarea label="报价说明" rows={3} value={offer.message} onChange={(e) => setOffer({ ...offer, message: e.target.value })} /><div className="flex gap-2"><Button loading={submitOffer.isPending} disabled={Number(offer.price) <= 0} onClick={() => submitOffer.mutate()}>提交报价</Button><Button variant="secondary" onClick={() => setOffer({ wantId: "", listingId: "", price: "", message: "" })}>取消</Button></div></div> : <Button variant="secondary" onClick={() => setOffer({ wantId: want.id, listingId: "", price: "", message: "" })}>我要报价</Button>}</LayerCard>)}</div></section>
     </>
   );
 }

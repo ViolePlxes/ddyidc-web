@@ -60,7 +60,7 @@ export function GroupBuyAdminLeaders() {
         empty={!leaders.isLoading && !leaders.data?.list.length}
         emptyTitle="暂无拼团记录"
       >
-        <LayerCard className="shadow-none overflow-x-auto p-0">
+        <LayerCard className="overflow-x-auto p-0">
           <Table>
             <Table.Header variant="compact">
               <Table.Row>
@@ -112,14 +112,14 @@ export function GroupBuyAdminLeaders() {
       </PageState>
 
       {selectedId ? (
-        <LayerCard className="shadow-none overflow-x-auto p-0">
-          <div className="flex items-center justify-between gap-3 p-4">
+        <LayerCard >
+          <LayerCard.Secondary><div className="flex items-center justify-between gap-3 p-4">
             <div>
               <h2 className="text-lg font-semibold">成员明细</h2>
               <p className="text-sm text-kumo-subdued">团号 #{selectedId}；团长申请将提交整个拼团的退款审核，审核前不会退入余额。</p>
             </div>
             <Button variant="secondary" onClick={() => setSelectedId(undefined)}>关闭</Button>
-          </div>
+          </div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
           <PageState
             loading={detail.isLoading}
             error={detail.error ? getApiMessage(detail.error) : null}
@@ -160,7 +160,7 @@ export function GroupBuyAdminLeaders() {
               </Table.Body>
             </Table>
           </PageState>
-        </LayerCard>
+        </LayerCard.Primary></LayerCard>
       ) : null}
     </div>
   );

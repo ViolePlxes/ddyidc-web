@@ -17,7 +17,7 @@ export function SocialBindings() {
     },
     onSuccess: (_, input) => { setPassword(""); if (input.unbind) { setSuccess("已解除绑定"); void client.invalidateQueries({ queryKey: ["social-bindings"] }); } },
   });
-  return <LayerCard className="grid gap-4 p-5"><h2 className="text-lg font-semibold">社交账号绑定</h2>
+  return <LayerCard ><LayerCard.Secondary><h2 className="text-lg font-semibold">社交账号绑定</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
     <p className="text-sm text-kumo-subtle">验证当前密码后绑定或解绑。社交账号只能绑定一个平台账号，解绑前须已绑定手机号。</p>
     <Input label="当前登录密码" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" maxLength={20} />
     {(["github", "qq"] as const).map(provider => {
@@ -30,5 +30,5 @@ export function SocialBindings() {
     {query.error || action.error ? <Banner variant="error" title="操作未完成" description={getApiMessage(query.error ?? action.error)} /> : null}
     {success ? <Banner title={success} /> : null}
     {new URLSearchParams(window.location.search).get("social") === "bound" ? <Banner title="社交账号已绑定" /> : null}
-  </LayerCard>;
+  </LayerCard.Primary></LayerCard>;
 }
