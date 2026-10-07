@@ -13,7 +13,7 @@ export function PageHeaderSkeleton() {
 
 export function CardSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <LayerCard className={`grid gap-4 p-4 ${compact ? "" : "h-80"}`} aria-hidden="true">
+    <LayerCard className={`shadow-none grid gap-4 ${compact ? "p-4" : "h-80 p-5"}`} aria-hidden="true">
       <div className="flex items-center justify-between gap-4">
         <SkeletonLine className="h-10 w-10" />
         <SkeletonLine className="h-5 w-20" />
@@ -50,7 +50,7 @@ export function ProductListSkeleton() {
 
 export function ProductBillSkeleton() {
   return (
-    <LayerCard className="grid gap-5 p-4" role="status" aria-label="正在加载当前应付账单">
+    <LayerCard className="shadow-none grid gap-5 p-5" role="status" aria-label="正在加载当前应付账单">
       <div className="grid gap-1" aria-hidden="true">
         <SkeletonLine className="h-4 w-24" />
         <SkeletonLine className="h-9 w-36" />
@@ -68,8 +68,8 @@ export function ProductBillSkeleton() {
 
 export function ProductSpecTableSkeleton() {
   return (
-    <LayerCard className="min-w-0" role="status" aria-label="正在加载计算规格">
-      <LayerCard.Secondary><h2>计算规格</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
+    <LayerCard className="shadow-none grid min-w-0 gap-4 p-5" role="status" aria-label="正在加载计算规格">
+      <h2>计算规格</h2>
       <div className="overflow-x-auto" aria-hidden="true">
         <Table className="whitespace-nowrap">
           <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
@@ -79,7 +79,7 @@ export function ProductSpecTableSkeleton() {
         </Table>
       </div>
       <SkeletonLine className="h-9 w-48" />
-    </LayerCard.Primary></LayerCard>
+    </LayerCard>
   );
 }
 
@@ -91,7 +91,7 @@ export function ProductCatalogSkeleton() {
         {[0, 1, 2, 3].map((index) => <SkeletonLine key={index} className="h-5 w-32" />)}
       </div>
       <div className="grid min-w-0 gap-5">
-        <LayerCard className="grid gap-4 p-4">
+        <LayerCard className="shadow-none grid gap-4 p-4">
           {["一级分类", "二级分类"].map((label) => <div key={label} className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
             <strong>{label}</strong><div className="flex min-w-0 gap-2 overflow-hidden" aria-hidden="true">
               {[0, 1, 2].map((index) => <SkeletonLine key={index} className="h-9 w-28 shrink-0" />)}
@@ -110,18 +110,18 @@ export function ProductConfigSkeleton({ externalBill = false }: { externalBill?:
   return (
     <div className={`grid min-w-0 items-start gap-6 ${externalBill ? "" : "xl:grid-cols-[minmax(0,1fr)_22rem]"}`} role="status" aria-label="正在加载商品配置">
       <div className="grid gap-5">
-        {!externalBill ? <LayerCard className="grid min-h-28 gap-3 p-4" aria-hidden="true">
+        {!externalBill ? <LayerCard className="shadow-none grid min-h-28 gap-3 p-5" aria-hidden="true">
           <SkeletonLine className="h-6 w-32" />
           <SkeletonLine className="h-4 w-24" />
           <SkeletonLine className="h-4 w-2/3" />
         </LayerCard> : null}
         {Array.from({ length: 4 }, (_, index) => (
-          <LayerCard key={index} className="grid gap-4 p-4 md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" aria-hidden="true">
+          <LayerCard key={index} className="shadow-none grid gap-4 p-5 md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" aria-hidden="true">
             <SkeletonLine className="h-6 w-32" />
             <SkeletonLine className="h-9 w-full" />
           </LayerCard>
         ))}
-        {[0, 1].map((index) => <LayerCard key={index} className="grid gap-4 p-4" aria-hidden="true">
+        {[0, 1].map((index) => <LayerCard key={index} className="shadow-none grid gap-4 p-5" aria-hidden="true">
           <SkeletonLine className="h-6 w-32" />
           <SkeletonLine className="h-9 w-full" />
           <SkeletonLine className="h-9 w-full" />

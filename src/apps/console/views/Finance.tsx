@@ -65,7 +65,7 @@ export function Finance() {
         description="支付平台验签、金额校验和幂等入账全部在服务端完成；浏览器展示结果不会直接修改余额。"
       />
       {created ? (
-        <LayerCard className="grid gap-4 p-4">
+        <LayerCard className="shadow-none grid gap-4 p-5">
           <Banner title="充值单已创建" description={`充值单 ${created.rechargeNo} 已进入待支付状态。`} />
           <div className="flex justify-end">
             <PaymentDialog businessType="recharge" businessId={created.id} amountCents={created.amount} defaultOpen onPaid={async () => {
@@ -76,13 +76,13 @@ export function Finance() {
         </LayerCard>
       ) : null}
       <section className="grid gap-4">
-        <LayerCard className="grid gap-2 p-4"><span className="text-sm text-kumo-subtle">账户余额</span><strong className="text-3xl text-kumo-strong">{balance.data ? `¥${Number(balance.data.balance).toFixed(2)}` : "—"}</strong><span className="text-sm text-kumo-subtle">{balance.error ? getApiMessage(balance.error) : "当前可用余额（元）"}</span></LayerCard>
+        <LayerCard className="shadow-none grid gap-2 p-5"><span className="text-sm text-kumo-subtle">账户余额</span><strong className="text-3xl text-kumo-strong">{balance.data ? `¥${Number(balance.data.balance).toFixed(2)}` : "—"}</strong><span className="text-sm text-kumo-subtle">{balance.error ? getApiMessage(balance.error) : "当前可用余额（元）"}</span></LayerCard>
       </section>
       <section className="grid gap-3">
         <h2 className="text-lg font-semibold text-kumo-strong">充值记录</h2>
         <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无充值记录">
           <div className="grid gap-3">
-            <LayerCard className="overflow-x-auto p-0">
+            <LayerCard className="shadow-none overflow-x-auto p-0">
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>充值单号</Table.Head><Table.Head>创建时间</Table.Head><Table.Head>状态</Table.Head><Table.Head className="text-right">金额</Table.Head><Table.Head className="text-right">操作</Table.Head></Table.Row></Table.Header>
                 <Table.Body data-animate-list>{rows.map((row) => <Table.Row key={row.id}><Table.Cell>{row.rechargeNo}</Table.Cell><Table.Cell>{row.createdAt}</Table.Cell><Table.Cell>{rechargeStatusLabel(row.status)}</Table.Cell><Table.Cell className="text-right">{formatMoney(row.amount)}</Table.Cell><Table.Cell className="text-right">{row.status === 1 ? <PaymentDialog businessType="recharge" businessId={row.id} amountCents={row.amount} onPaid={async () => { await queryClient.invalidateQueries({ queryKey: ["finance", "recharges"] });

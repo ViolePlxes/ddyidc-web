@@ -151,7 +151,7 @@ export function ReinstallDialog({
         {images.isLoading ? <PageState loading><></></PageState> : null}
         {images.error ? <Banner variant="error" title="镜像列表加载失败" description={getApiMessage(images.error)} /> : null}
         {!images.isLoading && !images.error && groups.length === 0 ? (
-          <LayerCard className="p-4 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
+          <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
         ) : null}
         {!images.isLoading && !images.error && groups.length > 0 && !review ? (
           <div className="grid gap-4">
@@ -295,21 +295,21 @@ export function InstanceConsole() {
         {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} /> : null}
         {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
-          <LayerCard ><LayerCard.Secondary><h2 className="text-lg font-semibold">实例设置</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3"><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard.Primary></LayerCard>
-                      <LayerCard >
-              <LayerCard.Secondary><div className="p-5">
+          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
+                      <LayerCard className="shadow-none overflow-x-auto p-0">
+              <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>
-              </div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
+              </div>
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>配置项</Table.Head><Table.Head>所选值</Table.Head></Table.Row></Table.Header>
                 <Table.Body data-animate-list>
                   {instance.config.length ? instance.config.map((item) => <Table.Row key={item.id}><Table.Cell>{item.displayName}</Table.Cell><Table.Cell>{item.displayValue}</Table.Cell></Table.Row>) : <Table.Row><Table.Cell colSpan={2}>固定套餐无额外选配项</Table.Cell></Table.Row>}
                 </Table.Body>
               </Table>
-            </LayerCard.Primary></LayerCard>
+            </LayerCard>
         </div> : null}
-        {activeTab === "logs" ?             <LayerCard >
-              <LayerCard.Secondary><div className="p-5"><h2 className="text-lg font-semibold text-kumo-strong">操作日志</h2></div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
+        {activeTab === "logs" ?             <LayerCard className="shadow-none overflow-x-auto p-0">
+              <div className="p-5"><h2 className="text-lg font-semibold text-kumo-strong">操作日志</h2></div>
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>结果</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header>
                 <Table.Body data-animate-list>
@@ -318,7 +318,7 @@ export function InstanceConsole() {
                   )) : <Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}
                 </Table.Body>
               </Table>
-            </LayerCard.Primary></LayerCard> : null}
+            </LayerCard> : null}
       </div> : null}
     </PageState>
   );

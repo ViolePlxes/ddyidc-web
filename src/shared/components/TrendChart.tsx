@@ -52,7 +52,7 @@ export function TrendChart({
   return (
     <section className="grid gap-3">
       <h2 className="text-lg font-semibold text-kumo-strong">{title}</h2>
-      <LayerCard className="p-4">
+      <LayerCard className="shadow-none p-5">
         <TimeseriesChart
           echarts={echarts}
           type={type}

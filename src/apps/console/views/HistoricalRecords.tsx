@@ -40,7 +40,7 @@ export function HistoricalRecords({ kind }: { kind: HistoryKind }) {
   return <section className="grid gap-3">
     <div><h2 className="text-lg font-semibold text-kumo-strong">{titles[kind]}</h2><p className="text-sm text-kumo-subtle">历史记录仅供查询。</p></div>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle={`暂无${titles[kind]}`}>
-      <LayerCard className="overflow-x-auto p-0"><Table>
+      <LayerCard className="shadow-none overflow-x-auto p-0"><Table>
         <Table.Header variant="compact"><Table.Row>
           <Table.Head>{kind === "orders" ? "订单号 / 商品" : kind === "payment" ? "交易号 / 支付方式" : "说明"}</Table.Head>
           <Table.Head>{kind === "orders" ? "支付时间" : "记录时间"}</Table.Head>

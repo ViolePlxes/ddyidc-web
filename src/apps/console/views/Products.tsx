@@ -73,7 +73,7 @@ function PublicProductCatalog() {
                 {items.map((product) => {
                   const unavailable = !isAvailable(product);
                   return (
-                    <LayerCard key={product.id} className="flex h-80 flex-col gap-4 p-4">
+                    <LayerCard key={product.id} className="shadow-none flex h-80 flex-col gap-4 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><PackageIcon /></div>
                         <Badge variant={unavailable ? "secondary" : "success"}>{unavailable ? "暂无库存" : "可订购"}</Badge>
@@ -168,7 +168,7 @@ function IntegratedProductCatalog() {
             {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
           </aside>
           <div className="grid min-w-0 gap-5">
-            <LayerCard className="grid gap-4 p-4">
+            <LayerCard className="shadow-none grid gap-4 p-4">
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
                 <strong>一级分类</strong>
                 <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
@@ -186,8 +186,8 @@ function IntegratedProductCatalog() {
               </div>
             </LayerCard>
 
-            <LayerCard id="catalog-specifications" >
-              <LayerCard.Secondary><h2>计算规格</h2></LayerCard.Secondary><LayerCard.Primary className="scroll-mt-4 grid gap-4">
+            <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid gap-4 p-5">
+              <h2>计算规格</h2>
               {productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
                 <Table className="whitespace-nowrap">
                   <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
@@ -198,7 +198,7 @@ function IntegratedProductCatalog() {
                 emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}
               {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} /> : null}
-            </LayerCard.Primary></LayerCard>
+            </LayerCard>
 
             {productsQuery.isLoading ? <ProductConfigSkeleton externalBill /> : null}
             {product ? <section aria-label="产品配置">

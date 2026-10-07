@@ -73,11 +73,11 @@ export function StaffLogin({
           </div>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
-        <LayerCard >
-          <LayerCard.Secondary><div className="grid gap-1">
+        <LayerCard className="shadow-none grid gap-5 p-6">
+          <div className="grid gap-1">
             <h1 className="text-xl font-semibold text-kumo-strong">{title}</h1>
             <p className="text-sm text-kumo-subtle">{subtitle}</p>
-          </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-5">
+          </div>
           <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
             <Input
               label="账号"
@@ -104,7 +104,7 @@ export function StaffLogin({
             <ShieldCheckIcon className="mt-0.5 shrink-0" />
             <span>此入口使用独立的 httpOnly Cookie 与服务端会话。</span>
           </div>
-        </LayerCard.Primary></LayerCard>
+        </LayerCard>
       </div>
     </main>
   );

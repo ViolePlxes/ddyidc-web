@@ -140,7 +140,7 @@ export function WalletRecharge() {
 
   return <div className="wallet-recharge-page">
     <PageHeader title="账户充值" />
-    <LayerCard className="wallet-recharge-balance grid gap-3 p-0 sm:flex sm:items-center sm:justify-between">
+    <LayerCard className="wallet-recharge-balance grid gap-3 bg-transparent p-0 shadow-none ring-0 sm:flex sm:items-center sm:justify-between">
       <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前账户总余额</span><strong className="text-xl text-kumo-strong">{balance.data ? `¥${Number(balance.data.balance).toFixed(2)}` : "—"}</strong></div>
       <div className="flex gap-4 text-sm"><Link to="/wallet/recharge-records" className="text-kumo-link">充值记录</Link><Link to="/wallet/consume-records" className="text-kumo-link">消费记录</Link></div>
     </LayerCard>
@@ -160,7 +160,7 @@ export function WalletRecharge() {
         {bank.data.instructions ? <p className="mt-3 whitespace-pre-wrap">{bank.data.instructions}</p> : null}
       </section></> : !bank.isLoading && !bank.error ? <p className="text-sm text-kumo-subtle">配置后可用</p> : null}
     </section> : <>
-    <LayerCard className="wallet-recharge-main"><LayerCard.Secondary>在线充值</LayerCard.Secondary><LayerCard.Primary className={`grid gap-6${attempt || message ? " lg:grid-cols-2" : ""}`}>
+    <LayerCard className={`wallet-recharge-main grid gap-6 bg-transparent p-0 shadow-none ring-0${attempt || message ? " lg:grid-cols-2" : ""}`}>
       <form className="wallet-recharge-form" onSubmit={submit}>
         <Radio.Group legend="支付方式" appearance="card" orientation="vertical" value={channel ?? ""} disabled={locked} onValueChange={value => { if (value === "alipay" || value === "wechat") setSelected(value); }} className="w-full">
           {methods.map(method => <Radio.Item key={method.value} value={method.value} className="wallet-payment-method" label={<img src={`/payment-logos/${method.value}.svg`} alt={method.label} />} disabled={!channels.data?.[method.value]} description={!channels.data?.[method.value] ? "暂未开放" : undefined} />)}
@@ -185,7 +185,7 @@ export function WalletRecharge() {
         {message ? <Banner title={message} /> : null}
         {pollError && !stopped ? <Banner variant="alert" title="支付状态暂未获取" description={pollError} /> : null}
       </section> : null}
-    </LayerCard.Primary></LayerCard>
+    </LayerCard>
     <section className="wallet-recharge-notes"><h2>温馨提示：</h2><ol className="list-decimal pl-5">
       <li>购买充值款及预存款均不支持提现，请理性购买充值。</li>
       <li>使用场景:你可以使用余额购买站内任何产品与服务。</li>

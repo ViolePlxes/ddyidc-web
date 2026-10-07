@@ -65,7 +65,7 @@ export function OrderConfirm() {
     return (
       <>
         <PageHeader title="订单已创建" description={`订单 ${createdOrder.orderNo} 正在等待支付。`} />
-        <LayerCard className="grid gap-5 p-4">
+        <LayerCard className="shadow-none grid gap-5 p-5">
           <Banner title="请选择支付方式" description="可使用账户余额、支付宝或微信支付。支付成功后系统会处理开通，并跳转至订单详情。" />
           <div className="flex flex-wrap justify-end gap-3">
             <LinkButton href={`/console/orders/${createdOrder.id}`} variant="secondary">查看订单详情</LinkButton>
@@ -102,7 +102,7 @@ export function OrderConfirm() {
       {certification.feedback}<PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
       <PageState loading={coupons.isLoading} error={coupons.error ? getApiMessage(coupons.error) : null}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <LayerCard className="p-4">
+        <LayerCard className="shadow-none p-5">
           <DefinitionList
             rows={[
               { label: "商品", value: draft.productName },
@@ -118,7 +118,7 @@ export function OrderConfirm() {
           />
           {draft.configOptions.length ? <div className="mt-4 grid gap-2"><InstancePasswordInput label="本次实例密码" value={draft.password} onChange={(value) => { const next = { ...draft, password: value }; setDraft(next); saveOrderDraft(next); }} /><p className="text-sm text-kumo-subtle">密码只在页面内存中保留；刷新后会替换为随机密码，请重新检查并确认。</p></div> : null}
         </LayerCard>
-        <LayerCard className="grid gap-5 p-4">
+        <LayerCard className="shadow-none grid gap-5 p-5">
           <CheckoutPoints amountYuan={draft.totalYuan} onRedeemed={setCouponId} onBusy={setPointsBusy}/>
           <Select
             label="优惠券"

@@ -24,7 +24,7 @@ function actionHref(user: unknown, target: string) {
 function ActivityCard({ activity }: { activity: GroupBuyActivity }) {
   const user = useAuthStore((state) => state.user);
   return (
-    <LayerCard className="flex min-h-80 flex-col gap-4 p-4">
+    <LayerCard className="shadow-none flex min-h-80 flex-col gap-4 p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><UsersThreeIcon /></div>
         <Badge variant="success">进行中</Badge>
@@ -71,7 +71,7 @@ export function GroupBuyPublicShare() {
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {data ? <div className="mx-auto grid max-w-3xl gap-6">
         <PageHeader title={`${data.activity.productName} 拼团分享`} description={data.activity.slogan || "好友正在等你参团。"} />
-        <LayerCard className="grid gap-5 p-4">
+        <LayerCard className="shadow-none grid gap-5 p-6">
           <div className="flex flex-wrap items-center gap-2"><Badge variant="success">还差 {Math.max(data.leader.needNum - data.members.length, 0)} 人</Badge><Badge variant="outline">{groupLabels[data.leader.groupType]}</Badge></div>
           <div><span className="text-sm text-kumo-subtle">团长</span><strong className="block text-lg text-kumo-strong">{data.members.find((item) => item.isLeader)?.memberName || "拼团用户"}</strong></div>
           <p className="text-kumo-subtle">拼团将于 {new Date(data.leader.timeoutTime).toLocaleString("zh-CN")} 截止，满员后自动开通。</p>

@@ -18,7 +18,7 @@ export function Cart() {
       <PageHeader title="购物车" description="购物车仅保存于当前设备；订单提交仍使用真实后端接口。" actions={items.length ? <Button variant="secondary" onClick={clear}>清空</Button> : undefined} />
       {certification.feedback}<PageState empty={items.length === 0} emptyTitle="购物车为空">
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <LayerCard className="overflow-x-auto p-0">
+          <LayerCard className="shadow-none overflow-x-auto p-0">
             <Table>
               <Table.Header><Table.Row><Table.Head>商品</Table.Head><Table.Head>配置</Table.Head><Table.Head>数量</Table.Head><Table.Head className="text-right">小计</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
               <Table.Body data-animate-list>
@@ -34,7 +34,7 @@ export function Cart() {
               </Table.Body>
             </Table>
           </LayerCard>
-          <LayerCard className="grid gap-4 p-4">
+          <LayerCard className="shadow-none grid gap-4 p-5">
             <div className="flex justify-between"><span>商品合计</span><span>¥{total.toFixed(2)}</span></div>
             <p className="border-t border-kumo-line pt-4 text-sm text-kumo-subtle">当前订单接口一次仅接受一个商品，请在列表中逐项结算。</p>
           </LayerCard>

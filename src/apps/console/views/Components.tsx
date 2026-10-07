@@ -10,7 +10,7 @@ export function ComponentsPage() {
         title="界面状态预览"
         description="兼容旧版组件展示路由，用于核对统一的 Kumo 视觉语言。"
       />
-      <LayerCard className="grid gap-5 p-4">
+      <LayerCard className="shadow-none grid gap-5 p-5">
         <div className="flex flex-wrap gap-2">
           <Button>主操作</Button>
           <Button variant="secondary">次操作</Button>
@@ -30,7 +30,7 @@ export function ComponentsPage() {
         <Switch label="示例开关" defaultChecked />
       </LayerCard>
       <PageState>
-        <LayerCard className="p-4">
+        <LayerCard className="shadow-none p-5">
           通过查询参数 ?state=empty、loading、error 可检查对应页面状态。
         </LayerCard>
       </PageState>

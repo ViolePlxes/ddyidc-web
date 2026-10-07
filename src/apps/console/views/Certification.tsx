@@ -116,7 +116,7 @@ export function Certification() {
         <p>正在读取认证状态…</p>
       ) : (
         <>
-          <LayerCard className="grid gap-3 p-4">
+          <LayerCard className="grid gap-3 p-5">
             <div>
               <Badge>
                 {data.record?.certifyChannel === "alipay" && data.status === 1
@@ -158,8 +158,8 @@ export function Certification() {
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 {data.settings.channel !== "alipay" && (
-                  <LayerCard >
-                    <LayerCard.Secondary><h2>个人认证</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
+                  <LayerCard className="grid gap-3 p-5">
+                    <h2>个人认证</h2>
                     <p>提交本人证件资料，由管理员审核。</p>
                     <Button
                       disabled={busy}
@@ -170,11 +170,11 @@ export function Certification() {
                     >
                       选择个人认证
                     </Button>
-                  </LayerCard.Primary></LayerCard>
+                  </LayerCard>
                 )}
                 {data.settings.companyEnabled && (
-                  <LayerCard >
-                    <LayerCard.Secondary><h2>企业认证</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
+                  <LayerCard className="grid gap-3 p-5">
+                    <h2>企业认证</h2>
                     <p>
                       {data.settings.companyRequiresPerson
                         ? "当前要求先个人认证；一次认证机会规则下，企业申请暂不可用。"
@@ -189,11 +189,11 @@ export function Certification() {
                     >
                       选择企业认证
                     </Button>
-                  </LayerCard.Primary></LayerCard>
+                  </LayerCard>
                 )}
               </div>
               {type && (
-                <LayerCard className="p-4">
+                <LayerCard className="p-5">
                   <form
                     className="grid gap-4"
                     onSubmit={(e) => {
