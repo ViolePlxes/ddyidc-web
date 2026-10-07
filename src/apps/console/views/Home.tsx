@@ -48,7 +48,7 @@ export function ConsoleHome() {
   const loginIp = devices.data?.find(device => device.current)?.ip;
   const [days, setDays] = useState("7");
   const overview = useQuery({ queryKey: ["console", "overview", days], queryFn: () => getConsoleOverview(Number(days)), refetchInterval: 60_000 });
-  const services = useQuery({ queryKey: ["console", "recent-services"], queryFn: () => consoleApi.userInstances({ page: 1, pageSize: 5 }) });
+  const services = useQuery({ queryKey: ["console", "recent-services", 3], queryFn: () => consoleApi.userInstances({ page: 1, pageSize: 3 }) });
   const tickets = useQuery({ queryKey: ["console", "recent-tickets"], queryFn: () => userTicketApi.list({ page: 1, pageSize: 5 }) });
   const metrics = [
     { key: "balance" as const, title: "余额", value: overview.data ? `¥${Number(overview.data.balance).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—", hint: "每日可用余额净变动（元）", href: "/console/finance" },
@@ -77,7 +77,9 @@ export function ConsoleHome() {
         <section aria-label="已有服务" className="min-w-0">
           <RecentHeading title="已有服务" href="/console/instances" />
           <PageState loading={services.isLoading} error={services.error ? getApiMessage(services.error) : null}>
-            {services.data?.items.length ? services.data.items.map(s => <RecentRow key={s.id} icon={<CubeIcon size={18} />} category="服务" title={s.name || s.productName} description={s.primaryIp || s.productName || `#${s.id}`} href={`/console/instances/${s.id}`} />) : <Empty size="sm" className="bg-kumo-base" icon={<CubeIcon />} title="暂无服务" description="购买的服务将在这里显示。" />}
+            <div className="min-w-0">
+              {services.data?.items.length ? services.data.items.slice(0, 3).map(s => <RecentRow key={s.id} icon={<CubeIcon size={18} />} category="服务" title={s.name || s.productName} description={s.primaryIp || s.productName || `#${s.id}`} href={`/console/instances/${s.id}`} />) : <Empty size="sm" className="bg-kumo-base" icon={<CubeIcon />} title="暂无服务" description="购买的服务将在这里显示。" />}
+            </div>
           </PageState>
         </section>
         <section aria-label="最近工单" className="min-w-0">
