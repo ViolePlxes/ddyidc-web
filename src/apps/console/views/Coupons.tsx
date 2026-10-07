@@ -1,4 +1,5 @@
 import { Badge } from "../../../shared/components/Badge";
+import { PromoCouponOffers, PromoCouponNotices } from "./PromoCouponOffers";
 import { Dialog } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, LayerCard, Pagination, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,6 +69,7 @@ export function Coupons() {
       />
       {!config.isLoading && !config.data?.couponSelfClaim ? <Banner variant="alert" title="自主领券已关闭" description="营销公共配置当前禁止用户自主领券。" /> : null}
       {notice ? <Banner title="操作成功" description={notice} /> : null}
+      <PromoCouponNotices/><PromoCouponOffers />
       {claim.error || redeem.error ? <Banner variant="error" title="优惠券操作失败" description={getApiMessage(claim.error ?? redeem.error)} /> : null}
       <LayerCard className="shadow-none flex flex-wrap items-end gap-3 p-4">
         <div className="min-w-64 flex-1"><Input label="优惠券兑换码" value={claimCode} onChange={(event) => setClaimCode(event.target.value)} placeholder="请输入兑换码" /></div>

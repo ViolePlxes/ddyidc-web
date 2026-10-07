@@ -74,6 +74,7 @@ const AdminInvites = lazy(() =>
     .adminMarketing()
     .then((module) => ({ default: module.AdminInvites })),
 );
+const AdminPromoCoupons = lazy(() => import("./views/PromoCoupons").then(module => ({ default: module.AdminPromoCoupons })));
 const AdminMarketingConfig = lazy(() =>
   routeModules
     .adminMarketing()
@@ -592,6 +593,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path={adminPath('/admin/marketing/promo-coupons')} element={<LazyRoute><AdminPromoCoupons /></LazyRoute>} />
             <Route
               path={adminPath('/admin/marketing/rewards')}
               element={

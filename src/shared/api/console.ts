@@ -149,6 +149,7 @@ export interface OrderDraft {
 }
 
 export interface OrderItem {
+  moduleType?: string;
   id: string;
   productId: string;
   productName: string;

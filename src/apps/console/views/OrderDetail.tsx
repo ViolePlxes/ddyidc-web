@@ -1,6 +1,7 @@
 import { Banner, Button, LayerCard } from "@cloudflare/kumo";
+import { PromoOrderCoupon } from "./PromoOrderCoupon";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { consoleApi } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { DefinitionList } from "../../../shared/components/DataTable";
@@ -13,7 +14,7 @@ import { StatusBadge } from "../../../shared/components/StatusBadge";
 import { useOrder } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels, formatMoney, orderStatusCode } from "../../../shared/utils/format";
 
-const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付", 4: "线下转账" };
+const payTypes: Record<number, string> = { 1: "支付宝", 2: "微信支付", 3: "余额支付", 4: "线下转账", 5: "积分出资" };
 const orderMessages: Record<number, { title: string; description: string }> = {
   1: { title: "等待支付", description: "支持账户余额、支付宝与微信支付，支付状态以服务端确认结果为准。" },
   2: { title: "订单已支付", description: "服务正在处理交付，请在产品列表查看开通结果。" },
@@ -68,7 +69,7 @@ export function OrderDetail() {
                     { label: "订单号", value: order.orderNo },
                     { label: "商品", value: order.productName || order.items?.[0]?.productName || "—" },
                     { label: "下单时间", value: order.createdAt },
-                    { label: "支付方式", value: order.payAmount === 0 && [2, 6].includes(order.status) ? "优惠全额抵扣（无渠道付款）" : order.payType ? payTypes[order.payType] ?? `类型 ${order.payType}` : "尚未支付" },
+                    { label: "支付方式", value: item?.moduleType!=="promo_coupon" && order.payAmount === 0 && [2, 6].includes(order.status) ? "优惠全额抵扣（无渠道付款）" : order.payType ? payTypes[order.payType] ?? `类型 ${order.payType}` : "尚未支付" },
                     ...configRows,
                     ...(snapshot?.hostname
                       ? [{ label: "主机名", value: snapshot.hostname }]
@@ -84,20 +85,21 @@ export function OrderDetail() {
                         item?.durationText ||
                         "—",
                     },
-                    { label: "数量", value: `${item?.quantity ?? 1} 台` },
+                    { label: "数量", value: `${item?.quantity ?? 1} ${item?.moduleType==="promo_coupon"?"批":"台"}` },
                   ]}
                 />
               </LayerCard>
               <Banner
                 variant={order.status === 1 ? "alert" : "default"}
                 title={orderMessages[order.status]?.title ?? "订单状态待核对"}
-                description={orderMessages[order.status]?.description ?? "请刷新订单，或联系平台核对处理进度。"}
+                description={item?.moduleType==="promo_coupon"?"请在推广客户与收益查看审核、出资、券发放与原资产退还进度。":orderMessages[order.status]?.description ?? "请刷新订单，或联系平台核对处理进度。"}
               />
             </div>
             <LayerCard className="shadow-none grid gap-4 p-5">
-              <span className="text-sm text-kumo-subtle">应付金额</span>
-              <strong className="text-3xl text-kumo-strong">{formatMoney(order.payAmount)}</strong>
-              <PaymentDialog
+              <span className="text-sm text-kumo-subtle">{item?.moduleType==="promo_coupon"?"批次出资":"应付金额"}</span>
+              {item?.moduleType==="promo_coupon"?<p className="text-sm">积分或余额出资金额请在批次中核对。</p>:<strong className="text-3xl text-kumo-strong">{formatMoney(order.payAmount)}</strong>}
+              {order.status===1&&!order.couponId&&item?.moduleType!=="promo_coupon"?<PromoOrderCoupon orderId={order.id} amount={order.totalAmount}/>:null}
+              {item?.moduleType==="promo_coupon"?<Link className="text-kumo-link" to="/console/promo">返回推广客户与收益确认出资或回收</Link>:<PaymentDialog
                 businessType="order"
                 businessId={order.id}
                 amountCents={order.payAmount}
@@ -109,7 +111,7 @@ export function OrderDetail() {
                     queryClient.invalidateQueries({ queryKey: ["instances"] }),
                   ]);
                 }}
-              />
+              />}
               <Button
                 variant="secondary"
                 disabled={order.status !== 1}
@@ -118,8 +120,8 @@ export function OrderDetail() {
               >
                 取消订单
               </Button>
-              {order.status === 1 && order.payAmount > 0 ? <OfflineTransferForm orderId={order.id} amountCents={order.payAmount} /> : null}
-              {[2,4,5,6].includes(order.status)?<RefundApplication orderId={order.id}/>:null}
+              {item?.moduleType!=="promo_coupon" && order.status === 1 && order.payAmount > 0 ? <OfflineTransferForm orderId={order.id} amountCents={order.payAmount} /> : null}
+              {item?.moduleType!=="promo_coupon"&&[2,4,5,6].includes(order.status)?<RefundApplication orderId={order.id}/>:null}
               {cancel.error ? <Banner variant="error" title="取消失败" description={getApiMessage(cancel.error)} /> : null}
             </LayerCard>
           </div>
