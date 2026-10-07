@@ -1,3 +1,4 @@
+import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Link, useSearchParams } from "react-router-dom";
 import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
@@ -460,7 +461,7 @@ export function MarketplaceAdminWithdrawals() {
                     </Badge>
                   </Table.Cell>
                   <Table.Cell>
-                    {["pending","approved","processing","unknown"].includes(r.status) ? <Link to={`/admin/todos/withdrawals?record=${r.id}&source=marketplace`}><Button variant="secondary">核对并处理</Button></Link> : "—"}
+                    {["pending","approved","processing","unknown"].includes(r.status) ? <Link to={`${adminBase}/todos/withdrawals?record=${r.id}&source=marketplace`}><Button variant="secondary">核对并处理</Button></Link> : "—"}
                   </Table.Cell>
                 </Table.Row>
               ))}

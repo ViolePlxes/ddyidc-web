@@ -10,9 +10,9 @@ export function todoCountVariant(count: string | number | null | undefined) {
 export function withTodoCounts(groups: NavigationGroup[], snapshot: AdminTodos | undefined): NavigationGroup[] {
   if (!snapshot) return groups;
   return groups.map(group => {
-    if (!group.items.some(item => /^\/admin\/todos(?:\/|$)/.test(item.href))) return group;
+    if (!group.items.some(item => /^\/dd-admin-[a-z0-9]{24,64}\/todos(?:\/|$)/.test(item.href))) return group;
     return { ...group, badge: snapshot.complete ? String(snapshot.total) : '—', items: group.items.map(item => {
-      const kind = item.href.match(/^\/admin\/todos\/([^/?#]+)/)?.[1];
+      const kind = item.href.match(/^\/dd-admin-[a-z0-9]{24,64}\/todos\/([^/?#]+)/)?.[1];
       const count = snapshot.items.find(row => row.key === kind);
       return count ? { ...item, badge: count.count === null ? '—' : String(count.count) } : item;
     }) };

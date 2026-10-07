@@ -1,3 +1,4 @@
+import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
@@ -513,7 +514,7 @@ export function Certifications() {
                 {query.data?.items.map(({ record, username }) => (
                   <Table.Row key={record.id}>
                     <Table.Cell>
-                      <Link to={`/admin/customers/${record.customerId}`}>
+                      <Link to={`${adminBase}/customers/${record.customerId}`}>
                         #{record.customerId} {username}
                       </Link>
                     </Table.Cell>

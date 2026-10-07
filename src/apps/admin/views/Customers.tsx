@@ -1,3 +1,4 @@
+import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { Banner, Button, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tooltip } from "@cloudflare/kumo";
@@ -134,7 +135,7 @@ function customerLink(customer: AdminCustomerRow, value: string) {
       render={
         <Link
           className="font-medium text-kumo-link hover:underline"
-          to={`/admin/customers/${customer.id}`}
+          to={`${adminBase}/customers/${customer.id}`}
         >
           {value}
         </Link>

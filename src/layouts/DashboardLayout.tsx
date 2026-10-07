@@ -1,3 +1,4 @@
+import { adminPath } from "../shared/utils/adminEntry";
 import { TodoCountBadge } from "../shared/components/TodoCountBadge";
 import { useNavigation } from "../shared/hooks/useNavigation";
 import { Banner } from "@cloudflare/kumo";
@@ -86,13 +87,13 @@ export function DashboardLayout({
   }
   const location = useLocation();
   const requestedReturn: unknown = (location.state as { todoReturn?: unknown } | null)?.todoReturn;
-  const todoReturn = location.pathname.startsWith("/admin/") && typeof requestedReturn === "string" && /^\/admin\/todos(?:\/[a-z-]+)?(?:\?[^#]*)?$/.test(requestedReturn) ? requestedReturn : null;
+  const todoReturn = location.pathname.startsWith(adminPath('/admin/')) && typeof requestedReturn === "string" && /^\/dd-admin-[a-z0-9]{24,64}\/todos(?:\/[a-z-]+)?(?:\?[^#]*)?$/.test(requestedReturn) ? requestedReturn : null;
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
   const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
   const contentWidth = isProductCatalog ? "wide" : layoutWidth.width;
   const contentContainerClassName = isProductCatalog ? "w-full" : layoutWidth.containerClassName;
-  const standalonePaths = ["/console", "/console/products", "/admin"];
+  const standalonePaths = ["/console", "/console/products", adminPath('/admin')];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
 
@@ -122,7 +123,7 @@ export function DashboardLayout({
 
   const isItemActive = (href: string) =>
     location.pathname === href ||
-    (!["/console", "/admin", "/sales"].includes(href) &&
+    (!["/console", adminPath('/admin'), "/sales"].includes(href) &&
       location.pathname.startsWith(`${href}/`));
 
   return (

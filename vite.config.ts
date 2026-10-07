@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
 function entryForPath(pathname: string): string {
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "/admin.html";
+  if (/^\/dd-admin-[a-z0-9]{24,64}(?:\/|$)/.test(pathname)) return "/admin.html";
   if (pathname === "/sales" || pathname.startsWith("/sales/")) return "/sales.html";
   if (
     pathname === "/cart" ||
@@ -26,6 +26,13 @@ function entryForPath(pathname: string): string {
 }
 
 function entryRewrite(): Plugin {
+  async function secureEntry(path: string, response: import("node:http").ServerResponse) {
+    if (/^\/(?:admin(?:\/|$)|backend(?:\/|$)|manage(?:\/|$)|admin\.html$)/.test(path) && !path.startsWith("/admin/v1/")) { response.statusCode=404; response.end("Not Found"); return false; }
+    if (/^\/dd-admin-/.test(path)) {
+      try { const result=await fetch((process.env.DDYIDC_API_TARGET||"http://localhost:8080")+"/api/v1/security/entry?path="+encodeURIComponent(path), { signal: AbortSignal.timeout(5000) }); if(result.status!==204){response.statusCode=result.status===503?503:404;response.end("Not Found");return false;} const cookie=result.headers.get("set-cookie");if(cookie)response.setHeader("Set-Cookie",cookie);response.setHeader("Referrer-Policy","no-referrer");response.setHeader("Cache-Control","no-store"); } catch {response.statusCode=503;response.end("Service unavailable");return false;}
+    }
+    return true;
+  }
   return {
     name: "ddyidc-entry-rewrite",
     configureServer(server) {
@@ -39,6 +46,7 @@ function entryRewrite(): Plugin {
           return;
         }
         const url = new URL(request.url, "http://localhost");
+        if (!await secureEntry(url.pathname,response)) return;
         const entry = entryForPath(url.pathname);
         if (entry === "/index.html" || (url.pathname.includes(".") && entry !== "/console.html")) {
           next();
@@ -66,6 +74,7 @@ function entryRewrite(): Plugin {
           return;
         }
         const url = new URL(request.url, "http://localhost");
+        if (!await secureEntry(url.pathname,response)) return;
         const entry = entryForPath(url.pathname);
         if (entry === "/index.html" || (url.pathname.includes(".") && entry !== "/console.html")) {
           next();

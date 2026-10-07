@@ -1,3 +1,4 @@
+import { adminBase } from "../../../shared/utils/adminEntry";
 import { Dialog } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ export function ImportInstanceDialog({ customerId }: { customerId: string }) {
       await client.invalidateQueries({ queryKey: ["admin", "customer-records", customerId, "products"] });
       await client.invalidateQueries({ queryKey: ["admin", "customer-instance-options", customerId] });
       setOpen(false);
-      navigate(`/admin/customers/${customerId}/instances/${result.id}`);
+      navigate(`${adminBase}/customers/${customerId}/instances/${result.id}`);
     },
     onSettled: () => { submitting.current = false; },
   });

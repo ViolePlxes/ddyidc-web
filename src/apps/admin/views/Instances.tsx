@@ -1,3 +1,4 @@
+import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
@@ -46,12 +47,12 @@ export function AdminInstances(){
  useEffect(()=>{if(task.data&&task.data.state!=='running'){void refresh()}},[task.data?.state,taskId]);
  const exporting=useMutation({mutationFn:()=>adminInstancesApi.export(params),onSuccess:()=>setNotice('CSV 已按当前筛选和排序导出，不含密码或密钥')});
  const rows=list.data?.items||[];const picked=rows.filter(r=>selected.includes(r.id));const allowedRows=rows.filter(r=>[3,4].includes(r.status)&&!r.customerMissing);
- const returnTo=`/admin/instances${queryString?'?'+queryString:''}`;
- const detail=(r:ManagedInstance,logs=false)=>`/admin/customers/${encodeURIComponent(r.customerId)}/instances/${encodeURIComponent(r.id)}?returnTo=${encodeURIComponent(returnTo)}${logs?'&tab=logs':''}`;
+ const returnTo=`${adminBase}/instances${queryString?'?'+queryString:''}`;
+ const detail=(r:ManagedInstance,logs=false)=>`${adminBase}/customers/${encodeURIComponent(r.customerId)}/instances/${encodeURIComponent(r.id)}?returnTo=${encodeURIComponent(returnTo)}${logs?'&tab=logs':''}`;
  function cell(r:ManagedInstance,c:Column):ReactNode{switch(c){
   case 'identity':return <div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={detail(r)}>{r.id}</Link><span className="text-xs text-kumo-subtle">{r.instanceNo}</span></div>;
   case 'product':return <div className="grid gap-1"><span>{r.productName}</span><span className="text-xs text-kumo-subtle">{r.hostname||'—'}</span></div>;
-  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={`/admin/customers/${r.customerId}`}>{r.username||r.customerId}</Link><span className="text-xs">{r.phone||r.email||'—'}</span></div>;
+  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><Link className="text-kumo-link hover:underline" to={`${adminBase}/customers/${r.customerId}`}>{r.username||r.customerId}</Link><span className="text-xs">{r.phone||r.email||'—'}</span></div>;
   case 'ip':return <div className="grid gap-1"><span>{r.primaryIp||'—'}</span>{r.ips.filter(ip=>ip!==r.primaryIp).length>0&&<details><summary className="cursor-pointer text-xs text-kumo-link">附加 IP（{r.ips.filter(ip=>ip!==r.primaryIp).length}）</summary>{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><p key={ip}>{ip}</p>)}</details>}</div>;
   case 'status':return <div className="grid gap-1"><MachineStatusBadge status={r.status} label={statusNames[r.status]||'未知'}/><div className="flex flex-wrap items-center gap-1"><MachineStatusBadge status={r.powerStatus} label={powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}/><span className="text-xs text-kumo-subtle">（缓存）</span></div>{r.errorCount>0&&<Link className="text-xs text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
   case 'expires':return date(r.expiresAt);

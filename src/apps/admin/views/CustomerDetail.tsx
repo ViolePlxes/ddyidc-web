@@ -1,3 +1,4 @@
+import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog } from "../../../shared/components/Dialog";
@@ -148,7 +149,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
                   ];
                 else if (kind === "products")
                   cells = [
-                    <Link className="text-kumo-link hover:underline" to={`/admin/customers/${id}/instances/${r.id}`}>{r.name || r.number}</Link>,
+                    <Link className="text-kumo-link hover:underline" to={`${adminBase}/customers/${id}/instances/${r.id}`}>{r.name || r.number}</Link>,
                     r.number,
                     <MachineStatusBadge status={r.status} label={String(productLabels[r.status] ?? r.status)} />,
                     <span className="inline-block max-w-xs whitespace-pre-wrap break-words">{r.remark || "—"}</span>,
@@ -276,7 +277,7 @@ function ProfileEditor({
     mutationFn: () => customerDetailApi.remove(customer.id),
     onSuccess: () => {
       void refresh();
-      navigate("/admin/customers");
+      navigate(adminPath('/admin/customers'));
     },
   });
   const status = useMutation({
@@ -329,7 +330,7 @@ function ProfileEditor({
               {realnameLabels[customer.realnameStatus] ?? "未知"}
             </Badge>
           </span>
-          <Button variant="ghost" onClick={() => navigate(`/admin/certifications?customerId=${customer.id}`)}>
+          <Button variant="ghost" onClick={() => navigate(`${adminBase}/certifications?customerId=${customer.id}`)}>
             查看
           </Button>
           <Badge variant={customer.status === 1 ? "success" : "warning"}>
@@ -612,7 +613,7 @@ export function AdminCustomerDetail() {
       adminOverviewApi.customers({ page: userPage, pageSize: 20, keyword }),
   });
   if (!tabs.some((item) => item.value === tab))
-    return <Navigate to={`/admin/customers/${id}/profile`} replace />;
+    return <Navigate to={`${adminBase}/customers/${id}/profile`} replace />;
   const current = customer.data;
   const options = [
     ...(current ? [current] : []),
@@ -624,9 +625,9 @@ export function AdminCustomerDetail() {
   return (
     <>
       <Breadcrumbs>
-        <Breadcrumbs.Link href="/admin">后台</Breadcrumbs.Link>
+        <Breadcrumbs.Link href={adminPath('/admin')}>后台</Breadcrumbs.Link>
         <Breadcrumbs.Separator />
-        <Breadcrumbs.Link href="/admin/customers">客户管理</Breadcrumbs.Link>
+        <Breadcrumbs.Link href={adminPath('/admin/customers')}>客户管理</Breadcrumbs.Link>
         <Breadcrumbs.Separator />
         <Breadcrumbs.Current>用户详情</Breadcrumbs.Current>
       </Breadcrumbs>
@@ -650,7 +651,7 @@ export function AdminCustomerDetail() {
               items={options}
               onValueChange={(value) => {
                 if (value && value !== id)
-                  navigate(`/admin/customers/${value}/${tab}`);
+                  navigate(`${adminBase}/customers/${value}/${tab}`);
               }}
             />
             {users.data && users.data.total > 20 ? (
@@ -672,7 +673,7 @@ export function AdminCustomerDetail() {
           variant="underline"
           tabs={tabs}
           value={tab}
-          onValueChange={(value) => navigate(`/admin/customers/${id}/${value}`)}
+          onValueChange={(value) => navigate(`${adminBase}/customers/${id}/${value}`)}
         />
       </div>
       <PageState

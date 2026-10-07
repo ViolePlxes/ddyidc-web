@@ -1,5 +1,7 @@
+import { adminPath, adminNavigationResponse } from "../utils/adminEntry";
 import { neutralCustomerResponse, neutralCustomerText } from "../utils/customerCopy";
 import axios, { AxiosError } from "axios";
+import { adminBase } from "../utils/adminEntry";
 import { renewUserSession, refreshSessionAvailable } from "./refreshSession";
 
 export interface ApiEnvelope<T> {
@@ -17,8 +19,9 @@ function createRequest(baseURL: string, unauthorizedEvent: string, customerFacin
     xsrfHeaderName: "X-CSRF-Token",
     headers: { "Content-Type": "application/json" },
   });
+  if(csrfKind === "admin") client.interceptors.request.use(config => { config.headers.set("X-Admin-Entry", adminBase); return config; });
   client.interceptors.response.use(
-    (response) => { if (customerFacing) response.data = neutralCustomerResponse(response.data); return response; },
+    (response) => { if (customerFacing) response.data = neutralCustomerResponse(response.data); if(csrfKind === "admin") response.data=adminNavigationResponse(response.data); return response; },
     async (error: AxiosError<ApiEnvelope<unknown>>) => {
       if (customerFacing && error.response) error.response.data = neutralCustomerResponse(error.response.data);
       if (
@@ -69,8 +72,8 @@ export const salesRequest = createRequest(
 export function getApiMessage(error: unknown): string {
   if (axios.isAxiosError<ApiEnvelope<unknown>>(error)) {
     const message = error.response?.data?.message ?? error.message;
-    return window.location.pathname.startsWith("/admin") ? message : neutralCustomerText(message);
+    return window.location.pathname.startsWith(adminPath('/admin')) ? message : neutralCustomerText(message);
   }
   const message = error instanceof Error ? error.message : "请求失败，请稍后重试";
-  return window.location.pathname.startsWith("/admin") ? message : neutralCustomerText(message);
+  return window.location.pathname.startsWith(adminPath('/admin')) ? message : neutralCustomerText(message);
 }

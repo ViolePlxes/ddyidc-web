@@ -1,4 +1,5 @@
 import { adminRequest, salesRequest, userRequest, type ApiEnvelope } from "./request";
+import { adminBase, adminPath } from "../utils/adminEntry";
 export type NavigationScope = "console" | "sales" | "admin";
 export interface NavigationNode {
  badge?: string;
@@ -12,10 +13,12 @@ export const navigationApi = {
  async list(scope: NavigationScope, manage = false) {
   const client = manage || scope === "admin" ? adminRequest : scope === "sales" ? salesRequest : userRequest;
   const path = manage ? `/navigation-config/${scope}` : scope === "sales" ? "/sales/navigation" : "/navigation";
-  return (await client.get<ApiEnvelope<NavigationSnapshot>>(path)).data.data;
+  const snapshot=(await client.get<ApiEnvelope<NavigationSnapshot>>(path)).data.data;
+  return scope === "admin" ? {...snapshot,nodes:snapshot.nodes.map(node=>({...node,href:adminPath(node.href)}))} : snapshot;
  },
  async save(scope: NavigationScope, revision: number, value: NavigationInput, id?: string) {
   const path = `/navigation-config/${scope}/nodes`;
+  if(scope === "admin" && (value.href === adminBase || value.href.startsWith(adminBase+"/"))) value={...value,href:"/admin"+value.href.slice(adminBase.length)};
   return id ? adminRequest.put(`${path}/${id}`, { ...value, revision }) : adminRequest.post(path, { ...value, revision });
  },
  async remove(scope: NavigationScope, revision: number, id: string) {

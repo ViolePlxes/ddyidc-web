@@ -1,3 +1,5 @@
+import { AdminSecureLogin } from "./views/SecureLogin";
+import { adminPath } from "../../shared/utils/adminEntry";
 import {
   BuildingsIcon,
   ChatCenteredTextIcon,
@@ -28,7 +30,6 @@ import {
   DashboardLayout,
   type NavigationGroup,
 } from "../../layouts/DashboardLayout";
-import { StaffLogin } from "../../shared/components/StaffLogin";
 import {
   EntryGuard,
   ForbiddenPage,
@@ -223,45 +224,45 @@ const adminGroups: NavigationGroup[] = [
   {
     label: "概览",
     items: [
-      { label: "控制台", href: "/admin", icon: HouseIcon },
-      { label: "订单管理", href: "/admin/orders", icon: ReceiptIcon },
-      { label: "客户管理", href: "/admin/customers", icon: UsersIcon },
-      { label: "产品列表", href: "/admin/instances", icon: PackageIcon },
+      { label: "控制台", href: adminPath('/admin'), icon: HouseIcon },
+      { label: "订单管理", href: adminPath('/admin/orders'), icon: ReceiptIcon },
+      { label: "客户管理", href: adminPath('/admin/customers'), icon: UsersIcon },
+      { label: "产品列表", href: adminPath('/admin/instances'), icon: PackageIcon },
     ],
   },
   {
     label: "商品管理",
     items: [
-      { label: "商品列表", href: "/admin/products", icon: PackageIcon },
-      { label: "商品分组", href: "/admin/products/groups", icon: PackageIcon },
+      { label: "商品列表", href: adminPath('/admin/products'), icon: PackageIcon },
+      { label: "商品分组", href: adminPath('/admin/products/groups'), icon: PackageIcon },
     ],
   },
   {
     label: "系统设置",
     items: [
-      { label: "系统配置", href: "/admin/system", icon: GearIcon },
-      { label: "通知任务", href: "/admin/notification-tasks", icon: GearIcon },
-      { label: "更新中心", href: "/admin/updates", icon: ArrowsClockwiseIcon },
-      { label: "数据库备份", href: "/admin/backups", icon: CloudArrowDownIcon },
+      { label: "系统配置", href: adminPath('/admin/system'), icon: GearIcon },
+      { label: "通知任务", href: adminPath('/admin/notification-tasks'), icon: GearIcon },
+      { label: "更新中心", href: adminPath('/admin/updates'), icon: ArrowsClockwiseIcon },
+      { label: "数据库备份", href: adminPath('/admin/backups'), icon: CloudArrowDownIcon },
     ],
   },
   {
     label: "客户服务",
     items: [
-      { label: "工单管理", href: "/admin/tickets", icon: ChatCenteredTextIcon },
+      { label: "工单管理", href: adminPath('/admin/tickets'), icon: ChatCenteredTextIcon },
       {
         label: "工单类型",
-        href: "/admin/tickets/types",
+        href: adminPath('/admin/tickets/types'),
         icon: ChatCenteredTextIcon,
       },
       {
         label: "工单状态",
-        href: "/admin/tickets/statuses",
+        href: adminPath('/admin/tickets/statuses'),
         icon: ChatCenteredTextIcon,
       },
       {
         label: "预设回复",
-        href: "/admin/tickets/prereplies",
+        href: adminPath('/admin/tickets/prereplies'),
         icon: ChatCenteredTextIcon,
       },
     ],
@@ -271,17 +272,17 @@ const adminGroups: NavigationGroup[] = [
     items: [
       {
         label: "供应商管理",
-        href: "/admin/upstream/suppliers",
+        href: adminPath('/admin/upstream/suppliers'),
         icon: BuildingsIcon,
       },
       {
         label: "供应商映射",
-        href: "/admin/upstream/products",
+        href: adminPath('/admin/upstream/products'),
         icon: CloudArrowDownIcon,
       },
       {
         label: "上游订单",
-        href: "/admin/upstream/orders",
+        href: adminPath('/admin/upstream/orders'),
         icon: CloudCheckIcon,
       },
     ],
@@ -291,22 +292,22 @@ const adminGroups: NavigationGroup[] = [
     items: [
       {
         label: "优惠码审核",
-        href: "/admin/marketing/invites",
+        href: adminPath('/admin/marketing/invites'),
         icon: IdentificationCardIcon,
       },
       {
         label: "分销结算",
-        href: "/admin/marketing/rewards",
+        href: adminPath('/admin/marketing/rewards'),
         icon: PercentIcon,
       },
       {
         label: "销售权限",
-        href: "/admin/marketing/sales",
+        href: adminPath('/admin/marketing/sales'),
         icon: MegaphoneIcon,
       },
       {
         label: "营销配置",
-        href: "/admin/marketing/config",
+        href: adminPath('/admin/marketing/config'),
         icon: ShieldCheckIcon,
       },
     ],
@@ -326,19 +327,8 @@ function AdminSessionBoundary() {
 }
 
 function AdminLogin() {
-  const state = useAdminAuthStore();
-  return (
-    <StaffLogin
-      title="管理控制台"
-      subtitle="使用管理员凭据登录系统后台。"
-      roleLabel="管理员"
-      homePath="/admin"
-      expectedRole="admin"
-      user={state.user}
-      loading={state.loading}
-      signIn={state.signIn}
-    />
-  );
+  const user = useAdminAuthStore(state => state.user);
+  return <AdminSecureLogin user={user} />;
 }
 
 function AdminGuard() {
@@ -347,7 +337,7 @@ function AdminGuard() {
     <EntryGuard
       user={user}
       role="admin"
-      loginPath="/admin/login"
+      loginPath={adminPath('/admin/login')}
       foreignSessionPaths={foreignSessions}
     />
   );
@@ -370,17 +360,17 @@ function AdminDashboard() {
                 ...group.items,
                 {
                   label: "拼团活动",
-                  href: "/admin/marketing/groupbuy/activities",
+                  href: adminPath('/admin/marketing/groupbuy/activities'),
                   icon: UsersThreeIcon,
                 },
                 {
                   label: "拼团成员",
-                  href: "/admin/marketing/groupbuy/leaders",
+                  href: adminPath('/admin/marketing/groupbuy/leaders'),
                   icon: UsersThreeIcon,
                 },
                 {
                   label: "拼团设置",
-                  href: "/admin/marketing/groupbuy/settings",
+                  href: adminPath('/admin/marketing/groupbuy/settings'),
                   icon: UsersThreeIcon,
                 },
               ],
@@ -396,50 +386,50 @@ function AdminDashboard() {
         items: [
           {
             label: "市场概览",
-            href: "/admin/marketplace/dashboard",
+            href: adminPath('/admin/marketplace/dashboard'),
             icon: StorefrontIcon,
           },
           {
             label: "挂牌管理",
-            href: "/admin/marketplace/listings",
+            href: adminPath('/admin/marketplace/listings'),
             icon: StorefrontIcon,
           },
           {
             label: "交易订单",
-            href: "/admin/marketplace/orders",
+            href: adminPath('/admin/marketplace/orders'),
             icon: ReceiptIcon,
           },
           {
             label: "资金流水",
-            href: "/admin/marketplace/flows",
+            href: adminPath('/admin/marketplace/flows'),
             icon: CreditCardIcon,
           },
           {
             label: "提现审核",
-            href: "/admin/marketplace/withdrawals",
+            href: adminPath('/admin/marketplace/withdrawals'),
             icon: CreditCardIcon,
           },
           {
             label: "举报处理",
-            href: "/admin/marketplace/reports",
+            href: adminPath('/admin/marketplace/reports'),
             icon: ShieldCheckIcon,
           },
           {
             label: "市场设置",
-            href: "/admin/marketplace/settings",
+            href: adminPath('/admin/marketplace/settings'),
             icon: GearIcon,
           },
         ],
       },
     ];
-  if(!points.isLoading) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:"/admin/points",icon:CoinsIcon},{label:"积分账户",href:"/admin/points/accounts",icon:UsersIcon},{label:"商品管理",href:"/admin/points/goods",icon:StorefrontIcon},{label:"兑换订单",href:"/admin/points/orders",icon:ReceiptIcon},{label:"插件配置",href:"/admin/points/plugin",icon:GearIcon}]}];
-  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:"/admin/cdnsell",icon:HouseIcon},{label:"金山云上游",href:"/admin/cdnsell/upstream",icon:CloudArrowDownIcon},{label:"API 与资源包",href:"/admin/cdnsell/capabilities",icon:CloudCheckIcon},{label:"域名管理",href:"/admin/cdnsell/domains",icon:StorefrontIcon},{label:"域名配置中心",href:"/admin/cdnsell/config-center",icon:GearIcon},{label:"流量包产品",href:"/admin/cdnsell/products",icon:PackageIcon},{label:"CDN 客户",href:"/admin/cdnsell/customers",icon:UsersIcon}]}];
+  if(!points.isLoading) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:adminPath('/admin/points'),icon:CoinsIcon},{label:"积分账户",href:adminPath('/admin/points/accounts'),icon:UsersIcon},{label:"商品管理",href:adminPath('/admin/points/goods'),icon:StorefrontIcon},{label:"兑换订单",href:adminPath('/admin/points/orders'),icon:ReceiptIcon},{label:"插件配置",href:adminPath('/admin/points/plugin'),icon:GearIcon}]}];
+  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:adminPath('/admin/cdnsell'),icon:HouseIcon},{label:"金山云上游",href:adminPath('/admin/cdnsell/upstream'),icon:CloudArrowDownIcon},{label:"API 与资源包",href:adminPath('/admin/cdnsell/capabilities'),icon:CloudCheckIcon},{label:"域名管理",href:adminPath('/admin/cdnsell/domains'),icon:StorefrontIcon},{label:"域名配置中心",href:adminPath('/admin/cdnsell/config-center'),icon:GearIcon},{label:"流量包产品",href:adminPath('/admin/cdnsell/products'),icon:PackageIcon},{label:"CDN 客户",href:adminPath('/admin/cdnsell/customers'),icon:UsersIcon}]}];
   return (
     <DashboardLayout
       user={user}
       groups={groups}
       signOut={signOut}
-      loginPath="/admin/login"
+      loginPath={adminPath('/admin/login')}
       density="compact"
     />
   );
@@ -449,11 +439,11 @@ export function AdminApp() {
   return (
     <Routes>
       <Route element={<AdminSessionBoundary />}>
-        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path={adminPath('/admin/login')} element={<AdminLogin />} />
         <Route element={<AdminGuard />}>
           <Route element={<AdminDashboard />}>
             <Route
-              path="/admin"
+              path={adminPath('/admin')}
               element={
                 <LazyRoute>
                   <AdminHome />
@@ -461,7 +451,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/products"
+              path={adminPath('/admin/products')}
               element={
                 <LazyRoute>
                   <AdminProducts />
@@ -469,7 +459,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/products/groups"
+              path={adminPath('/admin/products/groups')}
               element={
                 <LazyRoute>
                   <ProductGroups />
@@ -477,7 +467,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/orders"
+              path={adminPath('/admin/orders')}
               element={
                 <LazyRoute>
                   <AdminOrders />
@@ -485,7 +475,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/customers"
+              path={adminPath('/admin/customers')}
               element={
                 <LazyRoute>
                   <AdminCustomers />
@@ -493,26 +483,26 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/customers/:id/:tab?"
+              path={adminPath('/admin/customers/:id/:tab?')}
               element={
                 <LazyRoute>
                   <AdminCustomerDetail />
                 </LazyRoute>
               }
             />
-            <Route path="/admin/instances" element={<LazyRoute><AdminInstances /></LazyRoute>} />
-            <Route path="/admin/customers/:customerId/instances/:instanceId" element={<LazyRoute><AdminInstanceDetail /></LazyRoute>} />
-            <Route path="/admin/customers/:customerId/instances/:instanceId/vnc" element={<LazyRoute><AdminInstanceVnc /></LazyRoute>} />
-            <Route path="/admin/video-bindings" element={<LazyRoute><VideoBindings admin /></LazyRoute>} />
-            <Route path="/admin/transfers" element={<LazyRoute><TransfersPage admin /></LazyRoute>} />
- <Route path="/admin/certifications" element={<LazyRoute><Certifications /></LazyRoute>} />
-            <Route path="/admin/backups" element={<LazyRoute><AdminBackups /></LazyRoute>} />
-            <Route path="/admin/notification-tasks" element={<LazyRoute><NotificationTasks /></LazyRoute>} />
-            <Route path="/admin/todos/:kind?" element={<LazyRoute><AdminTodos /></LazyRoute>} />
-            <Route path="/admin/navigation" element={<LazyRoute><Navigation /></LazyRoute>} />
-            <Route path="/admin/social-login" element={<LazyRoute><SocialLoginSettings /></LazyRoute>} />
+            <Route path={adminPath('/admin/instances')} element={<LazyRoute><AdminInstances /></LazyRoute>} />
+            <Route path={adminPath('/admin/customers/:customerId/instances/:instanceId')} element={<LazyRoute><AdminInstanceDetail /></LazyRoute>} />
+            <Route path={adminPath('/admin/customers/:customerId/instances/:instanceId/vnc')} element={<LazyRoute><AdminInstanceVnc /></LazyRoute>} />
+            <Route path={adminPath('/admin/video-bindings')} element={<LazyRoute><VideoBindings admin /></LazyRoute>} />
+            <Route path={adminPath('/admin/transfers')} element={<LazyRoute><TransfersPage admin /></LazyRoute>} />
+ <Route path={adminPath('/admin/certifications')} element={<LazyRoute><Certifications /></LazyRoute>} />
+            <Route path={adminPath('/admin/backups')} element={<LazyRoute><AdminBackups /></LazyRoute>} />
+            <Route path={adminPath('/admin/notification-tasks')} element={<LazyRoute><NotificationTasks /></LazyRoute>} />
+            <Route path={adminPath('/admin/todos/:kind?')} element={<LazyRoute><AdminTodos /></LazyRoute>} />
+            <Route path={adminPath('/admin/navigation')} element={<LazyRoute><Navigation /></LazyRoute>} />
+            <Route path={adminPath('/admin/social-login')} element={<LazyRoute><SocialLoginSettings /></LazyRoute>} />
             <Route
-              path="/admin/system"
+              path={adminPath('/admin/system')}
               element={
                 <LazyRoute>
                   <AdminSystem />
@@ -520,7 +510,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/updates"
+              path={adminPath('/admin/updates')}
               element={
                 <LazyRoute>
                   <AdminUpdates />
@@ -528,7 +518,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/tickets"
+              path={adminPath('/admin/tickets')}
               element={
                 <LazyRoute>
                   <AdminTicketList />
@@ -536,7 +526,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/tickets/:id"
+              path={adminPath('/admin/tickets/:id')}
               element={
                 <LazyRoute>
                   <AdminTicketDetail />
@@ -544,7 +534,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/tickets/types"
+              path={adminPath('/admin/tickets/types')}
               element={
                 <LazyRoute>
                   <TicketTypes />
@@ -552,7 +542,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/tickets/statuses"
+              path={adminPath('/admin/tickets/statuses')}
               element={
                 <LazyRoute>
                   <TicketStatuses />
@@ -560,7 +550,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/tickets/prereplies"
+              path={adminPath('/admin/tickets/prereplies')}
               element={
                 <LazyRoute>
                   <TicketPrereplies />
@@ -568,7 +558,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/upstream/suppliers"
+              path={adminPath('/admin/upstream/suppliers')}
               element={
                 <LazyRoute>
                   <UpstreamSuppliers />
@@ -576,7 +566,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/upstream/products"
+              path={adminPath('/admin/upstream/products')}
               element={
                 <LazyRoute>
                   <UpstreamProducts />
@@ -584,7 +574,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/upstream/orders"
+              path={adminPath('/admin/upstream/orders')}
               element={
                 <LazyRoute>
                   <UpstreamOrders />
@@ -592,7 +582,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/invites"
+              path={adminPath('/admin/marketing/invites')}
               element={
                 <LazyRoute>
                   <AdminInvites />
@@ -600,7 +590,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/rewards"
+              path={adminPath('/admin/marketing/rewards')}
               element={
                 <LazyRoute>
                   <AdminRewards />
@@ -608,7 +598,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/sales"
+              path={adminPath('/admin/marketing/sales')}
               element={
                 <LazyRoute>
                   <AdminSales />
@@ -616,7 +606,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/config"
+              path={adminPath('/admin/marketing/config')}
               element={
                 <LazyRoute>
                   <AdminMarketingConfig />
@@ -624,7 +614,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/groupbuy/activities"
+              path={adminPath('/admin/marketing/groupbuy/activities')}
               element={
                 <GroupBuyGate scope="admin">
                   <LazyRoute>
@@ -634,7 +624,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/groupbuy/leaders"
+              path={adminPath('/admin/marketing/groupbuy/leaders')}
               element={
                 <GroupBuyGate scope="admin">
                   <LazyRoute>
@@ -644,7 +634,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketing/groupbuy/settings"
+              path={adminPath('/admin/marketing/groupbuy/settings')}
               element={
                 <GroupBuyGate scope="admin">
                   <LazyRoute>
@@ -654,7 +644,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace"
+              path={adminPath('/admin/marketplace')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -664,7 +654,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/dashboard"
+              path={adminPath('/admin/marketplace/dashboard')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -674,7 +664,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/listings"
+              path={adminPath('/admin/marketplace/listings')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -684,7 +674,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/orders"
+              path={adminPath('/admin/marketplace/orders')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -694,7 +684,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/flows"
+              path={adminPath('/admin/marketplace/flows')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -704,7 +694,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/withdrawals"
+              path={adminPath('/admin/marketplace/withdrawals')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -714,7 +704,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/reports"
+              path={adminPath('/admin/marketplace/reports')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -724,7 +714,7 @@ export function AdminApp() {
               }
             />
             <Route
-              path="/admin/marketplace/settings"
+              path={adminPath('/admin/marketplace/settings')}
               element={
                 <MarketplaceGate scope="admin">
                   <LazyRoute>
@@ -733,22 +723,22 @@ export function AdminApp() {
                 </MarketplaceGate>
               }
             />
-            <Route path="/admin/points" element={<PointsGate scope="admin"><LazyRoute><PointsDashboard /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/accounts" element={<PointsGate scope="admin"><LazyRoute><PointsAccounts /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/goods" element={<PointsGate scope="admin"><LazyRoute><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/orders" element={<PointsGate scope="admin"><LazyRoute><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/plugin" element={<PointsGate scope="admin"><LazyRoute><PointsPlugin /></LazyRoute></PointsGate>} />
-            <Route path="/admin/points/coupons" element={<LazyRoute><AdminPointsCoupons /></LazyRoute>} />
-            <Route path="/admin/cdnsell" element={<CdnsellGate scope="admin"><LazyRoute><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/upstream" element={<CdnsellGate scope="admin"><LazyRoute><CdnUpstream /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/capabilities" element={<CdnsellGate scope="admin"><LazyRoute><CdnCapabilities /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/products" element={<CdnsellGate scope="admin"><LazyRoute><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/customers" element={<CdnsellGate scope="admin"><LazyRoute><CdnCustomers /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/domains" element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnDomains /></LazyRoute></CdnsellGate>} />
-            <Route path="/admin/cdnsell/config-center" element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/points')} element={<PointsGate scope="admin"><LazyRoute><PointsDashboard /></LazyRoute></PointsGate>} />
+            <Route path={adminPath('/admin/points/accounts')} element={<PointsGate scope="admin"><LazyRoute><PointsAccounts /></LazyRoute></PointsGate>} />
+            <Route path={adminPath('/admin/points/goods')} element={<PointsGate scope="admin"><LazyRoute><PointsGoodsAdmin /></LazyRoute></PointsGate>} />
+            <Route path={adminPath('/admin/points/orders')} element={<PointsGate scope="admin"><LazyRoute><PointsOrdersAdmin /></LazyRoute></PointsGate>} />
+            <Route path={adminPath('/admin/points/plugin')} element={<PointsGate scope="admin"><LazyRoute><PointsPlugin /></LazyRoute></PointsGate>} />
+            <Route path={adminPath('/admin/points/coupons')} element={<LazyRoute><AdminPointsCoupons /></LazyRoute>} />
+            <Route path={adminPath('/admin/cdnsell')} element={<CdnsellGate scope="admin"><LazyRoute><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/upstream')} element={<CdnsellGate scope="admin"><LazyRoute><CdnUpstream /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/capabilities')} element={<CdnsellGate scope="admin"><LazyRoute><CdnCapabilities /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/products')} element={<CdnsellGate scope="admin"><LazyRoute><CdnProductsAdmin /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/customers')} element={<CdnsellGate scope="admin"><LazyRoute><CdnCustomers /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/domains')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnDomains /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/config-center')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
           </Route>
         </Route>
-        <Route path="*" element={<ForbiddenPage loginPath="/admin/login" />} />
+        <Route path="*" element={<ForbiddenPage loginPath={adminPath('/admin/login')} />} />
       </Route>
     </Routes>
   );

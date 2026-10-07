@@ -1,3 +1,4 @@
+import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
 import { Banner, Breadcrumbs, Button, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
@@ -38,7 +39,7 @@ export function CustomerInstance(){
  const busy=useRef(false);const remoteWindow=useRef<Window|null>(null);
  const action=useMutation({mutationFn:api.action,onSuccess:async(result,input)=>{
    if(input.action!=="remote")live.afterAction(input.action);
-   if(result.remote){const target=new URL(result.remote.url,window.location.origin);const expected=`/admin/customers/${customerId}/instances/${instanceId}/vnc`;
+   if(result.remote){const target=new URL(result.remote.url,window.location.origin);const expected=`${adminBase}/customers/${customerId}/instances/${instanceId}/vnc`;
      if(target.origin!==window.location.origin||target.pathname!==expected){remoteWindow.current?.close();throw new Error('远程会话地址无效')}
      if(remoteWindow.current&&!remoteWindow.current.closed)remoteWindow.current.location.replace(target.pathname+target.search);
    }else remoteWindow.current?.close();
@@ -55,10 +56,10 @@ export function CustomerInstance(){
  const reinstall=<ReinstallDialog key={instanceId} instanceId={instanceId} currentPort={query.data?.port} scope={`admin-${customerId}`} loadImages={api.images} disabled={!caps?.reinstall} loading={action.isPending} onConfirm={submit}/>;
  const config=(fields:string[],names:string[]=[])=>item?configValue(item,fields,names):'—';
  const requestedReturn=search.get('returnTo')||'';
- const listPath=/^\/admin\/instances(?:\?[^#]*)?$/.test(requestedReturn)?requestedReturn:`/admin/customers/${customerId}/products`;
+ const listPath=/^\/admin\/instances(?:\?[^#]*)?$/.test(requestedReturn)?requestedReturn:`${adminBase}/customers/${customerId}/products`;
  return <div className="grid gap-5">
-  <Breadcrumbs><Breadcrumbs.Link href="/admin/customers">客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`/admin/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
-  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`/admin/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
+  <Breadcrumbs><Breadcrumbs.Link href={adminPath('/admin/customers')}>客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
+  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-sm text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
   <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'upgrade',label:'产品升级降级'},{value:'security',label:'安全组'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
   <PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null}>
    {item&&<>
@@ -67,7 +68,7 @@ export function CustomerInstance(){
     {action.error&&<Banner variant="error" title="操作失败" description={getApiMessage(action.error)}/>}
     {tab==='overview'&&<div className="grid items-start gap-5 xl:grid-cols-2">
      <div className="grid gap-5"><InfoGroup title="基础信息" action={<InstanceEdit key={item.id} instance={item} customerId={customerId}/>} rows={[
-      {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`/admin/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
+      {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
       {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'实例状态',value:<InstanceStatusControl live={live} fallback={item.powerStatus}/>},
       {label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
       {label:'备注信息',value:<InstanceRemark key={instanceId} instance={item} customerId={customerId}/>},{label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},

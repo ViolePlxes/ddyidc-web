@@ -83,7 +83,7 @@ export function Navigation() {
      <div className="flex flex-wrap items-center gap-2"><DragHandle scope="navigation-groups" label={`拖拽分类 ${group.name}`} disabled={busy} /><Icon size={20} /><Text variant="heading">{group.name}</Text><span className="flex-1" />{actions(group)}<Button variant="secondary" icon={<PlusIcon />} disabled={busy} onClick={() => {setError(null);setEditing({parentId:group.id});}}>新增菜单</Button></div>
      <SortableList scope={`navigation-items-${group.id}`} listId={group.id} disabled={busy} onDrop={drop => sort(group.id,drop.targetIds)}>
       {children(group.id).map(node => {const ItemIcon=navigationIcon(node.icon);return <div key={node.id} data-sort-id={node.id} className="sort-item flex flex-wrap items-center gap-3 border-b border-kumo-line py-3 last:border-0">
-       <DragHandle scope={`navigation-items-${group.id}`} label={`拖拽菜单 ${node.name}`} disabled={busy} /><ItemIcon size={18} /><div className="min-w-0 flex-1"><Text>{node.name}</Text><p className="break-all text-sm text-kumo-subtle">{node.href} · {node.target === "blank" ? "新增页面跳转" : "本页跳转"}</p>{node.gate && <Text variant="secondary">{node.gate.startsWith("/admin/todos") ? "仅超级管理员可见" : "受插件开关控制"}</Text>}</div>{actions(node)}
+       <DragHandle scope={`navigation-items-${group.id}`} label={`拖拽菜单 ${node.name}`} disabled={busy} /><ItemIcon size={18} /><div className="min-w-0 flex-1"><Text>{node.name}</Text><p className="break-all text-sm text-kumo-subtle">{node.href} · {node.target === "blank" ? "新增页面跳转" : "本页跳转"}</p>{node.gate && <Text variant="secondary">{node.gate.startsWith('/admin/todos') ? "仅超级管理员可见" : "受插件开关控制"}</Text>}</div>{actions(node)}
       </div>;})}
      </SortableList>
     </LayerCard>;})}

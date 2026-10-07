@@ -1,3 +1,4 @@
+import { adminPath } from "../shared/utils/adminEntry";
 import "../shared/hooks/useTheme";
 import { subscribeCatalogChanges } from "../shared/utils/catalogCache";
 import { StrictMode, forwardRef, type ComponentType } from "react";
@@ -34,7 +35,7 @@ declare global {
 }
 
 function entryScope(path: string): "portal" | "console" | "admin" | "sales" {
-  if (path === "/admin" || path.startsWith("/admin/")) return "admin";
+  if (path === adminPath('/admin') || path.startsWith(adminPath('/admin/'))) return "admin";
   if (path === "/sales" || path.startsWith("/sales/")) return "sales";
   if (
     path === "/cart" ||

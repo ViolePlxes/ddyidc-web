@@ -1,3 +1,4 @@
+import { adminPath } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Banner, Button, Input, LayerCard, Loader, Pagination, Select, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ export function NotificationTasks() {
   {error&&<Banner variant="error" title="操作未完成" description={getApiMessage(error)} />}
   {diagnostics.data&&<Banner title="邮件连接正常" description={`DNS、TLS 和 SMTP 认证已通过；未发送邮件。检查时间：${timestamp(diagnostics.data.checkedAt)}`} />}
   <LayerCard className="grid gap-4 p-5">
-   <div className="flex flex-wrap items-center gap-3"><h2 className="font-semibold">到期汇总通知</h2><Badge>{summary.data?.settings.dispatchEnabled?'自动发送已开启':'自动发送未开启'}</Badge><Link to="/admin/system">通知配置</Link></div>
+   <div className="flex flex-wrap items-center gap-3"><h2 className="font-semibold">到期汇总通知</h2><Badge>{summary.data?.settings.dispatchEnabled?'自动发送已开启':'自动发送未开启'}</Badge><Link to={adminPath('/admin/system')}>通知配置</Link></div>
    <p className="text-sm text-kumo-subtle">未来 72 小时到期；每天 09:00（上海时间）汇总，同一用户每种通道每天最多一次。页面可见时每 15 秒刷新。</p>
    <p>当前范围：{summary.data?.settings.allCustomers?'所有用户':`测试用户 18631428991（${summary.data?.settings.customerId??'读取中'}）`}</p>
    <div className="grid gap-3 md:grid-cols-3"><span>邮件：{summary.data?.emailReady?'已配置，需核对投递':'配置后可用'}</span><span>到期短信：{summary.data?.smsReady?'已配置':'模板审核或配置后可用'}</span><span>审核状态：{({pending:'审核中',approved:'已通过',rejected:'未通过',unknown:'申请结果待核对',applying:'申请中'} as Record<string,string>)[application.status??'']??'未申请'}</span></div>

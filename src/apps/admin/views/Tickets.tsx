@@ -1,3 +1,4 @@
+import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Dialog } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowsLeftRightIcon, CheckCircleIcon, HandPalmIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
@@ -76,7 +77,7 @@ export function AdminTicketList() {
                     <Table.Cell><div className="grid gap-0.5"><span>{ticket.clientName || ticket.clientId}</span><span className="text-sm text-kumo-subtle">{ticket.typeName}</span></div></Table.Cell>
                     <Table.Cell><TicketStatusBadge status={ticket.status} /></Table.Cell>
                     <Table.Cell>{ticket.adminName || "未接单"}</Table.Cell>
-                    <Table.Cell><div className="flex gap-1">{ticket.status.id === "1" ? <Button size="sm" variant="secondary" icon={<HandPalmIcon />} loading={receive.isPending} onClick={() => receive.mutate(ticket.id)}>接单</Button> : null}<LinkButton href={`/admin/tickets/${ticket.id}`} variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></div></Table.Cell>
+                    <Table.Cell><div className="flex gap-1">{ticket.status.id === "1" ? <Button size="sm" variant="secondary" icon={<HandPalmIcon />} loading={receive.isPending} onClick={() => receive.mutate(ticket.id)}>接单</Button> : null}<LinkButton href={`${adminBase}/tickets/${ticket.id}`} variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></div></Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -184,7 +185,7 @@ export function AdminTicketDetail() {
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {query.data ? (
         <div className="grid min-w-0 gap-5">
-          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/admin/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
+          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href={adminPath('/admin/tickets')} variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
           <div className="flex flex-wrap gap-2"><Button variant="secondary" icon={<HandPalmIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("receive")}>接单</Button><Button variant="secondary" icon={<CheckCircleIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("resolve")}>已解决</Button>{query.data.ticket.status.id === "4" ? <ReopenDialog ticketId={id} updatedAt={query.data.ticket.updatedAt} onDone={refresh} onError={setNotice} /> : <ForwardDialog ticketId={id} onDone={refresh} onError={setNotice} />}<Button variant="secondary-destructive" disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("close")}>关闭</Button></div>
           <LayerCard className="shadow-none p-5 sm:p-6"><dl className="grid gap-5 sm:grid-cols-2"><div><dt className="text-sm text-kumo-subtle">工单类型</dt><dd>{query.data.ticket.typeName}</dd></div><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd>{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd>{query.data.ticket.adminName || "未接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd>{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>

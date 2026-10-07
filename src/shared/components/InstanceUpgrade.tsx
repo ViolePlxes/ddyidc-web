@@ -1,3 +1,4 @@
+import { adminBase } from "../utils/adminEntry";
 import { Banner, Button, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,7 +23,7 @@ export function InstanceUpgrade({ instance, customerId }: { instance: InstanceDe
  {quote.error ? <Banner variant="error" title={getApiMessage(quote.error)} /> : null}<div><Button disabled={!product || !cycle || busy} loading={quote.isPending} onClick={() => quote.mutate()}>核算升降配差价</Button></div>
  <Dialog.Root open={open} onOpenChange={value => { if (!create.isPending) setOpen(value); }}><Dialog className="grid gap-4 p-6"><Dialog.Title>确认升降配方案</Dialog.Title><Dialog.Description>配置变更可能重启实例，请提前备份重要数据。核算报价有效期为 10 分钟；未付款的订单不会执行配置变更。</Dialog.Description>
  {quote.data ? <><p>目标：{quote.data.name}</p><p>本次差价：¥{quote.data.amount}</p><p className="text-sm text-kumo-subtle">报价到期：{new Date(quote.data.expiresAt).toLocaleString("zh-CN")}</p></> : null}
- {create.error ? <Banner variant="error" title={getApiMessage(create.error)} /> : null}{create.data ? <><p>订单 {create.data.orderNo} · ¥{create.data.amount}</p>{!customerId && create.data.orderId ? <PaymentDialog businessType="order" businessId={create.data.orderId} amountCents={Math.round(Number(create.data.amount) * 100)} onPaid={async () => { await cache.invalidateQueries({ queryKey: ["instances", instance.id] }); }} /> : null}<Link className="text-kumo-link" to={customerId ? `/admin/customers/${customerId}/orders` : `/console/orders/${create.data.orderId}`}>查看升降配订单</Link></> : null}
+ {create.error ? <Banner variant="error" title={getApiMessage(create.error)} /> : null}{create.data ? <><p>订单 {create.data.orderNo} · ¥{create.data.amount}</p>{!customerId && create.data.orderId ? <PaymentDialog businessType="order" businessId={create.data.orderId} amountCents={Math.round(Number(create.data.amount) * 100)} onPaid={async () => { await cache.invalidateQueries({ queryKey: ["instances", instance.id] }); }} /> : null}<Link className="text-kumo-link" to={customerId ? `${adminBase}/customers/${customerId}/orders` : `/console/orders/${create.data.orderId}`}>查看升降配订单</Link></> : null}
  <div className="flex flex-wrap justify-end gap-3"><Button variant="secondary" disabled={create.isPending} onClick={() => setOpen(false)}>关闭</Button>{!create.data ? <Button disabled={!quote.data || Date.now() >= Date.parse(quote.data.expiresAt)} loading={create.isPending} onClick={() => create.mutate()}>创建升降配订单</Button> : null}</div>
  </Dialog></Dialog.Root>
  </LayerCard>;

@@ -1,3 +1,4 @@
+import { adminPath } from "../utils/adminEntry";
 import { useInstanceDetailRoute } from './useInstanceDetailRoute';
 import { transfersApi } from "../api/transfers";
 import { useEffect } from "react";
@@ -18,7 +19,7 @@ const pluginPath = (href: string) => {
  try {
   const url = new URL(href, window.location.origin);
   // Also inspect same-host absolute links, escaped paths and query/hash variants.
-  return decodeURIComponent(url.pathname);
+  return decodeURIComponent(url.pathname).replace(/^\/dd-admin-[a-z0-9]{24,64}(?=\/|$)/,"/admin");
  } catch { return href; }
 };
 const plugin = (href: string) => pluginPath(href).match(/^\/(?:console|admin)\/(?:marketing\/)?(groupbuy|marketplace|points|cdnsell)(?:\/|$)/)?.[1];
@@ -42,10 +43,10 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
   if (feature) return availableItems.some(item => item.href === `/console/points/${feature}`);
   // Known subfeatures (e.g. points signin/mall) retain their individual Gate switches.
   const known = query.data?.nodes.some(node => node.gate === path);
-  return known ? availableItems.some(item => item.href === path) : availableItems.some(item => plugin(item.href) === module);
+  return known ? availableItems.some(item => item.href === adminPath(path)) : availableItems.some(item => plugin(item.href) === module);
  };
  const nodes = query.data?.nodes ?? [];
- const todos = useAdminTodos(scope === 'admin' && nodes.some(node => node.badge !== undefined && node.href.startsWith('/admin/todos')));
+ const todos = useAdminTodos(scope === 'admin' && nodes.some(node => node.badge !== undefined && node.href.startsWith(adminPath('/admin/todos'))));
  const groups: NavigationGroup[] = nodes.filter(node => node.parentId === "0").map(group => ({
   label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge,
   items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({

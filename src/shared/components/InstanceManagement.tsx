@@ -1,3 +1,4 @@
+import { adminBase } from "../utils/adminEntry";
 import { Dialog } from "./Dialog";
 import { DateField } from "./DateField";
 import { localDateTime } from "../utils/localDate";
@@ -69,11 +70,11 @@ export function InstanceRenewal({instance,customerId}:{instance:InstanceDetail;c
  <Dialog.Root open={open} onOpenChange={v=>{if(!create.isPending&&!pay.isPending)setOpen(v)}}><Button variant="secondary" size="sm" onClick={()=>{setOpen(true);pay.reset();create.reset();setCycle('')}}>续费</Button><Dialog className="grid gap-4 p-6"><Dialog.Title>实例续费</Dialog.Title><Dialog.Description>报价来自当前服务，创建订单后可选择支付方式。请核对周期和金额。</Dialog.Description>
  <Select label="续费周期" value={cycle} items={{"":"请选择续费周期",...Object.fromEntries((options.data?.items||[]).map(x=>[x.cycle,`${x.label||x.cycle} · ¥${x.amount}`]))}} onValueChange={v=>setCycle(v||'')} disabled={create.isPending||!!create.data}/>
  {options.error&&<Banner variant="error" title={getApiMessage(options.error)}/>}{create.error&&<Banner variant="error" title={getApiMessage(create.error)}/>}{pay.error&&<Banner variant="error" title={getApiMessage(pay.error)}/>}
- {!create.data?<Button disabled={!cycle||options.isLoading} loading={create.isPending} onClick={()=>create.mutate()}>创建续费订单</Button>:<><p>订单 {create.data.orderNo} · ¥{create.data.amount}</p><Button disabled={pay.isPending||pay.isSuccess} loading={pay.isPending} onClick={()=>pay.mutate()}>确认余额支付 ¥{create.data.amount}</Button>{!customerId&&<PaymentDialog businessType="order" businessId={create.data.orderId} amountCents={Math.round(Number(create.data.amount)*100)} onPaid={refresh}/>}<Link className="text-kumo-link" to={customerId?`/admin/customers/${customerId}/orders`:`/console/orders/${create.data.orderId}`}>查看续费订单</Link></>}
+ {!create.data?<Button disabled={!cycle||options.isLoading} loading={create.isPending} onClick={()=>create.mutate()}>创建续费订单</Button>:<><p>订单 {create.data.orderNo} · ¥{create.data.amount}</p><Button disabled={pay.isPending||pay.isSuccess} loading={pay.isPending} onClick={()=>pay.mutate()}>确认余额支付 ¥{create.data.amount}</Button>{!customerId&&<PaymentDialog businessType="order" businessId={create.data.orderId} amountCents={Math.round(Number(create.data.amount)*100)} onPaid={refresh}/>}<Link className="text-kumo-link" to={customerId?`${adminBase}/customers/${customerId}/orders`:`/console/orders/${create.data.orderId}`}>查看续费订单</Link></>}
  {pay.isSuccess&&<Banner title="余额支付已受理，请以到期时间更新为准"/>}<Button variant="secondary" disabled={create.isPending||pay.isPending} onClick={()=>setOpen(false)}>关闭</Button></Dialog></Dialog.Root></div>;
 }
 export function InstanceOrder({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
- if(instance.orderNo)return <Link className="text-kumo-link hover:underline" to={customerId?`/admin/customers/${customerId}/orders`:`/console/orders/${instance.orderId}`}>{instance.orderNo}</Link>;
+ if(instance.orderNo)return <Link className="text-kumo-link hover:underline" to={customerId?`${adminBase}/customers/${customerId}/orders`:`/console/orders/${instance.orderId}`}>{instance.orderNo}</Link>;
  if(instance.upstreamOrderNo||instance.upstreamOrderId)return <div className="grid gap-1"><span>{instance.upstreamOrderNo||instance.upstreamOrderId}</span>{instance.invoiceId&&<span>账单 #{instance.invoiceId}</span>}{instance.firstPayment&&<span>首付 ¥{instance.firstPayment}</span>}<span className="text-xs text-kumo-subtle">已开通服务的原始订单，无重复收费</span></div>;
  return <>未返回订单信息</>;
 }
