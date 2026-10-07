@@ -7,7 +7,7 @@ export interface PointsAccount { userId: string; username?: string; balance: num
 export interface PointsRecord { id: string; type: "gain"|"deduct"; source: string; event: string; change: number; balanceAfter: number; remark: string; createdAt: string }
 export interface Milestone { days: number; points: number }
 export interface ReferralChild { userId: string; registeredAt: string; spendYuan: string; rechargeYuan: string }
-export interface PointsSettings extends PointsStatus { id: string; pointsExpireDays: number; refundMode: "none"|"full"|"ratio"; refundInsufficient: "cut_to_zero"|"none"; rechargeRefundDeduct: boolean; signinMode: "normal"|"choose"; signinProgressive: boolean; signinStablePoints: number; signinLuckyMin: number; signinLuckyMax: number; streakRewardEnabled: boolean; streakResetOnBreak: boolean; streakMaxMode: "keep"|"reset"; streakMilestones: Milestone[] }
+export interface PointsSettings extends PointsStatus { dailyRewardLimit: number; inviteMonthlyLimit: number; checkoutDailyLimit: number; id: string; pointsExpireDays: number; refundMode: "none"|"full"|"ratio"; refundInsufficient: "cut_to_zero"|"none"; rechargeRefundDeduct: boolean; signinMode: "normal"|"choose"; signinProgressive: boolean; signinStablePoints: number; signinLuckyMin: number; signinLuckyMax: number; streakRewardEnabled: boolean; streakResetOnBreak: boolean; streakMaxMode: "keep"|"reset"; streakMilestones: Milestone[] }
 export interface Signin { id: string; signinDate: string; mode: string; points: number; streak: number; createdAt: string }
 export interface SigninCalendar { account: PointsAccount; currentStreak: number; monthCount: number; totalCount: number; signedDates: string[]; entries: Signin[]; settings: PointsSettings; nextMilestone?: Milestone }
 export interface PointsTask { id: string; name: string; code: string; description: string; targetEvent: string; taskType: "once"|"daily"|"weekly"|"monthly"; category: "newbie"|"daily"|"growth"; points: number; targetValue: number; enabled: boolean; sort: number; progress: number; claimStatus: "progress"|"claimable"|"claimed" }
@@ -25,7 +25,11 @@ async function unwrap<T>(request: Promise<{data:ApiEnvelope<T>}>):Promise<T>{ re
 const page=<T>(client:AxiosInstance,path:string,params?:Record<string,unknown>)=>unwrap(client.get<ApiEnvelope<PageData<T>>>(path,{params}));
 export async function probePoints(scope:"public"|"admin"):Promise<PointsStatus|false>{try{return await unwrap((scope==="admin"?adminRequest:userRequest).get<ApiEnvelope<PointsStatus>>(scope==="admin"?"/points/settings":"/points/status"))}catch(error){if(axios.isAxiosError(error)&&error.response?.status===404)return false;throw error}}
 
+export interface PointsActivity {id?:string; name:string; description:string; startsAt:string; endsAt:string; budgetPoints:number; awardedPoints:number; rewards:Array<{points:number;weight:number}>; enabled:boolean; claimed:boolean; claimedPoints:number}
 export const pointsApi={
+ activities:()=>unwrap(userRequest.get<ApiEnvelope<PointsActivity[]>>("/points/activities")),
+ claimActivity:(id:string)=>unwrap(userRequest.post<ApiEnvelope<{points:number}>>(`/points/activities/${id}/claim`)),
+ confirmOrder:(id:string)=>unwrap(userRequest.post<ApiEnvelope<{updated:boolean}>>(`/points/orders/${id}/confirm`)),
   checkoutCoupon:(points:number,requestId:string)=>unwrap(userRequest.post<ApiEnvelope<{points:number;userCouponId:string;amountYuan:string}>>("/points/checkout-coupon",{points,requestId})),
   activity:()=>unwrap(userRequest.post<ApiEnvelope<{updated:boolean}>>("/points/activity")),
   referrals:(page=1)=>unwrap(userRequest.get<ApiEnvelope<PageData<ReferralChild>>>("/points/referrals",{params:{page,pageSize:20}})),
@@ -49,6 +53,9 @@ const resource=<T extends {id?:string}>(path:string)=>({
   remove:(id:string)=>unwrap(adminRequest.delete<ApiEnvelope<{deleted:boolean}>>(`${path}/${id}`)),
 });
 export const pointsAdminApi={
+ retryEventTask:(key:string,notes:string,requestId:string)=>unwrap(adminRequest.post<ApiEnvelope<{updated:boolean}>>("/points/event-tasks/retry",{key,notes,requestId})),
+ activities:()=>unwrap(adminRequest.get<ApiEnvelope<PointsActivity[]>>("/points/activities")),
+ saveActivity:(v:PointsActivity)=>unwrap(v.id?adminRequest.put<ApiEnvelope<PointsActivity>>(`/points/activities/${v.id}`,v):adminRequest.post<ApiEnvelope<PointsActivity>>("/points/activities",v)),
   eventTasks:()=>unwrap(adminRequest.get<ApiEnvelope<Array<{key:string;userId:string;event:string;status:'pending'|'done'|'retry';attempts:number;error:string;availableAt:string}>>>("/points/event-tasks")),
   settings:()=>unwrap(adminRequest.get<ApiEnvelope<PointsSettings>>("/points/settings")),
   saveSettings:(value:PointsSettings)=>unwrap(adminRequest.put<ApiEnvelope<PointsSettings>>("/points/settings",value)),
@@ -56,7 +63,7 @@ export const pointsAdminApi={
   accounts:(params?:Record<string,unknown>)=>page<PointsAccount>(adminRequest,"/points/accounts",params),
   setAccountStatus:(id:string,status:boolean)=>unwrap(adminRequest.post<ApiEnvelope<{updated:boolean}>>(`/points/accounts/${id}/status`,{status})),
   grant:(userIds:string[],points:number,remark:string,requestId:string)=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/grant",{userIds,points,remark,requestId})),
-  trigger:(userIds:string[],event:string,amountCents=0,remark="")=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/trigger",{userIds,event,amountCents,remark})),
+  trigger:(userIds:string[],event:string,amountCents:number,remark:string,requestId:string)=>unwrap(adminRequest.post<ApiEnvelope<{affected:number}>>("/points/trigger",{userIds,event,amountCents,remark,requestId})),
   rules:resource<PointsRule>("/points/rules"), tasks:resource<PointsTask>("/points/tasks"), goods:resource<PointsGoods>("/points/goods"), categories:resource<PointsCategory>("/points/categories"),
   orders:(params?:Record<string,unknown>)=>page<PointsOrder>(adminRequest,"/points/orders",params),
   deliver:(id:string,tracking:Record<string,string>)=>unwrap(adminRequest.post<ApiEnvelope<{updated:boolean}>>(`/points/orders/${id}/deliver`,tracking)),
