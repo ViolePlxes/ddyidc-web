@@ -72,19 +72,6 @@ function instanceStatus(instance: InstanceListItem): StatusCode {
 }
 
 const productColumns = "grid grid-cols-[1.7fr_.8fr_1.4fr_1.1fr_.8fr_1.5fr_1.1fr_.6fr] items-center gap-x-2";
-let detailRequests = 0;
-const detailWaiters: Array<() => void> = [];
-async function loadRowDetail(id: string) {
-  if (detailRequests >= 2) await new Promise<void>((resolve) => detailWaiters.push(resolve));
-  else detailRequests += 1;
-  try {
-    await instanceManagementApi(id).status();
-    const detail = await consoleApi.instance(id);
-    if (detail.infoSource !== "upstream") throw new Error(detail.warning || "最新信息暂时不可用");
-    return detail;
-  }
-  finally { const next = detailWaiters.shift(); if (next) next(); else detailRequests -= 1; }
-}
 function expiryLabel(value?: string) {
   if (!value) return "未设置到期时间";
   const time = new Date(value.replace(" ", "T")).getTime();
@@ -169,17 +156,6 @@ export function InstanceList() {
   const instances = localFilter
     ? filteredInstances.slice((page - 1) * instancePageSize, page * instancePageSize)
     : filteredInstances;
-  const refresh = useMutation({
-    mutationFn: async () => {
-      const rows = instances.filter(instance => ![1, 2, 6].includes(instance.status));
-      const results = await Promise.allSettled(rows.map(instance => loadRowDetail(instance.id)));
-      if (results.some(result => result.status === "rejected")) throw new Error("部分产品获取失败，请稍后重试");
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["instances", "product-list"] });
-      void queryClient.invalidateQueries({ queryKey: ["instances", "filter-list"] });
-    },
-  });
   const title = category?.label ?? "产品列表";
 
   return (
@@ -189,14 +165,12 @@ export function InstanceList() {
         <LayerCard.Primary>
           <div className="mb-2 flex min-w-0 flex-wrap items-center gap-3">
             <Input size="sm" aria-label="搜索实例" placeholder="按实例名或 IP 搜索" className="min-w-0 w-full sm:w-auto sm:flex-1" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
-            <Button size="sm" variant="secondary" disabled={refresh.isPending || !instances.length} onClick={() => refresh.mutate()}>{refresh.isPending ? "获取中…" : "获取最新信息"}</Button>
             <div className="max-w-full overflow-x-auto">
               <Tabs variant="segmented" size="sm" aria-label="产品状态分类" value={status} onValueChange={(value) => { setStatus(value as InstanceFilter); setPage(1); }} tabs={[
                 { value: "all", label: "全部" }, { value: "active", label: "已激活" }, { value: "pending", label: "待开通" }, { value: "suspended", label: "已暂停" },
               ]} />
             </div>
           </div>
-          {refresh.error && <p role="alert" className="mb-2 text-sm text-kumo-danger">{getApiMessage(refresh.error)}</p>}
           <div className="-mx-1 min-w-0 overflow-x-auto text-sm" role="table" aria-label="产品列表">
             <div className="min-w-[900px]">
               <div role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle`}>

@@ -12,6 +12,10 @@ export function formatDate(value: string): string {
 }
 
 export const cycleLabels: Record<string, string> = {
+  recurring_prepayment: "周期预付",
+  recurring_postpaid: "周期后付",
+  onetime: "一次性",
+  free: "免费",
   monthly: "月付",
   quarterly: "季付",
   semiannually: "半年付",
