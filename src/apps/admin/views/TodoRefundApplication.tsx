@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
 import { MachineRefundDialog } from "./MachineRefundDialog";
+import { Dialog } from "../../../shared/components/Dialog";
 import { DefinitionList } from "../../../shared/components/DataTable";
 import type { TodoEntry } from "../../../shared/api/adminTodos";
 interface Fees { setup: string; installation: string; handling: string; gift: string; traffic: string; valueAdded: string; evidence: string }
@@ -31,4 +32,17 @@ export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: 
       <div className="flex gap-3"><Button variant="secondary" disabled={!reason.trim() || review.isPending || !query.data.request} onClick={() => review.mutate("reject")}>拒绝申请</Button><Button loading={review.isPending} disabled={locked || !quote || !reason.trim() || (Number(quote?.paidAmount) > 50000 && !confirmLarge)} onClick={() => review.mutate("approve")}>审核确认退入余额</Button></div></> : null}
     {calculation ? <><DefinitionList rows={[{ label: "计算截止点", value: new Date(calculation.appliedAt).toLocaleString("zh-CN") }, { label: "不退开通费", value: `¥${calculation.fees.setup}` }, { label: "不退安装费", value: `¥${calculation.fees.installation}` }, { label: "不退手续费", value: `¥${calculation.fees.handling}` }, { label: "不退赠送余额", value: `¥${calculation.fees.gift}` }, { label: "未使用服务费", value: `¥${calculation.unusedServiceAmount}` }, { label: "流量费扣除", value: `¥${calculation.fees.traffic}` }, { label: "增值服务费扣除", value: `¥${calculation.fees.valueAdded}` }, { label: "最终可退入余额", value: `¥${calculation.refundAmount}` }]} />{calculation.periods.map((period, index) => <p key={`${period.instanceId}-${index}`}>{period.instanceId !== "0" ? `机器 ${period.instanceId}` : "未开通服务"} · {period.unstarted ? "尚未使用" : `本期 ${period.totalDays} 天，扣除使用 ${period.usedDays} 天${period.partialDayDeductionDays ? `，另扣不足一天 ${period.partialDayDeductionDays} 天` : ""}，可退 ${period.remainingDays} 天`} · 未使用服务费 ¥{period.unusedServiceAmount}</p>)}<p>核验依据：{calculation.fees.evidence}</p></> : null}</> : null}
     {preview.error ? <Banner variant="error" title={getApiMessage(preview.error)} /> : null}{review.error ? <Banner variant="error" title={getApiMessage(review.error)} /> : null}</div>;
+}
+
+// Only delivered, non-renewal machine applications support supplier refunds.
+export function PendingRefundActions({ row, onDone }: { row: TodoEntry; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], retry: false, queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
+  const periods = query.data?.request?.snapshot.periods;
+  const machine = query.data?.request?.source === "order" && Boolean(periods?.length) && periods!.every(period => period.instanceId !== "0" && !period.unstarted && (!period.renewalId || period.renewalId === "0"));
+  if (query.isPending) return <p role="status">正在核对退款类型…</p>;
+  if (query.isError) return <div className="grid gap-2"><Banner variant="error" title={getApiMessage(query.error)} /><Button variant="secondary" onClick={() => void query.refetch()}>重新核对</Button></div>;
+  if (machine) return <><MachineRefundDialog row={row} action="direct_balance" onDone={onDone} /><MachineRefundDialog row={row} action="upstream" onDone={onDone} /></>;
+  const unavailable = periods?.some(period => period.unstarted || period.instanceId === "0") ? "实例尚未开通，没有可申请退款的供应商实例；请核算后直接退余额。" : "此申请不属于已开通机器退款，请按原费用核算流程处理。";
+  return <div className="grid gap-2"><div className="flex flex-wrap gap-2"><Dialog.Root open={open} onOpenChange={setOpen}><Dialog.Trigger render={<Button variant="secondary" size="sm">直接退余额</Button>} /><Dialog className="grid gap-4 p-6"><Dialog.Title>直接退余额</Dialog.Title><Dialog.Description>{unavailable}</Dialog.Description><TodoRefundApplication row={row} onDone={() => { setOpen(false); onDone(); }} /></Dialog></Dialog.Root><Button variant="secondary" size="sm" disabled title={unavailable}>向上游申请退款</Button></div><p className="text-sm text-kumo-subtle">{unavailable}</p></div>;
 }
