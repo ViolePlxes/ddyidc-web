@@ -6,6 +6,7 @@ import { getSession } from "../../../shared/api/auth";
 import { Link, useLocation } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { useAuthStore } from "../../../shared/stores/auth";
+import { useHumanVerification } from "../../../shared/components/captcha/HumanVerification";
 import { ExternalRedirect } from "../../../shared/router/EntryGuards";
 import { TermsAgreement } from "../components/TermsAgreement";
 import { AuthPageShell, SocialLoginOptions, authSubmitClassName } from "../components/AuthPageShell";
@@ -16,6 +17,7 @@ function readRememberedAccount() {
 }
 
 export function LoginPage() {
+  const human = useHumanVerification("user_login");
   const [account, setAccount] = useState(readRememberedAccount);
   const [rememberMe, setRememberMe] = useState(() => Boolean(readRememberedAccount()));
   const [password, setPassword] = useState("");
@@ -44,13 +46,13 @@ export function LoginPage() {
     if (!account.trim() || !password) { setError("请输入账号和密码"); return; }
     setError("");
     try {
-      await signIn(account.trim(), password, rememberMe);
+      await signIn(account.trim(), password, rememberMe, await human.prepare());
       try {
         if (rememberMe) localStorage.setItem(rememberedAccountKey, account.trim());
         else localStorage.removeItem(rememberedAccountKey);
       } catch { /* Storage availability must not prevent sign-in. */ }
       window.location.replace(useAuthStore.getState().needBindMobile ? "/bind-mobile" : safeRedirect ?? "/console");
-    } catch (nextError) { setError(getApiMessage(nextError)); }
+    } catch (nextError) { setError(getApiMessage(nextError)); await human.reset(); }
   };
   const quickLogin = async () => {
     if (quickLoading) return;
@@ -91,6 +93,7 @@ export function LoginPage() {
           if (checked !== true) { try { localStorage.removeItem(rememberedAccountKey); } catch { /* Storage is optional. */ } }
         }} />
         {error && <Banner variant="error" title="登录失败" description={error} />}
+        {human.element}
         <div className="grid gap-2">
           <Button type="submit" variant="secondary" size="lg" className={authSubmitClassName} loading={loading}>登录 <ArrowRightIcon /></Button>
           <TermsAgreement />

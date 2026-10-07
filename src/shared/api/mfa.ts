@@ -5,7 +5,7 @@ export interface MFAChallenge { mfaRequired: true; challenge: string; enrollment
 export interface MFAResult { recoveryCodes?: string[]; loginRequired?: boolean }
 export interface SecurityConfig { adminPath: string; mfaEnabled: boolean; issuer: string; version: number }
 export const adminSecurityApi = {
-  login: async (account: string, password: string) => (await adminRequest.post<ApiEnvelope<AuthPayload | MFAChallenge>>("/auth/login", { account, password })).data.data,
+  login: async (account: string, password: string, captchaGrant = "") => (await adminRequest.post<ApiEnvelope<AuthPayload | MFAChallenge>>("/auth/login", { account, password, captchaGrant })).data.data,
   verifyLogin: async (challenge: string, code: string) => (await adminRequest.post<ApiEnvelope<AuthPayload & MFAResult>>("/auth/login/mfa", { challenge, code })).data.data,
   config: async () => (await adminRequest.get<ApiEnvelope<SecurityConfig>>("/security/config")).data.data,
   saveConfig: async (config: SecurityConfig, code: string, password: string) => (await adminRequest.put<ApiEnvelope<{ adminPath: string }>>("/security/config", { ...config, code, password })).data.data,

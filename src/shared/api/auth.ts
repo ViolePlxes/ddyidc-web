@@ -6,11 +6,13 @@ export async function login(
   account: string,
   password: string,
   rememberMe = false,
+  captchaGrant = "",
 ): Promise<AuthPayload> {
   const response = await userRequest.post<ApiEnvelope<AuthPayload>>("/auth/login", {
     account,
     password,
     rememberMe,
+    captchaGrant,
   });
   const payload = response.data.data;
   if (payload.refresh_token) saveRefreshSession(payload as Required<AuthPayload>, rememberMe);

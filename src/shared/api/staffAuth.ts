@@ -6,18 +6,20 @@ async function loginWith(
   account: string,
   password: string,
   sales = false,
+  captchaGrant = "",
 ): Promise<AuthPayload> {
   const client = sales ? salesRequest : adminRequest;
   const response = await client.post<ApiEnvelope<AuthPayload>>(endpoint, {
     account,
     password,
+    captchaGrant,
   });
   return response.data.data;
 }
 
 export const adminAuthApi = {
-  login: (account: string, password: string) =>
-    loginWith("/auth/login", account, password),
+  login: (account: string, password: string, captchaGrant = "") =>
+    loginWith("/auth/login", account, password, false, captchaGrant),
   getSession: async () =>
     (await adminRequest.get<ApiEnvelope<AuthPayload>>("/auth/me")).data.data,
   logout: async () => {
@@ -26,8 +28,8 @@ export const adminAuthApi = {
 };
 
 export const salesAuthApi = {
-  login: (account: string, password: string) =>
-    loginWith("/sales/auth/login", account, password, true),
+  login: (account: string, password: string, captchaGrant = "") =>
+    loginWith("/sales/auth/login", account, password, true, captchaGrant),
   getSession: async () =>
     (await salesRequest.get<ApiEnvelope<AuthPayload>>("/sales/auth/me")).data
       .data,

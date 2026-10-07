@@ -3,7 +3,7 @@ import { adminAuthApi, salesAuthApi } from "../api/staffAuth";
 import type { AuthPayload, AuthUser } from "../types/auth";
 
 interface StaffAuthApi {
-  login: (account: string, password: string) => Promise<AuthPayload>;
+  login: (account: string, password: string, captchaGrant?: string) => Promise<AuthPayload>;
   getSession: () => Promise<AuthPayload>;
   logout: () => Promise<void>;
 }
@@ -13,7 +13,7 @@ interface StaffAuthState {
   initialized: boolean;
   loading: boolean;
   restoreSession: () => Promise<void>;
-  signIn: (account: string, password: string) => Promise<AuthUser>;
+  signIn: (account: string, password: string, captchaGrant?: string) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   clearSession: () => void;
 }
@@ -37,10 +37,10 @@ function createStaffAuthStore(api: StaffAuthApi) {
         set({ loading: false });
       }
     },
-    signIn: async (account, password) => {
+    signIn: async (account, password, captchaGrant = "") => {
       set({ loading: true });
       try {
-        const payload = await api.login(account, password);
+        const payload = await api.login(account, password, captchaGrant);
         set({ user: payload.user, initialized: true });
         return payload.user;
       } finally {

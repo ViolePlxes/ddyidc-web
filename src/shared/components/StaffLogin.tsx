@@ -1,3 +1,4 @@
+import { useHumanVerification } from "./captcha/HumanVerification";
 import { Badge } from "./Badge";
 import { FormEvent, useState } from "react";
 import { Button, Input, LayerCard } from "@cloudflare/kumo";
@@ -24,8 +25,9 @@ export function StaffLogin({
   expectedRole: "admin" | "sales";
   user: AuthUser | null;
   loading: boolean;
-  signIn: (account: string, password: string) => Promise<AuthUser>;
+  signIn: (account: string, password: string, captchaGrant?: string) => Promise<AuthUser>;
 }) {
+  const human=useHumanVerification(expectedRole === "admin" ? "admin_login" : "sales_login");
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -47,7 +49,7 @@ export function StaffLogin({
     }
     setError("");
     try {
-      const nextUser = await signIn(account.trim(), password);
+      const nextUser = await signIn(account.trim(), password, await human.prepare());
       if (nextUser.role !== expectedRole) {
         setError("该账号无权访问此入口");
         return;
@@ -55,6 +57,7 @@ export function StaffLogin({
       window.location.replace(safeRedirect);
     } catch (nextError) {
       setError(getApiMessage(nextError));
+      await human.reset();
     }
   };
 
@@ -92,7 +95,8 @@ export function StaffLogin({
               autoComplete="current-password"
               error={error || undefined}
             />
-            <Button type="submit" loading={loading} className="w-full">
+            {human.element}
+            <Button type="submit" loading={loading||human.busy} className="w-full">
               登录{title}
             </Button>
           </form>
