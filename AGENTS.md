@@ -21,3 +21,10 @@
 - 机器生命周期和电源状态通过 `MachineStatusBadge` 统一展示：运行绿色、操作/开通中蓝色、停机/暂停/待核查橙色、故障/到期红色、删除灰色。只用 Kumo Badge 原生色彩变体，不修改状态判定和操作权限。
 
 - 所有应用 Badge 统一复用 `src/shared/components/Badge.tsx`，使用 Kumo `appearance="dot"`；仅使用原生支持的 success / warning / error / neutral 圆点，不自绘圆点。
+
+# 门户头尾复用规范
+
+- 门户和公开官网所有页面统一引用 `src/apps/portal/components/PortalShell.tsx`，不得复制头部、页脚或另建滚动反色实现。
+- 开发前阅读 `docs/portal-shell.md`；新增参数、导航入口、反色区或响应式行为同步规范、所属Obsidian地图节点和验证记录。
+- 页面内容放在Shell的children，登录／控制台／法律域名由调用方提供；公开官网不恢复客户会话，业务入口沿用原认证与Gate。
+- 用户已删除的页脚大色块行动区不得重新加入。
