@@ -61,7 +61,7 @@ export function PortalHero({ onConsole }: { onConsole: () => void }) {
         <div className="hero-footnote"><ShieldCheckIcon size={18} />按需选择<span>／</span>统一管理<span>／</span>清晰可控</div>
       </div>
       <div className="infra-art">
-        <div className="art-topline"><span>你的云端基础设施 · 示意图</span><Button variant="ghost" size="sm" aria-pressed={playing} onClick={() => { setFeedback(false); if (playing) setPlaying(false); else { setLoop(true); setStep(0); setPlaying(true); } }}>{playing ? '暂停演示' : '播放演示'}</Button></div>
+        <div className="art-topline"><span>你的云端基础设施</span><Button variant="ghost" size="sm" aria-pressed={playing} onClick={() => { setFeedback(false); if (playing) setPlaying(false); else { setLoop(true); setStep(0); setPlaying(true); } }}>{playing ? '暂停演示' : '播放演示'}</Button></div>
         <div className="diagram" role="group" aria-label="技术关系图，选择节点查看说明" onMouseEnter={() => setHovered(true)} onMouseLeave={() => { setHovered(false); setPreview(null); }} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { setFocused(false); setPreview(null); } }}>
           <svg className="diagram-lines" viewBox="0 0 600 440" preserveAspectRatio="none" aria-hidden="true">
             <ellipse cx="300" cy="232" rx="250" ry="150" className="orbit" /><ellipse cx="300" cy="232" rx="195" ry="115" className="orbit" />
@@ -75,12 +75,12 @@ export function PortalHero({ onConsole }: { onConsole: () => void }) {
           {nodes.map(({ name, caption, Icon }, index) => <div className={`infra-node node-${index} ${saved === index ? 'node-saved' : ''} ${preview === index ? 'node-preview' : ''}`} key={name}>
             <div className="node-art-frame"><Button variant={saved === index ? 'secondary' : 'ghost'} aria-label={`选择${name}`} aria-pressed={saved === index} onPointerEnter={() => setPreview(index)} onPointerLeave={() => setPreview(null)} onFocus={() => setPreview(index)} onBlur={() => setPreview(null)} onClick={() => select(index)} icon={<Icon size={24} weight="duotone" />}>{name}</Button></div>
             <span className="node-caption">{caption}</span>
-            <span className="node-state">{saved === index ? <><CheckCircleIcon size={12} />已选择</> : preview === index ? '预览中' : '点击选择'}</span>
+            <span className="node-state">{saved === index ? <><CheckCircleIcon size={12} />已选择</> : preview === index ? '查看中' : '点击选择'}</span>
           </div>)}
           <div className="satellite satellite-one"><ReceiptIcon size={17} />订单记录</div><div className="satellite satellite-two"><ShieldCheckIcon size={17} />账户记录</div><div className="satellite satellite-three">CPU / RAM / SSD</div>
           <span className="coord coord-left">01 / 连接</span><span className="coord coord-right">03 / 管理</span>
         </div>
-        <div className="art-description" role="status" aria-live="polite" aria-atomic="true"><span className="art-number">0{current + 1}</span><div className="description-transition" key={current}><strong>{node.name} · {preview !== null && preview !== saved ? '临时预览' : '已保存选择'}</strong><p>{node.description}</p></div></div>
+        <div className="art-description" role="status" aria-live="polite" aria-atomic="true"><span className="art-number">0{current + 1}</span><div className="description-transition" key={current}><strong>{node.name} · {preview !== null && preview !== saved ? '当前查看' : '已选择'}</strong><p>{node.description}</p></div></div>
         <p className="demo-status">{reduced ? '已减少动态：静态图仍可选择' : feedback ? '传输反馈 · 播放一次' : playing ? automatic ? '自动演示 · 业务应用 → 云资源 → 管理' : '演示已暂缓' : '演示已停止 · 点击播放可循环'}{playing && !loop && !reduced ? '（首次一轮）' : ''}</p>
       </div>
     </div>
