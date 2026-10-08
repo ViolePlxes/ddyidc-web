@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
@@ -119,7 +120,20 @@ function versionAsset(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [entryRewrite(), versionAsset(), react(), tailwindcss()],
+  plugins: [entryRewrite(), versionAsset(), {
+    name: "ddyidc-browser-guard",
+    transformIndexHtml(_html, context) {
+      const source = readFileSync(resolve(__dirname, "public/browser-guard.js"), "utf8");
+      const hash = createHash("sha256").update(source).digest("hex").slice(0, 16);
+      const src = context.server ? "/browser-guard.js" : `/assets/browser-guard-${hash}.js`;
+      return [{ tag: "script", attrs: { src }, injectTo: "head-prepend" }];
+    },
+    generateBundle() {
+      const source = readFileSync(resolve(__dirname, "public/browser-guard.js"), "utf8");
+      const hash = createHash("sha256").update(source).digest("hex").slice(0, 16);
+      this.emitFile({ type: "asset", fileName: `assets/browser-guard-${hash}.js`, source });
+    },
+  }, react(), tailwindcss()],
   optimizeDeps: {
     esbuildOptions: { target: "esnext" },
   },

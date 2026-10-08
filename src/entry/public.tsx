@@ -13,6 +13,7 @@ const queryClient = new QueryClient({
 const root = document.getElementById("root");
 if (!root) throw new Error("缺少应用挂载节点");
 
+if (!window.__ddyBrowserGuard || window.__ddyBrowserGuard.checkStyles()) {
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -22,3 +23,5 @@ createRoot(root).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+window.__ddyBrowserGuard?.ready();
+}

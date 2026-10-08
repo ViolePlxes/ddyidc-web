@@ -122,3 +122,6 @@ body:has([data-mobile-binding="true"]) {
   }
 }
 
+
+/* Startup sentinel, checked independently before interactive pages mount. */
+:root { --ddy-styles-ready: 1; }

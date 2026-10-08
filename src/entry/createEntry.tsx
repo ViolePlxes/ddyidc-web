@@ -32,6 +32,7 @@ interface RootHost extends HTMLElement {
 declare global {
   interface Window {
     __POWERED_BY_QIANKUN__?: boolean;
+    __ddyBrowserGuard?: { blocked: boolean; mounted: boolean; checkStyles: () => boolean; ready: () => void };
   }
 }
 
@@ -127,6 +128,11 @@ function RoutePrefetch() {
   return null;
 }
 
+function RuntimeReady() {
+  useEffect(() => { window.__ddyBrowserGuard?.ready(); }, []);
+  return null;
+}
+
 export function createEntry(App: ComponentType) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -141,6 +147,7 @@ export function createEntry(App: ComponentType) {
   let stopCatalogListener: (() => void) | undefined;
 
   function render(props: MicroAppProps = {}) {
+    if (window.__ddyBrowserGuard && !window.__ddyBrowserGuard.checkStyles()) return;
     const rootElement =
       props.container?.querySelector<RootHost>("#root") ??
       (document.getElementById("root") as RootHost | null);
@@ -154,6 +161,7 @@ export function createEntry(App: ComponentType) {
     );
     host.__ddyidcRoot.render(
       <StrictMode>
+        <RuntimeReady />
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <ScrollRestoration />
