@@ -31,7 +31,7 @@ export function AdminHome() {
   const metrics = data
     ? [
         { label: "订单总数", value: data.metrics.totalOrders.toLocaleString("zh-CN"), hint: `今日 ${data.metrics.todayOrders} 笔` },
-        { label: "今日销售额", value: formatMoney(data.metrics.todayRevenueCents), hint: `今日已支付 ${data.metrics.todayPaidOrders} 笔` },
+        { label: "今日充值金额", value: formatMoney(data.metrics.todayRechargeCents), hint: `今日成功充值 ${data.metrics.todayPaidRecharges} 笔` },
         { label: "客户总数", value: data.metrics.totalCustomers.toLocaleString("zh-CN"), hint: `本周新增 ${data.metrics.newCustomersThisWeek}` },
         { label: "运行实例", value: `${data.metrics.runningInstances} / ${data.metrics.totalInstances}`, hint: `待支付订单 ${data.metrics.pendingOrders} · 待处理工单 ${data.metrics.openTickets}` },
       ]

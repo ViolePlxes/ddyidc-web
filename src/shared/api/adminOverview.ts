@@ -55,6 +55,8 @@ export interface AdminDashboard {
     todayOrders: number;
     todayRevenueCents: number;
     todayPaidOrders: number;
+    todayRechargeCents: number;
+    todayPaidRecharges: number;
     totalCustomers: number;
     newCustomersThisWeek: number;
     totalInstances: number;
