@@ -1,5 +1,1 @@
-import { ProductGroups } from "./ProductGroups";
-
-export function AdminProducts() {
-  return <ProductGroups embedded />;
-}
+import { ProductGroups } from "./ProductGroups"; export function AdminProducts() { return <ProductGroups />; }

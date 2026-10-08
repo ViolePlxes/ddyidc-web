@@ -28,7 +28,7 @@ const AdminBackups = lazy(() => routeModules.adminBackups().then(module => ({ de
 const SocialLoginSettings = lazy(() => import("./views/SocialLogin").then(module => ({ default: module.SocialLoginSettings })));
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import {
   DashboardLayout,
   type NavigationGroup,
@@ -100,11 +100,6 @@ const AdminProducts = lazy(() =>
   routeModules
     .adminProducts()
     .then((module) => ({ default: module.AdminProducts })),
-);
-const ProductGroups = lazy(() =>
-  routeModules
-    .adminProductGroups()
-    .then((module) => ({ default: module.ProductGroups })),
 );
 const NotificationTasks = lazy(() => import('./views/NotificationTasks').then(module => ({ default: module.NotificationTasks })));
 const AdminSystem = lazy(() =>
@@ -237,8 +232,7 @@ const adminGroups: NavigationGroup[] = [
   {
     label: "商品管理",
     items: [
-      { label: "商品列表", href: adminPath('/admin/products'), icon: PackageIcon },
-      { label: "商品分组", href: adminPath('/admin/products/groups'), icon: PackageIcon },
+      { label: "商品管理", href: adminPath('/admin/products'), icon: PackageIcon },
     ],
   },
   {
@@ -464,11 +458,7 @@ export function AdminApp() {
             />
             <Route
               path={adminPath('/admin/products/groups')}
-              element={
-                <LazyRoute>
-                  <ProductGroups />
-                </LazyRoute>
-              }
+              element={<Navigate to={adminPath('/admin/products')} replace />}
             />
             <Route
               path={adminPath('/admin/orders')}

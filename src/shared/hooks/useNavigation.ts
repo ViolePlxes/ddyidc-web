@@ -54,5 +54,18 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
    href: node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,
   })),
  }));
- return { ...query, groups: scope === 'admin' ? withTodoCounts(groups, todos.data) : groups };
+ // Keep saved navigation compatible without changing navigation records in the database.
+ const adminGroups = scope === "admin" ? mergeProductNavigation(groups) : groups;
+ return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : groups };
+}
+
+function mergeProductNavigation(groups: NavigationGroup[]): NavigationGroup[] {
+ let seen = false;
+ return groups.map(group => ({ ...group, items: group.items.flatMap(item => {
+  const path = pluginPath(item.href).replace(/\/$/, "");
+  if (path !== "/admin/products" && path !== "/admin/products/groups") return [item];
+  if (seen) return [];
+  seen = true;
+  return [{ ...item, label: "商品管理", href: adminPath("/admin/products") }];
+ }) })).filter(group => group.items.length > 0);
 }

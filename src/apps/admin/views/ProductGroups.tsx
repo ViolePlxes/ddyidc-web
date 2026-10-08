@@ -1,51 +1,53 @@
 import { Dialog } from "../../../shared/components/Dialog";
 import { GroupProducts } from "./GroupProducts";
-import { DragHandle, SortableList } from "../../../shared/components/SortableTableBody";
-import { useSortableList, type ListDrop } from "../../../shared/hooks/useSortableList";
 import { invalidateCatalog, publishCatalogChange } from "../../../shared/utils/catalogCache";
-import { Banner, Button, Checkbox, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
-import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, FolderPlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
+import { Banner, Button, Checkbox, Input, LayerCard, Select, Sidebar, Switch } from "@cloudflare/kumo";
+import { ArrowDownIcon, ArrowUpIcon, FolderIcon, FolderPlusIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { adminProductGroupsApi, type ProductGroup, type ProductGroupInput } from "../../../shared/api/adminProductGroups";
 import { adminProductsApi } from "../../../shared/api/adminProducts";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 
-function GroupDialog({ group, parentId, onClose }: { group?: ProductGroup; parentId: string; onClose: () => void }) {
-  const queryClient = useQueryClient();
+function GroupEditor({ group, parentId, onSaved, onDirtyChange, onBusyChange, onCancel }: {
+  group?: ProductGroup; parentId: string; onSaved: (id: string) => void;
+  onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void; onCancel: () => void;
+}) {
+  const client = useQueryClient();
   const [name, setName] = useState(group?.name ?? "");
   const [icon, setIcon] = useState(group?.icon ?? "");
   const [enabled, setEnabled] = useState((group?.status ?? 1) === 1);
+  const [notice, setNotice] = useState("");
+  const dirty = (nextName: string, nextIcon: string, nextEnabled: boolean) => {
+    setNotice("");
+    onDirtyChange(nextName !== (group?.name ?? "") || nextIcon !== (group?.icon ?? "") || nextEnabled !== ((group?.status ?? 1) === 1));
+  };
   const save = useMutation({
     mutationFn: async () => {
-      const input: ProductGroupInput = { name, icon, parentId, status: enabled ? 1 : 0 };
-      if (group) await adminProductGroupsApi.update(group.id, input);
-      else await adminProductGroupsApi.create(input);
+      const input: ProductGroupInput = { name: name.trim(), icon: icon.trim(), parentId, status: enabled ? 1 : 0 };
+      if (group) { await adminProductGroupsApi.update(group.id, input); return group.id; }
+      return (await adminProductGroupsApi.create(input)).id;
     },
-    onSuccess: async () => {
-      await invalidateCatalog(queryClient); publishCatalogChange();
-      onClose();
+    onMutate: () => onBusyChange(true),
+    onSettled: () => onBusyChange(false),
+    onSuccess: async (id) => {
+      await invalidateCatalog(client); publishCatalogChange();
+      onDirtyChange(false); setNotice("分组已保存"); onSaved(id);
     },
   });
-  return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog className="grid gap-5 p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div><Dialog.Title className="text-xl font-semibold">{group ? "编辑商品分组" : parentId === "0" ? "新建一级分组" : "新建二级分组"}</Dialog.Title><Dialog.Description className="text-kumo-subtle">商品分组最多支持两级。</Dialog.Description></div>
-          <Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" onClick={onClose} />
-        </div>
-        <Input label="分组名称" value={name} maxLength={64} onChange={(event) => setName(event.target.value)} />
-        <Input label="图标" value={icon} maxLength={255} description="可填写现有图标标识；留空使用默认分组图标。" onChange={(event) => setIcon(event.target.value)} />
-        <Switch label="启用分组" checked={enabled} onCheckedChange={setEnabled} />
-        {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
-        <div className="flex justify-end gap-2"><Button variant="secondary" onClick={onClose}>取消</Button><Button loading={save.isPending} disabled={!name.trim()} onClick={() => save.mutate()}>保存</Button></div>
-      </Dialog>
-    </Dialog.Root>
-  );
+  return <fieldset disabled={save.isPending} className="grid gap-4">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Input label="分组名称" value={name} maxLength={64} onChange={(e) => { setName(e.target.value); dirty(e.target.value, icon, enabled); }} />
+      <Input label="图标标识" value={icon} maxLength={255} placeholder="留空使用默认图标" onChange={(e) => { setIcon(e.target.value); dirty(name, e.target.value, enabled); }} />
+    </div>
+    <Switch label="显示此分组" checked={enabled} disabled={save.isPending} onCheckedChange={(value) => { setEnabled(value); dirty(name, icon, value); }} />
+    {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
+    {notice ? <Banner variant="default" title={notice} /> : null}
+    <div className="flex gap-2"><Button loading={save.isPending} disabled={!name.trim()} onClick={() => save.mutate()}>保存分组</Button><Button variant="secondary" disabled={save.isPending} onClick={onCancel}>取消修改</Button></div>
+  </fieldset>;
 }
-
 function MoveProductsDialog({ source, targets, onClose }: { source: ProductGroup; targets: ProductGroup[]; onClose: () => void }) {
   const queryClient = useQueryClient();
   const products = useQuery({ queryKey: ["admin", "products", source.id], queryFn: () => adminProductsApi.list(source.id) });
@@ -79,109 +81,101 @@ function MoveProductsDialog({ source, targets, onClose }: { source: ProductGroup
   );
 }
 
-export function ProductGroups({ embedded = false }: { embedded?: boolean }) {
-  const queryClient = useQueryClient();
+
+
+export function ProductGroups() {
+  const client = useQueryClient();
   const roots = useQuery({ queryKey: ["admin", "product-groups", "0"], queryFn: () => adminProductGroupsApi.list("0") });
-  const childQueries = useQueries({
-    queries: (roots.data?.list ?? []).map((root) => ({
-      queryKey: ["admin", "product-groups", root.id],
-      queryFn: () => adminProductGroupsApi.list(root.id),
-    })),
-  });
-  const childGroups = useMemo(() => childQueries.flatMap((query) => query.data?.list ?? []), [childQueries]);
-  const [dialog, setDialog] = useState<{ group?: ProductGroup; parentId: string } | null>(null);
+  const childrenQueries = useQueries({ queries: (roots.data?.list ?? []).map((root) => ({ queryKey: ["admin", "product-groups", root.id], queryFn: () => adminProductGroupsApi.list(root.id) })) });
+  const children = useMemo(() => childrenQueries.flatMap((q) => q.data?.list ?? []), [childrenQueries]);
+  const all = [...(roots.data?.list ?? []), ...children];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [creating, setCreating] = useState<{ parentId: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const firstExpanded = useRef(false);
+  useEffect(() => { const first = roots.data?.list[0]; if (first && !firstExpanded.current) { firstExpanded.current = true; setExpanded(new Set([first.id])); } }, [roots.data]);
+  const [dirty, setDirty] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(false);
+  const updateDirty = (value: boolean) => { setDirty(value); if (!value) setNotice(""); };
+  const [notice, setNotice] = useState("");
+  const [editorRevision, setEditorRevision] = useState(0);
   const [moveSource, setMoveSource] = useState<ProductGroup | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProductGroup | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [targetParent, setTargetParent] = useState("");
   const saving = useRef(false);
   const [pending, setPending] = useState(false);
-  const beginSave = () => { if (saving.current) return false; saving.current = true; setPending(true); return true; };
-  const endSave = () => { saving.current = false; setPending(false); };
-  const refresh = async () => { await invalidateCatalog(queryClient); publishCatalogChange(); };
-  const hidden = useMutation({ mutationFn: ({ group, value }: { group: ProductGroup; value: boolean }) => adminProductGroupsApi.hidden(group.id, value), onSuccess: refresh, onError: (cause) => setError(getApiMessage(cause)) });
-  const remove = useMutation({ mutationFn: (id: string) => adminProductGroupsApi.remove(id), onSuccess: async () => { setDeleteTarget(null); await refresh(); }, onError: (cause) => setError(getApiMessage(cause)) });
-  const submit = async (work: () => Promise<unknown>) => {
-    if (saving.current) return;
-    saving.current = true; setPending(true); setError(null);
-    try { await work(); await refresh(); }
-    catch (cause) { setError(`${getApiMessage(cause)}；已恢复原顺序，请刷新后重试。`); await invalidateCatalog(queryClient); }
-    finally { saving.current = false; setPending(false); }
+  const selected = all.find((group) => group.id === selectedId) ?? roots.data?.list[0];
+  const refresh = async () => { await invalidateCatalog(client); publishCatalogChange(); };
+  const operation = useMutation({ mutationFn: async (work: () => Promise<unknown>) => work(), onSuccess: refresh });
+  const remove = useMutation({ mutationFn: adminProductGroupsApi.remove, onSuccess: async () => { setDeleteTarget(null); setSelectedId(null); await refresh(); } });
+  const disabled = pending || operation.isPending || remove.isPending || roots.isFetching || childrenQueries.some((q) => q.isFetching || q.isError);
+  const navigate = (id: string | null, parentId?: string) => {
+    if (dirty || pending || operation.isPending) { setNotice("请先保存或取消当前修改，再切换分组。"); return; }
+    setSelectedId(id); setEditingProduct(false); setCreating(parentId === undefined ? null : { parentId }); setNotice(""); setTargetParent("");
   };
-  const drop = (event: ListDrop) => {
-    if (saving.current) return;
-    const all = [...(roots.data?.list ?? []), ...childGroups];
-    const moving = all.find((group) => group.id === event.id);
-    if (!moving || moving.parentId !== event.source) { setError("分组已变化，请刷新后重试"); return; }
-    if (event.source === event.target) {
-      const expected = all.filter((group) => group.parentId === event.source);
-      if (event.targetIds.length !== expected.length || new Set(event.targetIds).size !== expected.length || event.targetIds.some((id) => !expected.some((group) => group.id === id))) { setError("请先读取整层分组再排序"); return; }
-      void submit(() => adminProductGroupsApi.sort(event.source, event.targetIds));
-    } else {
-      if (moving.parentId === "0" || event.target === "0") { setError("禁止改变分组层级"); return; }
-      void submit(() => adminProductGroupsApi.moveGroup(event.id, event.target, event.targetIds, event.sourceIds));
-    }
+  const reorder = (group: ProductGroup, offset: number) => {
+    const siblings = all.filter((g) => g.parentId === group.parentId);
+    const index = siblings.findIndex((g) => g.id === group.id), target = index + offset;
+    if (target < 0 || target >= siblings.length || disabled || dirty) return;
+    const ids = siblings.map((g) => g.id); [ids[index], ids[target]] = [ids[target]!, ids[index]!];
+    operation.mutate(() => adminProductGroupsApi.sort(group.parentId, ids));
   };
-  const disabled = pending || hidden.isPending || remove.isPending || roots.isError || roots.isFetching || childQueries.some((query) => query.isFetching || query.isError);
-  const rootRef = useSortableList("roots", false, disabled, drop);
-  const reorder = (items: ProductGroup[], index: number, offset: number) => {
-    const target = index + offset;
-    if (saving.current || target < 0 || target >= items.length) return;
-    const ordered = [...items];
-    [ordered[index], ordered[target]] = [ordered[target]!, ordered[index]!];
-    void submit(() => adminProductGroupsApi.sort(items[index]!.parentId, ordered.map((item) => item.id)));
+  const moveGroup = () => {
+    if (!selected || !targetParent || selected.parentId === "0" || dirty || disabled) return;
+    const group = selected;
+    operation.mutate(async () => {
+      const [source, target] = await Promise.all([adminProductGroupsApi.list(group.parentId), adminProductGroupsApi.list(targetParent)]);
+      if (!source.list.some((g) => g.id === group.id)) throw new Error("分组已变化，请重新读取后重试");
+      await adminProductGroupsApi.moveGroup(group.id, targetParent, [...target.list.map((g) => g.id), group.id], source.list.filter((g) => g.id !== group.id).map((g) => g.id));
+      setExpanded((old) => new Set([...old, targetParent])); setTargetParent(""); setEditorRevision((v) => v + 1);
+    });
   };
-  return (
-    <div className="grid gap-4" inert={pending}>
-      <PageHeader title={embedded ? "商品目录" : "商品分组"} description={embedded ? "展开二级分组管理商品；拖动手柄调整顺序，二级分组可跨父移动。" : "维护两级分组；拖动手柄排序，二级分组可跨父移动。"} actions={<Button icon={<PlusIcon />} onClick={() => setDialog({ parentId: "0" })}>新建一级分组</Button>} />
-      {error ? <div className="grid gap-2"><Banner variant="error" title="操作失败" description={error} /><Button variant="secondary" onClick={() => void refresh()}>重新读取列表</Button></div> : null}
-      <PageState loading={roots.isLoading} keepContent error={!roots.data && roots.error ? getApiMessage(roots.error) : null} empty={!roots.isLoading && (roots.data?.list.length ?? 0) === 0} emptyTitle="暂无商品分组">
-        <div ref={rootRef} data-sort-list="0" className="grid gap-4">
-          {(roots.data?.list ?? []).map((root, rootIndex) => {
-            const children = childQueries[rootIndex]?.data?.list ?? [];
-            return (
-              <LayerCard key={root.id} data-sort-id={root.id} className="sort-item overflow-hidden p-0">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kumo-line p-4">
-                  <div className="grid gap-1"><div className="flex items-center gap-2"><DragHandle scope="roots" label={`拖动一级分组 ${root.name}`} disabled={disabled} /><strong className="text-kumo-strong">{root.name}</strong><span className="text-sm text-kumo-subtle">一级 · 排序 {root.sort} · {root.productCount} 个商品</span></div>{root.icon ? <span className="text-xs text-kumo-subtle">图标：{root.icon}</span> : null}</div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Switch label={root.status === 1 ? "显示" : "隐藏"} checked={root.status === 1} onCheckedChange={(checked) => hidden.mutate({ group: root, value: !checked })} />
-                    <Button variant="secondary" shape="square" icon={<ArrowUpIcon />} aria-label="一级分组上移" disabled={rootIndex === 0 || disabled} onClick={() => reorder(roots.data?.list ?? [], rootIndex, -1)} />
-                    <Button variant="secondary" shape="square" icon={<ArrowDownIcon />} aria-label="一级分组下移" disabled={rootIndex === (roots.data?.list.length ?? 0) - 1 || disabled} onClick={() => reorder(roots.data?.list ?? [], rootIndex, 1)} />
-                    <Button disabled={pending} variant="secondary" icon={<PlusIcon />} onClick={() => setDialog({ parentId: "0" })}>新建同级</Button>
-                    <Button disabled={pending} variant="secondary" icon={<FolderPlusIcon />} onClick={() => setDialog({ parentId: root.id })}>新建子级</Button>
-                    <Button variant="secondary" shape="square" icon={<PencilSimpleIcon />} aria-label="编辑一级分组" onClick={() => setDialog({ group: root, parentId: root.parentId })} />
-                    <Button variant="destructive" shape="square" icon={<TrashIcon />} aria-label="删除一级分组" onClick={() => setDeleteTarget(root)} />
-                  </div>
-                </div>
-                <PageState loading={childQueries[rootIndex]?.isLoading} keepContent error={!childQueries[rootIndex]?.data && childQueries[rootIndex]?.error ? getApiMessage(childQueries[rootIndex]?.error) : null}>
-                  <div className="overflow-x-auto p-2">
-                    <div className="min-w-[1000px]">
-                      <Table className="table-fixed"><Table.Header variant="compact"><Table.Row><Table.Head className="w-[28%]">二级分组</Table.Head><Table.Head className="w-[12%]">状态</Table.Head><Table.Head className="w-[8%]">商品数</Table.Head><Table.Head className="w-[8%]">排序</Table.Head><Table.Head className="w-[44%]">操作</Table.Head></Table.Row></Table.Header></Table>
-                      <SortableList scope="children" listId={root.id} crossList disabled={disabled} onDrop={drop}>
-                        {children.length === 0 && !childQueries[rootIndex]?.isLoading ? <p className="p-4 text-sm text-kumo-subtle">拖入二级分组，或点击“新建子级”</p> : null}
-                        {children.map((child, index) => (
-                          <LayerCard key={child.id} className="sort-item overflow-hidden p-0" data-sort-id={child.id}>
-                            <Table className="table-fixed"><Table.Body><Table.Row>
-                              <Table.Cell className="w-[28%]"><div className="flex items-center gap-2"><DragHandle scope="children" label={`拖动二级分组 ${child.name}`} disabled={disabled} />{embedded ? <Button variant="ghost" shape="square" aria-label={`${expanded.has(child.id) ? "收起" : "展开"} ${child.name}`} aria-expanded={expanded.has(child.id)} aria-controls={`products-${child.id}`} icon={expanded.has(child.id) ? <CaretDownIcon /> : <CaretRightIcon />} onClick={() => setExpanded((current) => { const next = new Set(current); if (next.has(child.id)) next.delete(child.id); else next.add(child.id); return next; })} /> : null}<div><strong className="text-kumo-strong">{child.name}</strong>{child.icon ? <p className="text-xs text-kumo-subtle">图标：{child.icon}</p> : null}</div></div></Table.Cell>
-                              <Table.Cell className="w-[12%]"><Switch label={child.status === 1 ? "显示" : "隐藏"} checked={child.status === 1} onCheckedChange={(checked) => hidden.mutate({ group: child, value: !checked })} /></Table.Cell><Table.Cell className="w-[8%]">{child.productCount}</Table.Cell><Table.Cell className="w-[8%]">{child.sort}</Table.Cell>
-                              <Table.Cell className="w-[44%]"><div className="flex flex-wrap gap-2"><Button variant="secondary" shape="square" icon={<ArrowUpIcon />} aria-label="二级分组上移" disabled={index === 0 || disabled} onClick={() => reorder(children, index, -1)} /><Button variant="secondary" shape="square" icon={<ArrowDownIcon />} aria-label="二级分组下移" disabled={index === children.length - 1 || disabled} onClick={() => reorder(children, index, 1)} /><Button disabled={pending} variant="secondary" icon={<PlusIcon />} onClick={() => setDialog({ parentId: child.parentId })}>新建同级</Button><Button variant="secondary" onClick={() => setMoveSource(child)}>移动商品</Button><Button variant="secondary" shape="square" icon={<PencilSimpleIcon />} aria-label="编辑二级分组" onClick={() => setDialog({ group: child, parentId: child.parentId })} /><Button variant="destructive" shape="square" icon={<TrashIcon />} aria-label="删除二级分组" onClick={() => setDeleteTarget(child)} /></div></Table.Cell>
-                            </Table.Row></Table.Body></Table>
-                            {embedded ? <GroupProducts groupId={child.id} expanded={expanded.has(child.id)} blocked={disabled} beginSave={beginSave} endSave={endSave} /> : null}
-                          </LayerCard>
-                        ))}
-                      </SortableList>
-                    </div>
-                  </div>
-                </PageState>
-              </LayerCard>
-            );
-          })}
-        </div>
-      </PageState>
-      {dialog ? <GroupDialog group={dialog.group} parentId={dialog.parentId} onClose={() => setDialog(null)} /> : null}
-      {moveSource ? <MoveProductsDialog source={moveSource} targets={childGroups} onClose={() => setMoveSource(null)} /> : null}
-      {deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-5 p-6"><Dialog.Title className="text-xl font-semibold">删除商品分组</Dialog.Title><Dialog.Description className="text-kumo-subtle">确定删除“{deleteTarget.name}”？存在子分组或商品时系统会拒绝删除。</Dialog.Description><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget.id)}>确认删除</Button></div></Dialog></Dialog.Root> : null}
-    </div>
-  );
-}
+  const visibleRoots = (roots.data?.list ?? []).filter((root) => !search.trim() || root.name.toLowerCase().includes(search.trim().toLowerCase()) || children.some((child) => child.parentId === root.id && child.name.toLowerCase().includes(search.trim().toLowerCase())));
+  return <div className="grid min-w-0 gap-4">
+    <PageHeader title="商品管理" description="选择左侧分组，在右侧编辑分组和商品。" actions={<Button icon={<PlusIcon />} onClick={() => navigate(null, "0")}>新建一级分组</Button>} />
+    {notice ? <Banner variant="alert" title={notice} /> : null}
+    {operation.error ? <Banner variant="error" title="操作失败" description={getApiMessage(operation.error)} /> : null}
+    <LayerCard className="overflow-hidden p-0">
+      <Sidebar.Provider contained collapsible="none" mobileBreakpoint={0} className="relative flex w-full flex-col lg:flex-row">
+        <Sidebar className="[--sidebar-width:100%] shrink-0 border-b border-kumo-line lg:[--sidebar-width:16rem] lg:border-r lg:border-b-0">
+          <Sidebar.Header><Input className="w-full" aria-label="搜索分组" placeholder="搜索分组…" value={search} onChange={(e) => setSearch(e.target.value)} /></Sidebar.Header>
+          <Sidebar.Content className="max-h-72 lg:max-h-[70vh]">
+            {roots.isLoading ? <Sidebar.Loading /> : <Sidebar.Group><Sidebar.GroupLabel>商品分组</Sidebar.GroupLabel><Sidebar.Menu>
+              {visibleRoots.map((root) => {
+                const rootMatches = root.name.toLowerCase().includes(search.trim().toLowerCase());
+                const rows = children.filter((child) => child.parentId === root.id && (!search.trim() || rootMatches || child.name.toLowerCase().includes(search.trim().toLowerCase())));
+                return <Sidebar.MenuItem key={root.id}><Sidebar.Collapsible open={Boolean(search.trim()) || expanded.has(root.id)} onOpenChange={(open) => setExpanded((old) => { const next = new Set(old); if (open) next.add(root.id); else next.delete(root.id); return next; })}>
+                  <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton icon={FolderIcon} active={!creating && selected?.id === root.id} onClick={() => navigate(root.id)}><span className="min-w-0 flex-1 truncate">{root.name}</span><Sidebar.MenuChevron /></Sidebar.MenuButton>} />
+                  <Sidebar.CollapsibleContent><Sidebar.MenuSub>
+                    {rows.map((child) => <Sidebar.MenuSubButton key={child.id} className="pl-6" active={!creating && selected?.id === child.id} onClick={() => navigate(child.id)}><FolderIcon className="size-4 shrink-0 text-kumo-subtle" /><span className="min-w-0 flex-1 truncate">{child.name}</span><span className="text-xs text-kumo-subtle">{child.productCount}</span></Sidebar.MenuSubButton>)}
+                    {childrenQueries[(roots.data?.list ?? []).findIndex((g) => g.id === root.id)]?.isLoading ? <li className="p-2 text-sm text-kumo-subtle">加载中…</li> : null}
+                  </Sidebar.MenuSub></Sidebar.CollapsibleContent>
+                </Sidebar.Collapsible></Sidebar.MenuItem>;
+              })}
+              {!roots.isLoading && !visibleRoots.length ? <li className="p-3 text-sm text-kumo-subtle">{search ? "没有匹配的分组" : "暂无分组"}</li> : null}
+            </Sidebar.Menu></Sidebar.Group>}
+          </Sidebar.Content>
+        </Sidebar>
+        <section className="min-w-0 flex-1 p-4 lg:p-6" aria-label="分组编辑与商品列表">
+          <PageState loading={roots.isLoading} error={roots.error ? getApiMessage(roots.error) : null}>
+            {creating ? <div className="grid gap-5"><h2 className="text-lg font-semibold text-kumo-strong">{creating.parentId === "0" ? "新建一级分组" : "新建二级分组"}</h2><GroupEditor key={`new-${creating.parentId}-${editorRevision}`} parentId={creating.parentId} onDirtyChange={updateDirty} onBusyChange={setPending} onSaved={(id) => { setCreating(null); setSelectedId(id); setDirty(false); }} onCancel={() => { setDirty(false); setCreating(null); }} /></div> : selected ? <div className="grid gap-5">
+              <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-kumo-strong">{selected.name}</h2><p className="mt-1 text-sm text-kumo-subtle">{selected.parentId === "0" ? "一级分组" : `${all.find((g) => g.id === selected.parentId)?.name ?? "二级分组"} / 二级分组`} · {selected.productCount} 个商品</p></div><div className="flex flex-wrap gap-2">
+                <Button variant="secondary" shape="square" aria-label="分组上移" icon={<ArrowUpIcon />} disabled={disabled || dirty || all.filter((g) => g.parentId === selected.parentId)[0]?.id === selected.id} onClick={() => reorder(selected, -1)} />
+                <Button variant="secondary" shape="square" aria-label="分组下移" icon={<ArrowDownIcon />} disabled={disabled || dirty || all.filter((g) => g.parentId === selected.parentId).at(-1)?.id === selected.id} onClick={() => reorder(selected, 1)} />
+                {selected.parentId === "0" ? <Button variant="secondary" icon={<FolderPlusIcon />} onClick={() => navigate(null, selected.id)}>新建二级分组</Button> : <Button variant="secondary" onClick={() => setMoveSource(selected)} disabled={dirty || disabled}>移动商品</Button>}
+                <Button variant="destructive" shape="square" aria-label="删除分组" icon={<TrashIcon />} disabled={dirty || disabled} onClick={() => setDeleteTarget(selected)} />
+              </div></div>
+              {!editingProduct ? <GroupEditor key={`${selected.id}-${editorRevision}`} group={selected} parentId={selected.parentId} onDirtyChange={updateDirty} onBusyChange={setPending} onSaved={() => setDirty(false)} onCancel={() => { setDirty(false); setEditorRevision((v) => v + 1); setNotice(""); }} /> : null}
+              {selected.parentId !== "0" ? <>
+                {!editingProduct ? <div className="flex flex-wrap items-end gap-3 border-t border-kumo-line pt-4"><div className="min-w-48 flex-1"><Select disabled={(roots.data?.list.length ?? 0) < 2} label="移动至其他一级分组" value={targetParent} onValueChange={(v) => setTargetParent(v ?? "")} items={Object.fromEntries((roots.data?.list ?? []).filter((g) => g.id !== selected.parentId).map((g) => [g.id, g.name]))} /></div><Button variant="secondary" disabled={!targetParent || disabled || dirty} loading={operation.isPending} onClick={moveGroup}>移动分组</Button></div> : null}
+                <div className="min-w-0 border-t border-kumo-line pt-4"><GroupProducts key={selected.id} groupId={selected.id} expanded onDirtyChange={updateDirty} onEditingChange={setEditingProduct} blocked={disabled || dirty} beginSave={() => { if (saving.current) return false; saving.current = true; setPending(true); return true; }} endSave={() => { saving.current = false; setPending(false); }} /></div>
+              </> : <p className="border-t border-kumo-line pt-4 text-sm text-kumo-subtle">展开左侧一级分组，选择下方二级分组查看并编辑商品。</p>}
+            </div> : <p className="text-sm text-kumo-subtle">创建一级分组，开始管理商品。</p>}
+          </PageState>
+        </section>
+      </Sidebar.Provider>
+    </LayerCard>
+    {moveSource ? <MoveProductsDialog source={moveSource} targets={children} onClose={() => setMoveSource(null)} /> : null}
+    {deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-5 p-6"><Dialog.Title className="text-xl font-semibold">删除商品分组</Dialog.Title><Dialog.Description>确定删除“{deleteTarget.name}”？存在子分组或商品时不能删除。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget.id)}>确认删除</Button></div></Dialog></Dialog.Root> : null}
+  </div>;}
