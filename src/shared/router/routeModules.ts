@@ -218,9 +218,10 @@ export function prefetchRoute(target: string): Promise<unknown> {
   if (!loader) return Promise.resolve();
   const existing = prefetchedRoutes.get(loader);
   if (existing) return existing;
-  const pending = loader().catch((error) => {
+  const pending = loader().catch(() => {
     prefetchedRoutes.delete(loader);
-    throw error;
+    // Optional prefetch must not reject an unobserved event-handler promise.
+    return undefined;
   });
   prefetchedRoutes.set(loader, pending);
   return pending;
