@@ -19,7 +19,7 @@ export interface PointsRule { id?: string; name: string; code: string; event: st
 export interface RiskTag { id?: string; name: string; level: number; color: string; description: string; isLockedDefault: boolean }
 export interface RiskRule { id?: string; name: string; tagId: string; conditions: unknown[]; enabled: boolean }
 export interface RiskLog { id: string; userId: string; tagIdBefore?: string; tagIdAfter?: string; source: string; operatorId?: string; remark: string; createdAt: string }
-export interface PointsStats { totalEarned: number; totalUsed: number; balance: number; accounts: number; sources: Array<{source:string;points:number}> }
+export interface PointsStats { totalEarned: number; totalUsed: number; balance: number; accounts: number; sources: Array<{source:string;points:number}> | null }
 
 async function unwrap<T>(request: Promise<{data:ApiEnvelope<T>}>):Promise<T>{ return (await request).data.data }
 const page=<T>(client:AxiosInstance,path:string,params?:Record<string,unknown>)=>unwrap(client.get<ApiEnvelope<PageData<T>>>(path,{params}));

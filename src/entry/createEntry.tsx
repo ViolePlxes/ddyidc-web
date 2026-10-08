@@ -18,6 +18,7 @@ import {
 } from "react-router-dom";
 import { useEffect, useLayoutEffect } from "react";
 import { prefetchRoute } from "../shared/router/routeModules";
+import { RouteErrorBoundary } from "../shared/router/RouteErrorBoundary";
 import "../styles/tailwind.css";
 
 interface MicroAppProps {
@@ -160,7 +161,7 @@ export function createEntry(App: ComponentType) {
             <LinkProvider component={RouterLink}>
               <TooltipProvider>
                 <Toasty>
-                  <App />
+                  <RouteErrorBoundary><App /></RouteErrorBoundary>
                 </Toasty>
               </TooltipProvider>
             </LinkProvider>
