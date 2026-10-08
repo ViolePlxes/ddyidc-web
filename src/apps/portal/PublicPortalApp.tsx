@@ -1,5 +1,8 @@
+import {PortalShell} from './components/PortalShell';
+import {PortalHomeContent} from './components/PortalHomeContent';
+import {useLocation} from 'react-router-dom';
 import { Badge } from "../../shared/components/Badge";
-import { Banner, Button, LayerCard, Link, Surface } from "@cloudflare/kumo";
+import { Banner, LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { Route, Routes, useParams } from "react-router-dom";
 import type { ProductDetail, ProductSummary } from "../../shared/api/console";
@@ -32,16 +35,7 @@ function textDescription(product: ProductSummary) {
   return "暂无产品简介";
 }
 
-function Home() {
-  return <section className="grid gap-6 py-10">
-    <h1 className="text-4xl font-semibold text-kumo-strong md:text-5xl">一处管理您的全球云资源</h1>
-    <p className="max-w-xl text-lg text-kumo-subtle">从选购、部署到续费与账单，DDYIDC 提供统一的云服务器管理体验。</p>
-    <div className="flex flex-wrap gap-3">
-      <Link href="/products"><Button>查看云产品</Button></Link>
-      <Link href={`${consoleOrigin}/login`}><Button variant="secondary">进入控制台</Button></Link>
-    </div>
-  </section>;
-}
+function Home() { return <PortalHomeContent consoleHref={`${consoleOrigin}/console`}/>; }
 
 function Products() {
   const query = useQuery({ queryKey: ["public-product-introductions"], queryFn: async () => {
@@ -63,7 +57,7 @@ function Products() {
           <p className="text-kumo-subtle">{textDescription(product)}</p>
           <Badge variant="outline">{cycleLabels[product.cycle] || product.cycle}</Badge>
           <p className="text-kumo-strong">¥{product.price.toFixed(2)} 起</p>
-          <Link href={`/products/${product.id}`}><Button variant="secondary">查看产品介绍</Button></Link>
+          <LinkButton href={`/products/${product.id}`} variant="secondary">查看产品介绍</LinkButton>
         </LayerCard>)}
       </div>
     </PageState>
@@ -84,22 +78,13 @@ function Product() {
         <p className="whitespace-pre-wrap text-kumo-subtle">{textDescription(product)}</p>
         <p className="text-lg text-kumo-strong">¥{product.price.toFixed(2)} 起 / {cycleLabels[product.cycle] || product.cycle}</p>
         {product.specs?.length > 0 && <div className="grid gap-3">{product.specs.map(spec => <p key={spec.id} className="text-kumo-subtle">{spec.name} · {spec.vcpu} vCPU · {spec.memory}</p>)}</div>}
-        <Link href={`${consoleOrigin}/console/products/${encodeURIComponent(product.id)}`}><Button>前往控制台选购</Button></Link>
+        <LinkButton href={`${consoleOrigin}/console/products/${encodeURIComponent(product.id)}`}>前往控制台选购</LinkButton>
       </LayerCard>}
     </PageState>
   </>;
 }
 
 export function PublicPortalApp() {
-  return <div className="min-h-svh bg-kumo-recessed">
-    <Surface className="border-b border-kumo-line">
-      <nav className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3">
-        <Link href="/" className="text-lg font-semibold">DDYIDC</Link>
-        <div className="flex items-center gap-5"><Link href="/products">云产品</Link><Link href={`${consoleOrigin}/login`}>进入控制台</Link></div>
-      </nav>
-    </Surface>
-    <main className="mx-auto grid max-w-7xl gap-6 p-6 lg:p-8">
-      <Routes><Route path="/" element={<Home />} /><Route path="/products" element={<Products />} /><Route path="/products/:id" element={<Product />} /><Route path="*" element={<PageHeader title="页面不存在" description="请返回首页查看公开内容。" />} /></Routes>
-    </main>
-  </div>;
+ const homepage=useLocation().pathname==='/';
+ return <PortalShell loginHref={`${consoleOrigin}/login`} consoleHref={`${consoleOrigin}/console`} legalOrigin={consoleOrigin} mainClassName={homepage?'flex-1':'mx-auto w-full max-w-6xl flex-1 px-5 py-8 md:px-8'}><Routes><Route path="/" element={<Home/>}/><Route path="/products" element={<Products/>}/><Route path="/products/:id" element={<Product/>}/><Route path="*" element={<PageHeader title="页面不存在" description="请返回首页查看公开内容。"/>}/></Routes></PortalShell>;
 }
