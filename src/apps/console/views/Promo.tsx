@@ -12,6 +12,7 @@ import { PromoCouponForm, PromoCouponBatches } from "./PromoCouponPanel";
 import { pointsApi } from "../../../shared/api/points";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useAuthStore } from "../../../shared/stores/auth";
 import { consoleApi } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
 import { MetricGrid } from "../../../shared/components/MetricGrid";
@@ -19,14 +20,41 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { formatMoney } from "../../../shared/utils/format";
 
+function CustomerCouponRow({ customerId }: { customerId: string }) {
+  const [open, setOpen] = useState(false);
+  const [visited, setVisited] = useState(false);
+  return (
+    <Collapsible.Root
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (value) setVisited(true);
+      }}
+    >
+      <div
+        className="border-b border-kumo-hairline last:border-0"
+        data-coupon-customer={customerId}
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-1 py-2.5">
+          <span className="truncate font-medium text-kumo-default">
+            {customerId}
+          </span>
+          <Collapsible.Trigger render={<Button size="sm" variant="ghost" />}>
+            {open ? "收起" : "送优惠券"}
+          </Collapsible.Trigger>
+        </div>
+        {visited ? (
+          <PromoCouponForm open={open} customerId={customerId} />
+        ) : null}
+      </div>
+    </Collapsible.Root>
+  );
+}
+
 export function Promo() {
+  const userId = useAuthStore((s) => s.user?.id);
   const [customCode, setCustomCode] = useState("");
   const [view, setView] = useState("customers");
-  const [selectedCustomer, setSelectedCustomer] = useState<{
-    id: string;
-    revision: number;
-  }>();
-  const [couponOpen, setCouponOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [rewardPage, setRewardPage] = useState(1);
   const [referralPage, setReferralPage] = useState(1);
@@ -206,173 +234,144 @@ export function Promo() {
               />
             ) : null}
           </LayerCard>
-          <Collapsible.Root open={couponOpen} onOpenChange={setCouponOpen}>
-            <LayerCard>
-              <LayerCard.Secondary className="flex items-center justify-between gap-3">
-                推广客户与收益
-                <Collapsible.Trigger render={<Button size="sm" />}>
-                  {couponOpen ? "收起表单" : "发优惠券"}
-                </Collapsible.Trigger>
-              </LayerCard.Secondary>
-              <LayerCard.Primary>
-                <div className="mb-2 flex flex-wrap items-center gap-3">
-                  <Input
-                    size="sm"
-                    aria-label="筛选用户ID"
-                    placeholder="筛选本页用户 ID…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="min-w-0 w-full flex-none lg:w-auto lg:flex-1"
-                  />
-                  <Tabs
-                    variant="segmented"
-                    size="sm"
-                    tabs={[
-                      { value: "customers", label: "邀请客户" },
-                      { value: "rewards", label: "已结算收益" },
-                      { value: "coupons", label: "我发出的券" },
-                    ]}
-                    value={view}
-                    onValueChange={(v) => {
-                      setView(v);
-                      setSearch("");
-                    }}
-                  />
-                </div>
-                <PromoCouponForm
-                  open={couponOpen}
-                  selectedCustomer={selectedCustomer}
-                  onCreated={() => setView("coupons")}
+          <LayerCard>
+            <LayerCard.Secondary className="flex items-center justify-between gap-3">
+              推广客户与收益
+            </LayerCard.Secondary>
+            <LayerCard.Primary>
+              <div className="mb-2 flex flex-wrap items-center gap-3">
+                <Input
+                  size="sm"
+                  aria-label="筛选用户ID"
+                  placeholder="筛选本页用户 ID…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="min-w-0 w-full flex-none lg:w-auto lg:flex-1"
                 />
-                {view === "coupons" ? (
-                  <PromoCouponBatches search={search} />
-                ) : (
-                  <>
-                    <PageState
-                      loading={
-                        view === "customers"
-                          ? children.isLoading
-                          : records.isLoading
-                      }
-                      error={
-                        children.error ? getApiMessage(children.error) : null
-                      }
-                      empty={
-                        view === "customers"
-                          ? !visibleCustomers.length
-                          : !visibleRewards.length
-                      }
-                      emptyTitle={
-                        view === "customers"
-                          ? "暂无匹配的邀请客户"
-                          : "暂无已结算收益"
-                      }
+                <Tabs
+                  variant="segmented"
+                  size="sm"
+                  tabs={[
+                    { value: "customers", label: "邀请客户" },
+                    { value: "rewards", label: "已结算收益" },
+                    { value: "coupons", label: "我发出的券" },
+                  ]}
+                  value={view}
+                  onValueChange={(v) => {
+                    setView(v);
+                    setSearch("");
+                  }}
+                />
+              </div>
+              {view === "coupons" ? (
+                <PromoCouponBatches search={search} />
+              ) : null}
+              <div hidden={view === "coupons"} inert={view === "coupons"}>
+                {view === "customers" && !visibleCustomers.length ? (
+                  <PageState
+                    children={null}
+                    loading={children.isLoading}
+                    error={
+                      children.error ? getApiMessage(children.error) : null
+                    }
+                    empty={!children.isLoading && !children.error}
+                    emptyTitle="暂无匹配的邀请客户"
+                  />
+                ) : null}
+                {view === "rewards" && !visibleRewards.length ? (
+                  <PageState
+                    children={null}
+                    loading={records.isLoading}
+                    error={records.error ? getApiMessage(records.error) : null}
+                    empty={!records.isLoading && !records.error}
+                    emptyTitle="暂无已结算收益"
+                  />
+                ) : null}
+                <div className="min-w-0 text-sm">
+                  <div
+                    className={`grid gap-x-4 border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle ${view === "customers" ? "grid-cols-[minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"}`}
+                  >
+                    <span>用户 ID</span>
+                    {view === "customers" ? (
+                      <span className="text-right">操作</span>
+                    ) : (
+                      <>
+                        <span className="w-28 text-right">收益金额</span>
+                        <span className="hidden w-40 text-right sm:block">
+                          结算时间
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div
+                    hidden={view !== "customers"}
+                    inert={view !== "customers"}
+                  >
+                    {visibleCustomers.map((c) => (
+                      <CustomerCouponRow
+                        key={`${userId}:${c.userId}`}
+                        customerId={c.userId}
+                      />
+                    ))}
+                  </div>
+                  <div hidden={view !== "rewards"} inert={view !== "rewards"}>
+                    {visibleRewards.map((r) => (
+                      <div
+                        key={r.id}
+                        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-kumo-hairline px-1 py-2.5 last:border-0 sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"
+                      >
+                        <span className="min-w-0 font-medium text-kumo-default">
+                          <span className="block truncate">{r.userId}</span>
+                          <span className="block text-xs text-kumo-subtle sm:hidden">
+                            {r.settledAt
+                              ? new Date(r.settledAt).toLocaleString("zh-CN")
+                              : "—"}
+                          </span>
+                        </span>
+                        <span className="flex w-28 justify-end">
+                          <Badge variant="success">
+                            {formatMoney(r.amount)}
+                          </Badge>
+                        </span>
+                        <span className="hidden w-40 text-right text-kumo-subtle sm:block">
+                          {r.settledAt
+                            ? new Date(r.settledAt).toLocaleString("zh-CN")
+                            : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-kumo-subtle">
+                  <span>
+                    共 {total} 条 · 本页显示{" "}
+                    {view === "customers"
+                      ? visibleCustomers.length
+                      : visibleRewards.length}{" "}
+                    条
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={page === 1}
+                      onClick={() => setPage(page - 1)}
                     >
-                      <div className="min-w-0 text-sm">
-                        <div
-                          className={`grid gap-x-4 border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle ${view === "customers" ? "grid-cols-[minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"}`}
-                        >
-                          <span>用户 ID</span>
-                          {view === "customers" ? (
-                            <span className="text-right">操作</span>
-                          ) : (
-                            <>
-                              <span className="w-28 text-right">收益金额</span>
-                              <span className="hidden w-40 text-right sm:block">
-                                结算时间
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        {view === "customers"
-                          ? visibleCustomers.map((c) => (
-                              <div
-                                key={c.userId}
-                                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-kumo-hairline px-1 py-2.5 last:border-0"
-                              >
-                                <span className="truncate font-medium text-kumo-default">
-                                  {c.userId}
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => {
-                                    setSelectedCustomer({
-                                      id: c.userId,
-                                      revision: Date.now(),
-                                    });
-                                    setCouponOpen(true);
-                                  }}
-                                >
-                                  送优惠券
-                                </Button>
-                              </div>
-                            ))
-                          : visibleRewards.map((r) => (
-                              <div
-                                key={r.id}
-                                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-kumo-hairline px-1 py-2.5 last:border-0 sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"
-                              >
-                                <span className="min-w-0 font-medium text-kumo-default">
-                                  <span className="block truncate">
-                                    {r.userId}
-                                  </span>
-                                  <span className="block text-xs text-kumo-subtle sm:hidden">
-                                    {r.settledAt
-                                      ? new Date(r.settledAt).toLocaleString(
-                                          "zh-CN",
-                                        )
-                                      : "—"}
-                                  </span>
-                                </span>
-                                <span className="flex w-28 justify-end">
-                                  <Badge variant="success">
-                                    {formatMoney(r.amount)}
-                                  </Badge>
-                                </span>
-                                <span className="hidden w-40 text-right text-kumo-subtle sm:block">
-                                  {r.settledAt
-                                    ? new Date(r.settledAt).toLocaleString(
-                                        "zh-CN",
-                                      )
-                                    : "—"}
-                                </span>
-                              </div>
-                            ))}
-                      </div>
-                    </PageState>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-kumo-subtle">
-                      <span>
-                        共 {total} 条 · 本页显示{" "}
-                        {view === "customers"
-                          ? visibleCustomers.length
-                          : visibleRewards.length}{" "}
-                        条
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={page === 1}
-                          onClick={() => setPage(page - 1)}
-                        >
-                          上一页
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={page * 20 >= total}
-                          onClick={() => setPage(page + 1)}
-                        >
-                          下一页
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </LayerCard.Primary>
-            </LayerCard>
-          </Collapsible.Root>
+                      上一页
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={page * 20 >= total}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      下一页
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </LayerCard.Primary>
+          </LayerCard>
         </div>
       </PageState>
     </>

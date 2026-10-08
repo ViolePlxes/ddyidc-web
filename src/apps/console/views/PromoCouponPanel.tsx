@@ -1,11 +1,4 @@
-import {
-  Banner,
-  Button,
-  Checkbox,
-  Collapsible,
-  Input,
-  Select,
-} from "@cloudflare/kumo";
+import { Banner, Button, Collapsible, Input, Select } from "@cloudflare/kumo";
 import { Badge } from "../../../shared/components/Badge";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -23,12 +16,10 @@ import { useAuthStore } from "../../../shared/stores/auth";
 
 export function PromoCouponForm({
   open,
-  onCreated,
-  selectedCustomer,
+  customerId,
 }: {
   open: boolean;
-  onCreated: () => void;
-  selectedCustomer?: { id: string; revision: number };
+  customerId: string;
 }) {
   const user = useAuthStore((s) => s.user?.id);
   const client = useQueryClient();
@@ -37,24 +28,17 @@ export function PromoCouponForm({
     mode: "direct",
     source: "points",
     quantity: 1,
-    recipientIds: [],
+    recipientIds: [customerId],
     claimPoints: 0,
     requestId: crypto.randomUUID(),
   });
   const [form, setForm] = useState<PromoCouponInput>(defaults);
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
   const [notice, setNotice] = useState("");
   const [created, setCreated] = useState(false);
   const options = useQuery({
     queryKey: ["promo-coupons", "options", user],
     queryFn: promoCouponsApi.options,
     enabled: open,
-  });
-  const customers = useQuery({
-    queryKey: ["promo-coupons", "customers", user, page, keyword],
-    queryFn: () => promoCouponsApi.customers(page, keyword),
-    enabled: open && form.mode === "direct",
   });
   const quote = useMutation({ mutationFn: () => promoCouponsApi.quote(form) });
   const reset = () => {
@@ -69,25 +53,11 @@ export function PromoCouponForm({
     setNotice("");
     setCreated(false);
     quote.reset();
-  }, [user]);
+  }, [user, customerId]);
   const change = (patch: Partial<PromoCouponInput>) => {
     setForm((f) => ({ ...f, ...patch }));
     quote.reset();
   };
-  useEffect(() => {
-    if (selectedCustomer) {
-      setForm((f) => ({
-        ...f,
-        mode: "direct",
-        recipientIds: [selectedCustomer.id],
-        claimPoints: 0,
-        requestId: crypto.randomUUID(),
-      }));
-      quote.reset();
-      setCreated(false);
-      setNotice("");
-    }
-  }, [selectedCustomer]);
   const create = useMutation({
     mutationFn: async () => {
       if (!quote.data) throw new Error("请先预览费用");
@@ -109,20 +79,20 @@ export function PromoCouponForm({
           : "出资与发券已完成，可在“我发出的券”查看。",
       );
       await client.invalidateQueries({ queryKey: ["promo-coupons"] });
-      onCreated();
     },
   });
   const q = quote.data;
   const config = options.data?.config;
   const busy = create.isPending || quote.isPending;
   return (
-    <Collapsible.Panel keepMounted className="mb-4" inert={!open}>
+    <Collapsible.Panel keepMounted className="px-1" inert={!open}>
       <div
-        className="grid gap-4 border-b border-kumo-line py-4"
-        aria-label="推广优惠券表单"
+        className="grid gap-4 pb-4 pt-2"
+        aria-label={`给客户 ${customerId} 送优惠券`}
       >
         <p className="text-sm text-kumo-subtle">
-          使用自己的积分或余额，给直接邀请的客户送优惠券。收起表单会保留草稿。
+          给客户ID {customerId}{" "}
+          送优惠券，使用自己的积分或余额。收起后保留该客户的草稿。
         </p>
         {!config?.enabled && !options.isLoading ? (
           <Banner
@@ -135,18 +105,6 @@ export function PromoCouponForm({
           disabled={busy || created}
           className="grid gap-4 md:grid-cols-2"
         >
-          <Select
-            label="发放方式"
-            value={form.mode}
-            items={{ direct: "指定客户赠券", offer: "专属领券活动" }}
-            onValueChange={(v) =>
-              change({
-                mode: v === "offer" ? "offer" : "direct",
-                recipientIds: [],
-                claimPoints: 0,
-              })
-            }
-          />
           <Select
             label="优惠券模板"
             value={form.templateId}
@@ -171,96 +129,7 @@ export function PromoCouponForm({
             可用积分 {options.data?.points ?? "—"} · 可用余额 ¥
             {options.data?.balance ?? "—"}
           </p>
-          {form.mode === "offer" ? (
-            <>
-              <Input
-                label="发行数量"
-                type="number"
-                min={1}
-                max={config?.batchMax ?? 100}
-                value={String(form.quantity)}
-                onChange={(e) => change({ quantity: Number(e.target.value) })}
-              />
-              {form.source === "points" ? (
-                <Input
-                  label="客户领取需付积分（免费填0）"
-                  type="number"
-                  min={0}
-                  value={String(form.claimPoints)}
-                  onChange={(e) =>
-                    change({ claimPoints: Number(e.target.value) })
-                  }
-                />
-              ) : (
-                <p className="text-sm text-kumo-subtle">
-                  余额出资的活动，客户免费领取。
-                </p>
-              )}
-            </>
-          ) : null}
         </fieldset>
-        {form.mode === "direct" ? (
-          <div className="grid gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <Input
-                size="sm"
-                aria-label="筛选发券客户ID"
-                placeholder="筛选客户ID"
-                value={keyword}
-                disabled={busy || created}
-                onChange={(e) => {
-                  setKeyword(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <span className="text-sm">
-                已选择 {form.recipientIds.length} 位客户
-              </span>
-            </div>
-            <PageState
-              loading={customers.isLoading}
-              error={customers.error ? getApiMessage(customers.error) : null}
-              empty={!customers.isLoading && !customers.data?.list.length}
-              emptyTitle="暂无有效的直接邀请客户"
-            >
-              <div className="grid gap-2 md:grid-cols-2">
-                {customers.data?.list.map((c) => (
-                  <Checkbox
-                    key={c.userId}
-                    label={`客户ID ${c.userId}`}
-                    checked={form.recipientIds.includes(c.userId)}
-                    disabled={busy || created}
-                    onCheckedChange={(v) =>
-                      change({
-                        recipientIds: v
-                          ? [...form.recipientIds, c.userId]
-                          : form.recipientIds.filter((id) => id !== c.userId),
-                      })
-                    }
-                  />
-                ))}
-              </div>
-            </PageState>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
-                上一页
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={page * 20 >= (customers.data?.total ?? 0)}
-                onClick={() => setPage(page + 1)}
-              >
-                下一页
-              </Button>
-            </div>
-          </div>
-        ) : null}
         {q ? (
           <Banner
             title="费用确认"
