@@ -20,14 +20,21 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { formatMoney } from "../../../shared/utils/format";
 
-function CustomerCouponRow({ customerId }: { customerId: string }) {
-  const [open, setOpen] = useState(false);
+function CustomerCouponRow({
+  customerId,
+  open,
+  onOpenChange,
+}: {
+  customerId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [visited, setVisited] = useState(false);
   return (
     <Collapsible.Root
       open={open}
       onOpenChange={(value) => {
-        setOpen(value);
+        onOpenChange(value);
         if (value) setVisited(true);
       }}
     >
@@ -53,6 +60,7 @@ function CustomerCouponRow({ customerId }: { customerId: string }) {
 
 export function Promo() {
   const userId = useAuthStore((s) => s.user?.id);
+  const [expandedCustomer, setExpandedCustomer] = useState<string>();
   const [customCode, setCustomCode] = useState("");
   const [view, setView] = useState("customers");
   const [search, setSearch] = useState("");
@@ -311,6 +319,12 @@ export function Promo() {
                       <CustomerCouponRow
                         key={`${userId}:${c.userId}`}
                         customerId={c.userId}
+                        open={expandedCustomer === `${userId}:${c.userId}`}
+                        onOpenChange={(open) =>
+                          setExpandedCustomer(
+                            open ? `${userId}:${c.userId}` : undefined,
+                          )
+                        }
                       />
                     ))}
                   </div>
