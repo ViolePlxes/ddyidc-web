@@ -1,8 +1,8 @@
 import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Textarea } from "@cloudflare/kumo";
-import { ArrowLeftIcon, ArrowRightIcon, BellRingingIcon, PlusIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, ArrowRightIcon, BellRingingIcon, PlusIcon, TicketIcon, CreditCardIcon, ChatCircleIcon, InfoIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import {
   userTicketApi,
@@ -21,6 +21,12 @@ import { useVisibilityPolling } from "../../../shared/hooks/useVisibilityPolling
 
 const userRepliedStatus: TicketStatus = { id: "2", name: "用户已回复", color: "#ff6600", final: false, isDefault: false };
 const adminRepliedStatus: TicketStatus = { id: "3", name: "已回复", color: "#000000", final: true, isDefault: false };
+
+function ticketTypePresentation(name: string) {
+  if (/财务|计费|账单/.test(name)) return { icon: CreditCardIcon, description: "账单、付款、续费、退款，以及账户余额相关问题。" };
+  if (/售前|咨询/.test(name)) return { icon: ChatCircleIcon, description: "产品选购、配置选择、价格与服务内容相关咨询。" };
+  return { icon: TicketIcon, description: /技术/.test(name) ? "产品使用、网络连接、系统配置，以及服务运行相关问题。" : `获取${name}相关帮助，描述问题后由客服协助处理。` };
+}
 
 function mergeTicketList(current: TicketListResult, incoming: TicketListResult): TicketListResult {
   const changed = new Map(incoming.list.map((ticket) => [ticket.id, ticket]));
@@ -108,6 +114,7 @@ export function TicketCreate() {
   const products = useQuery({ queryKey: ["tickets", "products"], queryFn: userTicketApi.products });
   const [title, setTitle] = useState("");
   const [typeId, setTypeId] = useState("");
+  const [choosingType, setChoosingType] = useState(true);
   const [hostId, setHostId] = useState("none");
   const [content, setContent] = useState("");
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
@@ -128,10 +135,21 @@ export function TicketCreate() {
   };
 
   return (
-    <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
-      <PageHeader title="创建工单" description="请尽量完整描述问题，并可关联受影响的云主机。" actions={<LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton>} />
+    <div className="mx-auto grid w-full min-w-0 max-w-[520px] gap-6 pt-8 pb-16 sm:pt-28">
+      <div className="flex items-center justify-center gap-2"><h1 className="text-center text-xl font-medium text-kumo-default">{choosingType ? "您需要哪方面的帮助？" : "请描述您遇到的问题"}</h1><InfoIcon size={14} aria-hidden className="shrink-0 text-kumo-subtle" /></div>
       {error ? <Banner variant="error" title="提交失败" description={error} /> : null}
-      <LayerCard className="shadow-none grid min-w-0 gap-5 p-5 sm:p-6">
+      {choosingType ? <LayerCard className="overflow-hidden shadow-none">
+        <div className="grid gap-3 p-6 sm:grid-cols-2">
+          {(types.data ?? []).map((item) => { const presentation = ticketTypePresentation(item.name); return <Button key={item.id} variant="outline" className="h-auto min-h-40 w-full min-w-0 items-start whitespace-normal p-5 text-left shadow-none" onClick={() => { setTypeId(item.id); setChoosingType(false); }}>
+            <span className="grid w-full content-start gap-3"><presentation.icon size={20} aria-hidden className="text-kumo-subtle" /><span className="grid gap-1"><span className="flex items-center justify-between gap-3"><span className="text-sm font-medium">{item.name}</span><ArrowRightIcon size={14} aria-hidden className="shrink-0 text-kumo-subtle" /></span><span className="text-sm leading-5 font-normal text-kumo-subtle">{presentation.description}</span></span></span>
+          </Button>; })}
+          {types.isLoading ? <p className="text-sm text-kumo-subtle sm:col-span-2">正在加载工单类型…</p> : null}
+          {types.isError ? <div className="grid gap-3 sm:col-span-2"><Banner variant="error" title="工单类型加载失败" description={getApiMessage(types.error)} /><Button variant="secondary" onClick={() => void types.refetch()}>重新加载</Button></div> : null}
+          {!types.isLoading && !types.isError && !types.data?.length ? <p className="text-sm text-kumo-subtle sm:col-span-2">暂无可用工单类型</p> : null}
+        </div>
+        <div className="border-t border-kumo-line bg-kumo-base px-5 py-3"><Link to="/console/help" className="text-sm text-kumo-default underline focus-visible:outline-2 focus-visible:outline-kumo-ring">返回</Link></div>
+      </LayerCard> : <LayerCard className="overflow-hidden shadow-none">
+      <div className="grid min-w-0 gap-5 p-5 sm:p-6">
         <Select className="w-full" placeholder={types.isError ? "工单类型加载失败" : types.isLoading ? "正在加载工单类型…" : types.data?.length ? "请选择工单类型" : "暂无可用工单类型"} value={typeId} renderValue={(value) => types.data?.find((item) => item.id === value)?.name ?? "请选择工单类型"} onValueChange={(value) => setTypeId(value ?? "")} label="工单类型" hideLabel={false}>
           {(types.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)}
         </Select>
@@ -142,8 +160,9 @@ export function TicketCreate() {
         </Select>
         <Textarea className="h-[200px] w-full" label="问题描述" rows={9} value={content} maxLength={20000} onChange={(event) => setContent(event.target.value)} />
         <AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />
-        <div className="flex justify-end"><Button icon={<PlusIcon />} loading={create.isPending} disabled={uploading} onClick={submit}>提交工单</Button></div>
-      </LayerCard>
+      </div>
+        <div className="flex items-center justify-between gap-3 border-t border-kumo-line px-4 py-3"><Button variant="ghost" icon={<ArrowLeftIcon />} onClick={() => setChoosingType(true)}>返回</Button><Button icon={<PlusIcon />} loading={create.isPending} disabled={uploading} onClick={submit}>提交工单</Button></div>
+      </LayerCard>}
     </div>
   );
 }

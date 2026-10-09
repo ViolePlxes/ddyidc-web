@@ -205,7 +205,7 @@ const consoleGroups: NavigationGroup[] = [
       { label: "产品列表", href: "/user/productList.htm", icon: UsersIcon },
       { label: "我的订单", href: "/console/orders", icon: ReceiptIcon },
       { label: "财务中心", href: "/console/finance", icon: CreditCardIcon },
-      { label: "工单中心", href: "/console/tickets", icon: ChatsCircleIcon },
+      { label: "工单中心", href: "/console/help", icon: ChatsCircleIcon },
       { label: "优惠券", href: "/console/coupons", icon: GiftIcon },
     ],
   },

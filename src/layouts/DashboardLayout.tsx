@@ -5,7 +5,7 @@ import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
 import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
-import { Button, DropdownMenu, Sidebar, Surface } from "@cloudflare/kumo";
+import { Button, DropdownMenu, LinkButton, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   MoonIcon,
   SunIcon,
@@ -16,6 +16,7 @@ import {
   HouseIcon,
   SignOutIcon,
   UserCircleIcon,
+  QuestionIcon,
 } from "@phosphor-icons/react";
 import { Link, useLocation } from "react-router-dom";
 import { SearchPalette } from "../shared/components/SearchPalette";
@@ -237,6 +238,7 @@ export function DashboardLayout({
           <Sidebar.Trigger className="md:hidden" />
           <LayoutWidthToggle {...layoutWidth} />
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
+          {scope === "console" ? <LinkButton href="/console/help" variant="ghost" size="sm" icon={<QuestionIcon size={16} />}>工单支持</LinkButton> : null}
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={<Button variant="secondary" icon={<UserCircleIcon />} />}

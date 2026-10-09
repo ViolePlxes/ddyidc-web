@@ -51,7 +51,7 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
   label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge,
   items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({
    id: node.id, label: node.href === "/console/groupbuy" && node.name === "拼团" ? (availableItems.find(item => item.href === node.href)?.label ?? node.name) : node.name,
-   href: node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,
+   href: scope === "console" && pluginPath(node.href).replace(/\/$/, "") === "/console/tickets" ? "/console/help" : node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,
   })),
  }));
  // Keep saved navigation compatible without changing navigation records in the database.
