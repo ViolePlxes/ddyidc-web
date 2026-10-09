@@ -23,10 +23,10 @@ export function optionValueAt(option: ConfigOption, index: number) {
 export function choiceLabel(choice: ConfigOptionValue) {
   // Suppliers sometimes embed formatted prices in names. Use the numeric price
   // for presentation, without changing the original name or submitted choice ID.
-  const name = choice.name.replace(/\s*[（(]?\s*\+?\s*[¥￥]\s*\d+(?:\.\d+)?\s*元?\s*[）)]?/g, "").trim();
+  const name = withoutZeroPrice(choice.name).replace(/\s*[（(]?\s*\+?\s*[¥￥]\s*\d+(?:\.\d+)?\s*元?\s*[）)]?/g, "").trim();
   return `${name}${choice.price ? `（+¥${choice.price.toFixed(2)}）` : ""}`;
 }
 
 export function withoutZeroPrice(value: string) {
-  return value.replace(/\s*[（(]?\s*\+?\s*[¥￥]\s*0(?:\.0+)?(?![\d.])\s*元?\s*[）)]?/g, "").trim();
+  return value.replace(/\s*[（(]?\s*\+?\s*(?:[¥￥]\s*0(?:\.0+)?(?![\d.])\s*元?|(?<![\d.])0(?:\.0+)?(?![\d.])\s*元)\s*[）)]?/g, "").trim();
 }

@@ -1,7 +1,7 @@
 import { Badge } from "../../../shared/components/Badge";
 import { Banner, Button, LayerCard, Loader, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
 
-import { ArrowRightIcon, PackageIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
@@ -89,7 +89,6 @@ function PublicProductCatalog() {
                       <div className="mt-auto flex items-end justify-between gap-4 border-t border-kumo-line pt-4">
                         <div>
                           <strong className="text-xl text-kumo-strong">¥{product.price.toFixed(2)}</strong>
-                          <span className="text-sm text-kumo-subtle"> 起</span>
                         </div>
                         <Link to={`/products/${product.id}`} viewTransition>
                           <Button icon={<ArrowRightIcon />} disabled={unavailable}>查看配置</Button>
@@ -121,7 +120,8 @@ function CatalogProductRow({ product, selected }: { product: CatalogProduct; sel
       <Table.Cell>{spec?.upstreamBandwidth || "—"}</Table.Cell>
       <Table.Cell>{spec?.downstreamRate || "—"}</Table.Cell>
       <Table.Cell>{stock === null || stock === undefined || stock === "" ? "—" : stock}</Table.Cell>
-      <Table.Cell>¥{(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)} / {cycleLabels[product.cycle] || product.cycle || "周期以配置为准"} 起</Table.Cell>
+      <Table.Cell><div className="flex items-center gap-2 text-kumo-subtle" aria-label="系统类型：Windows、Linux"><span title="Windows"><WindowsLogoIcon size={18} aria-label="Windows" /></span><span title="Linux"><LinuxLogoIcon size={18} aria-label="Linux" /></span></div></Table.Cell>
+      <Table.Cell>¥{(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)}</Table.Cell>
     </Table.Row>
   );
 }
@@ -163,7 +163,7 @@ function IntegratedProductCatalog() {
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
       <PageState loading={productsQuery.isLoading} keepContent error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
         <div className={catalogLayout}>
-          <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:h-[calc(100dvh-12rem)] xl:flex-col xl:justify-center xl:overflow-y-auto">
+          <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:max-h-[calc(100dvh-12rem)] xl:flex-col xl:overflow-y-auto">
             <div ref={setStepsTarget} />
             {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
           </aside>
@@ -186,14 +186,14 @@ function IntegratedProductCatalog() {
               </div>
             </LayerCard>
 
-            <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid gap-4 p-5">
+            <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid min-w-0 gap-4 p-5">
               <h2>计算规格</h2>
-              {productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="overflow-x-auto">
+              {productsQuery.isLoading || linkedProducts.length ? <div className="min-w-0 overflow-x-auto"><Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
                 <Table className="whitespace-nowrap">
                   <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
                   <Table.Body>{productsQuery.isLoading ? <Table.Row><Table.Cell colSpan={catalogColumns.length}><div role="status" className="flex items-center gap-2"><Loader />正在加载计算规格…</div></Table.Cell></Table.Row> : pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
                 </Table>
-              </Radio.Group> : <PageState empty
+              </Radio.Group></div> : <PageState empty
                 emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
                 emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}

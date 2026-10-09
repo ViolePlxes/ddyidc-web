@@ -2,7 +2,7 @@ import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
 import { Banner, Button, LayerCard, Radio, Table, Tabs } from "@cloudflare/kumo";
 import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import type {
@@ -20,6 +20,7 @@ import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
 import { choiceLabel, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, withoutZeroPrice } from "../utils/productOptions";
+import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductSteps } from "./ProductSteps";
 
 const cycleMonths: Record<string, number> = {
@@ -82,7 +83,6 @@ function ProductOptionControl({
   disabled: boolean;
   onChange: (value: string) => void;
 }) {
-  const stopsId = useId();
   const pageSize = 25;
   const [quantityPage, setQuantityPage] = useState(() => Math.max(0, Math.floor((Number(value) - option.min) / (option.step || 1) / pageSize)));
   if (!usesResourceSlider(option)) {
@@ -109,24 +109,13 @@ function ProductOptionControl({
     const immutable = disabled || option.min === option.max;
     const change = (next: number) => onChange(String(Math.min(option.max, Math.max(option.min, next))));
     return (
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="hidden shrink-0 text-xs text-kumo-subtle lg:inline">{option.min}</span>
-        <input
-          aria-label={option.name}
-          aria-valuetext={`${value} ${option.unit || ""}`.trim()}
-          className="min-w-0 flex-1 accent-kumo-brand disabled:cursor-not-allowed disabled:opacity-50"
-          type="range"
-          min={option.min}
-          max={option.max}
-          step={step}
-          value={value}
-          disabled={immutable}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        <span className="hidden shrink-0 text-xs text-kumo-subtle lg:inline">{option.max}</span>
-        <Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label={`减少${option.name}`} disabled={immutable || current <= option.min} onClick={() => change(current - step)} />
-        <strong className="min-w-12 shrink-0 whitespace-nowrap text-center text-kumo-strong">{value} {option.unit}</strong>
-        <Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label={`增加${option.name}`} disabled={immutable || current >= option.max} onClick={() => change(current + step)} />
+      <div className="grid min-w-0 gap-2">
+        <div className="flex min-w-0 items-start gap-2">
+          <Button variant="secondary" size="sm" shape="square" className="size-6 shrink-0" icon={<MinusIcon />} aria-label={`减少${option.name}`} disabled={immutable || current <= option.min} onClick={() => change(current - step)} />
+          <Slider size="sm" getAriaLabel={() => `${option.name} ${option.unit}`.trim()} formatValue={(next) => `${next} ${option.unit}`.trim()} className="min-w-0 flex-1" min={option.min} max={option.max} step={step} value={current} disabled={immutable}
+            onValueChange={(next) => change(typeof next === "number" ? next : next[0] ?? current)} />
+          <Button variant="secondary" size="sm" shape="square" className="size-6 shrink-0" icon={<PlusIcon />} aria-label={`增加${option.name}`} disabled={immutable || current >= option.max} onClick={() => change(current + step)} />
+        </div>
       </div>
     );
   }
@@ -136,16 +125,11 @@ function ProductOptionControl({
     if (id !== undefined) onChange(id);
   };
   return (
-    <div className="grid min-w-0 gap-3">
-      <input type="range" aria-label={option.name} aria-valuetext={option.options[index] ? choiceLabel(option.options[index]) : ""}
-        className="min-w-0 w-full accent-kumo-brand disabled:cursor-not-allowed disabled:opacity-50"
-        min={0} max={option.options.length - 1} step={1} value={index} list={stopsId} disabled={disabled}
-        onChange={(event) => selectIndex(Number(event.target.value))} />
-      <datalist id={stopsId}>{option.options.map((choice, stop) => <option key={choice.id} value={stop} label={choiceLabel(choice)} />)}</datalist>
-      <div className="flex flex-wrap gap-2" role="group" aria-label={`${option.name}档位`}>
-        {option.options.map((choice, stop) => <Button key={choice.id} variant={index === stop ? "secondary" : "ghost"}
-          size="sm" aria-pressed={index === stop} disabled={disabled} onClick={() => selectIndex(stop)}>{choiceLabel(choice)}</Button>)}
-      </div>
+    <div className="flex min-w-0 items-start gap-2">
+      <Button variant="secondary" size="sm" shape="square" className="size-6 shrink-0" icon={<MinusIcon />} aria-label={`减少${option.name}`} disabled={disabled || index === 0} onClick={() => selectIndex(index - 1)} />
+      <Slider size="sm" getAriaLabel={() => `${option.name}档位`} formatValue={(next) => option.options[next - 1] ? choiceLabel(option.options[next - 1]!).replace(/\s*（\+¥[^）]+）$/, "") : next} className="min-w-0 flex-1" min={1} max={Math.max(2, option.options.length)} step={1} value={index + 1} disabled={disabled || option.options.length < 2}
+        onValueChange={(next) => selectIndex((typeof next === "number" ? next : next[0] ?? index + 1) - 1)} />
+      <Button variant="secondary" size="sm" shape="square" className="size-6 shrink-0" icon={<PlusIcon />} aria-label={`增加${option.name}`} disabled={disabled || index >= option.options.length - 1} onClick={() => selectIndex(index + 1)} />
     </div>
   );
 }
@@ -362,7 +346,7 @@ export function ProductConfig({
           const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty" && usesResourceSlider(option);
           return (
-            <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className={`scroll-mt-4 shadow-none grid gap-4 p-5 ${isSlider ? "md:grid-cols-[8rem_minmax(0,1fr)] md:items-center" : ""}`}>
+            <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className="scroll-mt-4 shadow-none grid min-w-0 gap-4 p-5">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
               <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>

@@ -1,7 +1,7 @@
 import type { CatalogProduct, ProductGroupSummary, ProductSummary } from "../api/console";
 
-export const catalogLayout = "grid items-start gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_minmax(22rem,28rem)]";
-export const catalogColumns = ["实例规格", "vCPU", "内存", "处理器型号", "处理器主频 / 睿频", "基础防御", "上行带宽", "下行速率", "库存数量", "参考价格"];
+export const catalogLayout = "grid items-start gap-6 xl:grid-cols-[9rem_minmax(0,1fr)_minmax(22rem,28rem)]";
+export const catalogColumns = ["实例规格", "vCPU", "内存", "处理器型号", "处理器主频 / 睿频", "基础防御", "上行带宽", "下行速率", "库存数量", "系统", "参考价格"];
 
 type StockProduct = Pick<ProductSummary, "stock"> & Partial<Pick<CatalogProduct, "catalogSpec" | "upstreamStock">>;
 
