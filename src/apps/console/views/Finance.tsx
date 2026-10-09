@@ -17,6 +17,7 @@ import { HistoricalRecords } from "./HistoricalRecords";
 export function Finance() {
   const balance = useQuery({ queryKey: ["console", "overview", "7"], queryFn: () => getConsoleOverview(7) });
   const [page, setPage] = useState(1);
+const [withdrawOpen,setWithdrawOpen]=useState(false);
   const [amount, setAmount] = useState("");
   const [created, setCreated] = useState<Recharge | null>(null);
   const query = useRecharges(page);
@@ -36,9 +37,9 @@ export function Finance() {
     <>
       <PageHeader
         title="财务中心"
-        description="查看账户余额与充值记录。"
+        description="查看账户余额、充值与提现记录。"
         actions={
-          <Dialog.Root>
+          <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={()=>{setWithdrawOpen(true);document.getElementById("balance-withdrawals")?.scrollIntoView({block:"start",behavior:"smooth"});}}>提现</Button><Dialog.Root>
             <Dialog.Trigger render={<Button icon={<PlusIcon />}>创建充值单</Button>} />
             <Dialog className="grid gap-5 p-6">
               <div className="flex justify-between">
@@ -56,7 +57,7 @@ export function Finance() {
                 <Button loading={create.isPending} disabled={!Number(amount) || Number(amount) < 1} onClick={() => create.mutate()}>确认创建</Button>
               </div>
             </Dialog>
-          </Dialog.Root>
+          </Dialog.Root></div>
         }
       />
       <Banner
@@ -75,9 +76,7 @@ export function Finance() {
           </div>
         </LayerCard>
       ) : null}
-      <section className="grid gap-4">
-        <LayerCard className="shadow-none grid gap-2 p-5"><span className="text-sm text-kumo-subtle">账户余额</span><strong className="text-3xl text-kumo-strong">{balance.data ? `¥${Number(balance.data.balance).toFixed(2)}` : "—"}</strong><span className="text-sm text-kumo-subtle">{balance.error ? getApiMessage(balance.error) : "当前可用余额（元）"}</span></LayerCard>
-      </section>
+      <BalanceWithdrawals expanded={withdrawOpen} onExpandedChange={setWithdrawOpen} fallbackBalance={balance.data?.balance}/>
       <section className="grid gap-3">
         <h2 className="text-lg font-semibold text-kumo-strong">充值记录</h2>
         <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无充值记录">
@@ -93,7 +92,6 @@ export function Finance() {
           </div>
         </PageState>
       </section>
-      <BalanceWithdrawals />
       <HistoricalRecords kind="balance" />
       <HistoricalRecords kind="payment" />
     </>

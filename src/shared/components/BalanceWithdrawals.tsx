@@ -1,13 +1,44 @@
-import { Banner, Button, Input, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, Collapsible, Input, LayerCard, Pagination, Select, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { userRequest, type ApiEnvelope, getApiMessage } from "../api/request";
-interface Withdrawal { id: string; amount: string; status: string; reason: string; createdAt: string }
-const labels:Record<string,string>={pending:"待审核",approved:"待汇款",paid:"已汇款",rejected:"已拒绝"};
-export function BalanceWithdrawals(){
- const cache=useQueryClient();const [amount,setAmount]=useState("");const [account,setAccount]=useState("");const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
- const settings=useQuery({queryKey:["payment-offline-config"],queryFn:async()=>(await userRequest.get<ApiEnvelope<{withdrawalEnabled:boolean;withdrawalFeePolicy:string}>>("/payment/offline-config")).data.data});
- const rows=useQuery({queryKey:["balance-withdrawals"],queryFn:async()=>(await userRequest.get<ApiEnvelope<Withdrawal[]>>("/finance/withdrawals")).data.data});
- const submit=useMutation({mutationFn:async()=>{await userRequest.post("/finance/withdrawals",{requestId,amount,account});},onSuccess:async()=>{setAmount("");setAccount("");setRequestId(crypto.randomUUID());await Promise.all([cache.invalidateQueries({queryKey:["balance-withdrawals"]}),cache.invalidateQueries({queryKey:["console","overview"]})]);}});
- return <LayerCard className="grid gap-4 p-5"><h2>余额提现</h2><p>申请时冻结金额，审核通过后等待人工汇款，拒绝申请将退回可用余额。</p>{settings.data?.withdrawalEnabled&&settings.data.withdrawalFeePolicy==="free"?<div className="flex flex-wrap items-end gap-3"><Input label="提现金额（元）" value={amount} onChange={e=>setAmount(e.target.value)} /><Input label="收款账户与户名" value={account} maxLength={256} autoComplete="off" onChange={e=>setAccount(e.target.value)} /><Button loading={submit.isPending} disabled={!amount||!account.trim()} onClick={()=>submit.mutate()}>申请提现</Button></div>:<p>配置后可用，请联系平台管理员。</p>}{submit.error||rows.error?<Banner variant="error" title={getApiMessage(submit.error??rows.error)} />:null}<Table><Table.Header><Table.Row><Table.Head>申请编号</Table.Head><Table.Head>金额</Table.Head><Table.Head>状态</Table.Head><Table.Head>处理说明</Table.Head></Table.Row></Table.Header><Table.Body>{rows.data?.map(row=><Table.Row key={row.id}><Table.Cell>{row.id}</Table.Cell><Table.Cell>¥{row.amount}</Table.Cell><Table.Cell>{labels[row.status]??row.status}</Table.Cell><Table.Cell>{row.reason||"—"}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>;
+import { Badge } from "./Badge";
+import {DateRangeField} from "./DateField";
+interface Withdrawal { id: string; amount: string; status: string; reason: string; createdAt: string; updatedAt: string }
+interface Quote { available: string; frozen: string; withdrawalFrozen: string; eligible: string; fee: string; net: string; policy: {reason: string; minimum: string; maximum: string} }
+const labels: Record<string,string> = {pending:"待审核",approved:"待汇款",paid:"已汇款",rejected:"已拒绝"};
+export function BalanceWithdrawals({expanded,onExpandedChange,fallbackBalance}:{expanded?:boolean;onExpandedChange?:(value:boolean)=>void;fallbackBalance?:string|number}) {
+ const cache=useQueryClient();
+ const [localOpen,setLocalOpen]=useState(false);const open=expanded??localOpen;const setOpen=onExpandedChange??setLocalOpen;const [detailId,setDetailId]=useState<string>();
+ const detail=useQuery({queryKey:["withdrawal-detail",detailId],enabled:!!detailId,queryFn:async()=>(await userRequest.get<ApiEnvelope<{accountMasked:string;flows:{request_id:string;type:string;amount:string;create_time:string}[]}>>(`/finance/withdrawals/${detailId}`)).data.data});
+ const [amount,setAmount]=useState("");const [checkedAmount,setCheckedAmount]=useState("");
+ useEffect(()=>{const timer=setTimeout(()=>setCheckedAmount(amount),350);return()=>clearTimeout(timer)},[amount]);const [account,setAccount]=useState("");const [name,setName]=useState("");const [channel,setChannel]=useState("bank");
+ const [from,setFrom]=useState("");const [to,setTo]=useState("");
+ const [requestId,setRequestId]=useState(()=>crypto.randomUUID());const [page,setPage]=useState(1);const [status,setStatus]=useState("");
+ const quote=useQuery({queryKey:["withdrawal-quote"],queryFn:async()=>(await userRequest.get<ApiEnvelope<Quote>>("/finance/withdrawals/quote")).data.data});
+ const rows=useQuery({queryKey:["balance-withdrawals",page,status,from,to],queryFn:async()=>{const data=(await userRequest.get<ApiEnvelope<{list:Withdrawal[];total:number}|Withdrawal[]>>("/finance/withdrawals",{params:{page,pageSize:10,status,createdFrom:from,createdTo:to}})).data.data;return Array.isArray(data)?{list:data,total:data.length}:data;}});
+ const submit=useMutation({onError:async()=>{await Promise.all([cache.invalidateQueries({queryKey:["balance-withdrawals"]}),cache.invalidateQueries({queryKey:["withdrawal-quote"]})]);},mutationFn:async()=>{await userRequest.post("/finance/withdrawals",{requestId,amount,account:JSON.stringify({channel,name:name.trim(),account:account.trim()})});},onSuccess:async()=>{setAmount("");setAccount("");setName("");setRequestId(crypto.randomUUID());setPage(1);await Promise.all([cache.invalidateQueries({queryKey:["balance-withdrawals"]}),cache.invalidateQueries({queryKey:["withdrawal-quote"]}),cache.invalidateQueries({queryKey:["console","overview"]})]);}});
+ const valid=/^(0|[1-9]\d{0,11})(\.\d{1,2})?$/.test(amount)&&Number(amount)>=Number(quote.data?.policy.minimum)&&Number(amount)<=Number(quote.data?.policy.maximum)&&Number(amount)<=Number(quote.data?.eligible);
+ const amountQuote=useQuery({queryKey:["withdrawal-amount",checkedAmount],enabled:valid&&checkedAmount===amount&&!quote.data?.policy.reason,queryFn:async()=>(await userRequest.get<ApiEnvelope<Quote>>("/finance/withdrawals/quote",{params:{amount:checkedAmount}})).data.data});
+ return <LayerCard id="balance-withdrawals"><LayerCard.Secondary><h2 className="font-semibold">余额提现</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
+ <div className="grid gap-3 sm:grid-cols-4">{[["可用余额",quote.data?.available??(fallbackBalance==null?undefined:Number(fallbackBalance).toFixed(2))],["冻结余额",quote.data?.frozen],["提现冻结",quote.data?.withdrawalFrozen],["可提现额度",quote.data?.eligible]].map(([label,value])=><div key={label} className="grid gap-1"><span className="text-sm text-kumo-subtle">{label}</span><strong className="text-xl">{value==null?"—":`¥${value}`}</strong></div>)}</div>
+ <Collapsible.Root open={open} onOpenChange={setOpen}>
+ <Collapsible.Trigger render={<Button variant="secondary"/>}>{open?"收起提现申请":"提现"}</Collapsible.Trigger>
+ <Collapsible.Panel keepMounted><div className="grid gap-4 pt-4">
+ {quote.data?.policy.reason?<Banner title={quote.data.policy.reason}/>:null}
+ <p className="text-sm text-kumo-subtle">申请金额会被冻结，审核通过后由人工汇款。拒绝申请将释放冻结金额。</p>
+ <div className="grid gap-3 sm:grid-cols-2"><Input label="提现金额（元）" inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)}/><Select label="收款方式" value={channel} items={{bank:"银行卡",alipay:"支付宝",wechat:"微信"}} onValueChange={value=>setChannel(String(value))}/><Input label="实名收款人" value={name} maxLength={50} onChange={e=>setName(e.target.value)}/><Input label="收款账号" value={account} maxLength={120} autoComplete="off" onChange={e=>setAccount(e.target.value)}/></div>
+ <p className="text-sm">手续费：{amountQuote.data&&checkedAmount===amount?`¥${amountQuote.data.fee}`:"—"} · 预计到账：{amountQuote.data&&checkedAmount===amount?`¥${amountQuote.data.net}`:"—"}</p>
+ <Button className="justify-self-start" loading={submit.isPending} disabled={submit.isPending||!valid||checkedAmount!==amount||!amountQuote.data||amountQuote.isPending||!!amountQuote.error||!name.trim()||!account.trim()||new TextEncoder().encode(JSON.stringify({channel,name:name.trim(),account:account.trim()})).length>350||!!quote.data?.policy.reason||quote.isPending||!!quote.error} onClick={()=>submit.mutate()}>提交提现申请</Button>
+ </div></Collapsible.Panel></Collapsible.Root>
+ {submit.isSuccess?<p role="status">申请已提交，请等待人工审核。</p>:null}
+ {submit.error||rows.error||quote.error||amountQuote.error?<Banner variant="error" title={getApiMessage(submit.error??rows.error??quote.error??amountQuote.error)} description="请核对提现记录后重试。"/>:null}
+ <DateRangeField label="申请日期范围" from={from} to={to} onValueChange={(start,end)=>{setFrom(start);setTo(end);setPage(1)}}/>
+ <div className="flex flex-wrap gap-2">{([["","全部"],["pending","待审核"],["approved","待汇款"],["paid","已汇款"],["rejected","已拒绝"]] as const).map(([value,label])=><Button key={value} size="sm" variant={status===value?"secondary":"ghost"} onClick={()=>{setStatus(value);setPage(1)}}>{label}</Button>)}</div>
+ {rows.error||quote.error?<Button variant="secondary" className="justify-self-start" onClick={()=>{void rows.refetch();void quote.refetch();}}>重新读取</Button>:null}
+ <div className="overflow-x-auto"><Table><Table.Header><Table.Row><Table.Head>提现账单</Table.Head><Table.Head>金额</Table.Head><Table.Head>状态</Table.Head><Table.Head>申请时间</Table.Head><Table.Head>处理说明</Table.Head></Table.Row></Table.Header><Table.Body>{rows.data?.list?.map(row=><Table.Row key={row.id}><Table.Cell><Button variant="ghost" size="sm" onClick={()=>setDetailId(detailId===row.id?undefined:row.id)}>{row.id}</Button></Table.Cell><Table.Cell>¥{row.amount}</Table.Cell><Table.Cell><Badge variant={row.status==="paid"?"success":row.status==="rejected"?"error":"warning"}>{labels[row.status]??row.status}</Badge></Table.Cell><Table.Cell>{new Date(row.createdAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{row.reason||"—"}</Table.Cell></Table.Row>)}</Table.Body></Table></div>
+  {detailId?<section className="grid gap-2 border-t border-kumo-line pt-3"><div className="flex items-center justify-between"><h3>提现账单 {detailId}</h3><Button variant="ghost" size="sm" onClick={()=>setDetailId(undefined)}>收起</Button></div>{detail.isPending?<p>正在读取关联流水…</p>:null}{detail.error?<Banner variant="error" title={getApiMessage(detail.error)}/>:null}{detail.data?<p className="text-sm text-kumo-subtle">收款账号：{detail.data.accountMasked}</p>:null}{detail.data?.flows?.map(flow=><div key={flow.request_id} className="flex flex-wrap justify-between gap-2 text-sm"><span>{({withdrawal_hold:"申请冻结",withdrawal_release:"释放冻结",withdraw:"人工汇款确认"} as Record<string,string>)[flow.type]??"资金流水"} · {flow.request_id}</span><span>¥{flow.amount}</span></div>)}</section>:null}
+ {rows.isPending?<p role="status">正在加载提现记录…</p>:!rows.error&&!rows.data?.list?.length?<p className="text-kumo-subtle">暂无提现记录</p>:null}
+ {(rows.data?.total??0)>10?<Pagination page={page} setPage={setPage} perPage={10} totalCount={rows.data?.total??0}/>:null}
+ </LayerCard.Primary></LayerCard>;
 }
