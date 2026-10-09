@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { ContentPending } from "../../shared/components/ContentFade";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { readRememberedProfile } from "../../shared/api/refreshSession";
 import { PortalLayout } from "../../layouts/PortalLayout";
@@ -25,7 +26,7 @@ const AgreementPlaceholder = lazy(() =>
 );
 const PortalHome = lazy(() =>
   routeModules
-    .portalPublic()
+    .portalHome()
     .then((module) => ({ default: module.PortalHome })),
 );
 const PublicProducts = lazy(() =>
@@ -93,7 +94,7 @@ export function PortalApp() {
           <Route
             path="/"
             element={
-              <LazyRoute>
+              <LazyRoute fallback={<div className="min-h-screen"><ContentPending /></div>}>
                 <PortalHome />
               </LazyRoute>
             }

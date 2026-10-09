@@ -150,7 +150,7 @@ function IntegratedProductCatalog() {
   // placeholder detail while React Query changes keys.
   const detailQuery = useProduct(product?.id ?? "");
   const detail = !detailQuery.isPlaceholderData && detailQuery.data?.id === product?.id ? detailQuery.data : undefined;
-  const orderPageQuery = useOrderPage(detail?.supplierId ?? "", detail?.upstreamProductId ?? "");
+  const orderPageQuery = useOrderPage(detail?.id ?? "", detail?.configurable ?? false);
   const orderPage = orderPageQuery.isPlaceholderData ? undefined : orderPageQuery.data;
   const configError = detailQuery.error ?? (detail ? orderPageQuery.error : null);
   const configLoading = Boolean(product) && !configError && (!detail || orderPageQuery.isPending || orderPageQuery.isPlaceholderData);

@@ -19,8 +19,8 @@ export function isCatalogAvailable(product: StockProduct) {
   return true;
 }
 
-export function isUpstreamProduct(product: Pick<CatalogProduct, "supplierId" | "upstreamProductId">) {
-  return Boolean(product.supplierId && product.supplierId !== "0" && product.upstreamProductId && product.upstreamProductId !== "0");
+export function isUpstreamProduct(product: Pick<CatalogProduct, "configurable">) {
+  return Boolean(product.configurable);
 }
 
 export function secondaryGroups(groups: ProductGroupSummary[], primaryId: string) {

@@ -17,11 +17,11 @@ export const useProduct = (id: string) =>
     placeholderData: keepPreviousData,
   });
 
-export const useOrderPage = (supplierId: string, productId: string) =>
+export const useOrderPage = (productId: string, configurable: boolean) =>
   useQuery({
-    queryKey: ["upstream-order-page", supplierId, productId],
-    queryFn: () => consoleApi.orderPage(supplierId, productId),
-    enabled: Boolean(supplierId && supplierId !== "0" && productId),
+    queryKey: ["upstream-order-page", productId],
+    queryFn: () => consoleApi.orderPage(productId),
+    enabled: Boolean(configurable && productId),
     staleTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
   });

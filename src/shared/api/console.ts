@@ -81,8 +81,7 @@ export interface CycleItem {
 export interface CatalogProduct extends ProductSummary {
   catalogSpec?: ProductSpec;
   upstreamStock?: string | number | null;
-  supplierId: string;
-  upstreamProductId: string;
+  configurable: boolean;
 }
 
 export interface ProductDetail extends CatalogProduct {
@@ -95,8 +94,7 @@ export interface ProductDetail extends CatalogProduct {
   configMode: "elastic" | "fixed" | "semi";
   configOptions: ConfigOption[] | null;
   specs: ProductSpec[];
-  supplierId: string;
-  upstreamProductId: string;
+  configurable: boolean;
 }
 
 export interface OrderPage {
@@ -111,7 +109,6 @@ export interface OrderPage {
   imageGroups: Array<{ name: string; child: ConfigOptionValue[] }>;
   configOptions: ConfigOption[];
   cycles: CycleItem[];
-  defaultPassword: string;
   networkTypes: ConfigOptionValue[];
 }
 
@@ -442,10 +439,10 @@ export const consoleApi = {
     return { ...first, items: Array.from(new Map(items.map((item) => [item.id, item])).values()), groups: first.groups ?? [] };
   },
   product: (id: string) => unwrap(userRequest.get<ApiEnvelope<ProductDetail>>(`/products/${id}`)),
-  orderPage: (supplierId: string, productId: string) =>
+  orderPage: (localProductId: string) =>
     unwrap(
       userRequest.get<ApiEnvelope<OrderPage>>("/upstream/order-page", {
-        params: { supplierId, productId },
+        params: { localProductId },
       }),
     ),
   orders: (status: number | undefined, page: number, pageSize = 10) =>
