@@ -1,6 +1,5 @@
 import { adminPath } from "../utils/adminEntry";
 export const routeModules = {
-  portalHome: () => import("../../apps/portal/views/Home"),
   portalPublic: () => import("../../apps/portal/views/Public"),
   portalLogin: () => import("../../apps/portal/views/Login"),
   portalRegister: () => import("../../apps/portal/views/Register"),
@@ -60,7 +59,7 @@ export const routeModules = {
 const routeLoaders: Array<
   [test: (path: string) => boolean, load: () => Promise<unknown>]
 > = [
-  [(path) => path === "/", routeModules.portalHome],
+  [(path) => path === "/", routeModules.portalPublic],
   [
     (path) => path === "/products" || /^\/products\/[^/]+$/.test(path),
     routeModules.portalPublic,
