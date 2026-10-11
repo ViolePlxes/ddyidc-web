@@ -7,3 +7,5 @@
 成功刷新admin-todos、admin-todo-items/certifications、certification-list、certification-detail缓存，使页面与左侧数量同步。历史记录不显示快捷审核按钮。模拟服务与测试脚本仅在仓库外VM运行，内存数据，无数据库、真实证件、真实审核或生产代理；不进入发布包。
 
 阶段使用共享Kumo Dot Badge：未提交neutral、待审核warning、已通过success、已拒绝error；待办列表和历史列表一致，未知状态中性色。不改变实名状态含义。
+
+2026-10-12 发布候选 v0.1.138：实名操作列快捷审核及阶段颜色；仅前端更新，复用原审核接口，无数据迁移。演示服务器与测试夹具均位于仓库外，不随发布部署。
