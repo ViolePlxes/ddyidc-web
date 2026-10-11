@@ -19,6 +19,7 @@ import {
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { BankTransferSettings } from "./BankTransferSettings";
+import { PaymentSettings } from "./PaymentSettings";
 import { SecuritySettings } from "./SecuritySettings";
 
 const sceneLabels: Record<string, string> = {
@@ -63,6 +64,7 @@ export function AdminSystem() {
           { value: "base", label: "基础设置" },
           { value: "security", label: "安全设置" },
           { value: "bank-transfer", label: "对公汇款" },
+          { value: "payment", label: "支付设置" },
           { value: "notify", label: "通知设置" },
           { value: "templates", label: "通知模板" },
           { value: "logs", label: "发送记录" },
@@ -74,6 +76,7 @@ export function AdminSystem() {
       {notice ? <Banner title="操作完成" description={notice} /> : null}
       {tab === "base" ? <BaseSettings /> : null}
       {tab === "security" ? <SecuritySettings /> : null}
+      {tab === "payment" ? <PaymentSettings /> : null}
       {tab === "bank-transfer" ? <BankTransferSettings /> : null}
       {tab === "notify" ? <NotifySettings onSaved={setNotice} /> : null}
       {tab === "templates" ? <TemplateSettings onSaved={setNotice} /> : null}
