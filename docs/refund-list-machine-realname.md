@@ -17,3 +17,6 @@
 待办页面文字跳转统一使用 Kumo Link current，继承主题默认文本色（亮色黑色、暗色浅色），保留原路由及返回上下文。
 
 机器 IP 旁复用 Kumo ClipboardText small 的复制按钮，紧邻 IP、无边框；IP 文字继续详情跳转，图标复制 IP 并显示勾，不传 tooltip，不发复制成功 toast；未获取信息不显示复制按钮。
+
+
+2026-10-11 本地新候选：MachineRefundDialog允许waiting/rejected状态填写原因直接退余额；completed不可再次提交。手机/PC六组隔离浏览器通过。需与后端refund_actions.go等待中转换及锁保护配套发布；生产尚未包含此更改。
