@@ -11,3 +11,5 @@
 - 本次需要前后端配套安装，旧后端未提供新字段时前端显示缺失标识，不冒用用户名为实名。
 
 代码：src/apps/admin/views/Todos.tsx、src/shared/api/adminTodos.ts；internal/admintodo/queries.go、refund_display.go、queries_integration_test.go。
+
+机器 IP 与机器 ID 均链接至后台 `/customers/:customerId/instances/:instanceId`，带待办返回上下文；未获取 IP 不生成链接，详情页沿用既有权限检查。
