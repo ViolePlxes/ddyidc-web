@@ -24,7 +24,10 @@ export interface PaymentStatus {
 }
 
 function unwrap<T>(request: Promise<AxiosResponse<ApiEnvelope<T>>>) {
-  return request.then((response) => response.data.data);
+  return request.then((response) => {
+    if (response.data.code !== 0) throw new Error(response.data.message || "支付操作失败，请核对后重试");
+    return response.data.data;
+  });
 }
 
 export const paymentApi = {
