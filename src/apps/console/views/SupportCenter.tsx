@@ -97,7 +97,7 @@ export function SupportCenter() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3">
           {topics.map((topic, index) => <div key={topic.title} className={`grid content-start gap-5 border-t border-kumo-line p-6 sm:p-8 ${index % 2 ? "sm:border-l" : "sm:border-l-0"} ${index % 3 ? "lg:border-l" : "lg:border-l-0"}`}>
             <Text as="h3" variant="heading">{topic.title}</Text>
-            <ul className="grid gap-2">{topic.links.map((link) => <li key={link.label}><Link to={link.href} className="text-sm text-kumo-subtle hover:text-kumo-default hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring">{link.label}</Link></li>)}</ul>
+            <ul className="grid gap-2">{topic.links.map((link) => <li key={link.label}><Link to={link.href} className="text-sm text-kumo-default hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring">{link.label}</Link></li>)}</ul>
           </div>)}
         </div>
         </LayerCard>

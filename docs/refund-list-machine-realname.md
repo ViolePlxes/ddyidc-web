@@ -15,3 +15,5 @@
 机器 IP 与机器 ID 均链接至后台 `/customers/:customerId/instances/:instanceId`，带待办返回上下文；未获取 IP 不生成链接，详情页沿用既有权限检查。
 
 待办页面文字跳转统一使用 Kumo Link current，继承主题默认文本色（亮色黑色、暗色浅色），保留原路由及返回上下文。
+
+机器 IP 旁复用 Kumo ClipboardText small 的复制按钮，紧邻 IP、无边框；IP 文字继续详情跳转，图标复制 IP 并显示勾，不传 tooltip，不发复制成功 toast；未获取信息不显示复制按钮。

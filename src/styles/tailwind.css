@@ -16,6 +16,21 @@
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Platform policy: links use Kumo default text color unless explicitly
+   overridden for a documented semantic requirement. Includes legacy utilities
+   and nested themes; button/status tokens remain independent. */
+:root,
+[data-theme],
+[data-mode] {
+  --text-color-kumo-link: var(--text-color-kumo-default);
+}
+
+@layer base {
+  :where(a[href]) {
+    color: var(--text-color-kumo-default);
+  }
+}
+
 html,
 body,
 #root {

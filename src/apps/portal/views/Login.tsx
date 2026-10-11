@@ -77,14 +77,14 @@ export function LoginPage() {
           {quickProfile.avatar?.startsWith("https://") ? <img src={quickProfile.avatar} className="size-10 object-cover" alt="" referrerPolicy="no-referrer" /> : <UserCircleIcon className="size-10" />}
           <span className="truncate">{quickProfile.name}</span>
         </Button>
-        <Link className="text-right text-xs text-kumo-subtle hover:underline" to="/login?switchAccount=1" onClick={() => { setAccount(""); setPassword(""); }}>切换账号</Link>
+        <Link className="text-right text-xs text-kumo-default hover:underline" to="/login?switchAccount=1" onClick={() => { setAccount(""); setPassword(""); }}>切换账号</Link>
       </div> : null}
       <form className="grid gap-5" onSubmit={submit}>
         <Input label="Email" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="username" placeholder="邮箱、账号或手机号" required autoFocus />
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3 text-sm">
             <label htmlFor="login-password">密码</label>
-            <Link className="text-kumo-subtle hover:underline" to="/reset-password">忘记密码？</Link>
+            <Link className="text-kumo-default hover:underline" to="/reset-password">忘记密码？</Link>
           </div>
           <Input id="login-password" aria-label="密码" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
         </div>
