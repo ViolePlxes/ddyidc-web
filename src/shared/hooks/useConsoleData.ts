@@ -6,6 +6,8 @@ export const useProducts = () =>
     queryKey: ["products"],
     queryFn: () => consoleApi.products(),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    retry: 1,
   });
 
 export const useProduct = (id: string) =>

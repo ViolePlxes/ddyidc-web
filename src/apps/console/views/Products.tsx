@@ -2,7 +2,7 @@ import { Badge } from "../../../shared/components/Badge";
 import { Banner, Button, LayerCard, Loader, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
 
 import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -142,6 +142,35 @@ function IntegratedProductCatalog() {
   const secondary = children.find((group) => group.id === selectedSecondaryId) ?? children[0];
   const visibleProducts = secondary ? products.filter((product) => belongsToGroup(product, secondary)) : [];
   const linkedProducts = visibleProducts.filter(isUpstreamProduct);
+  const catalogIssue = !productsQuery.isLoading && !productsQuery.error && (
+    (products.length === 0 && groups.length > 0) ||
+    (products.length > 0 && !products.some(isUpstreamProduct)) ||
+    (products.length > 0 && !groups.some(group => products.some(item => belongsToGroup(item, group))))
+  );
+  const categoryIssue = (visibleProducts.length > 0 && linkedProducts.length === 0)
+    || (Boolean(secondary) && visibleProducts.length === 0 && products.some(item => item.groupId === secondary?.id));
+  const recoveryAttempted = useRef(false);
+  const [diagnosticCopied, setDiagnosticCopied] = useState(false);
+  const [diagnosticNotice, setDiagnosticNotice] = useState("");
+  useEffect(() => {
+    if (catalogIssue && !recoveryAttempted.current && !productsQuery.isFetching) {
+      recoveryAttempted.current = true;
+      void productsQuery.refetch();
+    }
+  }, [catalogIssue, productsQuery.isFetching, productsQuery.refetch]);
+  const retryCatalog = () => { void productsQuery.refetch(); };
+  const copyDiagnostic = async () => {
+    const diagnostic = {
+      module: "product-catalog", version: import.meta.env.VITE_DDYIDC_VERSION || "unmarked",
+      recordedAt: new Date().toISOString(), total: productsQuery.data?.total ?? null,
+      loaded: products.length, groups: groups.length, matched: visibleProducts.length,
+      selectable: linkedProducts.length,
+      state: productsQuery.error ? "request-error" : catalogIssue ? "catalog-inconsistent" : categoryIssue ? "category-unavailable" : "category-empty",
+    };
+    try { await navigator.clipboard.writeText(JSON.stringify(diagnostic)); setDiagnosticCopied(true); }
+    catch { setDiagnosticCopied(false); setDiagnosticNotice("浏览器不支持复制，请截图此页面联系平台客服。"); }
+  };
+
   const currentPage = Math.min(page, Math.max(1, Math.ceil(linkedProducts.length / perPage)));
   const pageProducts = linkedProducts.slice((currentPage - 1) * perPage, currentPage * perPage);
   const product = pageProducts.find((item) => item.id === selectedProductId && isAvailable(item))
@@ -161,7 +190,7 @@ function IntegratedProductCatalog() {
   return (
     <>
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
-      <PageState loading={productsQuery.isLoading} keepContent error={productsQuery.error ? getApiMessage(productsQuery.error) : null}>
+      <PageState loading={productsQuery.isLoading} keepContent>
         <div className={catalogLayout}>
           <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:max-h-[calc(100dvh-12rem)] xl:flex-col xl:overflow-y-auto">
             <div ref={setStepsTarget} />
@@ -188,7 +217,12 @@ function IntegratedProductCatalog() {
 
             <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid min-w-0 gap-4 p-5">
               <h2>计算规格</h2>
-              {productsQuery.isLoading || linkedProducts.length ? <div className="min-w-0 overflow-x-auto"><Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
+              {catalogIssue || categoryIssue || productsQuery.error ? <div className="grid gap-3"><Banner variant="error"
+                title={productsQuery.error ? "商品目录加载失败" : "商品目录暂不可用"}
+                description={"未能确认当前分类的可选商品，请重新加载；仍无法显示时，可将诊断信息提供给客服。" + diagnosticNotice}
+                />
+                <div className="flex flex-wrap gap-2"><Button variant="secondary" loading={productsQuery.isFetching} onClick={retryCatalog}>重新加载</Button><Button variant="secondary" onClick={() => void copyDiagnostic()}>{diagnosticCopied ? "已复制诊断信息" : "复制诊断信息"}</Button></div></div>
+                : productsQuery.isLoading || linkedProducts.length ? <div className="min-w-0 overflow-x-auto"><Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
                 <Table className="whitespace-nowrap">
                   <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
                   <Table.Body>{productsQuery.isLoading ? <Table.Row><Table.Cell colSpan={catalogColumns.length}><div role="status" className="flex items-center gap-2"><Loader />正在加载计算规格…</div></Table.Cell></Table.Row> : pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>

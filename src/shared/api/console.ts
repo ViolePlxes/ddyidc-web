@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios";
+import { completeCatalog, normalizeCatalogPage } from "../utils/catalogIntegrity";
 import { userRequest, type ApiEnvelope } from "./request";
 
 export interface PageResult<T> {
@@ -423,20 +424,20 @@ async function unwrap<T>(
 
 export const consoleApi = {
   products: async (pageSize = 100) => {
-    const load = (page: number) => unwrap(
+    const catalogueRequest = Date.now();
+    const load = async (page: number) => normalizeCatalogPage(await unwrap(
       userRequest.get<ApiEnvelope<{ items: CatalogProduct[]; groups: ProductGroupSummary[]; total: number; page: number; pageSize: number }>>(
         "/products",
-        { params: { pageSize, page } },
+        { params: { pageSize, page, _catalog: catalogueRequest }, headers: { "Cache-Control": "no-cache" } },
       ),
-    );
+    ));
     const first = await load(1);
-    const items = [...(first.items ?? [])];
-    for (let page = 2; items.length < first.total; page += 1) {
-      const next = await load(page);
-      if (!next.items?.length) throw new Error("商品目录发生变化，请刷新后重试");
-      items.push(...next.items);
+    if (Math.ceil(first.total / pageSize) > 1000) throw new Error("商品目录数量异常，请联系平台客服");
+    const pages = [];
+    for (let page = 2; page <= Math.ceil(first.total / pageSize); page += 1) {
+      pages.push(await load(page));
     }
-    return { ...first, items: Array.from(new Map(items.map((item) => [item.id, item])).values()), groups: first.groups ?? [] };
+    return completeCatalog(first, pages);
   },
   product: (id: string) => unwrap(userRequest.get<ApiEnvelope<ProductDetail>>(`/products/${id}`)),
   orderPage: (localProductId: string) =>

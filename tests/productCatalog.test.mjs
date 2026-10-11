@@ -37,12 +37,10 @@ test("second-level ownership uses IDs, including duplicate names and empty roots
   assert.equal(belongsToGroup({ groupId: "a", parentGroupId: "r2" }, groups[2]), false);
 });
 
-test("only genuine linked products are eligible; empty manual specs do not exclude them", () => {
-  assert.equal(isUpstreamProduct({ supplierId: "9", upstreamProductId: "28", specs: [] }), true);
-  for (const value of ["", "0", undefined]) {
-    assert.equal(isUpstreamProduct({ supplierId: value, upstreamProductId: "28" }), false);
-    assert.equal(isUpstreamProduct({ supplierId: "9", upstreamProductId: value }), false);
-  }
+test("catalogue eligibility follows the published configurable contract", () => {
+  assert.equal(isUpstreamProduct({ configurable: true }), true);
+  assert.equal(isUpstreamProduct({ configurable: false }), false);
+  assert.equal(isUpstreamProduct({}), false);
 });
 
 test("supplier styles and scripts never appear as catalogue parameters", () => {
