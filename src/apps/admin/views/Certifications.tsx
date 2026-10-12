@@ -214,7 +214,7 @@ function Detail({
         )}
         {record && (
           <>
-            <Badge>
+            <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
               {record.certifyChannel === "alipay" && record.status === 1
                 ? "待认证"
                 : statuses[record.status]}
@@ -398,7 +398,7 @@ export function Certifications() {
   const cache = useQueryClient();
   const [tab, setTab] = useState("review");
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<number[]>([]);
+  const [filter, setFilter] = useState("all");
   const [keyword, setKeyword] = useState("");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
@@ -416,7 +416,7 @@ export function Certifications() {
       api.list({
         page,
         pageSize: 20,
-        statuses: filter,
+        statuses: filter === "all" ? [] : [Number(filter)],
         keyword: search,
         customerId: params.get("customerId") ?? "",
         sort,
@@ -444,52 +444,15 @@ export function Certifications() {
       {tab === "settings" ? (
         <Settings />
       ) : (
-        <>
-          <form
-            className="flex flex-wrap items-end gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSearch(keyword);
-              setPage(1);
-            }}
-          >
-            <Input
-              label="客户 / 姓名 / 证件号"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              autoComplete="off"
-            />
-            <Button type="submit">搜索</Button>
-            <Select
-              label="排序"
-              value={sort}
-              onValueChange={(v) => {
-                setSort(v ?? "newest");
-                setPage(1);
-              }}
-              items={[
-                { value: "newest", label: "最新提交" },
-                { value: "oldest", label: "最早提交" },
-              ]}
-            />
+        <LayerCard>
+          <LayerCard.Secondary>实名审核</LayerCard.Secondary>
+          <LayerCard.Primary>
+          <form className="mb-3 flex flex-wrap items-center gap-3" onSubmit={(e) => { e.preventDefault(); setSearch(keyword); setPage(1); }}>
+            <Input size="sm" aria-label="搜索实名申请" placeholder="搜索客户、姓名或证件号…" className="min-w-0 flex-1" value={keyword} onChange={(e) => setKeyword(e.target.value)} autoComplete="off" />
+            <Button type="submit" size="sm" variant="secondary">搜索</Button>
+            <Tabs variant="segmented" size="sm" value={filter} onValueChange={(value) => { setFilter(value); setPage(1); }} tabs={[{ value: "all", label: "全部" }, { value: "1", label: "待审核" }, { value: "2", label: "已通过" }, { value: "3", label: "已拒绝" }]} />
+            <Button size="sm" variant="secondary" aria-label="切换申请时间排序" onClick={() => { setSort(sort === "newest" ? "oldest" : "newest"); setPage(1); }}>{sort === "newest" ? "时间倒序 ↓" : "时间正序 ↑"}</Button>
           </form>
-          <div className="flex flex-wrap gap-3">
-            {[1, 2, 3].map((status) => (
-              <Switch
-                key={status}
-                label={statuses[status]}
-                checked={filter.includes(status)}
-                onCheckedChange={(checked) => {
-                  setFilter((old) =>
-                    checked
-                      ? [...old, status]
-                      : old.filter((x) => x !== status),
-                  );
-                  setPage(1);
-                }}
-              />
-            ))}
-          </div>
           {query.error && (
             <Banner variant="error" title={getApiMessage(query.error)} />
           )}
@@ -506,16 +469,16 @@ export function Certifications() {
                     "提交时间",
                     "操作",
                   ].map((label) => (
-                    <Table.Head key={label}>{label}</Table.Head>
+                    <Table.Head key={label} className="text-xs font-medium text-kumo-subtle">{label}</Table.Head>
                   ))}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {query.data?.items.map(({ record, username }) => (
+                {query.data?.items.map(({ record }) => (
                   <Table.Row key={record.id}>
                     <Table.Cell>
                       <Link to={`${adminBase}/customers/${record.customerId}`}>
-                        #{record.customerId} {username}
+                        #{record.customerId}
                       </Link>
                     </Table.Cell>
                     <Table.Cell>
@@ -526,7 +489,7 @@ export function Certifications() {
                     </Table.Cell>
                     <Table.Cell>{record.documentNumber}</Table.Cell>
                     <Table.Cell>
-                      <Badge>
+                      <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
                         {record.certifyChannel === "alipay" &&
                         record.status === 1
                           ? "待认证"
@@ -558,7 +521,8 @@ export function Certifications() {
             perPage={20}
             totalCount={query.data?.total ?? 0}
           />
-        </>
+          </LayerCard.Primary>
+        </LayerCard>
       )}
       {detail && (
         <Detail id={detail} close={() => setDetail("")} changed={changed} />

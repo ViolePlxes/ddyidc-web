@@ -1,3 +1,4 @@
+import { currentIdDisplay } from "../utils/currentIdDisplay";
 import { adminPath, adminNavigationResponse } from "../utils/adminEntry";
 import { neutralCustomerResponse, neutralCustomerText } from "../utils/customerCopy";
 import axios, { AxiosError } from "axios";
@@ -21,7 +22,7 @@ function createRequest(baseURL: string, unauthorizedEvent: string, customerFacin
   });
   if(csrfKind === "admin") client.interceptors.request.use(config => { config.headers.set("X-Admin-Entry", adminBase); return config; });
   client.interceptors.response.use(
-    (response) => { if (customerFacing) response.data = neutralCustomerResponse(response.data); if(csrfKind === "admin") response.data=adminNavigationResponse(response.data); return response; },
+    (response) => { response.data = currentIdDisplay(response.data); if (customerFacing) response.data = neutralCustomerResponse(response.data); if(csrfKind === "admin") response.data=adminNavigationResponse(response.data); return response; },
     async (error: AxiosError<ApiEnvelope<unknown>>) => {
       if (customerFacing && error.response) error.response.data = neutralCustomerResponse(error.response.data);
       if (
