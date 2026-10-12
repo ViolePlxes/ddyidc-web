@@ -22,7 +22,6 @@ export function TodoCertificationActions({ row }: { row: TodoEntry }) {
     mutationFn: async (action: "pass" | "reject") => {
       const { record } = await certificationAdminApi.detail(row.id);
       if (record.status !== 1) throw new Error("该申请已处理，请刷新列表。");
-      if (record.certifyChannel === "alipay") throw new Error("该申请由系统自动认证，不支持人工审核。");
       return certificationAdminApi.review(row.id, action, action === "reject" ? reason.trim() : "管理员在待处理实名列表审核通过");
     },
     onSuccess: async () => { setRejectOpen(false); setReason(""); await refresh(); },
