@@ -24,6 +24,7 @@ import { RouteOutlet } from "../shared/router/RouteOutlet";
 import type { AuthUser } from "../shared/types/auth";
 
 export interface NavigationItem {
+  children?: NavigationItem[];
   badge?: string;
   id?: string; target?: "_blank";
   label: string;
@@ -109,7 +110,7 @@ export function DashboardLayout({
     else categorizedGroups.push([category, [{ ...group, items }]]);
   }
   const searchItems = groups.flatMap((group) =>
-    group.items.map((item) => ({
+    group.items.flatMap(item=>item.children?.length?item.children:[item]).map((item) => ({
       id: item.id ?? item.href,
       title: item.label,
       path: item.href,
@@ -205,16 +206,16 @@ export function DashboardLayout({
                     />
                     <Sidebar.CollapsibleContent>
                       <Sidebar.MenuSub>
-                        {group.items.map((item) => (
-                          <Sidebar.MenuSubButton
-                            key={item.id ?? item.href}
-                            href={item.href} target={item.target} rel={item.target ? "noopener noreferrer" : undefined}
-                            active={isItemActive(item.href)}
-                            aria-current={isItemActive(item.href) ? "page" : undefined}
-                          >
-                            <item.icon className="mr-2 size-4 shrink-0" />
-                            {item.label}
-                            {item.badge !== undefined && <TodoCountBadge count={item.badge} className="ml-auto shrink-0" />}
+                        {group.items.map((item) => item.children?.length ? (
+                          <Sidebar.MenuItem key={item.id ?? item.href}>
+                            <Sidebar.Collapsible key={`${item.href}:${location.pathname}`} defaultOpen={item.children.some(child=>isItemActive(child.href))}>
+                              <Sidebar.CollapsibleTrigger render={<Sidebar.MenuSubButton active={item.children.some(child=>isItemActive(child.href))}><item.icon className="mr-2 size-4 shrink-0" />{item.label}<Sidebar.MenuChevron /></Sidebar.MenuSubButton>} />
+                              <Sidebar.CollapsibleContent><Sidebar.MenuSub>{item.children.map(child=><Sidebar.MenuSubButton key={child.href} href={child.href} active={location.pathname===child.href} aria-current={location.pathname===child.href?"page":undefined}>{child.label}</Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
+                            </Sidebar.Collapsible>
+                          </Sidebar.MenuItem>
+                        ) : (
+                          <Sidebar.MenuSubButton key={item.id ?? item.href} href={item.href} target={item.target} rel={item.target ? "noopener noreferrer" : undefined} active={isItemActive(item.href)} aria-current={isItemActive(item.href) ? "page" : undefined}>
+                            <item.icon className="mr-2 size-4 shrink-0" />{item.label}{item.badge !== undefined && <TodoCountBadge count={item.badge} className="ml-auto shrink-0" />}
                           </Sidebar.MenuSubButton>
                         ))}
                       </Sidebar.MenuSub>

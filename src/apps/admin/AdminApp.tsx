@@ -208,6 +208,8 @@ const PointsGoodsAdmin = lazy(() => routeModules.adminPoints().then((module)=>({
 const PointsOrdersAdmin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsOrdersAdmin})));
 const PointsPlugin = lazy(() => routeModules.adminPoints().then((module)=>({default:module.PointsPlugin})));
 const AdminPointsCoupons = lazy(() => import("./points/Coupons").then(module=>({default:module.AdminPointsCoupons})));
+const AdminCdnAdvancedTools = lazy(() => routeModules.adminCdnsell().then(module=>({default:module.AdminCdnAdvancedTools})));
+const AdminCdnStatistics = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.AdminCdnStatistics})));
 const CdnAdminOverview = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnAdminOverview})));
 const CdnUpstream = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnUpstream})));
 const CdnCapabilities = lazy(() => routeModules.adminCdnsell().then((module)=>({default:module.CdnCapabilities})));
@@ -421,7 +423,7 @@ function AdminDashboard() {
       },
     ];
   if(!points.isLoading) groups=[...groups,{label:"积分中心",items:[{label:"积分统计",href:adminPath('/admin/points'),icon:CoinsIcon},{label:"福利活动",href:adminPath('/admin/points/activities'),icon:GiftIcon},{label:"积分发放任务",href:adminPath('/admin/points/event-tasks'),icon:ReceiptIcon},{label:"积分账户",href:adminPath('/admin/points/accounts'),icon:UsersIcon},{label:"商品管理",href:adminPath('/admin/points/goods'),icon:StorefrontIcon},{label:"兑换订单",href:adminPath('/admin/points/orders'),icon:ReceiptIcon},{label:"插件配置",href:adminPath('/admin/points/plugin'),icon:GearIcon}]}];
-  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:adminPath('/admin/cdnsell'),icon:HouseIcon},{label:"金山云上游",href:adminPath('/admin/cdnsell/upstream'),icon:CloudArrowDownIcon},{label:"API 与资源包",href:adminPath('/admin/cdnsell/capabilities'),icon:CloudCheckIcon},{label:"域名管理",href:adminPath('/admin/cdnsell/domains'),icon:StorefrontIcon},{label:"域名配置中心",href:adminPath('/admin/cdnsell/config-center'),icon:GearIcon},{label:"流量包产品",href:adminPath('/admin/cdnsell/products'),icon:PackageIcon},{label:"CDN 客户",href:adminPath('/admin/cdnsell/customers'),icon:UsersIcon}]}];
+  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"业务概览",href:adminPath('/admin/cdnsell'),icon:HouseIcon},{label:"金山云上游",href:adminPath('/admin/cdnsell/upstream'),icon:CloudArrowDownIcon},{label:"API 与资源包",href:adminPath('/admin/cdnsell/capabilities'),icon:CloudCheckIcon},{label:"域名管理",href:adminPath('/admin/cdnsell/domains'),icon:StorefrontIcon},{label:"统计分析",href:adminPath('/admin/cdnsell/statistics'),icon:CloudCheckIcon},{label:"域名配置中心",href:adminPath('/admin/cdnsell/config-center'),icon:GearIcon},{label:"流量包产品",href:adminPath('/admin/cdnsell/products'),icon:PackageIcon},{label:"CDN 客户",href:adminPath('/admin/cdnsell/customers'),icon:UsersIcon}]}];
   return (
     <DashboardLayout
       user={user}
@@ -726,6 +728,9 @@ export function AdminApp() {
             <Route path={adminPath('/admin/points/activities')} element={<PointsGate scope="admin"><LazyRoute><PointsActivities admin /></LazyRoute></PointsGate>} />
             <Route path={adminPath('/admin/points/plugin')} element={<PointsGate scope="admin"><LazyRoute><PointsPlugin /></LazyRoute></PointsGate>} />
             <Route path={adminPath('/admin/points/coupons')} element={<LazyRoute><AdminPointsCoupons /></LazyRoute>} />
+            <Route path={adminPath('/admin/cdnsell/tools/:tool')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnAdvancedTools /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/statistics')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnStatistics /></LazyRoute></CdnsellGate>} />
+            <Route path={adminPath('/admin/cdnsell/statistics/:kind')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnStatistics /></LazyRoute></CdnsellGate>} />
             <Route path={adminPath('/admin/cdnsell')} element={<CdnsellGate scope="admin"><LazyRoute><CdnAdminOverview /></LazyRoute></CdnsellGate>} />
             <Route path={adminPath('/admin/cdnsell/upstream')} element={<CdnsellGate scope="admin"><LazyRoute><CdnUpstream /></LazyRoute></CdnsellGate>} />
             <Route path={adminPath('/admin/cdnsell/capabilities')} element={<CdnsellGate scope="admin"><LazyRoute><CdnCapabilities /></LazyRoute></CdnsellGate>} />

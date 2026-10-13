@@ -1,7 +1,7 @@
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
 
 export interface CdnsellStatus { enabled:boolean; phase:string; ready?:boolean; setupMessage?:string; autoSuspendEnabled?:boolean;autoRestoreEnabled?:boolean;overagePrice?:string|number;cloudWritesEnabled?:boolean; inventoryMode?:string }
-export interface CdnProduct { id:string; name:string; capacityBytes:number; validDays:number; price:string|number; tierPrices:Record<string,string|number>; minQty:number; maxQty:number; description:string; isHot:boolean; status:boolean; sort:number }
+export interface CdnProduct { resourceKind?:"traffic"|"https"; specification?:string; validityMonths?:number; previewOnly?:boolean; priceConfirmed?:boolean; id:string; name:string; capacityBytes:number; validDays:number; price:string|number; tierPrices:Record<string,string|number>; minQty:number; maxQty:number; description:string; isHot:boolean; status:boolean; sort:number }
 export interface CdnBatch { id:string; productId:string; orderId:string; originalBytes:number; consumedBytes:number; remainingBytes:number; effectiveTime:string; expireTime:string; status:string }
 export interface MeterRecord { id:string; domainId:string; windowStart:string; windowEnd:string; confirmedBytes:number; revisedBytes:number; status:string; source:string }
 export interface CdnOverview { remainingBytes:number; usedBytes:number; todayBytes:number; overageBytes:number; activeBatches:number; activeDomains:number; expiringAt?:string; trend:Array<{time:string;bytes:number}> }

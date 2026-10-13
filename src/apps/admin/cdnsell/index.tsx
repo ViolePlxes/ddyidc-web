@@ -1,3 +1,6 @@
+import { AdvancedToolsPage } from "../../../shared/components/cdnsell/AdvancedToolsPage";
+import { useLocation } from "react-router-dom";
+import { StatisticsPage } from "../../../shared/components/cdnsell/StatisticsPage";
 import { CdnSettings } from "./Settings";
 import { Badge } from "../../../shared/components/Badge";
 import { localDateTime } from "../../../shared/utils/localDate";
@@ -38,3 +41,7 @@ function AdminCdnOverageBills(){
  {review.error?<Banner variant="error" title={getApiMessage(review.error)}/>:null}
  </LayerCard.Primary></LayerCard>
 }
+
+export function AdminCdnStatistics(){const location=useLocation();const kind=location.pathname.split("/").at(-1);return <StatisticsPage admin key={kind} initialKind={kind}/>}
+
+export function AdminCdnAdvancedTools(){const location=useLocation();return <AdvancedToolsPage admin key={location.pathname}/>}

@@ -187,6 +187,8 @@ const CdnDomainPage = lazy(() => routeModules.consoleCdnsell().then((module)=>({
 const CdnCertificates = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnCertificates})));
 const CdnRefresh = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnRefresh})));
 const CdnLogs = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnLogs})));
+const CdnAdvancedTools = lazy(() => routeModules.consoleCdnsell().then(module=>({default:module.CdnAdvancedTools})));
+const CdnStatistics = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnStatistics})));
 const CdnIPCheck = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnIPCheck})));
 
 const foreignSessions = ["/admin/v1/auth/me", "/admin/v1/sales/auth/me"];
@@ -291,7 +293,7 @@ function UserDashboard() {
       : group,
   );
   if(!points.isLoading){groups=[...groups,{label:"积分中心",items:[{label:"积分账户",href:"/console/points",icon:CoinsIcon},...((points.data && points.data.enabled ? points.data.showSignin : true)?[{label:"签到中心",href:"/console/points/signin",icon:CoinsIcon}]:[]),...((points.data && points.data.enabled ? points.data.showTasks : true)?[{label:"任务中心",href:"/console/points/tasks",icon:GiftIcon}]:[]),...((points.data && points.data.enabled ? points.data.showMall : true)?[{label:"积分商城",href:"/console/points/mall",icon:StorefrontIcon},{label:"我的兑换",href:"/console/points/orders",icon:ReceiptIcon}]:[])]}]}
-  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon},{label:"我的域名",href:"/console/cdnsell/domains",icon:StorefrontIcon},{label:"证书管理",href:"/console/cdnsell/certs",icon:ShieldCheckIcon},{label:"刷新预热",href:"/console/cdnsell/refresh",icon:ArrowsClockwiseIcon},{label:"日志下载",href:"/console/cdnsell/logs",icon:CloudArrowDownIcon},{label:"IP 诊断",href:"/console/cdnsell/ipcheck",icon:CloudCheckIcon}]}];
+  if(!cdnsell.isLoading) groups=[...groups,{label:"CDN 加速",items:[{label:"服务总览",href:"/console/cdnsell",icon:HouseIcon},{label:"统计分析",href:"/console/cdnsell/statistics",icon:CloudCheckIcon},{label:"购买流量包",href:"/console/cdnsell/packages",icon:PackageIcon},{label:"用量与批次",href:"/console/cdnsell/usage",icon:ReceiptIcon},{label:"我的域名",href:"/console/cdnsell/domains",icon:StorefrontIcon},{label:"证书管理",href:"/console/cdnsell/certs",icon:ShieldCheckIcon},{label:"刷新预热",href:"/console/cdnsell/refresh",icon:ArrowsClockwiseIcon},{label:"日志下载",href:"/console/cdnsell/logs",icon:CloudArrowDownIcon},{label:"IP 诊断",href:"/console/cdnsell/ipcheck",icon:CloudCheckIcon}]}];
   return (
     <DashboardLayout
       user={user}
@@ -563,6 +565,9 @@ export function ConsoleApp() {
             <Route path="/console/cdnsell/certs" element={<CdnsellGate scope="public"><LazyRoute><CdnCertificates /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/refresh" element={<CdnsellGate scope="public"><LazyRoute><CdnRefresh /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/logs" element={<CdnsellGate scope="public"><LazyRoute><CdnLogs /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/tools/:tool" element={<CdnsellGate scope="public"><LazyRoute><CdnAdvancedTools /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/statistics" element={<CdnsellGate scope="public"><LazyRoute><CdnStatistics /></LazyRoute></CdnsellGate>} />
+            <Route path="/console/cdnsell/statistics/:kind" element={<CdnsellGate scope="public"><LazyRoute><CdnStatistics /></LazyRoute></CdnsellGate>} />
             <Route path="/console/cdnsell/ipcheck" element={<CdnsellGate scope="public"><LazyRoute><CdnIPCheck /></LazyRoute></CdnsellGate>} />
             <Route element={<RequireMobile />}>
               <Route path="/wallet/recharge" element={<LazyRoute><WalletRecharge /></LazyRoute>} />
