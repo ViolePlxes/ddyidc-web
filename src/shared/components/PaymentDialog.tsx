@@ -143,6 +143,7 @@ export function PaymentDialog({
   useEffect(() => {
     if (status.data?.status !== "paid" || !checkout || handledPaymentId.current === checkout.paymentId) return;
     handledPaymentId.current = checkout.paymentId;
+    window.dispatchEvent(new Event("ddyidc:balance-changed"));
     void onPaid?.();
   }, [checkout, onPaid, status.data?.status]);
 

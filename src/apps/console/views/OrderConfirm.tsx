@@ -47,6 +47,7 @@ export function OrderConfirm() {
       });
     },
     onSuccess: async (order) => {
+      window.dispatchEvent(new Event("ddyidc:order-created"));
       clearOrderDraft();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
       setCreatedOrder(order);

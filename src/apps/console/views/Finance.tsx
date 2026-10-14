@@ -13,7 +13,6 @@ import { useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
 import { BalanceWithdrawals } from "../../../shared/components/BalanceWithdrawals";
 import { BalanceTransactions } from "../../../shared/components/BalanceTransactions";
-import { HistoricalRecords } from "./HistoricalRecords";
 
 export function Finance() {
   const balance = useQuery({ queryKey: ["console", "overview", "7"], queryFn: () => getConsoleOverview(7) });
@@ -94,8 +93,6 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
         </PageState>
       </section>
       <BalanceTransactions />
-      <HistoricalRecords kind="balance" />
-      <HistoricalRecords kind="payment" />
     </>
   );
 }
