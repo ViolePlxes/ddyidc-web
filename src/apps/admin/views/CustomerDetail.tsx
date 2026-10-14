@@ -696,13 +696,13 @@ export function AdminCustomerDetail() {
               />
             ) : null
           ) : ["products", "orders", "transactions"].includes(tab) ? (
-            <LayerCard className="p-4">
+            <div className="min-w-0">
               {tab === "transactions" ? (
                 <CreditHistory key={id} id={id} />
               ) : (
-                <RecordList key={`${id}-${tab}`} id={id} kind={tab} />
+                <LayerCard className="p-4"><RecordList key={`${id}-${tab}`} id={id} kind={tab} /></LayerCard>
               )}
-            </LayerCard>
+            </div>
           ) : (
             <LayerCard >
               <LayerCard.Secondary><Text as="h2" variant="heading">

@@ -17,6 +17,7 @@ export interface CreditRow {
   is_unfrozen?: boolean;
 }
 export interface CreditPage {
+  snapshot_version: number;
   list: CreditRow[];
   count: number;
   page_total_amount: string;
@@ -34,11 +35,11 @@ export const customerFinanceApi = {
         ApiEnvelope<{ balance: string; frozen_balance: string }>
       >(`/clients/${id}`),
     ),
-  list: (id: string, page: number, type: string, frozen = false) =>
+  list: (id: string, page: number, type: string, frozen = false, filters: {direction?: string; keywords?: string; snapshotVersion?: number; limit?: number; start_time?: string; end_time?: string} = {}, signal?: AbortSignal) =>
     unwrap(
       adminRequest.get<ApiEnvelope<CreditPage>>(
         `/clients/${id}/credit${frozen ? "/freeze" : ""}`,
-        { params: { page, limit: 10, type } },
+        { params: { page, limit: 10, type, ...filters }, signal },
       ),
     ),
   change: (id: string, action: string, input: Record<string, unknown>) =>
