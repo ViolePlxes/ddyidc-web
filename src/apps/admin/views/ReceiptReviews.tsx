@@ -11,6 +11,7 @@ interface ReceiptReview {
   channel: string; amount: string; reason: string; status: string;
 }
 const reasons: Record<string, string> = {
+  external_balance_ledger_mismatch: "已收款但账户账本不一致，订单与成对流水未完成，需人工核查",
   balance_ledger_mismatch: "已收款但账户账本不一致，尚未入账，需人工核查",
   order_not_payable: "订单已关闭、已付款或金额已变化",
   recharge_not_payable: "充值单已关闭或已入账",
@@ -60,12 +61,12 @@ export function ReceiptReviews() {
           <Table.Cell>{row.payNo}</Table.Cell><Table.Cell>{row.businessId} / {row.customerId}</Table.Cell>
           <Table.Cell>{row.channel} · ¥{row.amount}</Table.Cell><Table.Cell>{reasons[row.reason] ?? row.reason}</Table.Cell>
           <Table.Cell>{row.status === "credited" ? "已恢复入账" : row.status === "refunded" ? "已退款" : "待核对"}</Table.Cell>
-          <Table.Cell>{row.reason === "balance_ledger_mismatch" ? <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={row.status!=="pending"} onClick={()=>{resume.reset();setReason("");setRestore(row)}}>核查后入账</Button><Link href={adminPath("/admin/todos/refunds")}>前往人工核查</Link></div> : <Button variant="secondary" disabled={row.status !== "pending"} onClick={() => { refund.reset(); setReason(""); setSelected(row); }}>原路退款</Button>}</Table.Cell>
+          <Table.Cell>{(row.reason === "balance_ledger_mismatch" || row.reason === "external_balance_ledger_mismatch") ? <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={row.status!=="pending"} onClick={()=>{resume.reset();setReason("");setRestore(row)}}>核查后入账</Button><Link href={adminPath("/admin/todos/refunds")}>前往人工核查</Link></div> : <Button variant="secondary" disabled={row.status !== "pending"} onClick={() => { refund.reset(); setReason(""); setSelected(row); }}>原路退款</Button>}</Table.Cell>
         </Table.Row>)}</Table.Body>
       </Table>
     </PageState>
     <div className="flex justify-end gap-2"><Button variant="secondary" disabled={page === 1 || query.isFetching} onClick={() => setPage(page - 1)}>上一页</Button><span>第 {page} 页</span><Button variant="secondary" disabled={query.isFetching || (query.data?.length ?? 0) < 20} onClick={() => setPage(page + 1)}>下一页</Button></div>
-    <Dialog.Root open={Boolean(restore)} onOpenChange={open=>{if(!open&&!resume.isPending)setRestore(undefined)}}><Dialog className="grid gap-4 p-6"><Dialog.Title>核查后恢复充值入账</Dialog.Title><Dialog.Description>支付单 {restore?.payNo}，金额 ¥{restore?.amount}。请确认账本已核查、该收款未退款。仅继续原已验真收款，仍受账本门禁保护，操作记录管理员与原因。</Dialog.Description><Input label="核查原因" value={reason} maxLength={256} onChange={e=>setReason(e.target.value)}/>{resume.error?<Banner variant="error" title="尚未恢复入账" description={getApiMessage(resume.error)}/>:null}<div className="flex justify-end gap-2"><Button variant="secondary" disabled={resume.isPending} onClick={()=>setRestore(undefined)}>取消</Button><Button loading={resume.isPending} disabled={!reason.trim()} onClick={()=>resume.mutate()}>确认入账 ¥{restore?.amount}</Button></div></Dialog></Dialog.Root>
+    <Dialog.Root open={Boolean(restore)} onOpenChange={open=>{if(!open&&!resume.isPending)setRestore(undefined)}}><Dialog className="grid gap-4 p-6"><Dialog.Title>核查后恢复收款处理</Dialog.Title><Dialog.Description>支付单 {restore?.payNo}，金额 ¥{restore?.amount}。请确认账本已核查、该收款未退款。仅继续原已验真收款，仍受账本门禁保护，操作记录管理员与原因。</Dialog.Description><Input label="核查原因" value={reason} maxLength={256} onChange={e=>setReason(e.target.value)}/>{resume.error?<Banner variant="error" title="尚未恢复入账" description={getApiMessage(resume.error)}/>:null}<div className="flex justify-end gap-2"><Button variant="secondary" disabled={resume.isPending} onClick={()=>setRestore(undefined)}>取消</Button><Button loading={resume.isPending} disabled={!reason.trim()} onClick={()=>resume.mutate()}>确认恢复 ¥{restore?.amount}</Button></div></Dialog></Dialog.Root>
     <Dialog.Root open={Boolean(selected)} onOpenChange={open => { if (!open && !refund.isPending) setSelected(undefined); }}>
       <Dialog className="grid gap-4 p-6"><Dialog.Title>确认原路退款</Dialog.Title><Dialog.Description>支付单 {selected?.payNo}，向原付款渠道退回 ¥{selected?.amount}。请核对收款与订单后执行，操作将记录管理员及原因。</Dialog.Description>
         <Input label="退款原因" value={reason} maxLength={256} onChange={e => setReason(e.target.value)} />
