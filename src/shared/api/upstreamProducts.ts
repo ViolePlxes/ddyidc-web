@@ -14,6 +14,7 @@ export interface CatalogProduct {
   id: string;
   supplierId: string;
   upstreamProductId: string;
+  groupId: string;
   name: string;
   description: string;
   type: string;
@@ -83,7 +84,28 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
   return envelope.data;
 }
 
+async function readCompletePages<T extends { id: string }>(path: string, supplierId: string) {
+  const items: T[] = [];
+  let expectedTotal: number | undefined;
+  for (let page = 1; ; page++) {
+    const data = await unwrap(adminRequest.get<ApiEnvelope<{ items: T[] | null; total: number }>>(path, { params: { supplierId, page, pageSize: 100 } }));
+    if (expectedTotal !== undefined && expectedTotal !== data.total) throw new Error("目录正在变化，请重新加载完整目录");
+    expectedTotal = data.total;
+    const rows = data.items ?? [];
+    if (!rows.length && items.length < data.total) throw new Error("目录返回不完整，请重试");
+    items.push(...rows);
+    if (items.length >= data.total) break;
+  }
+  if (items.length !== expectedTotal || new Set(items.map(item => item.id)).size !== expectedTotal) throw new Error("目录发生重复或缺失，请重试");
+  return items;
+}
+
 export const upstreamProductsApi = {
+  comparisonCatalog: (supplierId: string) => unwrap(adminRequest.get<ApiEnvelope<{items: CatalogProduct[]; categories: {id:string; parentId:string; name:string}[]; warning:string; fetchedAt:number}>>(`/upstream/suppliers/${supplierId}/comparison-catalog`, {timeout:75_000})),
+  groups: () => unwrap(adminRequest.get<ApiEnvelope<{id:string;parentId:string;name:string}[]>>("/upstream/groups")),
+  lossGuard: () => unwrap(adminRequest.get<ApiEnvelope<{enabled:boolean}>>("/upstream/config/loss-guard")),
+  allMappings: (supplierId: string) => readCompletePages<UpstreamProduct>("/upstream/products", supplierId),
+  allCatalog: (supplierId: string) => readCompletePages<CatalogProduct>(`/upstream/suppliers/${supplierId}/catalog`, supplierId),
   metrics: () => unwrap(adminRequest.get<ApiEnvelope<{ items: UpstreamRequestMetric[] }>>("/upstream/metrics")),
   suppliers: () => unwrap(adminRequest.get<ApiEnvelope<UpstreamSupplier[]>>("/upstream/suppliers")),
   list: (supplierId?: string) => unwrap(adminRequest.get<ApiEnvelope<{ items: UpstreamProduct[]; total: number; lossGuard: boolean }>>("/upstream/products", { params: { page: 1, pageSize: 100, supplierId: supplierId || undefined } })),
