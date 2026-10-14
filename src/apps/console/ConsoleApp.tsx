@@ -18,6 +18,7 @@ import {
   CloudCheckIcon,
 } from "@phosphor-icons/react";
 import { lazy, useEffect } from "react";
+const Transactions = lazy(() => import("./views/Transactions").then(module => ({ default: module.Transactions })));
 import { pointsApi } from "../../shared/api/points";
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
@@ -486,7 +487,7 @@ export function ConsoleApp() {
             <Route path="/console/invoices/list" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/invoices/titles" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/invoices/addresses" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
-            <Route path="/console/transactions" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/transactions" element={<LazyRoute><Transactions /></LazyRoute>} />
             <Route path="/console/messages" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/logs" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/api" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />

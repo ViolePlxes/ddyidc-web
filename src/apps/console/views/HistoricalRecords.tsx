@@ -17,7 +17,7 @@ interface HistoryRow {
 }
 interface HistoryPage { list: HistoryRow[]; total: number }
 type HistoryKind = "orders" | "balance" | "payment";
-const titles: Record<HistoryKind, string> = { orders: "历史订单", balance: "历史余额流水", payment: "历史支付记录" };
+const titles: Record<HistoryKind, string> = { orders: "历史订单", balance: "迁移前历史余额流水", payment: "历史支付记录" };
 const yuan = (value?: string) => value === undefined ? "—" : `¥${Number(value).toFixed(2)}`;
 function recordTime(row: HistoryRow) {
   const value = row.paidAt || row.createdAt || (row.data?.create_time ? new Date(row.data.create_time * 1000).toISOString() : null);
@@ -38,7 +38,7 @@ export function HistoricalRecords({ kind }: { kind: HistoryKind }) {
   });
   const rows = query.data?.list ?? [];
   return <section className="grid gap-3">
-    <div><h2 className="text-lg font-semibold text-kumo-strong">{titles[kind]}</h2><p className="text-sm text-kumo-subtle">历史记录仅供查询。</p></div>
+    <div><h2 className="text-lg font-semibold text-kumo-strong">{titles[kind]}</h2><p className="text-sm text-kumo-subtle">迁移前历史记录仅供查询，不计入新版余额流水汇总。</p></div>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle={`暂无${titles[kind]}`}>
       <LayerCard className="shadow-none overflow-x-auto p-0"><Table>
         <Table.Header variant="compact"><Table.Row>

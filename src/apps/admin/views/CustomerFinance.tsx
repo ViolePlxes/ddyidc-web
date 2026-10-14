@@ -170,7 +170,7 @@ export function CustomerFinanceDialog({
             ? { amount, gateway, transaction_number: trace }
             : action === "余额冻结"
               ? { freeze_amount: amount, client_notes: clientNotes }
-              : { type, amount, confirm_large: confirmLarge }),
+              : { type, amount, client_notes: clientNotes, confirm_large: confirmLarge }),
       };
       await customerFinanceApi.change(
         id,
@@ -253,6 +253,7 @@ export function CustomerFinanceDialog({
                     }}
                   />
                 )}
+                {action === "强制变更" ? <Textarea label="客户可见原因" required maxLength={500} value={clientNotes} onChange={e=>setClientNotes(e.target.value)} /> : null}
                 {action === "充值" ? (
                   <>
                     <Select

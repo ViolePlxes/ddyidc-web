@@ -1,6 +1,6 @@
 import { Dialog } from "../../../shared/components/Dialog";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
-import { Banner, Button, Input, LayerCard, Pagination, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Link, Pagination, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -12,6 +12,7 @@ import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { useRecharges } from "../../../shared/hooks/useConsoleData";
 import { formatMoney, rechargeStatusLabel } from "../../../shared/utils/format";
 import { BalanceWithdrawals } from "../../../shared/components/BalanceWithdrawals";
+import { BalanceTransactions } from "../../../shared/components/BalanceTransactions";
 import { HistoricalRecords } from "./HistoricalRecords";
 
 export function Finance() {
@@ -39,7 +40,7 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
         title="财务中心"
         description="查看账户余额、充值与提现记录。"
         actions={
-          <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={()=>{setWithdrawOpen(true);document.getElementById("balance-withdrawals")?.scrollIntoView({block:"start",behavior:"smooth"});}}>提现</Button><Dialog.Root>
+          <div className="flex flex-wrap items-center gap-2"><Link href="/console/transactions">余额流水</Link><Button variant="secondary" onClick={()=>{setWithdrawOpen(true);document.getElementById("balance-withdrawals")?.scrollIntoView({block:"start",behavior:"smooth"});}}>提现</Button><Dialog.Root>
             <Dialog.Trigger render={<Button icon={<PlusIcon />}>创建充值单</Button>} />
             <Dialog className="grid gap-5 p-6">
               <div className="flex justify-between">
@@ -92,6 +93,7 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
           </div>
         </PageState>
       </section>
+      <BalanceTransactions />
       <HistoricalRecords kind="balance" />
       <HistoricalRecords kind="payment" />
     </>

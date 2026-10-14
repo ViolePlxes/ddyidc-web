@@ -60,6 +60,7 @@ export function PaymentDialog({
     mutationFn: () => paymentApi.payBalance(businessId, businessType),
     onSuccess: async () => {
       setBalancePaid(true);
+      window.dispatchEvent(new Event("ddyidc:balance-changed"));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["console", "overview"] }),
         queryClient.invalidateQueries({ queryKey: ["orders"] }),
