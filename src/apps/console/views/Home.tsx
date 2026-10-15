@@ -3,6 +3,7 @@ import { ArrowClockwiseIcon, CaretRightIcon, CubeIcon, DotsThreeIcon, Magnifying
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { cdnsellApi, probeCdnsell } from "../../../shared/api/cdnsell";
 import { consoleApi } from "../../../shared/api/console";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
 import { userTicketApi } from "../../../shared/api/tickets";
@@ -50,11 +51,18 @@ export function ConsoleHome() {
   const overview = useQuery({ queryKey: ["console", "overview", days], queryFn: () => getConsoleOverview(Number(days)), refetchInterval: 60_000 });
   const services = useQuery({ queryKey: ["console", "recent-services", 3], queryFn: () => consoleApi.userInstances({ page: 1, pageSize: 3 }) });
   const tickets = useQuery({ queryKey: ["console", "recent-tickets"], queryFn: () => userTicketApi.list({ page: 1, pageSize: 5 }) });
+  const cdnStatus = useQuery({ queryKey: ["cdnsell", "home-status", user?.id], queryFn: () => probeCdnsell("public"), enabled: !!user, staleTime: 60_000 });
+  const cdn = useQuery({ queryKey: ["cdnsell", "home-delivery", user?.id], queryFn: cdnsellApi.overview, enabled: !!user && cdnStatus.data?.enabled === true, retry: false });
+  const traffic = (bytes: number) => `${(bytes / (bytes >= 1024 ** 4 ? 1024 ** 4 : 1024 ** 3)).toLocaleString("zh-CN", { maximumFractionDigits: 2 })} ${bytes >= 1024 ** 4 ? "TB" : "GB"}`;
+  const cdnHint = cdnStatus.error || cdn.error ? "流量读取失败，请刷新重试" : cdnStatus.data?.enabled === false ? "CDN 服务尚未启用" : "正在读取流量…";
+  const daily = (cdn.data?.dailyTrend ?? []).slice(-Number(days));
+  const dailyValues: [number, number][] = daily.map(p => [new Date(p.time).getTime(), p.bytes / 1024 ** 3]);
+  const metricValues = (key: "balance" | "active"): [number, number][] => (overview.data?.series[key] ?? []).map(p => [p.time, p.value]);
   const metrics = [
-    { key: "balance" as const, title: "余额", value: overview.data ? `¥${Number(overview.data.balance).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—", hint: "每日可用余额净变动（元）", href: "/console/finance" },
-    { key: "active" as const, title: "激活产品数量", value: overview.data?.active ?? "—", hint: "当前运行中 · 图表为每日激活记录", href: "/console/instances" },
-    { key: "products" as const, title: "产品总量", value: overview.data?.products ?? "—", hint: "全部产品 · 图表为每日新增产品", href: "/console/instances" },
-    { key: "unpaid" as const, title: "未支付订单", value: overview.data?.unpaid ?? "—", hint: "当前待支付 · 图表按订单创建日期分布", href: "/console/orders" },
+    { key: "balance" as const, title: "余额", value: overview.data ? `¥${Number(overview.data.balance).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—", hint: "每日可用余额净变动（元）", href: "/console/finance", values: metricValues("balance"), valueFormat: undefined },
+    { key: "active" as const, title: "激活产品数量", value: overview.data?.active ?? "—", hint: "当前运行中 · 图表为每日激活记录", href: "/console/instances", values: metricValues("active"), valueFormat: undefined },
+    { key: "delivery" as const, title: "边缘节点分发总量", value: cdn.data?.distributedBytes !== undefined ? traffic(cdn.data.distributedBytes) : "—", hint: cdn.data ? "累计已确认分发流量（含超额用量）· 图表为每日分发流量（GB）" : cdnHint, href: "/console/cdnsell/statistics/traffic", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
+    { key: "traffic" as const, title: "流量情况", value: cdn.data ? `今日 ${traffic(cdn.data.todayBytes)}` : "—", hint: cdn.data ? `资源包剩余 ${traffic(cdn.data.remainingBytes)} · ${cdn.data.activeDomains} 个加速域名 · 每日流量（GB）` : cdnHint, href: "/console/cdnsell/usage", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
   ];
   return <div className="mx-auto grid w-full max-w-5xl gap-10 pb-8">
     <section className="grid gap-8 pt-6 md:pt-10">
@@ -95,12 +103,12 @@ export function ConsoleHome() {
         <Text as="h2" variant="heading">账户数据分析</Text>
         <div className="flex items-center gap-2">
           <Select aria-label="趋势时间范围" value={days} items={[{ value: "7", label: "过去 7 天" }, { value: "30", label: "过去 30 天" }]} onValueChange={v => setDays(v ?? "7")} />
-          <Button variant="ghost" shape="square" aria-label="刷新指标" icon={<ArrowClockwiseIcon />} loading={overview.isFetching} onClick={() => void overview.refetch()} />
+          <Button variant="ghost" shape="square" aria-label="刷新指标" icon={<ArrowClockwiseIcon />} loading={overview.isFetching || cdn.isFetching || cdnStatus.isFetching} onClick={() => { void overview.refetch(); void cdnStatus.refetch(); if (cdnStatus.data?.enabled) void cdn.refetch(); }} />
         </div>
       </div>
       <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 gap-3 px-5 py-4">
+          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 grid-cols-1 gap-3 px-5 py-4">
             <Link href={m.href} variant="plain" aria-label={`查看${m.title}`} className="absolute inset-0 z-10" />
             <div className="flex items-center justify-between gap-3"><Text>{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
             <Text as="p" variant="body" size="base">{m.value}</Text>
@@ -108,14 +116,14 @@ export function ConsoleHome() {
               <Button variant="primary" size="sm" onClick={() => navigate("/wallet/recharge")}>充值</Button>
               <Button variant="secondary" size="sm" onClick={() => navigate("/wallet/consume-records")}>明细</Button>
             </div> : null}
-            <span className="text-base text-kumo-subtle">{m.hint}</span>
-            <div className="relative z-20 cursor-pointer" onClick={() => navigate(m.href)}>
-              <MiniTrend title={m.hint} money={m.key === "balance"} values={(overview.data?.series[m.key] ?? []).map(p => [p.time, p.value])} />
+            <span className="min-w-0 whitespace-normal break-words text-base text-kumo-subtle">{m.hint}</span>
+            <div className="relative z-20 min-w-0 cursor-pointer" onClick={() => navigate(m.href)}>
+              <MiniTrend title={m.key === "delivery" || m.key === "traffic" ? "每日分发流量（GB）" : m.hint} money={m.key === "balance"} values={m.values} valueFormat={m.valueFormat} />
             </div>
           </LayerCard>)}
         </div>
       </PageState>
-      <p className="text-base text-kumo-subtle">数量与余额为当前值，图表按服务器日期汇总；当前日期尚未结束。{overview.data ? ` 更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN")}` : ""}</p>
+      <p className="text-base text-kumo-subtle">数量与余额为当前值；分发总量为累计已确认计量流量，流量图表按北京时间逐日汇总，今日数据尚未结束。{overview.data ? ` 账户数据更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}` : ""}</p>
     </section>
   </div>;
 }
