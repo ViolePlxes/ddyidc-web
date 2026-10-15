@@ -44,7 +44,7 @@ export function PortalHeader({loginHref,consoleHref,homeHref='/',containerClassN
     <div ref={sentinel} className="h-20" aria-hidden="true" />
     <header data-portal-header={compact ? 'compact' : 'full'} className={`pointer-events-none fixed! inset-x-0 top-0 z-40 ${compact && !menu ? 'bg-transparent!' : 'border-b border-kumo-hairline bg-kumo-base'}`} onKeyDown={event => { if (event.key === 'Escape' && menu) { setMenu(false); menuButton.current?.focus(); } }}>
       <div className={`${container} grid h-20 grid-cols-[1fr_auto] items-center gap-2 lg:grid-cols-[1fr_auto_1fr]`}>
-        <Link ref={logo} href={homeHref} variant="plain" aria-label="DDYIDC 首页" className="pointer-events-auto flex w-fit items-center gap-2 text-xl font-semibold text-kumo-strong">
+        <Link ref={logo} href={homeHref} variant="plain" aria-label="DDYIDC 首页" className="pointer-events-auto flex w-fit items-center gap-2 text-base font-semibold text-kumo-strong">
           <CloudIcon size={32} weight="fill" aria-hidden="true" className={compact && !menu && tone.logo ? 'text-kumo-inverse' : 'text-kumo-brand'} />
           {!compact && <span className="hidden sm:inline">DDYIDC</span>}
         </Link>

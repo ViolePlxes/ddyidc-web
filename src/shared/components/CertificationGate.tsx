@@ -33,7 +33,7 @@ export function useCertificationGate() {
     <>
       {error && <Banner variant="error" title={error} />}
       <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog className="grid gap-4 p-6">
+        <Dialog className="grid gap-4 p-8">
           <Dialog.Title>尚未实名认证，请先完成实名认证</Dialog.Title>
           <Dialog.Description>
             当前平台要求完成实名认证后购买。国内云产品须遵守实名与合法使用要求。

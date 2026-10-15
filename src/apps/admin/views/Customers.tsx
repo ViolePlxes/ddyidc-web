@@ -1,7 +1,8 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
-import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, DropdownMenu, Input, LayerCard, Pagination, Select, Table, Tooltip } from "@cloudflare/kumo";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
+import { Banner, Button, DropdownMenu, Input, LayerCard,  Select, Table, Tooltip } from "@cloudflare/kumo";
 import {
   CaretDownIcon,
   PlusIcon,
@@ -119,8 +120,8 @@ function realnameBadge(status: number) {
 
 function customerSummary(customer: AdminCustomerRow) {
   return (
-    <div className="grid gap-1 text-sm">
-      <strong>{customer.displayName || customer.username}</strong>
+    <div className="grid gap-1 text-base">
+      <strong className="font-medium">{customer.displayName || customer.username}</strong>
       <span>{customer.email || "未绑定邮箱"}</span>
       <span>{customer.phone || "未绑定手机号"}</span>
       <span>{customer.status === 1 ? "账号已启用" : "账号未启用"}</span>
@@ -298,10 +299,10 @@ function CreateCustomerDialog({
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog size="lg" className="grid gap-5 p-6">
+      <Dialog size="lg" className="grid gap-4 p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Dialog.Title className="text-xl font-semibold">新建用户</Dialog.Title>
+            <Dialog.Title className="text-2xl font-semibold">新建用户</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               手机号与邮箱至少填写一项；创建后账号默认启用。
             </Dialog.Description>
@@ -436,7 +437,7 @@ export function AdminCustomers() {
       {createdName ? (
         <Banner variant="default" title="用户创建成功" description={`${createdName} 已加入客户列表。`} />
       ) : null}
-      <LayerCard className="grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
+      <LayerCard className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_12rem_auto]">
         <Input
           aria-label="客户关键词"
           placeholder="用户 ID、账号、姓名、邮箱或手机号…"
@@ -491,16 +492,16 @@ export function AdminCustomers() {
               </Table.Body>
             </Table>
           </LayerCard>
-          <LayerCard className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <span className="text-sm text-kumo-subtle">
-              总用户数 <strong className="text-kumo-strong">{query.data?.totalUsers ?? 0}</strong>
+          <LayerCard className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <span className="text-base text-kumo-subtle">
+              总用户数 <strong className="text-kumo-strong font-medium">{query.data?.totalUsers ?? 0}</strong>
             </span>
-            <div className="flex flex-wrap items-center gap-6 text-sm">
+            <div className="flex flex-wrap items-center gap-6 text-base">
               <span className="text-kumo-subtle">
-                本页用户余额合计 <strong className="text-kumo-strong">{formatMoney(query.data?.pageBalanceSum ?? 0)}</strong>
+                本页用户余额合计 <strong className="text-kumo-strong font-medium">{formatMoney(query.data?.pageBalanceSum ?? 0)}</strong>
               </span>
               <span className="text-kumo-subtle">
-                用户余额总计 <strong className="text-kumo-strong">{formatMoney(query.data?.totalBalanceSum ?? 0)}</strong>
+                用户余额总计 <strong className="text-kumo-strong font-medium">{formatMoney(query.data?.totalBalanceSum ?? 0)}</strong>
               </span>
             </div>
           </LayerCard>
@@ -512,7 +513,7 @@ export function AdminCustomers() {
           />
         </div>
       </PageState>
-      {createOpen ? (
+      <DialogPresence>{createOpen ? (
         <CreateCustomerDialog
           onClose={() => setCreateOpen(false)}
           onCreated={(customer) => {
@@ -522,7 +523,7 @@ export function AdminCustomers() {
             void queryClient.invalidateQueries({ queryKey: ["admin", "customers"] });
           }}
         />
-      ) : null}
+      ) : null}</DialogPresence>
     </>
   );
 }

@@ -1,11 +1,12 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
-import { Dialog } from "../../../shared/components/Dialog";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { ImportInstanceDialog } from "./ImportInstanceDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";
-import { Banner, Breadcrumbs, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Text, Textarea } from "@cloudflare/kumo";
+import { Banner, Breadcrumbs, Button, Input, LayerCard,  Select, Switch, Table, Tabs, Text, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   parsePhoneNumberFromString,
@@ -314,7 +315,7 @@ function ProfileEditor({
                 {m.label}
                 {typeof m.value === "string" ? "（元）" : ""}
               </p>
-              <Text as="p" variant="heading" size="lg">
+              <Text as="p" variant="body" size="base">
                 {m.value}
               </Text>
             </div>
@@ -509,7 +510,7 @@ function ProfileEditor({
           <RecordList id={customer.id} kind="logins" />
         </LayerCard.Primary></LayerCard>
       </div>
-      {["充值", "余额冻结", "强制变更", "变更记录"].includes(
+      <DialogPresence>{["充值", "余额冻结", "强制变更", "变更记录"].includes(
         dialog,
       ) ? (
         <CustomerFinanceDialog
@@ -518,7 +519,7 @@ function ProfileEditor({
           action={dialog}
           close={() => setDialog("")}
         />
-      ) : null}
+      ) : null}</DialogPresence>
       <Dialog.Root
         open={
           Boolean(dialog) &&
@@ -530,7 +531,7 @@ function ProfileEditor({
           if (!open) setDialog("");
         }}
       >
-        <Dialog className="grid gap-4 p-6">
+        <Dialog className="grid gap-4 p-8">
           <Dialog.Title>{dialog}</Dialog.Title>
           <Dialog.Description>
             {dialog === "账户状态"
@@ -700,7 +701,7 @@ export function AdminCustomerDetail() {
               {tab === "transactions" ? (
                 <CreditHistory key={id} id={id} />
               ) : (
-                <LayerCard className="p-4"><RecordList key={`${id}-${tab}`} id={id} kind={tab} /></LayerCard>
+                <LayerCard className="px-4 py-3"><RecordList key={`${id}-${tab}`} id={id} kind={tab} /></LayerCard>
               )}
             </div>
           ) : (

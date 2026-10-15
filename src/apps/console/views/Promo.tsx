@@ -1,3 +1,4 @@
+import { Badge } from "../../../shared/components/Badge";
 import {
   Banner,
   Button,
@@ -5,7 +6,7 @@ import {
   Input,
   LayerCard,
   Tabs,
-  Badge,
+
   Collapsible,
 } from "@cloudflare/kumo";
 import { PromoCouponForm, PromoCouponBatches } from "./PromoCouponPanel";
@@ -158,24 +159,24 @@ export function Promo() {
       <PageState loading={loading} error={error ? getApiMessage(error) : null}>
         <div className="grid gap-5">
           {inviteCode ? (
-            <LayerCard className="shadow-none grid min-w-0 gap-4 p-5 md:grid-cols-[auto_minmax(0,1fr)]">
+            <LayerCard className=" grid min-w-0 gap-4 px-5 py-4 md:grid-cols-[auto_minmax(0,1fr)]">
               <div className="grid gap-1">
-                <span className="text-sm text-kumo-subtle">
+                <span className="text-base text-kumo-subtle">
                   专属优惠码 · {inviteStatus}
                 </span>
                 <ClipboardText text={inviteCode} />
                 {currentInvite?.rejectReason ? (
-                  <p className="text-sm text-kumo-subtle">
+                  <p className="text-base text-kumo-subtle">
                     审核说明：{currentInvite.rejectReason}
                   </p>
                 ) : null}
               </div>
               <div className="grid min-w-0 content-start gap-1">
-                <span className="text-sm text-kumo-subtle">分享链接</span>
+                <span className="text-base text-kumo-subtle">分享链接</span>
                 {link && currentInvite?.status === 1 ? (
                   <ClipboardText text={link} className="w-full min-w-0" />
                 ) : (
-                  <span className="text-sm text-kumo-subtle">
+                  <span className="text-base text-kumo-subtle">
                     优惠码通过审核并启用后可分享
                   </span>
                 )}
@@ -183,7 +184,7 @@ export function Promo() {
             </LayerCard>
           ) : null}
           {canApply ? (
-            <LayerCard className="shadow-none grid gap-4 p-5">
+            <LayerCard className=" grid gap-4 px-5 py-4">
               <Input
                 label="自定义优惠码（可选）"
                 value={customCode}
@@ -215,9 +216,9 @@ export function Promo() {
             />
           ) : null}
           <MetricGrid metrics={metrics} />
-          <LayerCard className="shadow-none grid gap-3 p-5">
+          <LayerCard className=" grid gap-3 px-5 py-4">
             <h2 className="font-semibold text-kumo-strong">积分推广奖励</h2>
-            <p className="text-sm text-kumo-subtle">
+            <p className="text-base text-kumo-subtle">
               邀请注册、好友首充和消费奖励自动计入积分账户，可在积分商城兑换余额。当前规则由后台配置。
             </p>
             {rules.data
@@ -295,9 +296,9 @@ export function Promo() {
                     emptyTitle="暂无已结算收益"
                   />
                 ) : null}
-                <div className="min-w-0 text-sm">
+                <div className="min-w-0 text-base">
                   <div
-                    className={`grid gap-x-4 border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle ${view === "customers" ? "grid-cols-[minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"}`}
+                    className={`grid gap-x-4 border-b border-kumo-fill px-1 pb-2 text-base font-medium text-kumo-subtle ${view === "customers" ? "grid-cols-[minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(12rem,1fr)_auto_auto]"}`}
                   >
                     <span>用户 ID</span>
                     {view === "customers" ? (
@@ -336,7 +337,7 @@ export function Promo() {
                       >
                         <span className="min-w-0 font-medium text-kumo-default">
                           <span className="block truncate">{r.userId}</span>
-                          <span className="block text-xs text-kumo-subtle sm:hidden">
+                          <span className="block text-base text-kumo-subtle sm:hidden">
                             {r.settledAt
                               ? new Date(r.settledAt).toLocaleString("zh-CN")
                               : "—"}
@@ -356,7 +357,7 @@ export function Promo() {
                     ))}
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-kumo-subtle">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-base text-kumo-subtle">
                   <span>
                     共 {total} 条 · 本页显示{" "}
                     {view === "customers"

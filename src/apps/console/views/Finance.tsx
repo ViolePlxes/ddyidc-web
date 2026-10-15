@@ -1,6 +1,7 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { Dialog } from "../../../shared/components/Dialog";
 import { getConsoleOverview } from "../../../shared/api/consoleHome";
-import { Banner, Button, Input, LayerCard, Link, Pagination, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Link,  Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -41,10 +42,10 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
         actions={
           <div className="flex flex-wrap items-center gap-2"><Link href="/console/transactions">余额流水</Link><Button variant="secondary" onClick={()=>{setWithdrawOpen(true);document.getElementById("balance-withdrawals")?.scrollIntoView({block:"start",behavior:"smooth"});}}>提现</Button><Dialog.Root>
             <Dialog.Trigger render={<Button icon={<PlusIcon />}>创建充值单</Button>} />
-            <Dialog className="grid gap-5 p-6">
+            <Dialog className="grid gap-4 p-8">
               <div className="flex justify-between">
                 <div>
-                  <Dialog.Title className="text-xl font-semibold">创建充值单</Dialog.Title>
+                  <Dialog.Title className="text-2xl font-semibold">创建充值单</Dialog.Title>
                   <Dialog.Description className="text-kumo-subtle">创建待支付充值单后，使用支付宝完成在线充值。</Dialog.Description>
                 </div>
                 <Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} />
@@ -66,7 +67,7 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
         description="支付平台验签、金额校验和幂等入账全部在服务端完成；浏览器展示结果不会直接修改余额。"
       />
       {created ? (
-        <LayerCard className="shadow-none grid gap-4 p-5">
+        <LayerCard className=" grid gap-4 px-5 py-4">
           <Banner title="充值单已创建" description={`充值单 ${created.rechargeNo} 已进入待支付状态。`} />
           <div className="flex justify-end">
             <PaymentDialog businessType="recharge" businessId={created.id} amountCents={created.amount} defaultOpen onPaid={async () => {
@@ -81,7 +82,7 @@ const [withdrawOpen,setWithdrawOpen]=useState(false);
         <h2 className="text-lg font-semibold text-kumo-strong">充值记录</h2>
         <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无充值记录">
           <div className="grid gap-3">
-            <LayerCard className="shadow-none overflow-x-auto p-0">
+            <LayerCard className=" overflow-x-auto p-0">
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>充值单号</Table.Head><Table.Head>创建时间</Table.Head><Table.Head>状态</Table.Head><Table.Head className="text-right">金额</Table.Head><Table.Head className="text-right">操作</Table.Head></Table.Row></Table.Header>
                 <Table.Body data-animate-list>{rows.map((row) => <Table.Row key={row.id}><Table.Cell>{row.rechargeNo}</Table.Cell><Table.Cell>{row.createdAt}</Table.Cell><Table.Cell>{rechargeStatusLabel(row.status)}</Table.Cell><Table.Cell className="text-right">{formatMoney(row.amount)}</Table.Cell><Table.Cell className="text-right">{row.status === 1 ? <PaymentDialog businessType="recharge" businessId={row.id} amountCents={row.amount} onPaid={async () => { await queryClient.invalidateQueries({ queryKey: ["finance", "recharges"] });

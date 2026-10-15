@@ -60,7 +60,7 @@ export function DateRangeField({ label, from, to, onValueChange, withTime = fals
   const incomplete = !allowPartial && (!nextFrom || !nextTo);
   const format = (value: string) => value ? `${calendarDate(value)?.toLocaleDateString('zh-CN') ?? ''}${withTime ? ` ${value.slice(11)}` : ''}` : '不限';
   return <div className="grid min-w-0 gap-2">
-    <span id={id} className="text-sm font-medium">{label}</span>
+    <span id={id} className="text-base font-medium">{label}</span>
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Popover open={open} onOpenChange={changeOpen}>
         <Popover.Trigger render={<Button type="button" variant="secondary" icon={CalendarDotsIcon} disabled={disabled} aria-label={label} aria-describedby={id} className="h-auto min-h-9 max-w-full whitespace-normal" />}>
@@ -71,7 +71,7 @@ export function DateRangeField({ label, from, to, onValueChange, withTime = fals
             <DatePicker mode="range" selected={range} defaultMonth={range?.from ?? range?.to} onChange={setRange} numberOfMonths={wide ? 2 : 1} disabled={disabled}
               labels={{ labelNav: () => '切换月份', labelGrid: date => date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' }), labelPrevious: () => '上个月', labelNext: () => '下个月', labelDayButton: date => date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) }}
               formatters={{ formatCaption: date => date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' }), formatWeekdayName: date => date.toLocaleDateString('zh-CN', { weekday: 'short' }) }} />
-            <p className="text-sm text-kumo-subtle">{range?.from ? `${calendarValue(range.from)} – ${calendarValue(range.to) || '请选择结束日期'}` : '请选择开始日期和结束日期'}</p>
+            <p className="text-base text-kumo-subtle">{range?.from ? `${calendarValue(range.from)} – ${calendarValue(range.to) || '请选择结束日期'}` : '请选择开始日期和结束日期'}</p>
             {allowPartial && <div className="flex flex-wrap gap-2">
               <Button type="button" variant="ghost" size="sm" disabled={disabled || !range?.from} onClick={() => setRange(current => ({ from: undefined, to: current?.to }))}>不限开始日期</Button>
               <Button type="button" variant="ghost" size="sm" disabled={disabled || !range?.to} onClick={() => setRange(current => ({ from: current?.from, to: undefined }))}>不限结束日期</Button>
@@ -80,7 +80,7 @@ export function DateRangeField({ label, from, to, onValueChange, withTime = fals
               <Input label="开始时刻" type="time" step={seconds ? 1 : 60} value={fromTime} disabled={disabled || !range?.from} onChange={event => { if (event.target.value) setFromTime(event.target.value); }} />
               <Input label="结束时刻" type="time" step={seconds ? 1 : 60} value={toTime} disabled={disabled || !range?.to} onChange={event => { if (event.target.value) setToTime(event.target.value); }} />
             </div>}
-            {invalid && <p role="alert" className="text-sm text-kumo-danger">结束时间不能早于开始时间</p>}
+            {invalid && <p role="alert" className="text-base text-kumo-danger">结束时间不能早于开始时间</p>}
             <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="ghost" disabled={disabled} onClick={() => setRange(undefined)}>重新选择</Button>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>取消</Button>
@@ -108,7 +108,7 @@ export function DateField({ label, value, onValueChange, withTime = false, disab
     setOpen(false);
   };
   return <div className="grid gap-2">
-    <span id={id} className="text-sm font-medium">{label}</span>
+    <span id={id} className="text-base font-medium">{label}</span>
     <div className="flex items-center gap-2">
       <Popover open={open} onOpenChange={setOpen}>
         <Popover.Trigger render={<Button type="button" variant="secondary" icon={CalendarDotsIcon} disabled={disabled} aria-label={label} aria-describedby={id} />}>

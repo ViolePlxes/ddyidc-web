@@ -17,7 +17,7 @@ export function TransferDialog({ instanceId }: { instanceId: string }) {
  const busy = status.data.trading || status.data.transferring;
  return <Dialog.Root open={open} onOpenChange={(value) => { if (!submit.isPending) { setOpen(value); if(value)void status.refetch(); setPassword(""); submit.reset(); } }}>
   <Dialog.Trigger render={<Button variant="secondary" disabled={busy}>{status.data.trading ? "交易中" : status.data.transferring ? "待接收" : "转让实例"}</Button>} />
-  <Dialog className="grid gap-5 p-6">
+  <Dialog className="grid gap-4 p-8">
    <Dialog.Title>免费转让实例</Dialog.Title>
    <Dialog.Description>双方须已实名认证。接收方登录接收中心并确认后才会过户，原账号将失去全部控制权。请提前备份并移除个人数据。</Dialog.Description>
    <Input label="接收方用户名 / 手机号 / 邮箱" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="off" />

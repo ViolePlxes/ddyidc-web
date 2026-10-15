@@ -33,13 +33,13 @@ export function TrafficCalculator() {
   return <LayerCard className="mt-6">
     <LayerCard.Secondary>按量付费价格计算器</LayerCard.Secondary>
     <LayerCard.Primary className="grid gap-5 p-5 sm:p-6">
-      <p className="text-sm text-kumo-subtle">中国大陆流量按自然月分段累进计费。1TB = 1000GB，1PB = 1000TB；此估算不含 HTTPS 请求费，也不扣除已购资源包。</p>
+      <p className="text-base text-kumo-subtle">中国大陆流量按自然月分段累进计费。1TB = 1000GB，1PB = 1000TB；此估算不含 HTTPS 请求费，也不扣除已购资源包。</p>
       <div className="grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <Input label="预计月流量" type="number" min={0} step="any" value={value} onChange={e => setValue(e.target.value)} aria-invalid={!result} />
         <Tabs variant="segmented" value={unit} onValueChange={v => setUnit(v as keyof typeof units)} tabs={Object.keys(units).map(v => ({ value: v, label: v }))} />
       </div>
-      {!result ? <p role="alert" className="text-sm text-kumo-subtle">请输入非负流量，最多6位小数，换算后不超过10亿GB。</p> : <>
-        <div className="grid gap-1"><span className="text-sm text-kumo-subtle">{quantity(gb)} GB · 预计流量费用</span><strong aria-live="polite" className="text-3xl text-kumo-strong">¥{money(result.totalCents)}</strong></div>
+      {!result ? <p role="alert" className="text-base text-kumo-subtle">请输入非负流量，最多6位小数，换算后不超过10亿GB。</p> : <>
+        <div className="grid gap-1"><span className="text-base text-kumo-subtle">{quantity(gb)} GB · 预计流量费用</span><strong aria-live="polite" className="text-base text-kumo-strong font-medium">¥{money(result.totalCents)}</strong></div>
         <div className="overflow-x-auto"><Table><Table.Header><Table.Row><Table.Head>流量阶梯</Table.Head><Table.Head>单价（元/GB）</Table.Head><Table.Head>本段用量（GB）</Table.Head><Table.Head>本段费用（元）</Table.Head></Table.Row></Table.Header><Table.Body>{result.rows.map(row => <Table.Row key={row.label}><Table.Cell>{row.label}</Table.Cell><Table.Cell>{(row.cents / 100).toFixed(2)}</Table.Cell><Table.Cell>{quantity(row.used)}</Table.Cell><Table.Cell>{money(row.amount)}</Table.Cell></Table.Row>)}</Table.Body></Table></div>
       </>}
     </LayerCard.Primary>

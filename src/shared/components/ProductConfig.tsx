@@ -98,7 +98,7 @@ function ProductOptionControl({
       <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />
       {option.optionType === "qty" && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" size="sm" disabled={disabled || page === 0} onClick={() => setQuantityPage(page - 1)}>上一组</Button>
-        <span className="text-sm text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
+        <span className="text-base text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
         <Button variant="secondary" size="sm" disabled={disabled || (page + 1) * pageSize >= quantityCount} onClick={() => setQuantityPage(page + 1)}>下一组</Button>
       </div> : null}
     </div>;
@@ -136,10 +136,10 @@ function ProductOptionControl({
 
 function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePrice }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean; referencePrice?: number }) {
   return (
-    <LayerCard className="shadow-none overflow-hidden p-0">
+    <LayerCard className=" overflow-hidden p-0">
       <div className="grid gap-1 p-5">
         <h2 className="text-lg font-semibold text-kumo-strong">{catalogSelection ? "销售规格" : "计算规格"}</h2>
-        <p className="text-sm text-kumo-subtle">规格与价格以当前商品展示为准。</p>
+        <p className="text-base text-kumo-subtle">规格与价格以当前商品展示为准。</p>
       </div>
       {specs.length ? (
         <Radio.Group aria-label="计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
@@ -161,14 +161,14 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePri
                   <Table.Cell>{spec.processorModel || "—"}</Table.Cell><Table.Cell>{spec.processorFrequency || "—"}</Table.Cell>
                   <Table.Cell>{spec.defense || "—"}</Table.Cell><Table.Cell>{spec.upstreamBandwidth || "—"}</Table.Cell>
                   <Table.Cell>{spec.downstreamRate || "—"}</Table.Cell><Table.Cell>{spec.stock === null ? "库存充足" : `${spec.stock} 台`}</Table.Cell>
-                  <Table.Cell><strong className="text-kumo-strong">¥{(referencePrice ?? spec.price).toFixed(2)}/月</strong></Table.Cell>
+                  <Table.Cell><strong className="text-kumo-strong font-medium">¥{(referencePrice ?? spec.price).toFixed(2)}/月</strong></Table.Cell>
                 </Table.Row>
               ))}
             </Table.Body>
           </Table>
         </Radio.Group>
       ) : (
-        <div className="border-t border-kumo-line p-5 text-sm text-kumo-subtle">规格待配置。运营完成商品规格配置后即可购买。</div>
+        <div className="border-t border-kumo-line p-5 text-base text-kumo-subtle">规格待配置。运营完成商品规格配置后即可购买。</div>
       )}
     </LayerCard>
   );
@@ -307,17 +307,17 @@ export function ProductConfig({
   const bill = (
     <LayerCard
       aria-busy={billLoading}
-      className={`shadow-none ${externalBill ? "grid gap-5 p-5" : "sticky top-20 grid gap-5 p-5"}${billLoading ? " pointer-events-none" : ""}`}
+      className={` ${externalBill ? "grid gap-5 px-5 py-4" : "sticky top-20 grid gap-5 px-5 py-4"}${billLoading ? " pointer-events-none" : ""}`}
     >
       <div className="grid gap-1">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-kumo-subtle">当前应付</span>
+          <span className="text-base text-kumo-subtle">当前应付</span>
           {billLoading ? <Badge variant="secondary">正在更新</Badge> : null}
         </div>
-        <strong className="text-3xl font-semibold text-kumo-strong">¥{total.toFixed(2)}</strong>
-        <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 ¥{unitPrice.toFixed(2)}</span>
+        <strong className="text-base font-semibold text-kumo-strong">¥{total.toFixed(2)}</strong>
+        <span className="text-base text-kumo-subtle">{product.name} · 单台本周期 ¥{unitPrice.toFixed(2)}</span>
       </div>
-      <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
+      <div className="grid gap-2 border-t border-kumo-line pt-4 text-base text-kumo-subtle">
         {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>计算规格：{product.name}</span>}
         {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{withoutZeroPrice(item.displayValue)}</span>)}
         <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
@@ -325,7 +325,7 @@ export function ProductConfig({
         <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
         <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
       </div>
-          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
+          <div className="grid gap-2"><span className="text-base font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong font-medium">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
       <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
       <Button disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
     </LayerCard>
@@ -339,14 +339,14 @@ export function ProductConfig({
         <div className="grid gap-5">
         {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} referencePrice={isUpstreamProduct(product) ? product.price : undefined} /> : null}
         {!catalogSelection && selectedSpec ? (
-          <LayerCard className="shadow-none p-5 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
+          <LayerCard className=" px-5 py-4 text-base"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong font-medium">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}
 
         {displayedOptions.map((option) => {
           const value = selected[option.id] ?? initialValue(option);
           const isSlider = option.optionType === "qty" && usesResourceSlider(option);
           return (
-            <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className="scroll-mt-4 shadow-none grid min-w-0 gap-4 p-5">
+            <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
               <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>
@@ -354,8 +354,8 @@ export function ProductConfig({
         })}
 
         {imageOption && imageGroups.length ? (
-          <LayerCard id={anchor("images")} className="scroll-mt-4 shadow-none grid gap-4 p-5">
-            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
+          <LayerCard id={anchor("images")} className="scroll-mt-4 grid gap-4 px-5 py-4">
+            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-base text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
             <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
               <div key={group.name} className="overflow-x-auto"><Tabs variant="segmented" aria-label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [imageOption.id]: value }))} tabs={group.child.map((choice) => ({ value: choice.id, label: choiceLabel(choice) }))} /></div>
@@ -363,14 +363,14 @@ export function ProductConfig({
           </LayerCard>
         ) : null}
 
-        <LayerCard id={anchor("purchase")} className="scroll-mt-4 shadow-none grid gap-5 p-5">
+        <LayerCard id={anchor("purchase")} className="scroll-mt-4 grid gap-5 px-5 py-4">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
 <div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
           {options.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
         </LayerCard>
 
         {certification.feedback}<Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
-        <LayerCard className="shadow-none grid gap-2 p-5"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按商品退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
+        <LayerCard className=" grid gap-2 px-5 py-4"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-base text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按商品退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
         </div>
 
         {externalBill ? null : bill}

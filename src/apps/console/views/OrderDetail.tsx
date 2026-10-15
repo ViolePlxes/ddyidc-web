@@ -63,7 +63,7 @@ export function OrderDetail() {
         {order ? (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
-              <LayerCard className="shadow-none p-5">
+              <LayerCard className=" px-5 py-4">
                 <DefinitionList
                   rows={[
                     { label: "订单号", value: order.orderNo },
@@ -95,9 +95,9 @@ export function OrderDetail() {
                 description={item?.moduleType==="promo_coupon"?"请在推广客户与收益查看审核、出资、券发放与原资产退还进度。":orderMessages[order.status]?.description ?? "请刷新订单，或联系平台核对处理进度。"}
               />
             </div>
-            <LayerCard className="shadow-none grid gap-4 p-5">
-              <span className="text-sm text-kumo-subtle">{item?.moduleType==="promo_coupon"?"批次出资":"应付金额"}</span>
-              {item?.moduleType==="promo_coupon"?<p className="text-sm">积分或余额出资金额请在批次中核对。</p>:<strong className="text-3xl text-kumo-strong">{formatMoney(order.payAmount)}</strong>}
+            <LayerCard className=" grid gap-4 px-5 py-4">
+              <span className="text-base text-kumo-subtle">{item?.moduleType==="promo_coupon"?"批次出资":"应付金额"}</span>
+              {item?.moduleType==="promo_coupon"?<p className="text-base">积分或余额出资金额请在批次中核对。</p>:<strong className="text-base text-kumo-strong font-medium">{formatMoney(order.payAmount)}</strong>}
               {order.status===1&&!order.couponId&&item?.moduleType!=="promo_coupon"?<PromoOrderCoupon orderId={order.id} amount={order.totalAmount}/>:null}
               {item?.moduleType==="promo_coupon"?<Link className="text-kumo-link" to="/console/promo">返回推广客户与收益确认出资或回收</Link>:<PaymentDialog
                 businessType="order"

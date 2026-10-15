@@ -6,6 +6,6 @@
 .wallet-payment-method img { display: block; width: auto; height: 1.5rem; max-width: 100%; }
 .wallet-transfer { width: 100%; max-width: 37.5rem; display: grid; gap: 1.5rem; }
 .wallet-transfer dl { display: grid; grid-template-columns: minmax(0, 5.25rem) minmax(0, 1fr); gap: 1rem; }
-.wallet-transfer dt { color: var(--color-kumo-subtle); }
+.wallet-transfer dt { color: var(--text-color-kumo-subtle); }
 .wallet-transfer dd { overflow-wrap: anywhere; }
 .wallet-recharge-notes { display: grid; gap: 0.75rem; }

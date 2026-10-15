@@ -66,7 +66,7 @@ export function TrendChart({
   return (
     <section className="grid gap-3">
       <h2 className="text-lg font-semibold text-kumo-strong">{title}</h2>
-      <LayerCard className="shadow-none p-5">
+      <LayerCard className=" px-5 py-4">
         <TimeseriesChart
           echarts={echarts}
           type={type}
@@ -85,7 +85,7 @@ export function TrendChart({
         />
         {zoomable&&times.length>1?<div className="mt-5 grid min-w-0 gap-3">
           <Slider size="sm" min={0} max={last} step={1} value={[startIndex,endIndex]} getAriaLabel={index=>index===0?"图表起始时间":"图表结束时间"} formatValue={index=>clock(index)} onValueChange={next=>{if(!Array.isArray(next)||next.length!==2)return;let start=Math.max(0,Math.min(last-1,Math.round(next[0]??0)));const end=Math.max(start+1,Math.min(last,Math.round(next[1]??last)));start=Math.min(start,end-1);setWindow([start,end])}} className="w-full min-w-0"/>
-          <p className="text-sm text-kumo-subtle" aria-live="polite">显示：{clock(startIndex,true)} – {clock(endIndex,true)} · {endIndex-startIndex+1}/{times.length} 个时间点</p>
+          <p className="text-base text-kumo-subtle" aria-live="polite">显示：{clock(startIndex,true)} – {clock(endIndex,true)} · {endIndex-startIndex+1}/{times.length} 个时间点</p>
         </div>:null}
       </LayerCard>
     </section>

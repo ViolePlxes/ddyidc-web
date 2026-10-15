@@ -1,4 +1,4 @@
-import { Dialog } from "../../../shared/components/Dialog";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { PencilSimpleIcon, PlusIcon, PlugsConnectedIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,10 +40,10 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog size="lg" className="grid max-h-[90vh] gap-5 overflow-y-auto p-6">
+      <Dialog size="lg" className="grid max-h-[90vh] gap-4 overflow-y-auto p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Dialog.Title className="text-xl font-semibold">{supplier ? "编辑供应商" : "新增供应商"}</Dialog.Title>
+            <Dialog.Title className="text-2xl font-semibold">{supplier ? "编辑供应商" : "新增供应商"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">凭据仅提交到服务端加密保存，列表接口不会返回凭据。</Dialog.Description>
           </div>
           <Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" onClick={onClose} />
@@ -108,9 +108,9 @@ export function UpstreamSuppliers() {
             <Table.Body>
               {suppliers.map((supplier) => (
                 <Table.Row key={supplier.id}>
-                  <Table.Cell><div className="grid"><strong className="text-kumo-strong">{supplier.name}</strong><span className="text-xs text-kumo-subtle">#{supplier.id} · {supplier.remark || "无备注"}</span></div></Table.Cell>
+                  <Table.Cell><div className="grid"><strong className="text-kumo-strong font-medium">{supplier.name}</strong><span className="text-base text-kumo-subtle">#{supplier.id} · {supplier.remark || "无备注"}</span></div></Table.Cell>
                   <Table.Cell>{supplier.type === "zjmf" ? "智简魔方 V10" : supplier.type === "finance" ? "魔方财务系统" : "兼容类型（历史）"}</Table.Cell>
-                  <Table.Cell><div className="grid"><span>{supplier.url}</span><span className="text-xs text-kumo-subtle">{supplier.username}</span></div></Table.Cell>
+                  <Table.Cell><div className="grid"><span>{supplier.url}</span><span className="text-base text-kumo-subtle">{supplier.username}</span></div></Table.Cell>
                   <Table.Cell>{supplier.rate.toFixed(4)} {supplier.currencyCode || "CNY"}</Table.Cell>
                   <Table.Cell><Switch label={`启用 ${supplier.name}`} checked={supplier.status === 1} disabled={updateStatus.isPending} onCheckedChange={(checked) => updateStatus.mutate({ supplier, status: checked ? 1 : 2 })} /></Table.Cell>
                   <Table.Cell><div className="flex flex-wrap gap-2">
@@ -124,8 +124,8 @@ export function UpstreamSuppliers() {
           </Table>
         </LayerCard>
       </PageState>
-      {editing ? <SupplierDialog supplier={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} /> : null}
-      {deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-5 p-6"><Dialog.Title className="text-xl font-semibold">删除供应商</Dialog.Title><Dialog.Description className="text-kumo-subtle">确定删除“{deleteTarget.name}”？存在依赖时服务端会拒绝操作。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget)}>确认删除</Button></div></Dialog></Dialog.Root> : null}
+      <DialogPresence>{editing ? <SupplierDialog supplier={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} /> : null}</DialogPresence>
+      <DialogPresence>{deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-4 p-8"><Dialog.Title className="text-2xl font-semibold">删除供应商</Dialog.Title><Dialog.Description className="text-kumo-subtle">确定删除“{deleteTarget.name}”？存在依赖时服务端会拒绝操作。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget)}>确认删除</Button></div></Dialog></Dialog.Root> : null}</DialogPresence>
     </>
   );
 }

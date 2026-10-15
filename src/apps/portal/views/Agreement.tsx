@@ -7,7 +7,7 @@ export function AgreementPlaceholder() {
   const document = kind === "privacy" ? legalDocuments.privacy : legalDocuments.service;
   return (
     <main className="min-h-svh bg-kumo-recessed p-4 md:p-8">
-      <LayerCard className="shadow-none mx-auto grid w-full max-w-3xl gap-6 p-6 md:p-8">
+      <LayerCard className=" mx-auto grid w-full max-w-3xl gap-6 px-6 py-5 md:p-8">
         <h1 className="text-2xl font-semibold text-kumo-strong">{document.title}</h1>
         <article aria-label={document.title} className="grid min-w-0 gap-4 break-words text-base leading-relaxed text-kumo-default">
           {document.blocks.map((block, index) => block.type === "heading" ? (

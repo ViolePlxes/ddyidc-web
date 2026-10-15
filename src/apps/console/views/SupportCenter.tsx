@@ -45,7 +45,7 @@ export function SupportCenter() {
   if (selected) return (
     <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
       <PageHeader title={selected.title} actions={<LinkButton href="/console/help" variant="secondary" icon={<ArrowLeftIcon />}>返回支持中心</LinkButton>} />
-      <LayerCard className="shadow-none p-5 sm:p-6">
+      <LayerCard className=" px-5 py-4 sm:px-6 py-5">
         <Empty icon={<selected.icon />} title="暂未开放" description={selected.empty} />
         <div className="mt-5 flex justify-center"><LinkButton href="/console/tickets/create">提交工单</LinkButton></div>
       </LayerCard>
@@ -58,7 +58,7 @@ export function SupportCenter() {
       <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-6">
         {entries.map((entry, index) => (
           <Link key={entry.title} to={entry.href} className={`group min-w-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring ${index < 2 ? "lg:col-span-3" : "lg:col-span-2"}`}>
-            <LayerCard className="flex h-full flex-col items-start gap-3 p-5 shadow-none group-hover:ring-kumo-contrast/25 sm:p-6">
+            <LayerCard className="flex h-full flex-col items-start gap-3 px-5 py-4 sm:px-6 py-5">
               <entry.icon size={24} aria-hidden className="text-kumo-default opacity-40 transition-opacity group-hover:opacity-100" />
               <div className="mt-2 flex w-full items-start justify-between gap-2">
                 <div className="grid min-w-0 gap-1.5"><Text as="h2" variant="heading">{entry.title}</Text><Text variant="secondary">{entry.description}</Text></div>
@@ -92,12 +92,12 @@ export function SupportCenter() {
         <div aria-hidden className="hidden items-center justify-center gap-4 text-kumo-subtle md:flex"><BookOpenIcon size={40} weight="light" /><PackageIcon size={40} weight="light" /><SparkleIcon size={40} weight="light" /></div>
       </section>
       <section aria-labelledby="support-topics">
-        <LayerCard className="overflow-hidden shadow-none">
+        <LayerCard className="overflow-hidden ">
         <div className="grid gap-3 p-6 sm:p-8"><Text variant="secondary">帮助与指引</Text><h2 id="support-topics" className="text-2xl font-medium text-kumo-default">按主题浏览</h2><Text variant="secondary">从常用功能入口开始，未找到答案时可提交工单。</Text></div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3">
           {topics.map((topic, index) => <div key={topic.title} className={`grid content-start gap-5 border-t border-kumo-line p-6 sm:p-8 ${index % 2 ? "sm:border-l" : "sm:border-l-0"} ${index % 3 ? "lg:border-l" : "lg:border-l-0"}`}>
             <Text as="h3" variant="heading">{topic.title}</Text>
-            <ul className="grid gap-2">{topic.links.map((link) => <li key={link.label}><Link to={link.href} className="text-sm text-kumo-default hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring">{link.label}</Link></li>)}</ul>
+            <ul className="grid gap-2">{topic.links.map((link) => <li key={link.label}><Link to={link.href} className="text-base text-kumo-default hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kumo-ring">{link.label}</Link></li>)}</ul>
           </div>)}
         </div>
         </LayerCard>

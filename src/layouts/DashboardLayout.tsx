@@ -134,22 +134,23 @@ export function DashboardLayout({
       peekable
       className="h-svh max-h-svh overflow-hidden font-sans"
     >
-      <Sidebar aria-label="主导航" className="font-sans leading-[normal] tracking-normal antialiased [--sidebar-bg:var(--color-kumo-canvas)] [--sidebar-active-bg:var(--color-kumo-recessed)] dark:[--sidebar-active-bg:var(--color-kumo-control)]">
+      <Sidebar aria-label="主导航" className="antialiased">
         <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   aria-label="账户菜单"
-                  className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-kumo-default transition-[padding] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) outline-none hover:bg-kumo-tint focus-visible:ring-1 focus-visible:ring-kumo-line"
+                  className="flex w-full min-w-0 items-center justify-start gap-2 text-left"
                 >
                   <CubeIcon className="size-4 shrink-0 text-kumo-brand" weight="duotone" />
                   <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">DDYIDC</span>
                   <span className="w-4 shrink-0 overflow-hidden transition-[width] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:w-0">
                     <CaretUpDownIcon className="size-4 text-kumo-subtle" />
                   </span>
-                </button>
+                </Button>
               }
             />
             <DropdownMenu.Content className="w-(--anchor-width)">

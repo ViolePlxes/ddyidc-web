@@ -42,7 +42,7 @@ export function UpstreamOrders() {
   return (
     <>
       <PageHeader title="上游订单管理" description="销售额、成本、利润与订单均来自真实上游关联数据。" />
-      <LayerCard className="grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
+      <LayerCard className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_12rem_auto]">
         <Input aria-label="上游订单关键词" placeholder="订单号、客户或商品…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
         <Select aria-label="上游订单状态" value={status} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} items={{ all: "全部状态", paid: "已付款", unpaid: "未付款" }} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>

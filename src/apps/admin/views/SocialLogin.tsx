@@ -22,7 +22,7 @@ function ProviderConfig({ config, onSaved }: { config: SocialConfig; onSaved: (m
       <Input label={config.provider === "github" ? "Client Secret / AppSecret" : "AppKey / AppSecret"} type="password" value={secret} onChange={e => setSecret(e.target.value)} autoComplete="new-password" maxLength={1024} placeholder={config.hasSecret ? "已配置，留空保留现有密钥" : "尚未配置"} />
       <Checkbox label="清除已保存密钥" checked={clearSecret} onCheckedChange={value => setClearSecret(value === true)} />
       <Input label="完整回调地址" value={callbackUrl} onChange={e => setCallbackUrl(e.target.value)} placeholder={`${window.location.origin}/auth/${config.provider}/callback`} maxLength={1024} />
-      <p className="text-sm text-kumo-subtle">回调路径为 /auth/{config.provider}/callback，与应用平台登记地址保持一致。生产环境使用 HTTPS。</p>
+      <p className="text-base text-kumo-subtle">回调路径为 /auth/{config.provider}/callback，与应用平台登记地址保持一致。生产环境使用 HTTPS。</p>
       <Switch label="启用此登录方式" checked={enabled} onCheckedChange={setEnabled} />
       {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
       <Button type="submit" loading={save.isPending}>保存配置</Button>

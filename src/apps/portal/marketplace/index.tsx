@@ -31,7 +31,7 @@ function ListingCard({ row, refundEnabled, feeRate }: { row: Listing; refundEnab
   const belowRenewal = Number(row.originalRenewalPrice) > 0 && Number(row.price) < Number(row.originalRenewalPrice);
   const summary = Object.values(row.configSnapshot ?? {}).filter((value) => typeof value === "string" || typeof value === "number").slice(0, 3).join(" · ");
   return (
-    <LayerCard className="shadow-none flex min-h-72 flex-col gap-4 p-5">
+    <LayerCard className=" flex min-h-72 flex-col gap-4 px-5 py-4">
       <div className="flex items-center justify-between">
         <span className="grid size-10 place-items-center bg-kumo-control text-kumo-brand">
           <StorefrontIcon />
@@ -50,28 +50,28 @@ function ListingCard({ row, refundEnabled, feeRate }: { row: Listing; refundEnab
         <h2 className="text-lg font-semibold text-kumo-strong">
           {row.productName}
         </h2>
-        <p className="text-sm text-kumo-subtle">
+        <p className="text-base text-kumo-subtle">
           {row.region || "区域未提供"} · 剩余 {row.remainingDays} 天
  <br />{row.sellerLabel} · {new Date(row.createdAt).toLocaleString()}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 bg-kumo-control p-4">
         <div>
-          <span className="text-xs text-kumo-subtle">转让价</span>
-          <p className="text-xl font-semibold text-kumo-strong">
+          <span className="text-base text-kumo-subtle">转让价</span>
+          <p className="text-base font-semibold text-kumo-strong">
             {money(row.price)}
           </p>
         </div>
         <div>
-          <span className="text-xs text-kumo-subtle">原续费价</span>
+          <span className="text-base text-kumo-subtle">原续费价</span>
           <p className="text-kumo-default">{money(row.originalRenewalPrice)}</p>
         </div>
       </div>
-      <p className="line-clamp-2 text-sm text-kumo-subtle">
+      <p className="line-clamp-2 text-base text-kumo-subtle">
         {summary || row.sellerNote || "卖家暂未填写补充说明"}
       </p>
       <div className="mt-auto flex items-center justify-between border-t border-kumo-line pt-4">
-        <span className="text-xs text-kumo-subtle">
+        <span className="text-base text-kumo-subtle">
           {row.views} 次浏览 · {row.favoriteCount} 人收藏
         </span>
         <Link to={`/marketplace/listing/${row.id}`}>
@@ -126,9 +126,9 @@ export function MarketplaceHome() {
         />
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[["出售中", status.data?.onSale ?? 0], ["已成交", status.data?.sold ?? 0], ["求购", status.data?.wants ?? 0], ["平台手续费率", `${status.data?.feeRate ?? "0"}%`]].map(([label, value]) => <LayerCard key={String(label)} className="shadow-none grid gap-1 p-5"><span className="text-sm text-kumo-subtle">{label}</span><strong className="text-2xl text-kumo-strong">{value}</strong></LayerCard>)}
+        {[["出售中", status.data?.onSale ?? 0], ["已成交", status.data?.sold ?? 0], ["求购", status.data?.wants ?? 0], ["平台手续费率", `${status.data?.feeRate ?? "0"}%`]].map(([label, value]) => <LayerCard key={String(label)} className=" grid gap-1 px-5 py-4"><span className="text-base text-kumo-subtle">{label}</span><strong className="text-base text-kumo-strong font-medium">{value}</strong></LayerCard>)}
       </div>
-      <LayerCard className="shadow-none grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <LayerCard className=" grid gap-4 px-5 py-4 md:grid-cols-2 xl:grid-cols-4">
         <Input
           label="搜索产品、配置"
           value={keyword}
@@ -168,24 +168,24 @@ export function MarketplaceHome() {
         <section className="grid gap-4">
           <div>
             <h2 className="text-xl font-semibold text-kumo-strong">求购信息</h2>
-            <p className="text-sm text-kumo-subtle">
+            <p className="text-base text-kumo-subtle">
               有合适资源可登录后提交报价。
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {wants.data.list.map((want) => (
-              <LayerCard key={want.id} className="shadow-none grid gap-3 p-5">
+              <LayerCard key={want.id} className=" grid gap-3 px-5 py-4">
                 <div className="flex justify-between">
-                  <strong className="text-kumo-strong">{want.title}</strong>
+                  <strong className="text-kumo-strong font-medium">{want.title}</strong>
                   <Badge variant="outline">求购</Badge>
                 </div>
-                <p className="text-sm text-kumo-subtle">
+                <p className="text-base text-kumo-subtle">
                   {want.region || "区域不限"}
                 </p>
                 <p>
                   {money(want.budgetMin)} – {money(want.budgetMax)}
                 </p>
-                <p className="line-clamp-2 text-sm text-kumo-subtle">
+                <p className="line-clamp-2 text-base text-kumo-subtle">
                   {want.description}
                 </p>
               </LayerCard>
@@ -249,10 +249,10 @@ export function MarketplaceListingDetail() {
             }
           />
           {message ? <Banner variant="default" title={message} /> : null}
-          {showAgreement ? <LayerCard className="shadow-none grid gap-3 p-5"><div className="flex items-center justify-between"><h2 className="font-semibold text-kumo-strong">交易规则协议</h2><Button variant="ghost" onClick={() => setShowAgreement(false)}>关闭</Button></div><p className="whitespace-pre-wrap text-sm text-kumo-subtle">{agreement.data?.agreement || "正在加载协议…"}</p></LayerCard> : null}
+          {showAgreement ? <LayerCard className=" grid gap-3 px-5 py-4"><div className="flex items-center justify-between"><h2 className="font-semibold text-kumo-strong">交易规则协议</h2><Button variant="ghost" onClick={() => setShowAgreement(false)}>关闭</Button></div><p className="whitespace-pre-wrap text-base text-kumo-subtle">{agreement.data?.agreement || "正在加载协议…"}</p></LayerCard> : null}
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-5">
-              <LayerCard className="shadow-none grid gap-5 p-5">
+              <LayerCard className=" grid gap-5 px-5 py-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="success">站内归属转移</Badge>
                   <Badge variant="outline">{row.region || "区域不限"}</Badge>
@@ -260,23 +260,23 @@ export function MarketplaceListingDetail() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div>
-                    <span className="text-sm text-kumo-subtle">产品类型</span>
+                    <span className="text-base text-kumo-subtle">产品类型</span>
                     <p className="font-medium text-kumo-strong">
                       {row.productType}
                     </p>
                   </div>
                   <div>
-                    <span className="text-sm text-kumo-subtle">浏览</span>
+                    <span className="text-base text-kumo-subtle">浏览</span>
                     <p>{row.views}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-kumo-subtle">收藏</span>
+                    <span className="text-base text-kumo-subtle">收藏</span>
                     <p>{row.favoriteCount}</p>
                   </div>
                 </div>
                 <div>
                   <h2 className="font-semibold text-kumo-strong">配置信息</h2>
-                  <pre className="mt-3 overflow-x-auto whitespace-pre-wrap bg-kumo-control p-4 text-sm">
+                  <pre className="mt-3 overflow-x-auto whitespace-pre-wrap bg-kumo-control p-4 text-base">
                     {JSON.stringify(row.configSnapshot ?? {}, null, 2)}
                   </pre>
                 </div>
@@ -287,13 +287,13 @@ export function MarketplaceListingDetail() {
                   </p>
                 </div>
               </LayerCard>
-              <LayerCard className="shadow-none grid gap-3 p-5">
+              <LayerCard className=" grid gap-3 px-5 py-4">
                 <h2 className="font-semibold text-kumo-strong">价格变动</h2>
                 {row.priceHistory?.length ? (
                   row.priceHistory.map((p) => (
                     <div
                       key={p.id}
-                      className="flex justify-between border-b border-kumo-line py-2 text-sm"
+                      className="flex justify-between border-b border-kumo-line py-2 text-base"
                     >
                       <span>
                         {new Date(p.createdAt).toLocaleString("zh-CN")}
@@ -304,24 +304,24 @@ export function MarketplaceListingDetail() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-kumo-subtle">暂无调价记录</p>
+                  <p className="text-base text-kumo-subtle">暂无调价记录</p>
                 )}
               </LayerCard>
             </div>
-            <LayerCard className="shadow-none grid content-start gap-4 p-5">
+            <LayerCard className=" grid content-start gap-4 px-5 py-4">
               <div>
-                <span className="text-sm text-kumo-subtle">转让价格</span>
-                <p className="text-3xl font-semibold text-kumo-strong">
+                <span className="text-base text-kumo-subtle">转让价格</span>
+                <p className="text-base font-semibold text-kumo-strong">
                   {money(row.price)}
                 </p>
               </div>
-              <p className="text-sm text-kumo-subtle">
+              <p className="text-base text-kumo-subtle">
                 原续费价格 {money(row.originalRenewalPrice)}
               </p>
-              <p className="text-sm text-kumo-subtle">平台服务费预估 {money(String(marketplaceFee(row.price, status.data?.feeType ?? "ratio", status.data?.feeRate ?? "0", status.data?.feeFixed ?? "0")))} · {status.data?.refundEnabled ? "支持退款窗口仲裁" : "不支持自助退款"}</p>
+              <p className="text-base text-kumo-subtle">平台服务费预估 {money(String(marketplaceFee(row.price, status.data?.feeType ?? "ratio", status.data?.feeRate ?? "0", status.data?.feeFixed ?? "0")))} · {status.data?.refundEnabled ? "支持退款窗口仲裁" : "不支持自助退款"}</p>
               <div className="flex items-start gap-2 bg-kumo-control p-4">
                 <ShieldCheckIcon className="mt-0.5 shrink-0" />
-                <p className="text-sm">
+                <p className="text-base">
                   支付成功后，平台在本地事务内变更产品归属；交易期间资源操作会被锁定。
                 </p>
               </div>

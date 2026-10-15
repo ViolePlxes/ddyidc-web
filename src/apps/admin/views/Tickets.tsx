@@ -1,6 +1,7 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, LinkButton,  Select, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowsLeftRightIcon, CheckCircleIcon, HandPalmIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -54,7 +55,7 @@ export function AdminTicketList() {
     <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
       <PageHeader title="工单管理" description={`待接单优先展示${query.data ? ` · ${query.data.unreadCount} 条未读` : ""}`} />
       {notice ? <Banner variant="default" title="工单提醒" description={notice} /> : null}
-      <LayerCard className="grid gap-5 p-4 sm:grid-cols-3">
+      <LayerCard className="grid gap-5 px-4 py-3 sm:grid-cols-3">
         <Select value={status} renderValue={(value) => value === "all" ? "全部状态" : statuses.data?.find((item) => item.id === value)?.name ?? value} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} label="状态" hideLabel={false}>
           <Select.Option value="all">全部状态</Select.Option>
           {(statuses.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)}
@@ -73,8 +74,8 @@ export function AdminTicketList() {
               <Table.Body data-animate-list>
                 {(query.data?.list ?? []).map((ticket) => (
                   <Table.Row key={ticket.id}>
-                    <Table.Cell><div className="grid gap-0.5"><strong className="font-medium text-kumo-strong">{ticket.title}</strong><span className="text-sm text-kumo-subtle">{ticket.ticketNum}{ticket.unreadCount ? ` · ${ticket.unreadCount} 条未读` : ""}</span></div></Table.Cell>
-                    <Table.Cell><div className="grid gap-0.5"><span>{ticket.clientName || ticket.clientId}</span><span className="text-sm text-kumo-subtle">{ticket.typeName}</span></div></Table.Cell>
+                    <Table.Cell><div className="grid gap-0.5"><strong className="font-medium text-kumo-strong">{ticket.title}</strong><span className="text-base text-kumo-subtle">{ticket.ticketNum}{ticket.unreadCount ? ` · ${ticket.unreadCount} 条未读` : ""}</span></div></Table.Cell>
+                    <Table.Cell><div className="grid gap-0.5"><span>{ticket.clientName || ticket.clientId}</span><span className="text-base text-kumo-subtle">{ticket.typeName}</span></div></Table.Cell>
                     <Table.Cell><TicketStatusBadge status={ticket.status} /></Table.Cell>
                     <Table.Cell>{ticket.adminName || "未接单"}</Table.Cell>
                     <Table.Cell><div className="flex gap-1">{ticket.status.id === "1" ? <Button size="sm" variant="secondary" icon={<HandPalmIcon />} loading={receive.isPending} onClick={() => receive.mutate(ticket.id)}>接单</Button> : null}<LinkButton href={`${adminBase}/tickets/${ticket.id}`} variant="ghost" shape="square" size="sm" icon={<ArrowRightIcon />} aria-label={`查看 ${ticket.ticketNum}`} /></div></Table.Cell>
@@ -100,8 +101,8 @@ function ForwardDialog({ ticketId, onDone, onError }: { ticketId: string; onDone
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<Button variant="secondary" icon={<ArrowsLeftRightIcon />}>转交</Button>} />
-      <Dialog className="grid gap-5 p-6">
-        <div className="flex justify-between"><div><Dialog.Title className="text-xl font-semibold">转交工单</Dialog.Title><Dialog.Description className="text-kumo-subtle">可转给指定管理员，或调整所属工单类型。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} /></div>
+      <Dialog className="grid gap-4 p-8">
+        <div className="flex justify-between"><div><Dialog.Title className="text-2xl font-semibold">转交工单</Dialog.Title><Dialog.Description className="text-kumo-subtle">可转给指定管理员，或调整所属工单类型。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} /></div>
         <Select value={adminId} renderValue={(value) => value === "none" ? "不指定管理员" : admins.data?.find((item) => item.id === value)?.name ?? value} onValueChange={(value) => setAdminId(value ?? "none")} label="目标管理员" hideLabel={false}><Select.Option value="none">不指定管理员</Select.Option>{(admins.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)}</Select>
         <Select value={typeId} renderValue={(value) => value === "none" ? "保持当前类型" : types.data?.find((item) => item.id === value)?.name ?? value} onValueChange={(value) => setTypeId(value ?? "none")} label="目标类型" hideLabel={false}><Select.Option value="none">保持当前类型</Select.Option>{(types.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)}</Select>
         <Input label="转交说明" value={notes} onChange={(event) => setNotes(event.target.value)} />
@@ -118,7 +119,7 @@ function ReopenDialog({ ticketId, updatedAt, onDone, onError }: { ticketId: stri
   const mutation = useMutation({ mutationFn: () => adminTicketApi.reopen(ticketId, { reason, requestId, expectedUpdatedAt: updatedAt }), onSuccess: () => { setOpen(false); onDone(); }, onError: (error) => onError(getApiMessage(error)) });
   return <Dialog.Root open={open} onOpenChange={(value) => { setOpen(value); if (value) { setReason(""); setRequestId(crypto.randomUUID()); } }}>
     <Dialog.Trigger render={<Button variant="secondary">重新打开</Button>} />
-    <Dialog className="grid gap-5 p-6">
+    <Dialog className="grid gap-4 p-8">
       <Dialog.Title>重新打开工单</Dialog.Title>
       <Dialog.Description>恢复为系统配置的未完结默认状态，并重新进入待处理工单。</Dialog.Description>
       <Input label="重新打开原因" maxLength={256} value={reason} onChange={(event) => setReason(event.target.value)} />
@@ -133,8 +134,8 @@ function NoteEditDialog({ ticketId, noteId, initialContent, onDone, onError }: {
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<Button variant="ghost" shape="square" icon={<PencilSimpleIcon />} title="编辑备注" aria-label="编辑备注" />} />
-      <Dialog className="grid gap-5 p-6">
-        <div className="flex justify-between"><div><Dialog.Title className="text-xl font-semibold">编辑内部备注</Dialog.Title><Dialog.Description className="text-kumo-subtle">备注仅管理员可见。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} title="关闭" aria-label="关闭" />} /></div>
+      <Dialog className="grid gap-4 p-8">
+        <div className="flex justify-between"><div><Dialog.Title className="text-2xl font-semibold">编辑内部备注</Dialog.Title><Dialog.Description className="text-kumo-subtle">备注仅管理员可见。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} title="关闭" aria-label="关闭" />} /></div>
         <Textarea label="备注内容" rows={6} value={content} onChange={(event) => setContent(event.target.value)} />
         <div className="flex justify-end gap-2"><Dialog.Close render={<Button variant="secondary">取消</Button>} /><Button loading={mutation.isPending} disabled={!content.trim()} onClick={() => mutation.mutate()}>保存</Button></div>
       </Dialog>
@@ -188,10 +189,10 @@ export function AdminTicketDetail() {
           <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href={adminPath('/admin/tickets')} variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
           <div className="flex flex-wrap gap-2"><Button variant="secondary" icon={<HandPalmIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("receive")}>接单</Button><Button variant="secondary" icon={<CheckCircleIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("resolve")}>已解决</Button>{query.data.ticket.status.id === "4" ? <ReopenDialog ticketId={id} updatedAt={query.data.ticket.updatedAt} onDone={refresh} onError={setNotice} /> : <ForwardDialog ticketId={id} onDone={refresh} onError={setNotice} />}<Button variant="secondary-destructive" disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("close")}>关闭</Button></div>
-          <LayerCard className="p-4 sm:p-4"><dl className="grid gap-5 sm:grid-cols-2"><div><dt className="text-sm text-kumo-subtle">工单类型</dt><dd>{query.data.ticket.typeName}</dd></div><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd>{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd>{query.data.ticket.adminName || "未接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd>{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
+          <LayerCard className="px-4 py-3 sm:px-4 py-3"><dl className="grid gap-5 sm:grid-cols-2"><div><dt className="text-base text-kumo-subtle">工单类型</dt><dd>{query.data.ticket.typeName}</dd></div><div><dt className="text-base text-kumo-subtle">关联产品</dt><dd>{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-base text-kumo-subtle">负责人</dt><dd>{query.data.ticket.adminName || "未接单"}</dd></div><div><dt className="text-base text-kumo-subtle">最后回复</dt><dd>{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
           <Tabs variant="underline" tabs={[{ value: "conversation", label: "对话" }, { value: "notes", label: `内部备注 (${query.data.notes?.length ?? 0})` }, { value: "logs", label: `操作日志 (${query.data.logs?.length ?? 0})` }]} value={tab} onValueChange={setTab} />
           {tab === "conversation" ? <><TicketConversation replies={query.data.replies} perspective="Admin" onQuote={setQuote} /><ReplyComposer content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}><Select value="none" renderValue={() => "选择预设回复"} onValueChange={(value) => { const selected = prereplies.data?.find((item) => item.id === value); if (selected) setContent(selected.content); }} label="预设回复" hideLabel={false}><Select.Option value="none">选择预设回复</Select.Option>{(prereplies.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.content.slice(0, 30)}</Select.Option>)}</Select><Textarea label="随回复添加内部备注（可选）" rows={3} value={internalNote} onChange={(event) => setInternalNote(event.target.value)} /><AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} /></ReplyComposer></> : null}
-          {tab === "notes" ? <LayerCard className="grid gap-5 p-4 sm:p-4"><Textarea label="新增内部备注" rows={4} value={noteContent} onChange={(event) => setNoteContent(event.target.value)} /><div><Button icon={<PlusIcon />} loading={addNote.isPending} disabled={!noteContent.trim()} onClick={() => addNote.mutate()}>添加备注</Button></div><ul className="divide-y divide-kumo-line">{(query.data.notes ?? []).map((note) => <li key={note.id} className="flex items-start gap-3 py-3"><div className="min-w-0 flex-1"><p className="whitespace-pre-wrap text-kumo-default">{note.content}</p><span className="text-xs text-kumo-subtle">管理员 {note.adminId} · {new Date(note.createdAt).toLocaleString("zh-CN")}</span></div><div className="flex gap-1"><NoteEditDialog ticketId={id} noteId={note.id} initialContent={note.content} onDone={refresh} onError={setNotice} /><Button variant="ghost" shape="square" size="sm" icon={<TrashIcon />} title="删除备注" aria-label="删除备注" loading={deleteNote.isPending} onClick={() => deleteNote.mutate(note.id)} /></div></li>)}</ul></LayerCard> : null}
+          {tab === "notes" ? <LayerCard className="grid gap-5 px-4 py-3 sm:px-4 py-3"><Textarea label="新增内部备注" rows={4} value={noteContent} onChange={(event) => setNoteContent(event.target.value)} /><div><Button icon={<PlusIcon />} loading={addNote.isPending} disabled={!noteContent.trim()} onClick={() => addNote.mutate()}>添加备注</Button></div><ul className="divide-y divide-kumo-line">{(query.data.notes ?? []).map((note) => <li key={note.id} className="flex items-start gap-3 py-3"><div className="min-w-0 flex-1"><p className="whitespace-pre-wrap text-kumo-default">{note.content}</p><span className="text-base text-kumo-subtle">管理员 {note.adminId} · {new Date(note.createdAt).toLocaleString("zh-CN")}</span></div><div className="flex gap-1"><NoteEditDialog ticketId={id} noteId={note.id} initialContent={note.content} onDone={refresh} onError={setNotice} /><Button variant="ghost" shape="square" size="sm" icon={<TrashIcon />} title="删除备注" aria-label="删除备注" loading={deleteNote.isPending} onClick={() => deleteNote.mutate(note.id)} /></div></li>)}</ul></LayerCard> : null}
           {tab === "logs" ? <LayerCard className="overflow-x-auto p-0"><Table><Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>说明</Table.Head><Table.Head>操作者</Table.Head></Table.Row></Table.Header><Table.Body>{(query.data.logs ?? []).map((log) => <Table.Row key={log.id}><Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{log.action}</Table.Cell><Table.Cell>{log.detail}</Table.Cell><Table.Cell>{log.actorType} {log.actorId}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard> : null}
         </div>
       ) : null}

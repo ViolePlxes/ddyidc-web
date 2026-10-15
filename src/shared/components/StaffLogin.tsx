@@ -66,17 +66,17 @@ export function StaffLogin({
       <div className="grid w-full max-w-sm gap-4">
         <div className="flex items-center justify-between gap-3">
           <div className="grid gap-0.5">
-            <span className="text-sm font-semibold text-kumo-strong">DDYIDC</span>
-            <span className="text-xs text-kumo-subtle">
+            <span className="text-base font-semibold text-kumo-strong">DDYIDC</span>
+            <span className="text-base text-kumo-subtle">
               {import.meta.env.VITE_DDYIDC_VERSION || "版本未标记"} · {import.meta.env.PROD ? "发布构建" : "开发构建"}
             </span>
           </div>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
-        <LayerCard className="shadow-none grid gap-5 p-6">
+        <LayerCard className=" grid gap-5 px-6 py-5">
           <div className="grid gap-1">
             <h1 className="text-xl font-semibold text-kumo-strong">{title}</h1>
-            <p className="text-sm text-kumo-subtle">{subtitle}</p>
+            <p className="text-base text-kumo-subtle">{subtitle}</p>
           </div>
           <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
             <Input
@@ -100,7 +100,7 @@ export function StaffLogin({
               登录{title}
             </Button>
           </form>
-          <div className="flex items-start gap-2 border-t border-kumo-line pt-4 text-xs text-kumo-subtle">
+          <div className="flex items-start gap-2 border-t border-kumo-line pt-4 text-base text-kumo-subtle">
             <ShieldCheckIcon className="mt-0.5 shrink-0" />
             <span>此入口使用独立的 httpOnly Cookie 与服务端会话。</span>
           </div>

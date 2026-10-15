@@ -46,7 +46,7 @@ export function ImportInstanceDialog({ customerId }: { customerId: string }) {
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!save.isPending) { setOpen(next); save.reset(); } }}>
       <Dialog.Trigger render={<Button variant="secondary">创建空白实例</Button>} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <Dialog.Title>创建空白实例并绑定上游</Dialog.Title>
         <Dialog.Description>填写已开通的上游实例 ID。保存时拉取真实 IP、状态与配置，不会在上游再次下单或扣款。</Dialog.Description>
         <form className="grid gap-4" onSubmit={(event) => {

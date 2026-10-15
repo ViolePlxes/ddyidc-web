@@ -13,7 +13,7 @@ export function ConfirmAction({ children, title, description, onConfirm, loading
   const [open, setOpen] = useState(false);
   return <Dialog.Root open={open} onOpenChange={setOpen}>
     <Dialog.Trigger render={<Button loading={loading} disabled={disabled} />}>{children}</Dialog.Trigger>
-    <Dialog className="p-6">
+    <Dialog className="p-8">
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.Description className="my-4">{description}</Dialog.Description>
       <div className="flex justify-end gap-2">

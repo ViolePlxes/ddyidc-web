@@ -116,7 +116,7 @@ export function Certification() {
         <p>正在读取认证状态…</p>
       ) : (
         <>
-          <LayerCard className="grid gap-3 p-5">
+          <LayerCard className="grid gap-3 px-5 py-4">
             <div>
               <Badge>
                 {data.record?.certifyChannel === "alipay" && data.status === 1
@@ -158,7 +158,7 @@ export function Certification() {
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 {data.settings.channel !== "alipay" && (
-                  <LayerCard className="grid gap-3 p-5">
+                  <LayerCard className="grid gap-3 px-5 py-4">
                     <h2>个人认证</h2>
                     <p>提交本人证件资料，由管理员审核。</p>
                     <Button
@@ -173,7 +173,7 @@ export function Certification() {
                   </LayerCard>
                 )}
                 {data.settings.companyEnabled && (
-                  <LayerCard className="grid gap-3 p-5">
+                  <LayerCard className="grid gap-3 px-5 py-4">
                     <h2>企业认证</h2>
                     <p>
                       {data.settings.companyRequiresPerson
@@ -193,7 +193,7 @@ export function Certification() {
                 )}
               </div>
               {type && (
-                <LayerCard className="p-5">
+                <LayerCard className="px-5 py-4">
                   <form
                     className="grid gap-4"
                     onSubmit={(e) => {
@@ -302,7 +302,7 @@ export function Certification() {
           if (!busy) setConfirm(open);
         }}
       >
-        <Dialog className="grid gap-4 p-6">
+        <Dialog className="grid gap-4 p-8">
           <Dialog.Title>确认提交认证</Dialog.Title>
           <Dialog.Description>
             每人仅一次免费机会。提交后无法修改，被拒绝后需管理员解除限制才能重新申请。

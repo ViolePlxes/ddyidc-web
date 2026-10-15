@@ -232,7 +232,7 @@ export function RegisterPage() {
             <TermsAgreement />
           </div>
         </form>
-        <div className="text-center text-sm text-kumo-subtle">
+        <div className="text-center text-base text-kumo-subtle">
           已有账号？{" "}
           <Link className="text-kumo-link hover:underline" to="/login">
             返回登录

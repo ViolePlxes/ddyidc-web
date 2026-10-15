@@ -16,7 +16,7 @@ export function BankTransferSettings() {
   } });
   return <LayerCard className="max-w-3xl">
     <LayerCard.Secondary><h2 className="text-lg font-semibold">对公汇款收款信息</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-5">
-    <p className="text-sm text-kumo-subtle">启用后向登录用户展示以下公司收款信息。汇款不会自动入账，工作人员核对到账后通过现有余额操作处理。</p>
+    <p className="text-base text-kumo-subtle">启用后向登录用户展示以下公司收款信息。汇款不会自动入账，工作人员核对到账后通过现有余额操作处理。</p>
     {query.error ? <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} /> : null}
     <form className="grid gap-5" onSubmit={event => { event.preventDefault(); save.mutate(config); }}>
       <Switch label="启用对公汇款" checked={config.enabled} disabled={query.isLoading || Boolean(query.error) || save.isPending} onCheckedChange={enabled => setConfig({ ...config, enabled })} />

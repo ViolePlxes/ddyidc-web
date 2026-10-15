@@ -21,7 +21,7 @@ function DialogHeading({ title, description }: { title: string; description: str
   return (
     <div className="flex justify-between gap-4">
       <div>
-        <Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title>
+        <Dialog.Title className="text-2xl font-semibold">{title}</Dialog.Title>
         <Dialog.Description className="text-kumo-subtle">{description}</Dialog.Description>
       </div>
       <Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} title="关闭" aria-label="关闭" />} />
@@ -39,7 +39,7 @@ function TypeDialog({ value, onSaved, onError }: { value?: TicketType; onSaved: 
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<EditTrigger label={value ? `编辑 ${value.name}` : "新增类型"} editing={Boolean(value)} />} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <DialogHeading title={`${value ? "编辑" : "新增"}工单类型`} description="类型用于客户创建工单和后台分流。" />
         <Input label="类型名称" value={name} onChange={(event) => setName(event.target.value)} />
         <div className="flex justify-end gap-2">
@@ -82,7 +82,7 @@ function StatusDialog({ value, onSaved, onError }: { value?: TicketStatus; onSav
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<EditTrigger label={value ? `编辑 ${value.name}` : "新增状态"} editing={Boolean(value)} />} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <DialogHeading title={`${value ? "编辑" : "新增"}工单状态`} description="颜色字段映射到 Kumo 语义 Badge，不引入自定义视觉色。" />
         <Input label="状态名称" value={name} onChange={(event) => setName(event.target.value)} />
         <Input label="颜色（#RRGGBB）" value={color} onChange={(event) => setColor(event.target.value)} />
@@ -118,7 +118,7 @@ function PrereplyDialog({ value, onSaved, onError }: { value?: TicketPrereply; o
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<EditTrigger label={value ? "编辑预设回复" : "新增预设回复"} editing={Boolean(value)} />} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <DialogHeading title={`${value ? "编辑" : "新增"}预设回复`} description="客服可在回复工单时一键填入。" />
         <Textarea label="回复内容" rows={8} value={content} onChange={(event) => setContent(event.target.value)} />
         <Input label="排序" type="number" value={String(sort)} onChange={(event) => setSort(Number(event.target.value) || 0)} />

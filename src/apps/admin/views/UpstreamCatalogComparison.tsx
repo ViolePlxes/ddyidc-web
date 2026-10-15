@@ -1,5 +1,6 @@
+import { Badge } from "../../../shared/components/Badge";
 import { useMemo, useRef, useState, type DragEvent } from "react";
-import { Banner, Badge, Button, Input, LayerCard, Select, Sidebar, Table } from "@cloudflare/kumo";
+import { Banner,  Button, Input, LayerCard, Select, Sidebar, Table } from "@cloudflare/kumo";
 import { Dialog } from "../../../shared/components/Dialog";
 import { DotsSixVerticalIcon, FolderIcon, SquaresFourIcon } from "@phosphor-icons/react";
 
@@ -42,30 +43,30 @@ function CatalogPane({ title, categories, products, upstream, onAction, busyId, 
     onProductDrop?.(event, groupId);
   };
   return <LayerCard className="min-w-0 overflow-hidden p-0">
-    <LayerCard.Secondary className="flex items-center justify-between gap-3 p-4"><h2 className="font-semibold">{title}</h2><span className="text-sm text-kumo-subtle">{products.length} 个商品</span></LayerCard.Secondary>
+    <LayerCard.Secondary className="flex items-center justify-between gap-3 p-4"><h2 className="font-semibold">{title}</h2><span className="text-base text-kumo-subtle">{products.length} 个商品</span></LayerCard.Secondary>
     <Sidebar.Provider defaultOpen contained collapsible="none" mobileBreakpoint={0} className="h-[640px] min-w-0 overflow-hidden">
       <Sidebar aria-label={`${title}分类`} className="w-44 shrink-0 border-r border-kumo-line">
         <Sidebar.Content><Sidebar.Group><Sidebar.GroupLabel>商品分类</Sidebar.GroupLabel><Sidebar.Menu>
-          <Sidebar.MenuButton icon={SquaresFourIcon} active={selected === "all"} onClick={() => select("all")}><span className="flex-1">全部商品</span><span className="text-xs text-kumo-subtle">{products.length}</span></Sidebar.MenuButton>
+          <Sidebar.MenuButton icon={SquaresFourIcon} active={selected === "all"} onClick={() => select("all")}><span className="flex-1">全部商品</span><span className="text-base text-kumo-subtle">{products.length}</span></Sidebar.MenuButton>
           {roots.map(root => <Sidebar.MenuItem key={root.id}><Sidebar.Collapsible defaultOpen>
-            <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton icon={FolderIcon} active={selected === root.id} onClick={() => select(root.id)}><span className="min-w-0 flex-1 truncate" title={root.name}>{root.name}</span><span className="text-xs text-kumo-subtle">{count(root.id)}</span><Sidebar.MenuChevron /></Sidebar.MenuButton>} />
-            <Sidebar.CollapsibleContent><Sidebar.MenuSub>{categories.filter(item => item.parentId === root.id).map(child => <Sidebar.MenuSubButton key={child.id} active={selected === child.id} onClick={() => select(child.id)} title={!upstream ? "拖入上游商品，对接到此分类" : undefined} className={dragging && dropTarget === child.id ? "bg-kumo-tint ring-1 ring-kumo-line" : undefined} onDragOver={event => dragOver(event, child.id)} onDragLeave={dragLeave} onDrop={event => drop(event, child.id)}><span className="min-w-0 flex-1 truncate" title={child.name}>{child.name}</span><span className="text-xs text-kumo-subtle">{count(child.id)}</span></Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
+            <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton icon={FolderIcon} active={selected === root.id} onClick={() => select(root.id)}><span className="min-w-0 flex-1 truncate" title={root.name}>{root.name}</span><span className="text-base text-kumo-subtle">{count(root.id)}</span><Sidebar.MenuChevron /></Sidebar.MenuButton>} />
+            <Sidebar.CollapsibleContent><Sidebar.MenuSub>{categories.filter(item => item.parentId === root.id).map(child => <Sidebar.MenuSubButton key={child.id} active={selected === child.id} onClick={() => select(child.id)} title={!upstream ? "拖入上游商品，对接到此分类" : undefined} className={dragging && dropTarget === child.id ? "bg-kumo-tint ring-1 ring-kumo-line" : undefined} onDragOver={event => dragOver(event, child.id)} onDragLeave={dragLeave} onDrop={event => drop(event, child.id)}><span className="min-w-0 flex-1 truncate" title={child.name}>{child.name}</span><span className="text-base text-kumo-subtle">{count(child.id)}</span></Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
           </Sidebar.Collapsible></Sidebar.MenuItem>)}
-          {ungrouped > 0 && <Sidebar.MenuButton active={selected === "ungrouped"} onClick={() => select("ungrouped")}><span className="flex-1">未分组商品</span><span className="text-xs text-kumo-subtle">{ungrouped}</span></Sidebar.MenuButton>}
+          {ungrouped > 0 && <Sidebar.MenuButton active={selected === "ungrouped"} onClick={() => select("ungrouped")}><span className="flex-1">未分组商品</span><span className="text-base text-kumo-subtle">{ungrouped}</span></Sidebar.MenuButton>}
         </Sidebar.Menu></Sidebar.Group></Sidebar.Content>
       </Sidebar>
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="grid gap-3 border-b border-kumo-line p-4"><div className="flex items-center justify-between gap-2"><h3 className="truncate text-sm font-medium">{categoryName}</h3><span className="shrink-0 text-xs text-kumo-subtle">{visible.length} 个</span></div><Input aria-label={`搜索${title}`} placeholder="搜索商品名称或编号" value={keyword} onChange={event => { setKeyword(event.target.value); setPage(1); }} /></div>
+        <div className="grid gap-3 border-b border-kumo-line p-4"><div className="flex items-center justify-between gap-2"><h3 className="truncate text-base font-medium">{categoryName}</h3><span className="shrink-0 text-base text-kumo-subtle">{visible.length} 个</span></div><Input aria-label={`搜索${title}`} placeholder="搜索商品名称或编号" value={keyword} onChange={event => { setKeyword(event.target.value); setPage(1); }} /></div>
         <div aria-label={`${title}商品列表`} className={`min-h-0 flex-1 overflow-auto ${dragging && dropTarget === "list" ? "bg-kumo-tint ring-1 ring-inset ring-kumo-line" : ""}`} onDragOver={event => dragOver(event, "list")} onDragLeave={dragLeave} onDrop={event => drop(event, categories.some(item => item.id === selected && item.parentId !== "0") ? selected : "")}><Table>
           <Table.Header variant="compact"><Table.Row><Table.Head>商品</Table.Head><Table.Head>{upstream ? "成本参考" : "售价"}</Table.Head><Table.Head>对接状态</Table.Head>{onAction && <Table.Head>操作</Table.Head>}</Table.Row></Table.Header>
           <Table.Body>{visible.slice((currentPage - 1) * 20, currentPage * 20).map(item => <Table.Row key={item.id} draggable={Boolean(upstream && onProductDragStart && !item.mapped && !busyId)} onDragStart={event => onProductDragStart?.(event, item)} onDragEnd={onProductDragEnd} className={upstream && !item.mapped && onProductDragStart ? "cursor-grab active:cursor-grabbing" : undefined}>
-            <Table.Cell><div className="grid gap-1"><span className="flex items-center gap-1 text-sm font-medium">{upstream && !item.mapped && onProductDragStart && <DotsSixVerticalIcon aria-hidden="true" className="size-4 shrink-0 text-kumo-subtle"/>}{item.name}</span><span className="text-xs text-kumo-subtle">#{item.id}</span>{item.counterpartName && <span className="text-xs text-kumo-subtle">{upstream ? "本地：" : "供应商："}{item.counterpartName}</span>}</div></Table.Cell>
+            <Table.Cell><div className="grid gap-1"><span className="flex items-center gap-1 text-base font-medium">{upstream && !item.mapped && onProductDragStart && <DotsSixVerticalIcon aria-hidden="true" className="size-4 shrink-0 text-kumo-subtle"/>}{item.name}</span><span className="text-base text-kumo-subtle">#{item.id}</span>{item.counterpartName && <span className="text-base text-kumo-subtle">{upstream ? "本地：" : "供应商："}{item.counterpartName}</span>}</div></Table.Cell>
             <Table.Cell>{item.price === null ? "—" : `¥${item.price.toFixed(2)}`}</Table.Cell>
             <Table.Cell><Badge variant={item.mapped ? "secondary" : "outline"}>{upstream ? item.mapped ? "已对接" : "—" : item.mapped ? item.hidden ? "已隐藏 · 已对接" : "已对接" : "未对接"}</Badge></Table.Cell>
             {onAction && <Table.Cell>{upstream ? !item.mapped && <Button size="sm" variant="primary" disabled={Boolean(busyId)} loading={busyId === item.id} onClick={() => onAction(item)}>对接</Button> : item.mapped ? <div className="flex gap-2">{onSync && <Button size="sm" variant="secondary" disabled={Boolean(busyId)} onClick={() => onSync(item)}>同步</Button>}<Button size="sm" variant="secondary" disabled={Boolean(busyId) || Boolean(item.deletable === false && item.hidden)} loading={busyId === item.id} onClick={() => onAction(item)}>{item.deletable === false ? item.hidden ? "已隐藏" : "隐藏" : "取消对接"}</Button></div> : "—"}</Table.Cell>}
           </Table.Row>)}</Table.Body>
-        </Table>{!visible.length && <p className="p-8 text-center text-sm text-kumo-subtle">当前分类暂无匹配商品</p>}</div>
-        <div className="flex items-center justify-between gap-2 border-t border-kumo-line p-3"><Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>上一页</Button><span className="text-xs text-kumo-subtle">{currentPage} / {pageCount}</span><Button variant="secondary" size="sm" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>下一页</Button></div>
+        </Table>{!visible.length && <p className="p-8 text-center text-base text-kumo-subtle">当前分类暂无匹配商品</p>}</div>
+        <div className="flex items-center justify-between gap-2 border-t border-kumo-line p-3"><Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>上一页</Button><span className="text-base text-kumo-subtle">{currentPage} / {pageCount}</span><Button variant="secondary" size="sm" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>下一页</Button></div>
       </div>
     </Sidebar.Provider>
   </LayerCard>;
@@ -147,10 +148,10 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
       <CatalogPane title="全部本地商品" categories={props.localCategories} products={props.localProducts} upstream={false} onAction={props.onDisconnect || props.onHide ? openAction : undefined} busyId={busyId} dragging={Boolean(draggedId)} onProductDrop={receiveDrop} onSync={props.onSync ? syncLocal : undefined}/>
     </div>
     <Dialog.Root open={Boolean(action)} onOpenChange={open => { if (!open && !busyId) setAction(null); }}>
-      <Dialog size="base" className="grid gap-5 p-6">
+      <Dialog size="base" className="grid gap-4 p-8">
         <div><Dialog.Title>{action?.mapped ? action.deletable === false ? "商品有关联记录，只能隐藏" : "取消商品对接" : "对接到本地商品"}</Dialog.Title><Dialog.Description>{action?.name} #{action?.id}</Dialog.Description></div>
-        {action?.mapped ? <p className="text-sm text-kumo-subtle">{action.deletable === false ? "该商品存在订单或机器关联，禁止删除本地商品和映射。隐藏后将停止展示给新客户，已有机器和订单继续保留。" : props.disconnectDescription ?? "将删除本地商品和供应商映射。服务端会再次检查订单和机器关联；存在关联则拒绝删除。"}</p> : <>
-          <p className="text-sm text-kumo-subtle">选择本地分类后，将在右侧建立对应商品。不会购买服务器或扣除余额。</p>
+        {action?.mapped ? <p className="text-base text-kumo-subtle">{action.deletable === false ? "该商品存在订单或机器关联，禁止删除本地商品和映射。隐藏后将停止展示给新客户，已有机器和订单继续保留。" : props.disconnectDescription ?? "将删除本地商品和供应商映射。服务端会再次检查订单和机器关联；存在关联则拒绝删除。"}</p> : <>
+          <p className="text-base text-kumo-subtle">选择本地分类后，将在右侧建立对应商品。不会购买服务器或扣除余额。</p>
           <Select label="本地一级分类" value={primaryId} onValueChange={value => { setPrimaryId(value ?? ""); setSecondaryId(""); }} items={Object.fromEntries(roots.map(item => [item.id, item.name]))}/>
           <Select label="本地二级分类" value={secondaryId} disabled={!primaryId} onValueChange={value => setSecondaryId(value ?? "")} items={Object.fromEntries(children.map(item => [item.id, item.name]))}/>
         </>}

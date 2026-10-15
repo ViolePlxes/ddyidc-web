@@ -1,4 +1,5 @@
-import { Button, LayerCard, Pagination, Table } from "@cloudflare/kumo";
+import { Pagination } from "./Pagination";
+import { Button, LayerCard,  Table } from "@cloudflare/kumo";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -54,7 +55,7 @@ export function DataTable({
 
   return (
     <div className="grid gap-3">
-      <LayerCard className="shadow-none overflow-x-auto p-0">
+      <LayerCard className=" overflow-x-auto p-0">
         <Table>
           <Table.Header variant="compact">
             <Table.Row>
@@ -94,7 +95,7 @@ export function DataTable({
                     <strong className="font-medium text-kumo-strong">
                       {row.primary}
                     </strong>
-                    <span className="text-sm text-kumo-subtle">{row.meta}</span>
+                    <span className="text-base text-kumo-subtle">{row.meta}</span>
                   </div>
                 </Table.Cell>
                 <Table.Cell className="text-kumo-subtle">
@@ -144,7 +145,7 @@ export function DefinitionList({
           key={row.label}
           className="grid gap-1 py-3 sm:grid-cols-[12rem_1fr]"
         >
-          <dt className="text-sm text-kumo-subtle">{row.label}</dt>
+          <dt className="text-base text-kumo-subtle">{row.label}</dt>
           <dd className="text-base text-kumo-strong">{row.value}</dd>
         </div>
       ))}

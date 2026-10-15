@@ -1,7 +1,8 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
 import { PromoCouponOffers, PromoCouponNotices } from "./PromoCouponOffers";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Pagination, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard,  Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -51,13 +52,13 @@ export function Coupons() {
         actions={
           <Dialog.Root>
             <Dialog.Trigger render={<Button disabled={!config.data?.couponSelfClaim}>领券中心</Button>} />
-            <Dialog className="grid max-h-[80vh] gap-5 overflow-y-auto p-6">
-              <div className="flex justify-between"><div><Dialog.Title className="text-xl font-semibold">领券中心</Dialog.Title><Dialog.Description className="text-kumo-subtle">仅展示当前账号可领取的真实优惠券。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} /></div>
+            <Dialog className="grid max-h-[80vh] gap-4 overflow-y-auto p-8">
+              <div className="flex justify-between"><div><Dialog.Title className="text-2xl font-semibold">领券中心</Dialog.Title><Dialog.Description className="text-kumo-subtle">仅展示当前账号可领取的真实优惠券。</Dialog.Description></div><Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} /></div>
               <PageState loading={center.isLoading} error={center.error ? getApiMessage(center.error) : null} empty={!center.isLoading && !center.error && (center.data?.length ?? 0) === 0} emptyTitle="暂无可领优惠券">
                 <div className="grid gap-3" data-animate-list>
                   {(center.data ?? []).map((coupon) => (
-                    <LayerCard key={coupon.id} className="shadow-none flex items-center justify-between gap-4 p-4">
-                      <div><strong className="text-kumo-strong">{coupon.name}</strong><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用 · 剩余 {coupon.remaining}</p></div>
+                    <LayerCard key={coupon.id} className=" flex items-center justify-between gap-4 px-4 py-3">
+                      <div><strong className="text-kumo-strong font-medium">{coupon.name}</strong><p className="text-base text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用 · 剩余 {coupon.remaining}</p></div>
                       <Button size="sm" loading={claim.isPending && claim.variables === coupon.id} disabled={coupon.userClaimed >= coupon.perUserLimit} onClick={() => claim.mutate(coupon.id)}>{coupon.userClaimed >= coupon.perUserLimit ? "已达上限" : "领取"}</Button>
                     </LayerCard>
                   ))}
@@ -71,7 +72,7 @@ export function Coupons() {
       {notice ? <Banner title="操作成功" description={notice} /> : null}
       <PromoCouponNotices/><PromoCouponOffers />
       {claim.error || redeem.error ? <Banner variant="error" title="优惠券操作失败" description={getApiMessage(claim.error ?? redeem.error)} /> : null}
-      <LayerCard className="shadow-none flex flex-wrap items-end gap-3 p-4">
+      <LayerCard className=" flex flex-wrap items-end gap-3 px-4 py-3">
         <div className="min-w-64 flex-1"><Input label="优惠券兑换码" value={claimCode} onChange={(event) => setClaimCode(event.target.value)} placeholder="请输入兑换码" /></div>
         <Button variant="secondary" loading={redeem.isPending} disabled={!claimCode.trim()} onClick={() => redeem.mutate(claimCode.trim())}>兑换</Button>
       </LayerCard>
@@ -85,9 +86,9 @@ export function Coupons() {
         <div className="grid gap-4">
           <section className="grid gap-4 md:grid-cols-2" data-animate-list>
             {rows.map((coupon) => (
-              <LayerCard key={coupon.id} className="shadow-none grid gap-4 p-5">
-                <div className="flex justify-between gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">{coupon.name}</h2><p className="text-sm text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用</p></div><strong className="text-3xl text-kumo-brand">{couponValue(coupon.type, coupon.faceValue, coupon.discountRate)}</strong></div>
-                <div className="flex items-center justify-between border-t border-kumo-line pt-4"><span className="text-sm text-kumo-subtle">有效期至 {coupon.expireAt}</span><Badge variant={tab === "available" ? "success" : "secondary"}>{tab === "available" ? "可使用" : tab === "used" ? "已使用" : "已过期"}</Badge></div>
+              <LayerCard key={coupon.id} className=" grid gap-4 px-5 py-4">
+                <div className="flex justify-between gap-4"><div><h2 className="text-lg font-semibold text-kumo-strong">{coupon.name}</h2><p className="text-base text-kumo-subtle">满 {formatMoney(coupon.minAmount)} 可用</p></div><strong className="text-base text-kumo-brand font-medium">{couponValue(coupon.type, coupon.faceValue, coupon.discountRate)}</strong></div>
+                <div className="flex items-center justify-between border-t border-kumo-line pt-4"><span className="text-base text-kumo-subtle">有效期至 {coupon.expireAt}</span><Badge variant={tab === "available" ? "success" : "secondary"}>{tab === "available" ? "可使用" : tab === "used" ? "已使用" : "已过期"}</Badge></div>
               </LayerCard>
             ))}
           </section>

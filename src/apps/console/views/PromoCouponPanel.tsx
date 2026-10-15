@@ -90,7 +90,7 @@ export function PromoCouponForm({
         className="grid gap-4 pb-4 pt-2"
         aria-label={`给客户 ${customerId} 送优惠券`}
       >
-        <p className="text-sm text-kumo-subtle">
+        <p className="text-base text-kumo-subtle">
           给客户ID {customerId}{" "}
           送优惠券，使用自己的积分或余额。收起后保留该客户的草稿。
         </p>
@@ -125,7 +125,7 @@ export function PromoCouponForm({
               })
             }
           />
-          <p className="self-center text-sm text-kumo-subtle">
+          <p className="self-center text-base text-kumo-subtle">
             可用积分 {options.data?.points ?? "—"} · 可用余额 ¥
             {options.data?.balance ?? "—"}
           </p>
@@ -212,10 +212,10 @@ function BatchRow({ batch }: { batch: PromoCouponBatch }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <strong className="text-sm">
+          <strong className="text-base font-medium">
             {batch.name} · ¥{batch.face}
           </strong>
-          <p className="text-xs text-kumo-subtle">
+          <p className="text-base text-kumo-subtle">
             {batch.mode === "direct" ? "指定客户赠券" : "专属领券活动"} ·{" "}
             {batch.quantity}张 · 到期{" "}
             {new Date(batch.expiresAt).toLocaleDateString("zh-CN")}
@@ -243,7 +243,7 @@ function BatchRow({ batch }: { batch: PromoCouponBatch }) {
           loading={detail.isLoading}
           error={detail.error ? getApiMessage(detail.error) : null}
         >
-          <div className="grid gap-3 text-sm">
+          <div className="grid gap-3 text-base">
             <p>
               批次 {batch.id} ·{" "}
               {batch.source === "points"
@@ -327,7 +327,7 @@ function BatchRow({ batch }: { batch: PromoCouponBatch }) {
                 description={getApiMessage(fund.error ?? close.error)}
               />
             ) : null}
-            <p className="text-xs text-kumo-subtle">
+            <p className="text-base text-kumo-subtle">
               处理记录：
               {detail.data?.events
                 .map(
@@ -371,7 +371,7 @@ export function PromoCouponBatches({ search }: { search: string }) {
           <BatchRow key={b.id} batch={b} />
         ))}
       </PageState>
-      <div className="mt-3 flex justify-between gap-2 text-sm text-kumo-subtle">
+      <div className="mt-3 flex justify-between gap-2 text-base text-kumo-subtle">
         <span>共{rows.data?.total ?? 0}个批次</span>
         <div className="flex gap-2">
           <Button

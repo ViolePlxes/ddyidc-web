@@ -31,10 +31,10 @@ export function ManagementPage({
       <Dialog.Trigger
         render={<Button icon={<PlusIcon />}>{actionLabel}</Button>}
       />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Dialog.Title className="text-xl font-semibold">
+            <Dialog.Title className="text-2xl font-semibold">
               {actionLabel}
             </Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">

@@ -2,7 +2,6 @@ import {
   Banner,
   Button,
   Empty,
-  LayerCard,
   Loader,
 } from "@cloudflare/kumo";
 import { PackageIcon, WarningCircleIcon } from "@phosphor-icons/react";
@@ -37,7 +36,7 @@ export function PageState({
 }) {
   if (loading) {
     return <div aria-busy="true" className="grid gap-3">
-      <div role="status" className="flex items-center gap-2 text-sm text-kumo-subtle"><Loader /><span>正在加载数据…</span></div>
+      <div role="status" className="flex items-center gap-2 text-base text-kumo-subtle"><Loader /><span>正在加载数据…</span></div>
       {keepContent ? children : skeleton ? (isSkeletonKind(skeleton) ? <ContentSkeleton kind={skeleton} /> : skeleton) : null}
     </div>;
   }
@@ -45,13 +44,11 @@ export function PageState({
     return (
       <ContentFade>
         <div>
-        <LayerCard className="shadow-none">
-          <Empty className="bg-kumo-base"
+          <Empty
             icon={<PackageIcon />}
             title={emptyTitle}
             description={emptyDescription}
           />
-        </LayerCard>
         </div>
       </ContentFade>
     );

@@ -1,4 +1,5 @@
-import { Button, LayerCard, Pagination, Table, Tabs } from "@cloudflare/kumo";
+import { Pagination } from "../../../shared/components/Pagination";
+import { Button, LayerCard,  Table, Tabs } from "@cloudflare/kumo";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -44,7 +45,7 @@ export function OrderList() {
         emptyTitle="暂无订单"
       >
         <div className="grid gap-3">
-          <LayerCard className="shadow-none overflow-x-auto p-0">
+          <LayerCard className=" overflow-x-auto p-0">
             <Table>
               <Table.Header variant="compact">
                 <Table.Row>
@@ -61,7 +62,7 @@ export function OrderList() {
                     <Table.Cell>
                       <div className="grid gap-0.5">
                         <strong className="font-medium text-kumo-strong">{order.productName || "订单商品"}</strong>
-                        <span className="text-sm text-kumo-subtle">{order.createdAt}</span>
+                        <span className="text-base text-kumo-subtle">{order.createdAt}</span>
                       </div>
                     </Table.Cell>
                     <Table.Cell>{order.orderNo}</Table.Cell>

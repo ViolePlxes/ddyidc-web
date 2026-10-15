@@ -1,4 +1,5 @@
-import { Button, ClipboardText, Input, LayerCard, Link, Pagination, Tabs } from "@cloudflare/kumo";
+import { Pagination } from "../../../shared/components/Pagination";
+import { Button, ClipboardText, Input, LayerCard, Link,  Tabs, Table } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -71,7 +72,7 @@ function instanceStatus(instance: InstanceListItem): StatusCode {
   return "expired";
 }
 
-const productColumns = "grid grid-cols-[1.7fr_.8fr_1.4fr_1.1fr_.8fr_1.5fr_1.1fr_.6fr] items-center gap-x-2";
+const productColumns = "align-top";
 function expiryLabel(value?: string) {
   if (!value) return "未设置到期时间";
   const time = new Date(value.replace(" ", "T")).getTime();
@@ -99,16 +100,16 @@ function ProductRow({ instance }: { instance: InstanceListItem }) {
   const system = data.operatingSystem;
   const SystemIcon = /windows/i.test(system ?? "") ? WindowsLogoIcon : /linux|ubuntu|debian|centos|alma|rocky|fedora|arch|suse/i.test(system ?? "") ? LinuxLogoIcon : DesktopIcon;
   const missing = "未同步";
-  return <div role="row" className={`${productColumns} border-b border-kumo-hairline px-1 py-2.5 last:border-b-0`}>
-    <div role="cell" className="grid min-w-0 gap-1"><Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><span className="break-all text-xs text-kumo-subtle">{data?.hostname || instance.name}</span></div>
-    <div role="cell"><StatusBadge status={instanceStatus(instance)} /></div>
-    <div role="cell">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</div>
-    <div role="cell" className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-xs text-kumo-subtle">{expiryLabel(instance.expiresAt)}</span></div>
-    <div role="cell" className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-xs text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div>
-    <div role="cell" className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div>
-    <div role="cell">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-xs text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-xs text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</div>
-    <div role="cell"><Link href={`/user/instance/${instance.id}.htm`} variant="plain">管理</Link></div>
-  </div>;
+  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline px-1 py-2.5 last:border-b-0`}>
+    <Table.Cell role="cell" ><div className="grid min-w-0 gap-1"><Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><span className="break-all text-base text-kumo-subtle">{data?.hostname || instance.name}</span></div></Table.Cell>
+    <Table.Cell role="cell"><StatusBadge status={instanceStatus(instance)} /></Table.Cell>
+    <Table.Cell role="cell">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</Table.Cell>
+    <Table.Cell role="cell" ><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-base text-kumo-subtle">{expiryLabel(instance.expiresAt)}</span></div></Table.Cell>
+    <Table.Cell role="cell" ><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-base text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></Table.Cell>
+    <Table.Cell role="cell" ><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></Table.Cell>
+    <Table.Cell role="cell">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-base text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-base text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</Table.Cell>
+    <Table.Cell role="cell"><Link href={`/user/instance/${instance.id}.htm`} variant="plain">管理</Link></Table.Cell>
+  </Table.Row>;
 }
 
 export function InstanceList() {
@@ -161,7 +162,7 @@ export function InstanceList() {
   return (
     <>
       <LayerCard>
-        <LayerCard.Secondary>产品列表{category && <span className="text-xs">· {title}</span>}</LayerCard.Secondary>
+        <LayerCard.Secondary>产品列表{category && <span className="text-base">· {title}</span>}</LayerCard.Secondary>
         <LayerCard.Primary>
           <div className="mb-2 flex min-w-0 flex-wrap items-center gap-3">
             <Input size="sm" aria-label="搜索实例" placeholder="按实例名或 IP 搜索" className="min-w-0 w-full sm:w-auto sm:flex-1" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
@@ -171,18 +172,20 @@ export function InstanceList() {
               ]} />
             </div>
           </div>
-          <div className="-mx-1 min-w-0 overflow-x-auto text-sm" role="table" aria-label="产品列表">
-            <div className="min-w-[900px]">
-              <div role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-xs font-medium text-kumo-subtle`}>
-                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "操作"].map(label=><span role="columnheader" key={label}>{label}</span>)}
-              </div>
-              <PageState loading={query.isLoading || query.isPlaceholderData} keepContent error={query.error ? getApiMessage(query.error) : null}>
-                <div role="rowgroup">{instances.map(instance=><ProductRow key={instance.id} instance={instance} />)}</div>
-              </PageState>
-            </div>
+          <div className="-mx-1 min-w-0 overflow-x-auto text-base"  aria-label="产品列表">
+            <PageState loading={query.isLoading || query.isPlaceholderData} keepContent error={query.error ? getApiMessage(query.error) : null}>
+            <Table className="min-w-[900px]">
+              <Table.Header>
+              <Table.Row role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-base font-medium text-kumo-subtle`}>
+                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "操作"].map(label=><Table.Head role="columnheader" key={label}>{label}</Table.Head>)}
+              </Table.Row>
+              </Table.Header>
+                <Table.Body role="rowgroup">{instances.map(instance=><ProductRow key={instance.id} instance={instance} />)}</Table.Body>
+            </Table>
+            </PageState>
           </div>
-          {!query.isLoading && !query.isPlaceholderData && !query.error && instances.length === 0 && <p className="py-6 text-center text-sm text-kumo-subtle">当前条件下暂无产品</p>}
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-3 text-xs text-kumo-subtle">
+          {!query.isLoading && !query.isPlaceholderData && !query.error && instances.length === 0 && <p className="py-6 text-center text-base text-kumo-subtle">当前条件下暂无产品</p>}
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-3 text-base text-kumo-subtle">
             <span>{query.isLoading || query.isPlaceholderData ? "正在加载产品…" : `显示 ${instances.length ? (page-1)*instancePageSize+1 : 0}–${(page-1)*instancePageSize+instances.length} 条，共 ${localFilter ? filteredInstances.length : listData?.total ?? 0} 条`}</span>
             {(localFilter ? filteredInstances.length : listData?.total ?? 0) > instancePageSize && <Pagination page={page} setPage={setPage} perPage={instancePageSize} totalCount={localFilter ? filteredInstances.length : listData?.total ?? 0} />}
           </div>

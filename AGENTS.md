@@ -28,3 +28,15 @@
 - 开发前阅读 `docs/portal-shell.md`；新增参数、导航入口、反色区或响应式行为同步规范、所属Obsidian地图节点和验证记录。
 - 页面内容放在Shell的children，登录／控制台／法律域名由调用方提供；公开官网不恢复客户会话，业务入口沿用原认证与Gate。
 - 用户已删除的页脚大色块行动区不得重新加入。
+
+
+# Kumo 官方设计审查（2026-10-15）
+
+- 参照 https://kumo-ui.com/skill/ 与现有 kumo-design；开发前核对已安装组件与版本，不重复安装，不因样式任务擅自升级依赖。
+- 作者正文/数据使用现有 Kumo text-base（14px）；标题用 heading/font-semibold，行内强调 font-medium；不使用 font-bold、tracking-*、悬浮颜色缓动。官方紧凑组件内部字号保持原生，不用全局覆盖硬压。
+- LayerCard 不覆盖配色/圆角/阴影，不套娃；空态直接复用 Empty；可用的表格、输入、按钮、分页优先用官方组件。
+- 有条件数据弹窗复用 DialogPresence，使用官方完成动画回调释放表单，保留重新打开重置、原提交与忙碌保护；不得长时间缓存密码等输入或让外层可见性强制打开嵌套窗口。
+- Pagination 统一从 shared/components/Pagination.tsx 导入，只统一中文显示，分页状态和查询逻辑仍由业务调用方控制。
+- 纯 UI 调整不得混改 API、hooks、stores、权限、金额、依赖、后端或数据；预览夹具独立且不入构建。检查清单见 docs/kumo-ui-audit-20261015.md。
+
+Dialog 补充：优先复用官方 p-8、text-2xl 标题与 secondary 方形关闭按钮，保留原生 top-8/sm:top-16；不得用全局 CSS 改写手机按钮尺寸。只保留防止内容越界的视口和滚动限制。
