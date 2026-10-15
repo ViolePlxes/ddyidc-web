@@ -24,11 +24,11 @@ echarts.use([
   TooltipComponent,
 ]);
 
-export function MiniTrend({ title, values, money = false }: { title: string; values: [number, number][]; money?: boolean }) {
+export function MiniTrend({ title, values, money = false, valueFormat }: { title: string; values: [number, number][]; money?: boolean; valueFormat?: (value: number) => string }) {
   const { theme } = useTheme();
   return <TimeseriesChart echarts={echarts} height={140} isDarkMode={theme === "dark"}
     ariaDescription={title} xAxisTickCount={3} yAxisTickCount={2}
-    tooltipValueFormat={(value) => money ? `${value.toFixed(2)} 元` : `${value} 个`}
+    tooltipValueFormat={(value) => valueFormat ? valueFormat(value) : money ? `${value.toFixed(2)} 元` : `${value} 个`}
     data={[{ name: title, color: ChartPalette.categorical(0), data: values }]} />;
 }
 
