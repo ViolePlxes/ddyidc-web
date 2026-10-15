@@ -10,15 +10,15 @@ export function TicketConversation({ replies, perspective, onQuote }: { replies:
         const mine = reply.type === perspective;
         return (
           <div key={reply.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-            <LayerCard className={`shadow-none grid w-full min-w-0 gap-5 p-5 sm:p-6 ${mine ? "bg-kumo-tint" : ""}`}>
+            <LayerCard className={` grid w-full min-w-0 gap-5 px-5 py-4 sm:px-6 py-5 ${mine ? "" : ""}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <strong className="text-sm font-medium text-kumo-strong">
+                <strong className="text-base font-medium text-kumo-strong">
                   {reply.type === "Client" ? "客户" : "管理员"}{mine ? "（我）" : ""}
                 </strong>
-                <span className="text-xs text-kumo-subtle">{new Date(reply.createdAt).toLocaleString("zh-CN")}</span>
+                <span className="text-base text-kumo-subtle">{new Date(reply.createdAt).toLocaleString("zh-CN")}</span>
               </div>
               {reply.quote ? (
-                <div className="border-l-2 border-kumo-line bg-kumo-recessed p-3 text-sm text-kumo-subtle">
+                <div className="border-l-2 border-kumo-line bg-kumo-recessed p-3 text-base text-kumo-subtle">
                   <span className="font-medium">引用{reply.quote.type === "Client" ? "客户" : "管理员"}：</span>
                   <span className="ml-1 line-clamp-2">{reply.quote.content}</span>
                 </div>
@@ -58,11 +58,11 @@ export function ReplyComposer({
   onSubmit: () => void;
 }) {
   return (
-    <LayerCard className="shadow-none grid min-w-0 gap-5 p-5 sm:p-6">
+    <LayerCard className=" grid min-w-0 gap-5 px-5 py-4 sm:px-6 py-5">
       {quote ? (
         <div className="flex items-start gap-3 border-l-2 border-kumo-line bg-kumo-recessed p-3">
           <ArrowBendUpLeftIcon className="mt-0.5 shrink-0 text-kumo-subtle" />
-          <p className="line-clamp-2 min-w-0 flex-1 text-sm text-kumo-subtle">{quote.content}</p>
+          <p className="line-clamp-2 min-w-0 flex-1 text-base text-kumo-subtle">{quote.content}</p>
           <Button type="button" variant="ghost" shape="square" size="sm" icon={<XIcon />} aria-label="取消引用" onClick={onClearQuote} />
         </div>
       ) : null}
@@ -94,7 +94,7 @@ export function AttachmentLinks({ attachments }: { attachments: TicketReply["att
           key={attachment.id}
           href={attachment.url}
           download={attachment.name}
-          className="inline-flex items-center gap-2 text-sm text-kumo-link hover:underline"
+          className="inline-flex items-center gap-2 text-base text-kumo-link hover:underline"
         >
           <PaperclipIcon />{attachment.name}
         </a>

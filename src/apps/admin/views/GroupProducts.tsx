@@ -31,14 +31,14 @@ function SpecsEditor({ product, onClose, onDirtyChange, onBusyChange }: { produc
   const update = <K extends keyof ProductSpec>(key: K, value: ProductSpec[K]) => { onDirtyChange(true); setRow((current) => current ? { ...current, [key]: value } : current); };
   const upstreamStock = specsQuery.data?.upstreamStock;
   return (
-    <LayerCard className="grid gap-5 p-4">
+    <LayerCard className="grid gap-5 px-4 py-3">
         <div className="flex items-start justify-between gap-4">
           <div><h3 className="text-lg font-semibold text-kumo-strong">商品规格配置</h3><p className="text-kumo-subtle">{product.name} · 每个商品保存一条规格配置。</p></div>
           <Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" disabled={save.isPending} onClick={onClose} />
         </div>
         <PageState loading={specsQuery.isLoading} error={specsQuery.error ? getApiMessage(specsQuery.error) : null}>
           {row ? <fieldset disabled={save.isPending} className="grid gap-4">
-            <p className="text-sm text-kumo-subtle">{specsQuery.data?.capturedAt ? `本地上游快照：${new Date(specsQuery.data.capturedAt).toLocaleString()}。未提供的字段留空。` : "此商品尚无上游规格快照，可在对接商品页同步商品后查看；也可直接填写本地配置。"}</p>
+            <p className="text-base text-kumo-subtle">{specsQuery.data?.capturedAt ? `本地上游快照：${new Date(specsQuery.data.capturedAt).toLocaleString()}。未提供的字段留空。` : "此商品尚无上游规格快照，可在对接商品页同步商品后查看；也可直接填写本地配置。"}</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Input label="实例规格" maxLength={64} value={row.name} onChange={(event) => update("name", event.target.value)} />
               <Input label="vCPU" type="number" min={0} max={1024} value={row.vcpu || ""} onChange={(event) => update("vcpu", Number(event.target.value))} />
@@ -100,9 +100,9 @@ export function GroupProducts({ groupId, expanded, blocked, beginSave, endSave, 
       {listing.error ? <Banner variant="error" title="上下架失败" description={getApiMessage(listing.error)} /> : null}
       {sort.error ? <Banner variant="error" title="排序保存失败" description={`${getApiMessage(sort.error)}；已恢复原顺序，请刷新后重试。`} /> : null}
       <PageState loading={products.isLoading} keepContent error={!products.data && products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && !products.error && (products.data?.items.length ?? 0) === 0} emptyTitle="该分组暂无商品">
-        <div className="overflow-x-auto -mx-1 text-sm">
+        <div className="overflow-x-auto -mx-1 text-base">
           <div className="min-w-[480px] px-1">
-            <div className="grid grid-cols-[minmax(0,1fr)_5rem_15rem] gap-x-4 border-b border-kumo-fill pb-2 text-xs font-medium text-kumo-subtle"><span>商品</span><span className="text-right">售价</span><span className="text-right">操作</span></div>
+            <div className="grid grid-cols-[minmax(0,1fr)_5rem_15rem] gap-x-4 border-b border-kumo-fill pb-2 text-base font-medium text-kumo-subtle"><span>商品</span><span className="text-right">售价</span><span className="text-right">操作</span></div>
             <div className="[&>div]:gap-0">
               <SortableList scope="products" listId={groupId} disabled={disabled} onDrop={(event) => { if (event.source === groupId && event.target === groupId) submitSort(event.targetIds); }}>
                 {visibleProducts.map((product, index, rows) => <div key={product.id} data-sort-id={product.id} className="sort-item grid grid-cols-[minmax(0,1fr)_5rem_15rem] items-center gap-x-4 border-b border-kumo-hairline py-2.5">
@@ -115,8 +115,8 @@ export function GroupProducts({ groupId, expanded, blocked, beginSave, endSave, 
           </div>
         </div>
       </PageState>
-      {!products.isLoading && !products.isError && visibleProducts.length === 0 && (products.data?.total ?? 0) > 0 ? <p className="py-4 text-sm text-kumo-subtle">没有符合条件的商品</p> : null}
-      <p className="mt-3 text-xs text-kumo-subtle">显示 {visibleProducts.length} / {products.data?.total ?? 0} 个商品{filtering ? " · 清除筛选后可调整排序" : ""}</p>
+      {!products.isLoading && !products.isError && visibleProducts.length === 0 && (products.data?.total ?? 0) > 0 ? <p className="py-4 text-base text-kumo-subtle">没有符合条件的商品</p> : null}
+      <p className="mt-3 text-base text-kumo-subtle">显示 {visibleProducts.length} / {products.data?.total ?? 0} 个商品{filtering ? " · 清除筛选后可调整排序" : ""}</p>
     </LayerCard.Primary></LayerCard>
   );
 }

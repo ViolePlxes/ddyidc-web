@@ -24,7 +24,7 @@ function actionHref(user: unknown, target: string) {
 function ActivityCard({ activity }: { activity: GroupBuyActivity }) {
   const user = useAuthStore((state) => state.user);
   return (
-    <LayerCard className="shadow-none flex min-h-80 flex-col gap-4 p-5">
+    <LayerCard className=" flex min-h-80 flex-col gap-4 px-5 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><UsersThreeIcon /></div>
         <Badge variant="success">进行中</Badge>
@@ -36,14 +36,14 @@ function ActivityCard({ activity }: { activity: GroupBuyActivity }) {
       <div className="grid gap-2 sm:grid-cols-3">
         {(Object.keys(groupLabels) as Array<keyof typeof groupLabels>).map((kind) => (
           <div key={kind} className="bg-kumo-control p-3">
-            <span className="text-xs text-kumo-subtle">{groupLabels[kind]}</span>
-            <strong className="block text-kumo-strong">¥{(price(activity, kind) / 100).toFixed(2)}</strong>
+            <span className="text-base text-kumo-subtle">{groupLabels[kind]}</span>
+            <strong className="block text-kumo-strong font-medium">¥{(price(activity, kind) / 100).toFixed(2)}</strong>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-2 text-sm text-kumo-subtle"><ClockIcon /> 截止 {new Date(activity.endTime).toLocaleString("zh-CN")}</div>
+      <div className="flex items-center gap-2 text-base text-kumo-subtle"><ClockIcon /> 截止 {new Date(activity.endTime).toLocaleString("zh-CN")}</div>
       <div className="mt-auto flex items-end justify-between gap-4 border-t border-kumo-line pt-4">
-        <div><span className="text-sm text-kumo-subtle line-through">¥{(activity.originalPrice / 100).toFixed(2)}</span><p className="text-sm text-kumo-subtle">{activity.joinedMembers} 人已参与</p></div>
+        <div><span className="text-base text-kumo-subtle line-through">¥{(activity.originalPrice / 100).toFixed(2)}</span><p className="text-base text-kumo-subtle">{activity.joinedMembers} 人已参与</p></div>
         <LinkButton href={actionHref(user, `/console/groupbuy/activities/${activity.id}`)}>去开团 / 参团</LinkButton>
       </div>
     </LayerCard>
@@ -71,9 +71,9 @@ export function GroupBuyPublicShare() {
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {data ? <div className="mx-auto grid max-w-3xl gap-6">
         <PageHeader title={`${data.activity.productName} 拼团分享`} description={data.activity.slogan || "好友正在等你参团。"} />
-        <LayerCard className="shadow-none grid gap-5 p-6">
+        <LayerCard className=" grid gap-5 px-6 py-5">
           <div className="flex flex-wrap items-center gap-2"><Badge variant="success">还差 {Math.max(data.leader.needNum - data.members.length, 0)} 人</Badge><Badge variant="outline">{groupLabels[data.leader.groupType]}</Badge></div>
-          <div><span className="text-sm text-kumo-subtle">团长</span><strong className="block text-lg text-kumo-strong">{data.members.find((item) => item.isLeader)?.memberName || "拼团用户"}</strong></div>
+          <div><span className="text-base text-kumo-subtle">团长</span><strong className="block text-base text-kumo-strong font-medium">{data.members.find((item) => item.isLeader)?.memberName || "拼团用户"}</strong></div>
           <p className="text-kumo-subtle">拼团将于 {new Date(data.leader.timeoutTime).toLocaleString("zh-CN")} 截止，满员后自动开通。</p>
           <LinkButton href={actionHref(user, `/console/groupbuy/share/${inviteCode}`)} className="w-full">立即参团</LinkButton>
         </LayerCard>

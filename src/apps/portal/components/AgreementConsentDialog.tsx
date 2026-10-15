@@ -14,9 +14,9 @@ export function AgreementConsentDialog({
 }: AgreementConsentDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <div className="grid gap-2">
-          <Dialog.Title className="text-xl font-semibold">
+          <Dialog.Title className="text-2xl font-semibold">
             请先同意相关协议
           </Dialog.Title>
           <Dialog.Description className="text-kumo-subtle">

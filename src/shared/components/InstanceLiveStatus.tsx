@@ -35,5 +35,5 @@ export function useInstanceStatus(instanceId:string,customerId:string|undefined,
 }
 export function InstanceStatusControl({live,fallback}:{live:ReturnType<typeof useInstanceStatus>;fallback?:string}){
  const power=live.data?.powerStatus||fallback||'unknown';
- return <div className="grid gap-2"><div className="flex flex-wrap items-center gap-2"><MachineStatusBadge status={power} label={labels[power]||'状态未知'}/><Button size="sm" variant="secondary" aria-label="刷新实例状态" loading={live.isFetching} disabled={live.isFetching} onClick={()=>void live.refetch()}>刷新</Button></div>{live.message&&<span role="status" className="text-xs text-kumo-subtle">{live.message}</span>}</div>;
+ return <div className="grid gap-2"><div className="flex flex-wrap items-center gap-2"><MachineStatusBadge status={power} label={labels[power]||'状态未知'}/><Button size="sm" variant="secondary" aria-label="刷新实例状态" loading={live.isFetching} disabled={live.isFetching} onClick={()=>void live.refetch()}>刷新</Button></div>{live.message&&<span role="status" className="text-base text-kumo-subtle">{live.message}</span>}</div>;
 }

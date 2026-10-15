@@ -58,7 +58,7 @@ export function AdminHome() {
             </div>
             <PageState loading={operations.isLoading} error={operations.error ? getApiMessage(operations.error) : null}>
               {operations.data ? <>
-                <p className="text-sm text-kumo-subtle">采样时间：{formatDate(operations.data.sampledAt)}。仅按需读取；不可用不代表数值为零。</p>
+                <p className="text-base text-kumo-subtle">采样时间：{formatDate(operations.data.sampledAt)}。仅按需读取；不可用不代表数值为零。</p>
                 <MetricGrid metrics={operations.data.metrics.map((metric) => ({ label: metric.label, value: metric.value === null ? "不可用" : `${metric.value.toLocaleString("zh-CN")} ${metric.unit}`, hint: metric.hint }))} />
               </> : null}
             </PageState>

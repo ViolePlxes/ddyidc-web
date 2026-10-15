@@ -41,9 +41,9 @@ export function ActionDialog({
   return (
     <Dialog.Root>
       <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>{label}</Button>} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <div className="grid gap-2">
-          <Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title>
+          <Dialog.Title className="text-2xl font-semibold">{title}</Dialog.Title>
           <Dialog.Description className="text-kumo-subtle">{description}</Dialog.Description>
         </div>
         {children}
@@ -64,12 +64,12 @@ export function RescueDialog({ disabled, loading, onConfirm }: { disabled?: bool
   const valid = password.length >= 12 && password.length <= 128 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /[0-9]/.test(password);
   return <Dialog.Root open={open} onOpenChange={(value) => { setOpen(value); if (!value) { setPassword(""); setConfirmed(false); } }}>
     <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>救援系统</Button>} />
-    <Dialog className="grid gap-5 p-6">
+    <Dialog className="grid gap-4 p-8">
       <Dialog.Title>进入救援系统</Dialog.Title>
       <Dialog.Description>将重启实例进入临时救援环境，中断当前业务。完成修复后，请退出救援系统恢复正常启动。</Dialog.Description>
       <Select label="救援系统" value={system} items={{ "2": "Linux", "1": "Windows" }} onValueChange={value => setSystem(String(value))} />
       <Input label="临时救援密码" type="password" value={password} autoComplete="new-password" onChange={event => setPassword(event.target.value)} />
-      <p className="text-sm text-kumo-subtle">至少 12 位，包含大小写字母和数字。临时密码仅用于本次救援，请妥善保存。</p>
+      <p className="text-base text-kumo-subtle">至少 12 位，包含大小写字母和数字。临时密码仅用于本次救援，请妥善保存。</p>
       <Switch label="我确认可以重启并中断业务" checked={confirmed} onCheckedChange={setConfirmed} />
       <div className="flex flex-wrap justify-end gap-3"><Dialog.Close render={<Button variant="secondary">取消</Button>} /><Button disabled={!valid || !confirmed} loading={loading} onClick={() => { onConfirm({ action: "rescue", rescueSystem: system, password, force: true }); setOpen(false); setPassword(""); setConfirmed(false); }}>进入救援</Button></div>
     </Dialog>
@@ -141,9 +141,9 @@ export function ReinstallDialog({
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { setOpen(next); setReview(false); if(next){setGroupName("");setImageId("")}; if (next) setPort(currentPort && /^\d+$/.test(currentPort) && Number(currentPort) > 0 && Number(currentPort) <= 65535 ? currentPort : ""); }}>
       <Dialog.Trigger render={<Button variant="secondary" disabled={disabled || loading}>重装系统</Button>} />
-      <Dialog className="grid gap-5 p-6">
+      <Dialog className="grid gap-4 p-8">
         <div className="grid gap-2">
-          <Dialog.Title className="text-xl font-semibold">{review ? "二次确认重装" : "选择重装系统"}</Dialog.Title>
+          <Dialog.Title className="text-2xl font-semibold">{review ? "二次确认重装" : "选择重装系统"}</Dialog.Title>
           <Dialog.Description className="text-kumo-subtle">
             {review ? "请再次核对镜像与端口，确认后将开始重装系统。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
           </Dialog.Description>
@@ -151,7 +151,7 @@ export function ReinstallDialog({
         {images.isLoading ? <PageState loading><></></PageState> : null}
         {images.error ? <Banner variant="error" title="镜像列表加载失败" description={getApiMessage(images.error)} /> : null}
         {!images.isLoading && !images.error && groups.length === 0 ? (
-          <LayerCard className="shadow-none p-5 text-sm text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
+          <LayerCard className=" px-5 py-4 text-base text-kumo-subtle">该商品暂无可用重装镜像。</LayerCard>
         ) : null}
         {!images.isLoading && !images.error && groups.length > 0 && !review ? (
           <div className="grid gap-4">
@@ -295,8 +295,8 @@ export function InstanceConsole() {
         {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} /> : null}
         {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
-          <LayerCard className="grid gap-3 p-5"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-sm text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
-                      <LayerCard className="shadow-none overflow-x-auto p-0">
+          <LayerCard className="grid gap-3 px-5 py-4"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-base text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
+                      <LayerCard className=" overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>
               </div>
@@ -308,7 +308,7 @@ export function InstanceConsole() {
               </Table>
             </LayerCard>
         </div> : null}
-        {activeTab === "logs" ?             <LayerCard className="shadow-none overflow-x-auto p-0">
+        {activeTab === "logs" ?             <LayerCard className=" overflow-x-auto p-0">
               <div className="p-5"><h2 className="text-lg font-semibold text-kumo-strong">操作日志</h2></div>
               <Table>
                 <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>结果</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header>

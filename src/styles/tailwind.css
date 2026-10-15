@@ -39,6 +39,9 @@ body,
 
 body {
   margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height, 1.5);
   background: var(--color-kumo-canvas);
   color: var(--text-color-kumo-default);
 }
@@ -52,13 +55,12 @@ body:has([data-mobile-binding="true"]) {
 /* Layout only: Kumo owns all modal colors, typography, borders and shadows. */
 .ddy-dialog {
   --dialog-gutter: 1rem;
-  top: max(var(--dialog-gutter), env(safe-area-inset-top));
+  --dialog-top: 2rem;
   max-width: calc(100vw - 2 * var(--dialog-gutter));
-  max-height: calc(100vh - 2 * var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  max-height: calc(100dvh - 2 * var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100vh - var(--dialog-top) - var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: calc(100dvh - var(--dialog-top) - var(--dialog-gutter) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   grid-template-columns: minmax(0, 1fr);
   overflow-wrap: anywhere;
 }
@@ -120,22 +122,10 @@ body:has([data-mobile-binding="true"]) {
 
 @media (min-width: 640px) {
   .ddy-dialog {
-    --dialog-gutter: 2rem;
+    --dialog-top: 4rem;
   }
 }
 
-@media (max-width: 639px) {
-  .ddy-dialog {
-    padding: 1rem;
-  }
-
-  .ddy-dialog button {
-    white-space: normal;
-    height: auto;
-    min-height: 2.5rem;
-    padding-block: 0.5rem;
-  }
-}
 
 
 /* Startup sentinel, checked independently before interactive pages mount. */

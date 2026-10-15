@@ -1,7 +1,8 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
-import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Pagination, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
+import { Banner, Button, Input, LayerCard,  Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -46,7 +47,7 @@ function Settings() {
   const [error, setError] = useState("");
   const value = form ?? query.data;
   return (
-    <LayerCard className="grid gap-4 p-4">
+    <LayerCard className="grid gap-4 px-4 py-3">
       {query.error && (
         <Banner variant="error" title={getApiMessage(query.error)} />
       )}
@@ -204,7 +205,7 @@ function Detail({
         if (!open && !busy) close();
       }}
     >
-      <Dialog size="xl" className="grid max-h-[85vh] gap-4 overflow-y-auto p-6">
+      <Dialog size="xl" className="grid max-h-[85vh] gap-4 overflow-y-auto p-8">
         <Dialog.Title>实名认证详情</Dialog.Title>
         <Dialog.Description>
           资料默认脱敏。原始资料仅用于人工审核，查看和审核操作均会记录审计。
@@ -377,7 +378,7 @@ function Detail({
             if (!open) setImage("");
           }}
         >
-          <Dialog size="xl" className="grid gap-3 p-6">
+          <Dialog size="xl" className="grid gap-3 p-8">
             <Dialog.Title>证件照</Dialog.Title>
             {image && (
               <img
@@ -469,7 +470,7 @@ export function Certifications() {
                     "提交时间",
                     "操作",
                   ].map((label) => (
-                    <Table.Head key={label} className="text-xs font-medium text-kumo-subtle">{label}</Table.Head>
+                    <Table.Head key={label} className="text-base font-medium text-kumo-subtle">{label}</Table.Head>
                   ))}
                 </Table.Row>
               </Table.Header>
@@ -524,9 +525,9 @@ export function Certifications() {
           </LayerCard.Primary>
         </LayerCard>
       )}
-      {detail && (
+      <DialogPresence>{detail && (
         <Detail id={detail} close={() => setDetail("")} changed={changed} />
-      )}
+      )}</DialogPresence>
     </>
   );
 }

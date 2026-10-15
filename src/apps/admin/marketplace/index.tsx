@@ -67,9 +67,9 @@ export function MarketplaceAdminDashboard() {
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map(([label, value]) => (
-            <LayerCard key={String(label)} className="grid gap-1 p-4">
-              <span className="text-sm text-kumo-subtle">{label}</span>
-              <strong className="text-2xl text-kumo-strong">{value}</strong>
+            <LayerCard key={String(label)} className="grid gap-1 px-4 py-3">
+              <span className="text-base text-kumo-subtle">{label}</span>
+              <strong className="text-base text-kumo-strong font-medium">{value}</strong>
             </LayerCard>
           ))}
         </div>
@@ -119,7 +119,7 @@ export function MarketplaceAdminListings() {
     <>
       <PageHeader title="挂牌管理" description="审核、推荐和下架市场商品。" />
       <Result message={message} />
-      <LayerCard className="grid gap-4 p-4 md:grid-cols-3">
+      <LayerCard className="grid gap-4 px-4 py-3 md:grid-cols-3">
         <Input
           label="搜索编号、产品、配置"
           value={keyword}
@@ -171,8 +171,8 @@ export function MarketplaceAdminListings() {
               {q.data?.list.map((r) => (
                 <Table.Row key={r.id}>
                   <Table.Cell>
-                    <strong>{r.productName}</strong>
-                    <p className="text-xs text-kumo-subtle">{r.listingNo}</p>
+                    <strong className="font-medium">{r.productName}</strong>
+                    <p className="text-base text-kumo-subtle">{r.listingNo}</p>
  {r.riskFlag&&<Badge variant="warning">短期再次挂牌</Badge>}
                   </Table.Cell>
                   <Table.Cell>{r.sellerId}</Table.Cell>
@@ -298,7 +298,7 @@ export function MarketplaceAdminOrders() {
                     <Badge variant="outline">
                       {statusLabel[r.status] ?? r.status}
                     </Badge>
-                    {r.refundPending ? <p className="text-xs text-kumo-subtle">退款待后台审核</p> : null}
+                    {r.refundPending ? <p className="text-base text-kumo-subtle">退款待后台审核</p> : null}
                   </Table.Cell>
                   <Table.Cell>
                     {r.status === "paid" ? (
@@ -344,7 +344,7 @@ export function MarketplaceAdminFlows() {
         title="资金流水"
         description="审计成交、冻结、结算、退款和提现流水。"
       />
-      <LayerCard className="grid gap-4 p-4 md:grid-cols-3">
+      <LayerCard className="grid gap-4 px-4 py-3 md:grid-cols-3">
         <Input
           label="客户 ID"
           value={userId}
@@ -793,7 +793,7 @@ export function MarketplaceAdminSettings() {
             <LayerCard.Secondary><h2 className="font-semibold text-kumo-strong">
               允许交易的商品分组
             </h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
-            <p className="text-sm text-kumo-subtle">
+            <p className="text-base text-kumo-subtle">
               不选择时允许全部分组；选择后仅允许勾选分组。
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

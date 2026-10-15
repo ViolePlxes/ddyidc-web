@@ -77,12 +77,12 @@ export function LoginPage() {
           {quickProfile.avatar?.startsWith("https://") ? <img src={quickProfile.avatar} className="size-10 object-cover" alt="" referrerPolicy="no-referrer" /> : <UserCircleIcon className="size-10" />}
           <span className="truncate">{quickProfile.name}</span>
         </Button>
-        <Link className="text-right text-xs text-kumo-default hover:underline" to="/login?switchAccount=1" onClick={() => { setAccount(""); setPassword(""); }}>切换账号</Link>
+        <Link className="text-right text-base text-kumo-default hover:underline" to="/login?switchAccount=1" onClick={() => { setAccount(""); setPassword(""); }}>切换账号</Link>
       </div> : null}
       <form className="grid gap-5" onSubmit={submit}>
         <Input label="Email" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="username" placeholder="邮箱、账号或手机号" required autoFocus />
         <div className="grid gap-2">
-          <div className="flex items-center justify-between gap-3 text-sm">
+          <div className="flex items-center justify-between gap-3 text-base">
             <label htmlFor="login-password">密码</label>
             <Link className="text-kumo-default hover:underline" to="/reset-password">忘记密码？</Link>
           </div>
@@ -99,7 +99,7 @@ export function LoginPage() {
           <TermsAgreement />
         </div>
       </form>
-      <div className="text-center text-sm text-kumo-subtle">新用户？ <Link className="text-kumo-default hover:underline" to="/register">注册</Link></div>
+      <div className="text-center text-base text-kumo-subtle">新用户？ <Link className="text-kumo-default hover:underline" to="/register">注册</Link></div>
       <SocialLoginOptions rememberMe={rememberMe} />
       {new URLSearchParams(location.search).has("socialError") && <Banner variant="error" title="社交登录未完成" description="授权已取消、过期或账号无法使用，请重新发起登录。" />}
     </AuthPageShell>

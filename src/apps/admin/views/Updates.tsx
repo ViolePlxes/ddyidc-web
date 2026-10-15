@@ -84,11 +84,11 @@ export function AdminUpdates() {
       {running ? (
         <LayerCard >
           <LayerCard.Secondary><div className="flex flex-wrap items-center justify-between gap-3">
-            <div><h2 className="font-medium text-kumo-strong">正在更新{targetLabels[running.target]}</h2><p className="text-sm text-kumo-subtle">任务 {running.id} · {running.branch}</p></div>
+            <div><h2 className="font-medium text-kumo-strong">正在更新{targetLabels[running.target]}</h2><p className="text-base text-kumo-subtle">任务 {running.id} · {running.branch}</p></div>
             <Badge variant="warning">执行中</Badge>
           </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <Meter label="任务进度" value={running.progress} customValue={`${running.progress}%`} />
-          <pre className="max-h-56 overflow-auto whitespace-pre-wrap p-4 text-xs text-kumo-default">{running.log || "等待执行日志…"}</pre>
+          <pre className="max-h-56 overflow-auto whitespace-pre-wrap p-4 text-base text-kumo-default">{running.log || "等待执行日志…"}</pre>
         </LayerCard.Primary></LayerCard>
       ) : null}
       <div className="grid gap-5 lg:grid-cols-2">
@@ -96,7 +96,7 @@ export function AdminUpdates() {
         <VersionCard info={status.data.frontend} busy={Boolean(running) || update.isPending} onUpdate={() => update.mutate("frontend")} />
       </div>
       <LayerCard >
-        <LayerCard.Secondary><div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-sm text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div></LayerCard.Secondary><LayerCard.Primary>
+        <LayerCard.Secondary><div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-base text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div></LayerCard.Secondary><LayerCard.Primary>
         <Table>
           <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>目标 / 状态</Table.Head><Table.Head>功能 / 分支</Table.Head><Table.Head>版本 / 提交变化</Table.Head><Table.Head>日志摘要 / 回滚</Table.Head></Table.Row></Table.Header>
           <Table.Body>
@@ -104,14 +104,14 @@ export function AdminUpdates() {
               <Table.Row key={task.id}>
                 <Table.Cell>{localTime(task.createdAt)}</Table.Cell>
                 <Table.Cell><div className="grid gap-1"><span>{targetLabels[task.target]}</span><Badge variant={task.status === "success" ? "success" : task.status === "failed" ? "error" : "warning"}>{task.status === "success" ? "成功" : task.status === "failed" ? "失败" : "执行中"}</Badge></div></Table.Cell>
-                <Table.Cell><div className="grid"><span>{task.feature || "无新提交"}</span><span className="text-xs text-kumo-subtle">{task.branch}</span></div></Table.Cell>
-                <Table.Cell><div className="grid"><span className="text-sm">{task.beforeVersion || "—"} → {task.targetVersion || "—"}</span><span className="text-xs text-kumo-subtle">{shortCommit(task.beforeCommit)} → {shortCommit(task.targetCommit)}</span></div></Table.Cell>
-                <Table.Cell><div className="grid"><span className="text-sm">{task.error || task.log.split("\n").at(-1) || "—"}</span><span className="text-xs text-kumo-subtle">回滚：{task.rollbackStatus || "—"}</span></div></Table.Cell>
+                <Table.Cell><div className="grid"><span>{task.feature || "无新提交"}</span><span className="text-base text-kumo-subtle">{task.branch}</span></div></Table.Cell>
+                <Table.Cell><div className="grid"><span className="text-base">{task.beforeVersion || "—"} → {task.targetVersion || "—"}</span><span className="text-base text-kumo-subtle">{shortCommit(task.beforeCommit)} → {shortCommit(task.targetCommit)}</span></div></Table.Cell>
+                <Table.Cell><div className="grid"><span className="text-base">{task.error || task.log.split("\n").at(-1) || "—"}</span><span className="text-base text-kumo-subtle">回滚：{task.rollbackStatus || "—"}</span></div></Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>
         </Table>
-        {!history.isLoading && (history.data?.length ?? 0) === 0 ? <div className="p-5 text-sm text-kumo-subtle">暂无更新记录。</div> : null}
+        {!history.isLoading && (history.data?.length ?? 0) === 0 ? <div className="p-5 text-base text-kumo-subtle">暂无更新记录。</div> : null}
       </LayerCard.Primary></LayerCard>
     </>
   );
@@ -121,21 +121,21 @@ function VersionCard({ info, busy, onUpdate }: { info: VersionInfo; busy: boolea
   return (
     <LayerCard >
       <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
-        <div><h2 className="font-medium text-kumo-strong">{targetLabels[info.target]}</h2><p className="flex items-center gap-1 text-sm text-kumo-subtle"><GitBranchIcon /> {info.branch}</p></div>
+        <div><h2 className="font-medium text-kumo-strong">{targetLabels[info.target]}</h2><p className="flex items-center gap-1 text-base text-kumo-subtle"><GitBranchIcon /> {info.branch}</p></div>
         <Badge variant={info.hasUpdate ? "warning" : "success"}>{info.hasUpdate ? `落后 ${info.behind} 个提交` : "已是最新"}</Badge>
       </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
-      <dl className="grid grid-cols-2 gap-3 text-sm">
+      <dl className="grid grid-cols-2 gap-3 text-base">
         <div><dt className="text-kumo-subtle">当前版本</dt><dd className="font-medium text-kumo-strong">{info.currentVersion || shortCommit(info.currentCommit)}</dd></div>
         <div><dt className="text-kumo-subtle">远端版本</dt><dd className="font-medium text-kumo-strong">{info.remoteVersion || shortCommit(info.remoteCommit)}</dd></div>
         <div><dt className="text-kumo-subtle">当前提交</dt><dd>{shortCommit(info.currentCommit)}</dd></div>
         <div><dt className="text-kumo-subtle">更新时间</dt><dd>{localTime(info.updatedAt)}</dd></div>
       </dl>
-      {info.changes.length > 0 ? <div className="grid gap-2"><p className="text-sm font-medium text-kumo-strong">待更新功能</p>{info.changes.map((change) => <div key={change.commit} className="text-sm"><span>{change.feature}</span><span className="ml-2 text-xs text-kumo-subtle">{shortCommit(change.commit)}</span></div>)}</div> : null}
+      {info.changes.length > 0 ? <div className="grid gap-2"><p className="text-base font-medium text-kumo-strong">待更新功能</p>{info.changes.map((change) => <div key={change.commit} className="text-base"><span>{change.feature}</span><span className="ml-2 text-base text-kumo-subtle">{shortCommit(change.commit)}</span></div>)}</div> : null}
       <div>
         <Dialog.Root>
           <Dialog.Trigger render={<Button disabled={!info.hasUpdate || busy} loading={busy}>一键更新{targetLabels[info.target]}</Button>} />
-          <Dialog className="grid gap-5 p-6">
-            <div><Dialog.Title className="text-xl font-semibold">确认更新{targetLabels[info.target]}</Dialog.Title><Dialog.Description className="text-kumo-subtle">系统将从 {info.branch} 拉取 {info.behind} 个提交并自动构建、备份和部署。任务期间请勿手动修改工作区或停止依赖服务。</Dialog.Description></div>
+          <Dialog className="grid gap-4 p-8">
+            <div><Dialog.Title className="text-2xl font-semibold">确认更新{targetLabels[info.target]}</Dialog.Title><Dialog.Description className="text-kumo-subtle">系统将从 {info.branch} 拉取 {info.behind} 个提交并自动构建、备份和部署。任务期间请勿手动修改工作区或停止依赖服务。</Dialog.Description></div>
             <div className="flex justify-end gap-2"><Dialog.Close render={<Button variant="secondary">取消</Button>} /><Dialog.Close render={<Button onClick={onUpdate}>确认更新</Button>} /></div>
           </Dialog>
         </Dialog.Root>

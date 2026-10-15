@@ -55,7 +55,7 @@ function PermissionForm() {
   ];
   return (
     <div className="grid gap-4">
-      <p className="text-sm text-kumo-subtle">
+      <p className="text-base text-kumo-subtle">
         仅超级管理员可以授权。未授权的管理员默认无法访问本模块。
       </p>
       {rows.data?.map((p) => (
@@ -339,7 +339,7 @@ function AdminBatch({ batch }: { batch: PromoCouponBatch }) {
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           {batch.name} · 客户ID {batch.ownerId}
-          <p className="text-xs text-kumo-subtle">
+          <p className="text-base text-kumo-subtle">
             {batch.id} · {batch.quantity}张 ·{" "}
             {batch.source === "points"
               ? `${batch.pointCost}积分`
@@ -360,7 +360,7 @@ function AdminBatch({ batch }: { batch: PromoCouponBatch }) {
           loading={detail.isLoading}
           error={detail.error ? getApiMessage(detail.error) : null}
         >
-          <div className="grid gap-2 text-sm">
+          <div className="grid gap-2 text-base">
             {detail.data?.units.map((u) => (
               <p key={u.id}>
                 客户ID {u.recipientId} ·{" "}
@@ -369,7 +369,7 @@ function AdminBatch({ batch }: { batch: PromoCouponBatch }) {
               </p>
             ))}
             {detail.data?.events.map((e) => (
-              <p className="text-xs text-kumo-subtle" key={e.id}>
+              <p className="text-base text-kumo-subtle" key={e.id}>
                 {new Date(e.createdAt).toLocaleString("zh-CN")} ·{" "}
                 {promoCouponEvent[e.event] ?? "处理记录"} · 操作人{e.actorId} ·{" "}
                 {e.notes}
@@ -540,7 +540,7 @@ export function AdminPromoCoupons() {
                 {tasks.data?.list.map((t) => (
                   <div
                     key={t.id}
-                    className="flex flex-wrap items-center justify-between gap-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-3 text-base"
                   >
                     <span>
                       批次{t.batchId} ·{" "}
@@ -569,7 +569,7 @@ export function AdminPromoCoupons() {
             ) : tab === "audit" ? (
               <>
                 {audit.data?.list.map((e) => (
-                  <p key={e.id} className="text-sm">
+                  <p key={e.id} className="text-base">
                     {new Date(e.createdAt).toLocaleString("zh-CN")} · 操作人
                     {e.actorId} · {promoCouponEvent[e.event] ?? "处理记录"} ·{" "}
                     {e.amount}元 / {e.points}积分 · {e.notes}
@@ -579,7 +579,7 @@ export function AdminPromoCoupons() {
             ) : (
               <>
                 {reconcile.data?.map((r) => (
-                  <p key={r.id} className="text-sm">
+                  <p key={r.id} className="text-base">
                     {String(r.day)} · 批次{r.batch_id} ·{" "}
                     <Badge variant={r.healthy ? "success" : "error"}>
                       {r.healthy ? "正常" : "差额待核对"}

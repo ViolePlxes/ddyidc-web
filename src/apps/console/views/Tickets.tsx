@@ -1,4 +1,5 @@
-import { Banner, Button, Input, LayerCard, LinkButton, Pagination, Select, Table, Textarea } from "@cloudflare/kumo";
+import { Pagination } from "../../../shared/components/Pagination";
+import { Banner, Button, Input, LayerCard, LinkButton,  Select, Table, Textarea } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, BellRingingIcon, PlusIcon, TicketIcon, CreditCardIcon, ChatCircleIcon, InfoIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -73,7 +74,7 @@ export function TicketList() {
       {newMessageCount ? (
         <Banner variant="default" icon={<BellRingingIcon />} title="收到新回复" description={`有 ${newMessageCount} 条新消息已局部更新到列表。`} />
       ) : null}
-      <LayerCard className="shadow-none p-5">
+      <LayerCard className=" px-5 py-4">
         <Select value={status} renderValue={(value) => ({ all: "全部状态", "1": "待接单", "2": "用户已回复", "3": "已回复", "4": "已关闭", "5": "处理中" })[value] ?? value} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} label="状态筛选" hideLabel={false}>
           <Select.Option value="all">全部状态</Select.Option>
           <Select.Option value="1">待接单</Select.Option>
@@ -85,13 +86,13 @@ export function TicketList() {
       </LayerCard>
       <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.list.length} emptyTitle="暂无工单" emptyDescription="遇到问题时可创建工单，我们会尽快处理。">
         <div className="grid gap-3">
-          <LayerCard className="shadow-none overflow-x-auto p-0">
+          <LayerCard className=" overflow-x-auto p-0">
             <Table>
               <Table.Header variant="compact"><Table.Row><Table.Head>工单</Table.Head><Table.Head>类型</Table.Head><Table.Head>状态</Table.Head><Table.Head>最后回复</Table.Head><Table.Head className="w-16"><span className="sr-only">查看</span></Table.Head></Table.Row></Table.Header>
               <Table.Body data-animate-list>
                 {(query.data?.list ?? []).map((ticket) => (
                   <Table.Row key={ticket.id}>
-                    <Table.Cell><div className="grid gap-0.5"><strong className="font-medium text-kumo-strong">{ticket.title}</strong><span className="text-sm text-kumo-subtle">{ticket.ticketNum}{ticket.unreadCount ? ` · ${ticket.unreadCount} 条未读` : ""}</span></div></Table.Cell>
+                    <Table.Cell><div className="grid gap-0.5"><strong className="font-medium text-kumo-strong">{ticket.title}</strong><span className="text-base text-kumo-subtle">{ticket.ticketNum}{ticket.unreadCount ? ` · ${ticket.unreadCount} 条未读` : ""}</span></div></Table.Cell>
                     <Table.Cell>{ticket.typeName}</Table.Cell>
                     <Table.Cell><TicketStatusBadge status={ticket.status} /></Table.Cell>
                     <Table.Cell className="text-kumo-subtle">{new Date(ticket.lastReplyTime).toLocaleString("zh-CN")}</Table.Cell>
@@ -138,17 +139,17 @@ export function TicketCreate() {
     <div className="mx-auto grid w-full min-w-0 max-w-[520px] gap-6 pt-8 pb-16 sm:pt-28">
       <div className="flex items-center justify-center gap-2"><h1 className="text-center text-xl font-medium text-kumo-default">{choosingType ? "您需要哪方面的帮助？" : "请描述您遇到的问题"}</h1><InfoIcon size={14} aria-hidden className="shrink-0 text-kumo-subtle" /></div>
       {error ? <Banner variant="error" title="提交失败" description={error} /> : null}
-      {choosingType ? <LayerCard className="overflow-hidden shadow-none">
+      {choosingType ? <LayerCard className="overflow-hidden ">
         <div className="grid gap-3 p-6 sm:grid-cols-2">
           {(types.data ?? []).map((item) => { const presentation = ticketTypePresentation(item.name); return <Button key={item.id} variant="outline" className="h-auto min-h-40 w-full min-w-0 items-start whitespace-normal p-5 text-left shadow-none" onClick={() => { setTypeId(item.id); setChoosingType(false); }}>
-            <span className="grid w-full content-start gap-3"><presentation.icon size={20} aria-hidden className="text-kumo-subtle" /><span className="grid gap-1"><span className="flex items-center justify-between gap-3"><span className="text-sm font-medium">{item.name}</span><ArrowRightIcon size={14} aria-hidden className="shrink-0 text-kumo-subtle" /></span><span className="text-sm leading-5 font-normal text-kumo-subtle">{presentation.description}</span></span></span>
+            <span className="grid w-full content-start gap-3"><presentation.icon size={20} aria-hidden className="text-kumo-subtle" /><span className="grid gap-1"><span className="flex items-center justify-between gap-3"><span className="text-base font-medium">{item.name}</span><ArrowRightIcon size={14} aria-hidden className="shrink-0 text-kumo-subtle" /></span><span className="text-base leading-5 font-normal text-kumo-subtle">{presentation.description}</span></span></span>
           </Button>; })}
-          {types.isLoading ? <p className="text-sm text-kumo-subtle sm:col-span-2">正在加载工单类型…</p> : null}
+          {types.isLoading ? <p className="text-base text-kumo-subtle sm:col-span-2">正在加载工单类型…</p> : null}
           {types.isError ? <div className="grid gap-3 sm:col-span-2"><Banner variant="error" title="工单类型加载失败" description={getApiMessage(types.error)} /><Button variant="secondary" onClick={() => void types.refetch()}>重新加载</Button></div> : null}
-          {!types.isLoading && !types.isError && !types.data?.length ? <p className="text-sm text-kumo-subtle sm:col-span-2">暂无可用工单类型</p> : null}
+          {!types.isLoading && !types.isError && !types.data?.length ? <p className="text-base text-kumo-subtle sm:col-span-2">暂无可用工单类型</p> : null}
         </div>
-        <div className="border-t border-kumo-line bg-kumo-base px-5 py-3"><Link to="/console/help" className="text-sm text-kumo-default underline focus-visible:outline-2 focus-visible:outline-kumo-ring">返回</Link></div>
-      </LayerCard> : <LayerCard className="overflow-hidden shadow-none">
+        <div className="border-t border-kumo-line bg-kumo-base px-5 py-3"><Link to="/console/help" className="text-base text-kumo-default underline focus-visible:outline-2 focus-visible:outline-kumo-ring">返回</Link></div>
+      </LayerCard> : <LayerCard className="overflow-hidden ">
       <div className="grid min-w-0 gap-5 p-5 sm:p-6">
         <Select className="w-full" placeholder={types.isError ? "工单类型加载失败" : types.isLoading ? "正在加载工单类型…" : types.data?.length ? "请选择工单类型" : "暂无可用工单类型"} value={typeId} renderValue={(value) => types.data?.find((item) => item.id === value)?.name ?? "请选择工单类型"} onValueChange={(value) => setTypeId(value ?? "")} label="工单类型" hideLabel={false}>
           {(types.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)}
@@ -212,7 +213,7 @@ export function TicketDetailPage() {
         <div className="grid min-w-0 gap-5">
           <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
-          <LayerCard className="shadow-none p-5 sm:p-6"><dl className="grid gap-3 sm:grid-cols-3"><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd className="text-kumo-strong">{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd className="text-kumo-strong">{query.data.ticket.adminName || "等待接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd className="text-kumo-strong">{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
+          <LayerCard className=" px-5 py-4 sm:px-6 py-5"><dl className="grid gap-3 sm:grid-cols-3"><div><dt className="text-base text-kumo-subtle">关联产品</dt><dd className="text-kumo-strong">{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-base text-kumo-subtle">负责人</dt><dd className="text-kumo-strong">{query.data.ticket.adminName || "等待接单"}</dd></div><div><dt className="text-base text-kumo-subtle">最后回复</dt><dd className="text-kumo-strong">{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
           <TicketConversation replies={query.data.replies} perspective="Client" onQuote={setQuote} />
           <ReplyComposer content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}>
             <AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />

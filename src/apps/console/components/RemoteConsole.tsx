@@ -29,7 +29,7 @@ function isSameOriginRelativePath(value: string): boolean {
 function ReservedEngine({ type, url }: Pick<RemoteConsoleDescriptor, "type" | "url">) {
   const safe = isSameOriginRelativePath(url);
   return (
-    <LayerCard className="shadow-none m-auto grid max-w-2xl gap-4 p-6">
+    <LayerCard className=" m-auto grid max-w-2xl gap-4 px-6 py-5">
       <Banner
         variant={safe ? "alert" : "error"}
         title={safe ? "远程引擎尚未启用" : "远程会话地址无效"}

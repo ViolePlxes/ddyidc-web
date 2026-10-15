@@ -172,10 +172,10 @@ export function PaymentDialog({
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger render={<Button disabled={disabled}>{businessType !== "recharge" && triggerLabel === "在线支付" ? "支付订单" : triggerLabel}</Button>} />
-      <Dialog size="lg" className="grid gap-5 p-6">
+      <Dialog size="lg" className="grid gap-4 p-8">
         <div className="flex justify-between gap-4">
           <div className="grid min-w-0 gap-2">
-            <Dialog.Title className="text-xl font-semibold">{businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
+            <Dialog.Title className="text-2xl font-semibold">{businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               应付 {formatMoney(amountCents)}。支付结果以服务端核对并确认的状态为准。
             </Dialog.Description>
@@ -184,14 +184,14 @@ export function PaymentDialog({
         </div>
 
         {!checkout && !balancePaid ? (
-          <LayerCard className="shadow-none grid gap-2 p-5">
-            <strong className="text-kumo-strong">选择支付方式</strong>
-            <span className="text-sm text-kumo-subtle">{businessType !== "recharge" ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
+          <LayerCard className=" grid gap-2 px-5 py-4">
+            <strong className="text-kumo-strong font-medium">选择支付方式</strong>
+            <span className="text-base text-kumo-subtle">{businessType !== "recharge" ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
           </LayerCard>
         ) : null}
         {checkout?.wechat && currentState === "pending" && !expired ? (
-          <LayerCard className="grid justify-items-center gap-3 p-5">
-            <strong>请使用微信扫码支付 {formatMoney(amountCents)}</strong>
+          <LayerCard className="grid justify-items-center gap-3 px-5 py-4">
+            <strong className="font-medium">请使用微信扫码支付 {formatMoney(amountCents)}</strong>
             {qrImage ? <img src={qrImage} width={280} height={280} className="h-auto max-w-full" alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
             {qrError ? <Banner variant="error" title="二维码生成失败" description="请关闭后重新打开支付窗口。" /> : null}
           </LayerCard>

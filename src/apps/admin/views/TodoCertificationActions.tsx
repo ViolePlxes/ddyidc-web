@@ -37,7 +37,7 @@ export function TodoCertificationActions({ row }: { row: TodoEntry }) {
     <Button variant="secondary" disabled={review.isPending} onClick={() => { review.reset(); setReason(""); setRejectOpen(true); }}>拒绝</Button>
     {review.error && !rejectOpen ? <Banner variant="error" title={getApiMessage(review.error)} /> : null}
     <Dialog.Root open={rejectOpen} onOpenChange={open => { if (!review.isPending) setRejectOpen(open); }}>
-      <Dialog className="grid gap-4 p-6">
+      <Dialog className="grid gap-4 p-8">
         <Dialog.Title>拒绝实名申请</Dialog.Title>
         <Dialog.Description>申请编号：{row.number}。拒绝原因将告知客户并保留审核记录。</Dialog.Description>
         <Textarea label="拒绝原因（必填）" required maxLength={255} value={reason} disabled={review.isPending} onChange={event => setReason(event.target.value)} />

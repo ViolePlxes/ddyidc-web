@@ -22,8 +22,8 @@ function Offer({ batch }: { batch: PromoCouponBatch }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <strong>{batch.name}</strong>
-          <p className="text-sm text-kumo-subtle">
+          <strong className="font-medium">{batch.name}</strong>
+          <p className="text-base text-kumo-subtle">
             满¥{batch.minimum}减¥{batch.face} · 有效期至
             {new Date(batch.expiresAt).toLocaleDateString("zh-CN")}
           </p>
@@ -33,7 +33,7 @@ function Offer({ batch }: { batch: PromoCouponBatch }) {
         </Collapsible.Trigger>
       </div>
       <Collapsible.Panel keepMounted inert={!open} className="grid gap-3 pt-3">
-        <p className="text-sm">
+        <p className="text-base">
           {batch.claimPoints
             ? `领取将支出${batch.claimPoints}积分，券回收时按原积分有效期退还。`
             : "本券免费领取，每位直接邀请客户限领一次。"}

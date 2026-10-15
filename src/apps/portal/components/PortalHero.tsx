@@ -80,7 +80,7 @@ export function PortalHero({ onConsole }: { onConsole: () => void }) {
           <div className="satellite satellite-one"><ReceiptIcon size={17} />订单记录</div><div className="satellite satellite-two"><ShieldCheckIcon size={17} />账户记录</div><div className="satellite satellite-three">CPU / RAM / SSD</div>
           <span className="coord coord-left">01 / 连接</span><span className="coord coord-right">03 / 管理</span>
         </div>
-        <div className="art-description" role="status" aria-live="polite" aria-atomic="true"><span className="art-number">0{current + 1}</span><div className="description-transition" key={current}><strong>{node.name} · {preview !== null && preview !== saved ? '当前查看' : '已选择'}</strong><p>{node.description}</p></div></div>
+        <div className="art-description" role="status" aria-live="polite" aria-atomic="true"><span className="art-number">0{current + 1}</span><div className="description-transition" key={current}><strong className="font-medium">{node.name} · {preview !== null && preview !== saved ? '当前查看' : '已选择'}</strong><p>{node.description}</p></div></div>
         <p className="demo-status">{reduced ? '已减少动态：静态图仍可选择' : feedback ? '传输反馈 · 播放一次' : playing ? automatic ? '自动演示 · 业务应用 → 云资源 → 管理' : '演示已暂缓' : '演示已停止 · 点击播放可循环'}{playing && !loop && !reduced ? '（首次一轮）' : ''}</p>
       </div>
     </div>

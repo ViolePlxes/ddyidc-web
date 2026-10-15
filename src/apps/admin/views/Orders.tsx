@@ -1,5 +1,6 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { useSearchParams } from "react-router-dom";
-import { Button, Input, LayerCard, Pagination, Select } from "@cloudflare/kumo";
+import { Button, Input, LayerCard,  Select } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminOverviewApi } from "../../../shared/api/adminOverview";
@@ -29,7 +30,7 @@ export function AdminOrders() {
     <>
       <PageHeader title="订单管理" description="按真实订单数据筛选和分页查看。" />
       {record ? <div className="flex items-center gap-3"><span>已定位订单：{record}</span><Button variant="secondary" onClick={()=>setParams({})}>清除对象定位</Button></div> : null}
-      <LayerCard className="grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto]">
+      <LayerCard className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_12rem_auto]">
         <Input aria-label="订单关键词" placeholder="订单号、客户或商品…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
         <Select aria-label="订单状态" value={status} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} items={{ all: "全部状态", "1": "待支付", "2": "已支付", "3": "已取消", "4": "已退款", "5": "部分退款", "6": "已完成" }} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>

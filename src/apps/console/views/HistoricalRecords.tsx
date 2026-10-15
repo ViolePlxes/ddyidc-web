@@ -1,4 +1,5 @@
-import { LayerCard, Pagination, Table } from "@cloudflare/kumo";
+import { Pagination } from "../../../shared/components/Pagination";
+import { LayerCard,  Table } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { userRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
@@ -38,9 +39,9 @@ export function HistoricalRecords({ kind }: { kind: HistoryKind }) {
   });
   const rows = query.data?.list ?? [];
   return <section className="grid gap-3">
-    <div><h2 className="text-lg font-semibold text-kumo-strong">{titles[kind]}</h2><p className="text-sm text-kumo-subtle">迁移前历史记录仅供查询，不计入新版余额流水汇总。</p></div>
+    <div><h2 className="text-lg font-semibold text-kumo-strong">{titles[kind]}</h2><p className="text-base text-kumo-subtle">迁移前历史记录仅供查询，不计入新版余额流水汇总。</p></div>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle={`暂无${titles[kind]}`}>
-      <LayerCard className="shadow-none overflow-x-auto p-0"><Table>
+      <LayerCard className=" overflow-x-auto p-0"><Table>
         <Table.Header variant="compact"><Table.Row>
           <Table.Head>{kind === "orders" ? "订单号 / 商品" : kind === "payment" ? "交易号 / 支付方式" : "说明"}</Table.Head>
           <Table.Head>{kind === "orders" ? "支付时间" : "记录时间"}</Table.Head>
@@ -48,7 +49,7 @@ export function HistoricalRecords({ kind }: { kind: HistoryKind }) {
           <Table.Head>{kind === "orders" ? "状态" : kind === "balance" ? "变动后余额（元）" : "记录类型"}</Table.Head>
         </Table.Row></Table.Header>
         <Table.Body>{rows.map((row) => <Table.Row key={row.id}>
-          <Table.Cell><div className="grid gap-1"><span>{kind === "orders" ? row.orderNo : kind === "payment" ? row.data?.transaction_number || "—" : row.data?.client_notes || "余额记录"}</span>{kind === "orders" || kind === "payment" ? <span className="text-sm text-kumo-subtle">{kind === "orders" ? row.productName : row.data?.gateway_name || "历史支付"}</span> : null}</div></Table.Cell>
+          <Table.Cell><div className="grid gap-1"><span>{kind === "orders" ? row.orderNo : kind === "payment" ? row.data?.transaction_number || "—" : row.data?.client_notes || "余额记录"}</span>{kind === "orders" || kind === "payment" ? <span className="text-base text-kumo-subtle">{kind === "orders" ? row.productName : row.data?.gateway_name || "历史支付"}</span> : null}</div></Table.Cell>
           <Table.Cell>{recordTime(row)}</Table.Cell><Table.Cell className="text-right">{yuan(row.amountYuan)}</Table.Cell>
           <Table.Cell>{kind === "orders" ? row.status === "Refunded" ? "已退款" : "已支付" : kind === "balance" ? yuan(row.balanceAfterYuan) : "历史支付"}</Table.Cell>
         </Table.Row>)}</Table.Body>

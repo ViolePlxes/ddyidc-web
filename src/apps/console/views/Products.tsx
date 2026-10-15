@@ -1,5 +1,6 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, LayerCard, Loader, Pagination, Radio, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Loader,  Radio, Table, Tabs } from "@cloudflare/kumo";
 
 import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -73,7 +74,7 @@ function PublicProductCatalog() {
                 {items.map((product) => {
                   const unavailable = !isAvailable(product);
                   return (
-                    <LayerCard key={product.id} className="shadow-none flex h-80 flex-col gap-4 p-5">
+                    <LayerCard key={product.id} className=" flex h-80 flex-col gap-4 px-5 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="grid size-10 place-items-center bg-kumo-control text-kumo-brand"><PackageIcon /></div>
                         <Badge variant={unavailable ? "secondary" : "success"}>{unavailable ? "暂无库存" : "可订购"}</Badge>
@@ -88,7 +89,7 @@ function PublicProductCatalog() {
                       </div>
                       <div className="mt-auto flex items-end justify-between gap-4 border-t border-kumo-line pt-4">
                         <div>
-                          <strong className="text-xl text-kumo-strong">¥{product.price.toFixed(2)}</strong>
+                          <strong className="text-base text-kumo-strong font-medium">¥{product.price.toFixed(2)}</strong>
                         </div>
                         <Link to={`/products/${product.id}`} viewTransition>
                           <Button icon={<ArrowRightIcon />} disabled={unavailable}>查看配置</Button>
@@ -197,16 +198,16 @@ function IntegratedProductCatalog() {
             {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
           </aside>
           <div className="grid min-w-0 gap-5">
-            <LayerCard className="shadow-none grid gap-4 p-4">
+            <LayerCard className=" grid gap-4 px-4 py-3">
               <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
-                <strong>一级分类</strong>
+                <strong className="font-medium">一级分类</strong>
                 <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
                   tabs={Array.from(primaryGroups, ([value, label]) => ({ value, label }))}
                   value={selectedGroup} onValueChange={(value) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); }}
                 /></div>
               </div>
               <div className="grid min-w-0 gap-3">
-                <strong>二级分类</strong>
+                <strong className="font-medium">二级分类</strong>
                 <div className="min-w-0">{children.length ? <Tabs variant="segmented"
                   listClassName="h-auto flex-wrap gap-y-1 overflow-x-visible overflow-y-visible"
                   tabs={children.map((group) => ({ value: group.id, label: group.name, className: "min-h-8 max-w-full whitespace-normal break-words text-left" }))}
@@ -215,7 +216,7 @@ function IntegratedProductCatalog() {
               </div>
             </LayerCard>
 
-            <LayerCard id="catalog-specifications" className="scroll-mt-4 shadow-none grid min-w-0 gap-4 p-5">
+            <LayerCard id="catalog-specifications" className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
               <h2>计算规格</h2>
               {catalogIssue || categoryIssue || productsQuery.error ? <div className="grid gap-3"><Banner variant="error"
                 title={productsQuery.error ? "商品目录加载失败" : "商品目录暂不可用"}

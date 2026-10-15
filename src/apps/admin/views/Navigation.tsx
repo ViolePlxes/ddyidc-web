@@ -1,4 +1,4 @@
-import { Dialog } from "../../../shared/components/Dialog";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { Banner, Button, Input, LayerCard, Select, Switch, Tabs, Text } from "@cloudflare/kumo";
 import { ArrowDownIcon, ArrowUpIcon, PencilSimpleIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ function Editor({ node, parentId, busy, error, save, close }: {
  }));
  const Icon = navigationIcon(value.icon);
  return <Dialog.Root open onOpenChange={open => { if (!open && !busy) close(); }}>
-  <Dialog className="grid gap-5 p-6">
+  <Dialog className="grid gap-4 p-8">
    <div className="flex items-center justify-between"><Dialog.Title>{node ? "编辑" : "新增"}{parentId === "0" ? "分类" : "菜单项"}</Dialog.Title><Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" disabled={busy} onClick={close} /></div>
    <Dialog.Description>此配置仅影响导航入口，页面访问权限仍由原有权限与插件开关控制。</Dialog.Description>
    <Input label="名称" required maxLength={80} value={value.name} onChange={event => setValue({ ...value, name: event.target.value })} />
@@ -79,17 +79,17 @@ export function Navigation() {
   {error && !editing && <Banner variant="error" title="操作失败，顺序已恢复" description={error} />}
   <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !nodes.length} emptyTitle="暂无导航分类">
    <SortableList scope="navigation-groups" listId="0" disabled={busy} onDrop={drop => sort("0",drop.targetIds)}>
-    {children("0").map(group => {const Icon=navigationIcon(group.icon);return <LayerCard key={group.id} data-sort-id={group.id} className="sort-item grid gap-4 p-4">
+    {children("0").map(group => {const Icon=navigationIcon(group.icon);return <LayerCard key={group.id} data-sort-id={group.id} className="sort-item grid gap-4 px-4 py-3">
      <div className="flex flex-wrap items-center gap-2"><DragHandle scope="navigation-groups" label={`拖拽分类 ${group.name}`} disabled={busy} /><Icon size={20} /><Text variant="heading">{group.name}</Text><span className="flex-1" />{actions(group)}<Button variant="secondary" icon={<PlusIcon />} disabled={busy} onClick={() => {setError(null);setEditing({parentId:group.id});}}>新增菜单</Button></div>
      <SortableList scope={`navigation-items-${group.id}`} listId={group.id} disabled={busy} onDrop={drop => sort(group.id,drop.targetIds)}>
       {children(group.id).map(node => {const ItemIcon=navigationIcon(node.icon);return <div key={node.id} data-sort-id={node.id} className="sort-item flex flex-wrap items-center gap-3 border-b border-kumo-line py-3 last:border-0">
-       <DragHandle scope={`navigation-items-${group.id}`} label={`拖拽菜单 ${node.name}`} disabled={busy} /><ItemIcon size={18} /><div className="min-w-0 flex-1"><Text>{node.name}</Text><p className="break-all text-sm text-kumo-subtle">{node.href} · {node.target === "blank" ? "新增页面跳转" : "本页跳转"}</p>{node.gate && <Text variant="secondary">{node.gate.startsWith('/admin/todos') ? "仅超级管理员可见" : "受插件开关控制"}</Text>}</div>{actions(node)}
+       <DragHandle scope={`navigation-items-${group.id}`} label={`拖拽菜单 ${node.name}`} disabled={busy} /><ItemIcon size={18} /><div className="min-w-0 flex-1"><Text>{node.name}</Text><p className="break-all text-base text-kumo-subtle">{node.href} · {node.target === "blank" ? "新增页面跳转" : "本页跳转"}</p>{node.gate && <Text variant="secondary">{node.gate.startsWith('/admin/todos') ? "仅超级管理员可见" : "受插件开关控制"}</Text>}</div>{actions(node)}
       </div>;})}
      </SortableList>
     </LayerCard>;})}
    </SortableList>
   </PageState>
-  {editing && <Editor key={editing.node?.id ?? editing.parentId} {...editing} busy={busy} error={error} close={() => setEditing(null)} save={value => void submit(() => navigationApi.save(scope,query.data!.revision,value,editing.node?.id))} />}
-  {removing && <Dialog.Root open onOpenChange={open => {if(!open&&!busy)setRemoving(null);}}><Dialog className="grid gap-5 p-6"><Dialog.Title>删除“{removing.name}”</Dialog.Title><Dialog.Description>{removing.parentId === "0" ? "分类及其全部菜单项将被移除。" : "该导航入口将被移除。"}实际页面与访问权限不会改变。</Dialog.Description><div className="flex justify-end gap-2"><Button variant="secondary" disabled={busy} onClick={() => setRemoving(null)}>取消</Button><Button variant="destructive" loading={busy} onClick={() => void submit(() => navigationApi.remove(scope,query.data!.revision,removing.id))}>删除</Button></div></Dialog></Dialog.Root>}
+  <DialogPresence>{editing && <Editor key={editing.node?.id ?? editing.parentId} {...editing} busy={busy} error={error} close={() => setEditing(null)} save={value => void submit(() => navigationApi.save(scope,query.data!.revision,value,editing.node?.id))} />}</DialogPresence>
+  <Dialog.Root open={Boolean(removing)} onOpenChange={open => {if(!open&&!busy)setRemoving(null);}}><Dialog className="grid gap-4 p-8"><Dialog.Title>删除“{removing?.name}”</Dialog.Title><Dialog.Description>{removing?.parentId === "0" ? "分类及其全部菜单项将被移除。" : "该导航入口将被移除。"}实际页面与访问权限不会改变。</Dialog.Description><div className="flex justify-end gap-2"><Button variant="secondary" disabled={busy} onClick={() => setRemoving(null)}>取消</Button><Button variant="destructive" loading={busy} onClick={() => { if(removing) void submit(() => navigationApi.remove(scope,query.data!.revision,removing.id)); }}>删除</Button></div></Dialog></Dialog.Root>
  </>;
 }

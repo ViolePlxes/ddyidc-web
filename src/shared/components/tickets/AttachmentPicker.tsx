@@ -1,4 +1,4 @@
-import { Button, LayerCard } from "@cloudflare/kumo";
+import { Button, Input, LayerCard } from "@cloudflare/kumo";
 import { PaperclipIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 import type { TicketAttachment } from "../../api/tickets";
@@ -17,7 +17,8 @@ export function AttachmentPicker({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="grid gap-2">
-      <input
+      <Input
+        aria-label="选择工单附件"
         ref={inputRef}
         className="sr-only"
         type="file"
@@ -39,13 +40,13 @@ export function AttachmentPicker({
         上传附件
       </Button>
       {value.length ? (
-        <LayerCard className="shadow-none p-0">
+        <LayerCard className=" p-0">
           <ul className="divide-y divide-kumo-line">
             {value.map((item) => (
               <li key={item.id} className="flex items-center gap-3 p-3">
                 <PaperclipIcon className="shrink-0 text-kumo-subtle" />
-                <span className="min-w-0 flex-1 truncate text-sm text-kumo-strong">{item.name}</span>
-                <span className="text-xs text-kumo-subtle">{Math.max(1, Math.ceil(item.size / 1024))} KB</span>
+                <span className="min-w-0 flex-1 truncate text-base text-kumo-strong">{item.name}</span>
+                <span className="text-base text-kumo-subtle">{Math.max(1, Math.ceil(item.size / 1024))} KB</span>
                 <Button
                   type="button"
                   variant="ghost"

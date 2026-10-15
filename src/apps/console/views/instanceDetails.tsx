@@ -15,10 +15,10 @@ export function CopyValue({ value, label }: { value?: string; label: string }) {
 }
 
 export function InfoGroup({ title, rows, action, columns = 1 }: { columns?: 1 | 2 | 3; title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
-  return <LayerCard className="grid min-w-0 gap-4 p-5">
+  return <LayerCard className="grid min-w-0 gap-4 px-5 py-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div>
     <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3" : "grid min-w-0 content-start gap-1"}>
-      <dt className="text-sm text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-sm">{row.value}</dd>
+      <dt className="text-base text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-base">{row.value}</dd>
     </div>)}</dl>
   </LayerCard>;
 }
@@ -56,15 +56,15 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
     { title: "网卡", unit: "bps", series: [{ name: "流入", data: monitorPoints(monitor?.networkIn) }, { name: "流出", data: monitorPoints(monitor?.networkOut) }] },
   ];
   return <section aria-label="实例监控" className="grid min-w-0 content-start gap-4">
-    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-sm text-kumo-subtle">最近 24 小时 · 时间范围以实际采样为准</p></div>
+    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-base text-kumo-subtle">最近 24 小时 · 时间范围以实际采样为准</p></div>
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;
       const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
       return <section key={chart.title} aria-label={chart.title} className="grid min-w-0 content-start gap-2">
-        <p className="text-xs text-kumo-subtle">{range}</p>
-        {hasData ? <TrendChart title={chart.title} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid min-h-80 content-start gap-4 p-5">
-          <h3 className="font-semibold">{chart.title}</h3><p role="status" className="text-sm text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
+        <p className="text-base text-kumo-subtle">{range}</p>
+        {hasData ? <TrendChart title={chart.title} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid min-h-80 content-start gap-4 px-5 py-4">
+          <h3 className="font-semibold">{chart.title}</h3><p role="status" className="text-base text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
         </LayerCard>}
       </section>;
     })}</div>

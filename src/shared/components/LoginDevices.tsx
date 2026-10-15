@@ -25,9 +25,9 @@ export function LoginDevices() {
     await client.invalidateQueries({ queryKey: ["login-devices"] });
     setMessage("设备已下线");
   } });
-  return <LayerCard className="grid gap-4 p-5">
+  return <LayerCard className="grid gap-4 px-5 py-4">
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-kumo-strong">安全中心 · 登录设备</h2><Button variant="secondary" onClick={() => void devices.refetch()} loading={devices.isFetching}>刷新</Button></div>
-    <p className="text-sm text-kumo-subtle">最多同时登录 10 台设备，超过后最早登录的设备会自动下线。下线设备后，该设备的访问与续期权限立即失效。</p>
+    <p className="text-base text-kumo-subtle">最多同时登录 10 台设备，超过后最早登录的设备会自动下线。下线设备后，该设备的访问与续期权限立即失效。</p>
     {(devices.error || revoke.error) && <Banner variant="error" title="操作失败" description={getApiMessage(devices.error ?? revoke.error)} />}
     {message && <Banner variant="default" title={message} />}
     {devices.isPending ? <p>正在读取登录设备…</p> : <div className="overflow-x-auto"><Table>
@@ -38,6 +38,6 @@ export function LoginDevices() {
         <Table.Cell><Button variant="secondary" loading={revoke.isPending && revoke.variables === device.id} disabled={revoke.isPending} onClick={() => { setMessage(""); revoke.mutate(device.id); }}>{device.current ? "退出当前设备" : "下线"}</Button></Table.Cell>
       </Table.Row>)}</Table.Body>
     </Table></div>}
-    {devices.data?.length === 0 && <p className="text-sm text-kumo-subtle">当前为既有会话或管理员代登录，重新登录后可管理此设备。</p>}
+    {devices.data?.length === 0 && <p className="text-base text-kumo-subtle">当前为既有会话或管理员代登录，重新登录后可管理此设备。</p>}
   </LayerCard>;
 }

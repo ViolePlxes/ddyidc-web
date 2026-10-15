@@ -33,7 +33,7 @@ export function DeliveryTasks() {
     </PageState>
     <div className="flex justify-end gap-2"><Button variant="secondary" disabled={page === 1 || query.isFetching} onClick={() => setPage(page - 1)}>上一页</Button><span>第 {page} 页</span><Button variant="secondary" disabled={query.isFetching || (query.data?.length ?? 0) < 20} onClick={() => setPage(page + 1)}>下一页</Button></div>
     <Dialog.Root open={Boolean(selected)} onOpenChange={open => { if (!open && !reconcile.isPending) setSelected(undefined); }}>
-      <Dialog className="grid gap-4 p-6"><Dialog.Title>核对业务任务</Dialog.Title><Dialog.Description>业务 {selected?.businessId}。系统仅恢复可幂等执行的本地交付规划，或确认已有实例的完成事实。恢复规划可能继续交付尚未执行的单元；远端采购结果未知的单元不会重新采购。续费仅在已保存本次付款成功证据、并只读确认到期时间更新后完成本地交付，不会再次续费付款；付款结果未知时继续暂停。请先核对订单，操作会记录管理员和原因。</Dialog.Description>
+      <Dialog className="grid gap-4 p-8"><Dialog.Title>核对业务任务</Dialog.Title><Dialog.Description>业务 {selected?.businessId}。系统仅恢复可幂等执行的本地交付规划，或确认已有实例的完成事实。恢复规划可能继续交付尚未执行的单元；远端采购结果未知的单元不会重新采购。续费仅在已保存本次付款成功证据、并只读确认到期时间更新后完成本地交付，不会再次续费付款；付款结果未知时继续暂停。请先核对订单，操作会记录管理员和原因。</Dialog.Description>
         {selected?.taskKey.startsWith("delivery-unit:") ? <><Input label="远端实例 ID（可选）" value={remoteInstanceId} maxLength={20} onChange={e=>setRemoteInstanceId(e.target.value)} /><p>仅用于已产生账单但尚未关联本地实例的采购。系统只读核对产品、账单和有效实例是否匹配，通过后恢复本地关联，不会再次下单或扣款。留空则仅核对已有本地事实。</p></> : null}
         <Input label="核对依据" value={reason} maxLength={remoteInstanceId.trim()?100:256} onChange={e => setReason(e.target.value)} />
         <p>暂未取得完整远端证据时，可记录核对进度并保持暂停。记录不会改变付款结果或触发重试；请勿填写密码、验证码或完整个人资料。</p>

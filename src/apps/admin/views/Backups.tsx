@@ -1,6 +1,7 @@
+import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Loader, Pagination, Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Loader,  Select, Switch, Table } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { backupAdmin, type BackupInput, type BackupJob } from "../../../shared/api/backupAdmin";
@@ -40,7 +41,7 @@ export function AdminBackups() {
     <LayerCard >
       <LayerCard.Secondary><h2 className="text-lg font-semibold">OSS 配置</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-5">
       <Switch label="上传备份至 OSS" checked={form.enabled} onCheckedChange={(enabled) => setForm({ ...form, enabled })} disabled={busy} />
-      <p className="text-sm text-kumo-subtle">关闭上传时，定时任务仍保留本地业务备份。Bucket 必须为私有，建议在阿里云开启版本控制。未配置时可先使用本地备份。</p>
+      <p className="text-base text-kumo-subtle">关闭上传时，定时任务仍保留本地业务备份。Bucket 必须为私有，建议在阿里云开启版本控制。未配置时可先使用本地备份。</p>
       <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); save.mutate(form); }}>
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="AccessKey ID" value={form.accessKeyId} autoComplete="off" placeholder={config.data?.accessKeyMasked || "请输入 AccessKey ID"} description="已设置时留空保留原值" onChange={(event) => setForm({ ...form, accessKeyId: event.target.value })} />
@@ -57,27 +58,27 @@ export function AdminBackups() {
     <LayerCard >
       <LayerCard.Secondary><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">备份任务</h2><Button loading={run.isPending} disabled={busy} onClick={() => run.mutate()}>{config.data?.enabled ? "立即备份并上传" : "立即备份到本地"}</Button></div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
       {history.data?.activeId ? <Banner title="任务进行中" description="备份和恢复共用执行锁。恢复会暂停业务；导入完成后仍须运维核对交易、显式放行并启动服务。" /> : null}
-      <div className="grid gap-3 text-sm md:grid-cols-3"><div>最近任务：{timestamp(history.data?.items?.[0]?.createdAt)}</div><div>结果：{history.data?.items?.[0] ? statuses[history.data.items[0].status] : "暂无记录"}</div><div>下次定时：{history.data?.nextScheduledAt || "由 systemd timer 管理"}</div></div>
+      <div className="grid gap-3 text-base md:grid-cols-3"><div>最近任务：{timestamp(history.data?.items?.[0]?.createdAt)}</div><div>结果：{history.data?.items?.[0] ? statuses[history.data.items[0].status] : "暂无记录"}</div><div>下次定时：{history.data?.nextScheduledAt || "由 systemd timer 管理"}</div></div>
     </LayerCard.Primary></LayerCard>
     <LayerCard >
-      <LayerCard.Secondary><div className="p-5"><h2 className="text-lg font-semibold">备份历史</h2><p className="text-sm text-kumo-subtle">显示最近 100 条任务。本地保留每日 7 天、每周 28 天、每月 370 天；OSS 按配置仅清理本系统记录的对象。</p></div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
+      <LayerCard.Secondary><div className="p-5"><h2 className="text-lg font-semibold">备份历史</h2><p className="text-base text-kumo-subtle">显示最近 100 条任务。本地保留每日 7 天、每周 28 天、每月 370 天；OSS 按配置仅清理本系统记录的对象。</p></div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
       <Table><Table.Header><Table.Row>{["时间 / 类型", "状态", "本地大小", "OSS 大小", "OSS 对象", "耗时", "结果说明", "操作"].map((label) => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
         <Table.Body>{(history.data?.items ?? []).map((job) => <Table.Row key={job.id}>
-          <Table.Cell><div>{timestamp(job.createdAt)}</div><div className="text-sm text-kumo-subtle">{kinds[job.kind]}</div></Table.Cell>
+          <Table.Cell><div>{timestamp(job.createdAt)}</div><div className="text-base text-kumo-subtle">{kinds[job.kind]}</div></Table.Cell>
           <Table.Cell><Badge variant={job.status === "success" ? "success" : job.status === "failed" || job.status === "interrupted" ? "error" : "warning"}>{statuses[job.status]}</Badge></Table.Cell>
           <Table.Cell>{bytes(job.localBytes)}</Table.Cell><Table.Cell>{bytes(job.ossBytes)}</Table.Cell>
-          <Table.Cell><span className="break-all text-sm">{job.objectKey || (job.kind === "restore" ? "恢复任务" : "仅本地 / 未上传")}</span>{job.expired ? <Badge variant="secondary">OSS 已过期</Badge> : null}</Table.Cell>
+          <Table.Cell><span className="break-all text-base">{job.objectKey || (job.kind === "restore" ? "恢复任务" : "仅本地 / 未上传")}</span>{job.expired ? <Badge variant="secondary">OSS 已过期</Badge> : null}</Table.Cell>
           <Table.Cell>{job.finishedAt ? `${(job.durationMs / 1000).toFixed(1)} 秒` : "—"}</Table.Cell>
-          <Table.Cell><span className="text-sm">{job.error || job.warning || "—"}</span></Table.Cell>
+          <Table.Cell><span className="text-base">{job.error || job.warning || "—"}</span></Table.Cell>
           <Table.Cell>{job.kind !== "restore" && job.sha256 ? <div className="flex gap-2"><Button variant="secondary" size="sm" onClick={() => window.open(`/admin/v1/backup/${job.id}/download`, "_blank", "noopener,noreferrer")}>下载</Button><Button variant="secondary" size="sm" disabled={busy} onClick={() => { setRestoreJob(job); setConfirmation(""); }}>恢复</Button></div> : "—"}</Table.Cell>
         </Table.Row>)}</Table.Body></Table>
-      {!history.isLoading && !history.data?.items?.length ? <p className="p-5 text-sm text-kumo-subtle">暂无备份记录</p> : null}
+      {!history.isLoading && !history.data?.items?.length ? <p className="p-5 text-base text-kumo-subtle">暂无备份记录</p> : null}
       {(history.data?.total ?? 0) > 20 ? <div className="p-5"><Pagination page={page} setPage={setPage} perPage={20} totalCount={history.data?.total ?? 0} /></div> : null}
     </LayerCard.Primary></LayerCard>
     <Dialog.Root open={restoreJob !== null} onOpenChange={(open) => { if (!open && !restore.isPending) setRestoreJob(null); }}>
-      <Dialog className="grid gap-4 p-6"><Dialog.Title>恢复业务数据</Dialog.Title><Dialog.Description>将覆盖当前 MySQL 数据和用户附件。系统校验后等待已受理工作退出，隔离应用数据库账号并保存回滚副本。导入完成后保持维护状态，须由运维核对支付、退款、采购和续费事实后显式放行。外部写入程序也须纳入停机安排。</Dialog.Description>
+      <Dialog className="grid gap-4 p-8"><Dialog.Title>恢复业务数据</Dialog.Title><Dialog.Description>将覆盖当前 MySQL 数据和用户附件。系统校验后等待已受理工作退出，隔离应用数据库账号并保存回滚副本。导入完成后保持维护状态，须由运维核对支付、退款、采购和续费事实后显式放行。外部写入程序也须纳入停机安排。</Dialog.Description>
         <Banner variant="alert" title="配置和密钥不会从 OSS 恢复" description="必须保留匹配的原 AES 密钥、独立备份签名密钥及应用版本；恢复前副本仅保留本地，不上传 OSS。" />
-        <p className="break-all text-sm">所选备份：{restoreJob?.id}</p>
+        <p className="break-all text-base">所选备份：{restoreJob?.id}</p>
         <Input label={`请输入：恢复 ${restoreJob?.id ?? ""}`} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
         {restore.error ? <Banner variant="error" title="恢复未启动" description={getApiMessage(restore.error)} /> : null}
         <div className="flex justify-end gap-3"><Button variant="secondary" disabled={restore.isPending} onClick={() => setRestoreJob(null)}>取消</Button><Button variant="destructive" loading={restore.isPending} disabled={confirmation !== `恢复 ${restoreJob?.id}`} onClick={() => restore.mutate()}>确认覆盖并恢复</Button></div>

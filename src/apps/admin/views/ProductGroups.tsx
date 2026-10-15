@@ -1,4 +1,4 @@
-import { Dialog } from "../../../shared/components/Dialog";
+import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { GroupProducts } from "./GroupProducts";
 import { invalidateCatalog, publishCatalogChange } from "../../../shared/utils/catalogCache";
 import { Banner, Button, Checkbox, Input, LayerCard, Select, Sidebar, Switch } from "@cloudflare/kumo";
@@ -66,8 +66,8 @@ function MoveProductsDialog({ source, targets, onClose }: { source: ProductGroup
   });
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog size="lg" className="grid max-h-[85vh] gap-5 overflow-y-auto p-6">
-        <div className="flex items-start justify-between gap-4"><div><Dialog.Title className="text-xl font-semibold">移动商品</Dialog.Title><Dialog.Description className="text-kumo-subtle">从“{source.name}”批量移动到另一个二级分组。</Dialog.Description></div><Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" onClick={onClose} /></div>
+      <Dialog size="lg" className="grid max-h-[85vh] gap-4 overflow-y-auto p-8">
+        <div className="flex items-start justify-between gap-4"><div><Dialog.Title className="text-2xl font-semibold">移动商品</Dialog.Title><Dialog.Description className="text-kumo-subtle">从“{source.name}”批量移动到另一个二级分组。</Dialog.Description></div><Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" onClick={onClose} /></div>
         <PageState loading={products.isLoading} error={products.error ? getApiMessage(products.error) : null} empty={!products.isLoading && (products.data?.items.length ?? 0) === 0} emptyTitle="该分组暂无商品">
           <Checkbox.Group legend="选择商品" value={selected} onValueChange={setSelected} className="grid gap-3">
             {(products.data?.items ?? []).map((product) => <Checkbox.Item key={product.id} value={product.id} label={`${product.name}（#${product.id}）`} />)}
@@ -148,19 +148,19 @@ export function ProductGroups() {
                 return <Sidebar.MenuItem key={root.id}><Sidebar.Collapsible open={Boolean(search.trim()) || expanded.has(root.id)} onOpenChange={(open) => setExpanded((old) => { const next = new Set(old); if (open) next.add(root.id); else next.delete(root.id); return next; })}>
                   <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton icon={FolderIcon} active={!creating && selected?.id === root.id} onClick={() => navigate(root.id)}><span className="min-w-0 flex-1 truncate">{root.name}</span><Sidebar.MenuChevron /></Sidebar.MenuButton>} />
                   <Sidebar.CollapsibleContent><Sidebar.MenuSub>
-                    {rows.map((child) => <Sidebar.MenuSubButton key={child.id} className="pl-6" active={!creating && selected?.id === child.id} onClick={() => navigate(child.id)}><FolderIcon className="size-4 shrink-0 text-kumo-subtle" /><span className="min-w-0 flex-1 truncate">{child.name}</span><span className="text-xs text-kumo-subtle">{child.productCount}</span></Sidebar.MenuSubButton>)}
-                    {childrenQueries[(roots.data?.list ?? []).findIndex((g) => g.id === root.id)]?.isLoading ? <li className="p-2 text-sm text-kumo-subtle">加载中…</li> : null}
+                    {rows.map((child) => <Sidebar.MenuSubButton key={child.id} className="pl-6" active={!creating && selected?.id === child.id} onClick={() => navigate(child.id)}><FolderIcon className="size-4 shrink-0 text-kumo-subtle" /><span className="min-w-0 flex-1 truncate">{child.name}</span><span className="text-base text-kumo-subtle">{child.productCount}</span></Sidebar.MenuSubButton>)}
+                    {childrenQueries[(roots.data?.list ?? []).findIndex((g) => g.id === root.id)]?.isLoading ? <li className="p-2 text-base text-kumo-subtle">加载中…</li> : null}
                   </Sidebar.MenuSub></Sidebar.CollapsibleContent>
                 </Sidebar.Collapsible></Sidebar.MenuItem>;
               })}
-              {!roots.isLoading && !visibleRoots.length ? <li className="p-3 text-sm text-kumo-subtle">{search ? "没有匹配的分组" : "暂无分组"}</li> : null}
+              {!roots.isLoading && !visibleRoots.length ? <li className="p-3 text-base text-kumo-subtle">{search ? "没有匹配的分组" : "暂无分组"}</li> : null}
             </Sidebar.Menu></Sidebar.Group>}
           </Sidebar.Content>
         </Sidebar>
         <section className="min-w-0 flex-1 p-4 lg:p-6" aria-label="分组编辑与商品列表">
           <PageState loading={roots.isLoading} error={roots.error ? getApiMessage(roots.error) : null}>
             {creating ? <div className="grid gap-5"><h2 className="text-lg font-semibold text-kumo-strong">{creating.parentId === "0" ? "新建一级分组" : "新建二级分组"}</h2><GroupEditor key={`new-${creating.parentId}-${editorRevision}`} parentId={creating.parentId} onDirtyChange={updateDirty} onBusyChange={setPending} onSaved={(id) => { setCreating(null); setSelectedId(id); setDirty(false); }} onCancel={() => { setDirty(false); setCreating(null); }} /></div> : selected ? <div className="grid gap-5">
-              <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-kumo-strong">{selected.name}</h2><p className="mt-1 text-sm text-kumo-subtle">{selected.parentId === "0" ? "一级分组" : `${all.find((g) => g.id === selected.parentId)?.name ?? "二级分组"} / 二级分组`} · {selected.productCount} 个商品</p></div><div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-kumo-strong">{selected.name}</h2><p className="mt-1 text-base text-kumo-subtle">{selected.parentId === "0" ? "一级分组" : `${all.find((g) => g.id === selected.parentId)?.name ?? "二级分组"} / 二级分组`} · {selected.productCount} 个商品</p></div><div className="flex flex-wrap gap-2">
                 <Button variant="secondary" shape="square" aria-label="分组上移" icon={<ArrowUpIcon />} disabled={disabled || dirty || all.filter((g) => g.parentId === selected.parentId)[0]?.id === selected.id} onClick={() => reorder(selected, -1)} />
                 <Button variant="secondary" shape="square" aria-label="分组下移" icon={<ArrowDownIcon />} disabled={disabled || dirty || all.filter((g) => g.parentId === selected.parentId).at(-1)?.id === selected.id} onClick={() => reorder(selected, 1)} />
                 {selected.parentId === "0" ? <Button variant="secondary" icon={<FolderPlusIcon />} onClick={() => navigate(null, selected.id)}>新建二级分组</Button> : <Button variant="secondary" onClick={() => setMoveSource(selected)} disabled={dirty || disabled}>移动商品</Button>}
@@ -170,12 +170,12 @@ export function ProductGroups() {
               {selected.parentId !== "0" ? <>
                 {!editingProduct ? <div className="flex flex-wrap items-end gap-3 border-t border-kumo-line pt-4"><div className="min-w-48 flex-1"><Select disabled={(roots.data?.list.length ?? 0) < 2} label="移动至其他一级分组" value={targetParent} onValueChange={(v) => setTargetParent(v ?? "")} items={Object.fromEntries((roots.data?.list ?? []).filter((g) => g.id !== selected.parentId).map((g) => [g.id, g.name]))} /></div><Button variant="secondary" disabled={!targetParent || disabled || dirty} loading={operation.isPending} onClick={moveGroup}>移动分组</Button></div> : null}
                 <div className="min-w-0 border-t border-kumo-line pt-4"><GroupProducts key={selected.id} groupId={selected.id} expanded onDirtyChange={updateDirty} onEditingChange={setEditingProduct} blocked={disabled || dirty} beginSave={() => { if (saving.current) return false; saving.current = true; setPending(true); return true; }} endSave={() => { saving.current = false; setPending(false); }} /></div>
-              </> : <p className="border-t border-kumo-line pt-4 text-sm text-kumo-subtle">展开左侧一级分组，选择下方二级分组查看并编辑商品。</p>}
-            </div> : <p className="text-sm text-kumo-subtle">创建一级分组，开始管理商品。</p>}
+              </> : <p className="border-t border-kumo-line pt-4 text-base text-kumo-subtle">展开左侧一级分组，选择下方二级分组查看并编辑商品。</p>}
+            </div> : <p className="text-base text-kumo-subtle">创建一级分组，开始管理商品。</p>}
           </PageState>
         </section>
       </Sidebar.Provider>
     </LayerCard>
-    {moveSource ? <MoveProductsDialog source={moveSource} targets={children} onClose={() => setMoveSource(null)} /> : null}
-    {deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-5 p-6"><Dialog.Title className="text-xl font-semibold">删除商品分组</Dialog.Title><Dialog.Description>确定删除“{deleteTarget.name}”？存在子分组或商品时不能删除。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget.id)}>确认删除</Button></div></Dialog></Dialog.Root> : null}
+    <DialogPresence>{moveSource ? <MoveProductsDialog source={moveSource} targets={children} onClose={() => setMoveSource(null)} /> : null}</DialogPresence>
+    <DialogPresence>{deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-4 p-8"><Dialog.Title className="text-2xl font-semibold">删除商品分组</Dialog.Title><Dialog.Description>确定删除“{deleteTarget.name}”？存在子分组或商品时不能删除。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget.id)}>确认删除</Button></div></Dialog></Dialog.Root> : null}</DialogPresence>
   </div>;}

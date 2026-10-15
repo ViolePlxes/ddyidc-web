@@ -148,7 +148,7 @@ export function AlipayCertification({
   }
   if (info.status === 2) return null;
   return (
-    <LayerCard className="grid gap-4 p-5">
+    <LayerCard className="grid gap-4 px-5 py-4">
       <h2>个人认证 · 支付宝芝麻信用</h2>
       {error && <Banner variant="error" title={error} />}
       {message && <p role="status">{message}</p>}

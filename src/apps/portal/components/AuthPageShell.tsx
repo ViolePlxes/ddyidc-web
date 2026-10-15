@@ -15,7 +15,7 @@ export function AuthPageShell({ title, description, children, unstyledBackground
       <div className="grid w-full max-w-[400px] gap-7">
         <header className="grid gap-2">
           <h1 className="text-3xl font-semibold text-kumo-strong">{title}</h1>
-          <p className="text-sm text-kumo-subtle">{description}</p>
+          <p className="text-base text-kumo-subtle">{description}</p>
         </header>
         {children}
       </div>
@@ -28,7 +28,7 @@ export function SocialLoginOptions({ rememberMe = false }: { rememberMe?: boolea
   const start = (name: SocialProvider) => { void startSocialLogin(name, rememberMe).catch(error => setProvider(getApiMessage(error))); };
   return (
     <section className="grid gap-5" aria-label="社交账号登录">
-      <div className="flex items-center gap-3 text-xs text-kumo-subtle">
+      <div className="flex items-center gap-3 text-base text-kumo-subtle">
         <span className="h-px flex-1 bg-kumo-line" />
         <span>或使用社交账号登录</span>
         <span className="h-px flex-1 bg-kumo-line" />

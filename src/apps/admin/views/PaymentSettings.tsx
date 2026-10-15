@@ -46,7 +46,7 @@ export function PaymentSettings() {
  <LayerCard><LayerCard.Primary className="grid gap-4">
  <Input type="number" min={1} max={1440} label="支付有效期（分钟）" value={String(cfg.ExpireMinutes)} onChange={e=>setForm({...form,config:{...cfg,ExpireMinutes:Number(e.target.value)}})} disabled={disabled} />
  <Textarea label="修改原因（必填）" maxLength={255} value={reason} onChange={e=>setReason(e.target.value)} disabled={disabled} />
- <p className="text-sm text-kumo-subtle">凭据加密保存，不返回原文。更换商户或凭据前须先关闭支付渠道并重启生效，核对所有未完成支付。配置先校验再保存，保存失败不会更改原配置。</p>
+ <p className="text-base text-kumo-subtle">凭据加密保存，不返回原文。更换商户或凭据前须先关闭支付渠道并重启生效，核对所有未完成支付。配置先校验再保存，保存失败不会更改原配置。</p>
  <div><Button loading={disabled} disabled={disabled||reason.trim().length<2} onClick={()=>save.mutate()}>校验并保存</Button></div>
  </LayerCard.Primary></LayerCard>
  {saved ? <Banner title="支付配置已保存" description="请安排后端重启使配置生效，运行中的支付配置未切换。" /> : null}

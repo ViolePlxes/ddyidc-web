@@ -106,7 +106,7 @@ function NoticeReviews() {
     <LayerCard><Table><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
       <Table.Body>{(query.data ?? []).map(row => <Table.Row key={row.id}><Table.Cell>{row.id}</Table.Cell><Table.Cell>#{row.customerId}</Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.attempts}</Table.Cell><Table.Cell><Button disabled={mutation.isPending || row.status === "retry_pending"} onClick={() => { setSelected(row); setReason(""); mutation.reset(); }}>处置</Button></Table.Cell></Table.Row>)}</Table.Body>
     </Table>{query.data?.length === 0 ? <p className="p-4">暂无待处置通知。</p> : null}</LayerCard>
-    {selected ? <LayerCard className="grid gap-3 p-4">
+    {selected ? <LayerCard className="grid gap-3 px-4 py-3">
       <p>处理通知 #{selected.id}（{labels[selected.status]}）</p>
       <Textarea label="核对结果与处置原因（必填）" maxLength={256} value={reason} onChange={event => setReason(event.target.value)} disabled={mutation.isPending} />
       <div className="flex flex-wrap gap-3"><Button disabled={mutation.isPending || !reason.trim()} onClick={() => mutation.mutate("resolve")}>记录已人工处理</Button><Button disabled={mutation.isPending || !reason.trim()} onClick={() => mutation.mutate("retry")}>确认重复风险并重试一次</Button><Button disabled={mutation.isPending} onClick={() => setSelected(null)}>取消</Button></div>
@@ -120,7 +120,7 @@ function BaseSettings() {
     <LayerCard >
       <LayerCard.Secondary><h2 className="font-medium text-kumo-strong">基础设置</h2></LayerCard.Secondary><LayerCard.Primary className="grid gap-3">
       <Banner variant="alert" title="尚无基础设置接口" description="当前后端未提供站点名称、客服邮箱与注册开关的读取或保存接口，因此本页不展示推测值，也不会提交无效配置。" />
-      <div className="grid gap-1"><span className="text-sm text-kumo-subtle">当前访问地址</span><strong className="text-kumo-strong">{window.location.origin}</strong></div>
+      <div className="grid gap-1"><span className="text-base text-kumo-subtle">当前访问地址</span><strong className="text-kumo-strong font-medium">{window.location.origin}</strong></div>
     </LayerCard.Primary></LayerCard>
   );
 }
@@ -161,7 +161,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
     <div className="grid gap-5">
       <LayerCard >
         <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
-          <div><h2 className="font-medium text-kumo-strong">邮件 SMTP</h2><p className="text-sm text-kumo-subtle">465 使用 SMTPS，其他端口（常用 587）自动协商 STARTTLS。</p></div>
+          <div><h2 className="font-medium text-kumo-strong">邮件 SMTP</h2><p className="text-base text-kumo-subtle">465 使用 SMTPS，其他端口（常用 587）自动协商 STARTTLS。</p></div>
           <Badge variant={config.mail.mock ? "warning" : "success"}>{config.mail.mock ? "待配置" : "真实通道"}</Badge>
         </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -175,7 +175,7 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
 
       <LayerCard >
         <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
-          <div><h2 className="font-medium text-kumo-strong">阿里云短信</h2><p className="text-sm text-kumo-subtle">SendSms 2017-05-25；TemplateCode 须在阿里云控制台审核通过。</p></div>
+          <div><h2 className="font-medium text-kumo-strong">阿里云短信</h2><p className="text-base text-kumo-subtle">SendSms 2017-05-25；TemplateCode 须在阿里云控制台审核通过。</p></div>
           <Badge variant={config.sms.mock ? "warning" : "success"}>{config.sms.mock ? "待配置" : "真实通道"}</Badge>
         </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -232,7 +232,7 @@ function TemplateSettings({ onSaved }: { onSaved: (message: string) => void }) {
       {items.map((template) => (
         <LayerCard key={template.id} >
           <LayerCard.Secondary><div className="flex items-center justify-between gap-3">
-            <div><h2 className="font-medium text-kumo-strong">{sceneLabels[template.scene] ?? template.scene}</h2><p className="text-sm text-kumo-subtle">场景标识：{template.scene}</p></div>
+            <div><h2 className="font-medium text-kumo-strong">{sceneLabels[template.scene] ?? template.scene}</h2><p className="text-base text-kumo-subtle">场景标识：{template.scene}</p></div>
             <Switch label="启用" checked={template.enabled} onCheckedChange={(enabled) => update(template.id, { enabled })} />
           </div></LayerCard.Secondary><LayerCard.Primary className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -261,15 +261,15 @@ function NotifyLogs() {
           {rows.map((log) => (
             <Table.Row key={log.id}>
               <Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell>
-              <Table.Cell><div className="grid"><span>{sceneLabels[log.scene] ?? log.scene}</span><span className="text-xs text-kumo-subtle">{log.channel}</span></div></Table.Cell>
+              <Table.Cell><div className="grid"><span>{sceneLabels[log.scene] ?? log.scene}</span><span className="text-base text-kumo-subtle">{log.channel}</span></div></Table.Cell>
               <Table.Cell>{log.target}</Table.Cell>
               <Table.Cell><Badge variant={log.status === "success" ? "success" : log.status === "failed" ? "error" : "outline"}>{({success:"成功",failed:"失败",submitted:"服务商已接收",unknown:"结果待核对",pending:"等待重试"} as Record<string,string>)[log.status] ?? log.status}</Badge></Table.Cell>
-              <Table.Cell><span className="text-sm text-kumo-subtle">{log.requestId || log.error || "—"}</span></Table.Cell>
+              <Table.Cell><span className="text-base text-kumo-subtle">{log.requestId || log.error || "—"}</span></Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>
       </Table>
-      {rows.length === 0 ? <div className="p-5 text-sm text-kumo-subtle">暂无通知发送记录。</div> : null}
+      {rows.length === 0 ? <div className="p-5 text-base text-kumo-subtle">暂无通知发送记录。</div> : null}
     </LayerCard>
   );
 }
