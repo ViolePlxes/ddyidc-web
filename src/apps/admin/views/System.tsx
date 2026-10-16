@@ -1,3 +1,4 @@
+import { SMSReceiptQuery } from "./SMSReceiptQuery";
 import { Badge } from "../../../shared/components/Badge";
 import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -261,9 +262,9 @@ function NotifyLogs() {
           {rows.map((log) => (
             <Table.Row key={log.id}>
               <Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell>
-              <Table.Cell><div className="grid"><span>{sceneLabels[log.scene] ?? log.scene}</span><span className="text-base text-kumo-subtle">{log.channel}</span></div></Table.Cell>
+              <Table.Cell><div className="grid"><span>{(log.scene==="sms_receipt"?"短信送达回执":sceneLabels[log.scene]) ?? log.scene}</span><span className="text-base text-kumo-subtle">{log.channel}</span></div></Table.Cell>
               <Table.Cell>{log.target}</Table.Cell>
-              <Table.Cell><Badge variant={log.status === "success" ? "success" : log.status === "failed" ? "error" : "outline"}>{({success:"成功",failed:"失败",submitted:"服务商已接收",unknown:"结果待核对",pending:"等待重试"} as Record<string,string>)[log.status] ?? log.status}</Badge></Table.Cell>
+              <Table.Cell>{log.channel==="sms"&&["expiry","expiry_digest"].includes(log.scene)&&log.requestId&&["success","submitted"].includes(log.status)?<SMSReceiptQuery id={log.id}/>:null}<Badge variant={log.status === "delivered" || (log.status === "success"&&log.channel!=="sms") ? "success" : ["failed","delivery_failed"].includes(log.status) ? "error" : log.channel==="sms"&&["success","submitted","receipt_pending","receipt_unknown"].includes(log.status)?"warning":"outline"}>{({delivered:"已送达",delivery_failed:"投递失败",receipt_pending:"等待回执",receipt_unknown:"送达待核查",success:log.channel==="sms"?"已提交":"成功",failed:"失败",submitted:"服务商已接收",unknown:"结果待核对",pending:"等待重试"} as Record<string,string>)[log.status] ?? log.status}</Badge></Table.Cell>
               <Table.Cell><span className="text-base text-kumo-subtle">{log.requestId || log.error || "—"}</span></Table.Cell>
             </Table.Row>
           ))}
