@@ -9,3 +9,6 @@ PC 首次进入（宽度至少768px）默认表格，手机默认 Resource List 
 代码 src/apps/console/views/Instances.tsx；沿用 GET /user/instances 和原备注接口。无后端、数据表、配置或权限变更。
 
 VM npm ci、tsc、build通过；真实 Chromium 1600/390px默认视图、切换、搜索保留、透明背景、悬停、复制和详情导航已验证。模拟预览仅VM根目录存在，不提交、不进入生产构建。生产发布证据见本地部署报告和开发地图。
+
+## 生产路由复核修正 v0.1.158
+生产公开复核发现旧 /user/instance/*.htm 由门户入口接管。产品标题、管理和整卡链接统一改用现有正式 /console/instances/:id 路由，不修改详情组件、API或数据；匿名访问应跳转登录并保留详情redirect。
