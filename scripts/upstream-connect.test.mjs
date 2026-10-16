@@ -1,0 +1,18 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import ts from "typescript";
+const source=await readFile(new URL("../src/shared/utils/upstreamConnect.ts",import.meta.url),"utf8");
+const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const {connectWithConfirmation,ConnectResultPendingError}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
+const row={supplierId:"2019",upstreamProductId:"488",productId:"123456789012",mode:"sync"};
+function options(key){const data=new Map();let posts=0;return {key,supplierId:"2019",upstreamProductId:"488",storage:{getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)},data,posts:()=>posts,list:async()=>[],create:async()=>{posts++;return row},uncertain:e=>e?.code==="TIMEOUT",wait:async()=>{}}}
+test("normal result clears pending marker",async()=>{const o=options("normal");await connectWithConfirmation(o);assert.equal(o.posts(),1);assert.equal(o.data.size,0)});
+test("existing mapping never posts",async()=>{const o=options("existing");o.list=async()=>[row];assert.equal((await connectWithConfirmation(o)).existing,true);assert.equal(o.posts(),0)});
+test("timeout followed by late commit is recovered without retry",async()=>{const o=options("late");let reads=0,posts=0;o.list=async()=>++reads>=3?[row]:[];o.create=async()=>{posts++;throw {code:"TIMEOUT"}};assert.equal((await connectWithConfirmation(o)).recovered,true);assert.equal(posts,1);assert.equal(o.data.size,0)});
+test("unresolved timeout remains pending across a new attempt",async()=>{const o=options("pending");let posts=0;o.create=async()=>{posts++;throw {code:"TIMEOUT"}};await assert.rejects(connectWithConfirmation(o),ConnectResultPendingError);await assert.rejects(connectWithConfirmation(o),ConnectResultPendingError);assert.equal(posts,1);assert.equal(o.data.get(o.key),"pending");o.list=async()=>[row];assert.equal((await connectWithConfirmation(o)).recovered,true);assert.equal(posts,1)});
+test("definitive rejection clears marker and preserves reason",async()=>{const o=options("rejected");o.create=async()=>{throw Error("无效分类")};await assert.rejects(connectWithConfirmation(o),/无效分类/);assert.equal(o.data.size,0);o.create=async()=>row;await connectWithConfirmation(o)});
+test("concurrent clicks share one write",async()=>{const o=options("concurrent");let release;const gate=new Promise(resolve=>{release=resolve});let posts=0;o.create=async()=>{posts++;await gate;return row};const a=connectWithConfirmation(o),b=connectWithConfirmation(o);assert.equal(a,b);release();await Promise.all([a,b]);assert.equal(posts,1)});
+test("failed lookup or browser storage never starts a write",async()=>{const o=options("read-error");o.list=async()=>{throw Error("不可读取")};await assert.rejects(connectWithConfirmation(o),/不可读取/);assert.equal(o.posts(),0);const s=options("storage-error");s.storage.setItem=()=>{throw Error("不可持久化")};await assert.rejects(connectWithConfirmation(s),/不可持久化/);assert.equal(s.posts(),0)});
+test("wrong supplier or unpublished records do not confirm pending result",async()=>{const o=options("wrong");o.data.set(o.key,"pending");o.list=async()=>[{...row,supplierId:"other"},{...row,productId:"0"},{...row,mode:"only_api"}];await assert.rejects(connectWithConfirmation(o),ConnectResultPendingError);assert.equal(o.posts(),0);assert.equal(o.data.size,1)});
+test("ambiguous mappings refuse another write",async()=>{const o=options("ambiguous");o.list=async()=>[row,{...row,productId:"456"}];await assert.rejects(connectWithConfirmation(o),/多个有效关联/);assert.equal(o.posts(),0)});
