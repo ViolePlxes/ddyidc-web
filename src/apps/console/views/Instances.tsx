@@ -1,5 +1,5 @@
 import { Pagination } from "../../../shared/components/Pagination";
-import { Button, ClipboardText, Input, LayerCard, Link,  Tabs, Table } from "@cloudflare/kumo";
+import { Button, ClipboardText, Input, LayerCard, Link,  Tabs, Table, Surface } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -81,7 +81,7 @@ function expiryLabel(value?: string) {
   if (delta <= 0) return "已到期";
   return `${Math.ceil(delta / 86400000)}天后到期`;
 }
-function ProductRow({ instance }: { instance: InstanceListItem }) {
+function ProductRow({ instance, card = false }: { instance: InstanceListItem; card?: boolean }) {
   const client = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [remark, setRemark] = useState(instance.remark ?? "");
@@ -100,16 +100,28 @@ function ProductRow({ instance }: { instance: InstanceListItem }) {
   const system = data.operatingSystem;
   const SystemIcon = /windows/i.test(system ?? "") ? WindowsLogoIcon : /linux|ubuntu|debian|centos|alma|rocky|fedora|arch|suse/i.test(system ?? "") ? LinuxLogoIcon : DesktopIcon;
   const missing = "未同步";
-  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline px-1 py-2.5 last:border-b-0`}>
-    <Table.Cell role="cell" ><div className="grid min-w-0 gap-1"><Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><span className="break-all text-base text-kumo-subtle">{data?.hostname || instance.name}</span></div></Table.Cell>
-    <Table.Cell role="cell"><StatusBadge status={instanceStatus(instance)} /></Table.Cell>
-    <Table.Cell role="cell">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</Table.Cell>
-    <Table.Cell role="cell" ><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-base text-kumo-subtle">{expiryLabel(instance.expiresAt)}</span></div></Table.Cell>
-    <Table.Cell role="cell" ><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-base text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></Table.Cell>
-    <Table.Cell role="cell" ><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></Table.Cell>
-    <Table.Cell role="cell">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-base text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-base text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</Table.Cell>
-    <Table.Cell role="cell"><Link href={`/user/instance/${instance.id}.htm`} variant="plain">管理</Link></Table.Cell>
-  </Table.Row>;
+  const cells = [
+<div key="0" className="min-w-0"><div className="grid min-w-0 gap-1"><Link href={`/user/instance/${instance.id}.htm`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><span className="break-all text-sm text-kumo-subtle">{data?.hostname || instance.name}</span></div></div>,
+<div key="1" className="min-w-0"><StatusBadge status={instanceStatus(instance)} /></div>,
+<div key="2" className="min-w-0">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</div>,
+<div key="3" className="min-w-0"><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-sm text-kumo-subtle">{expiryLabel(instance.expiresAt)}</span></div></div>,
+<div key="4" className="min-w-0"><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-sm text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></div>,
+<div key="5" className="min-w-0"><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></div>,
+<div key="6" className="min-w-0">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-sm text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-sm text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</div>,
+<div key="7" className="min-w-0"><Link href={`/user/instance/${instance.id}.htm`} variant="plain">管理</Link></div>
+  ];
+  if (card) return <Surface className="relative p-6 motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:-translate-y-1 hover:ring-kumo-ring focus-within:ring-kumo-ring">
+    <Link href={`/user/instance/${instance.id}.htm`} variant="plain" aria-label={`进入产品详情 ${instance.name}`} className="absolute inset-0 z-0" />
+    <div className="pointer-events-none relative [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
+    <div className="mb-4 flex items-start justify-between gap-3">{cells[0]}{cells[1]}</div>
+    <dl className="grid gap-3 text-sm">
+      {[["IP", 2], ["到期时间", 3], ["费用", 4], ["系统", 5], ["备注", 6]].map(([label, index]) => <div key={label} className="grid grid-cols-[5rem_minmax(0,1fr)] items-start gap-3"><dt className="text-kumo-subtle">{label}</dt><dd className="min-w-0 break-words">{cells[Number(index)]}</dd></div>)}
+    </dl>
+    <div className="mt-4 flex justify-end">{cells[7]}</div>
+    </div>
+  </Surface>;
+  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline last:border-b-0`}>{cells.map((cell, index) => <Table.Cell key={index} role="cell">{cell}</Table.Cell>)}</Table.Row>;
+
 }
 
 export function InstanceList() {
@@ -119,6 +131,7 @@ export function InstanceList() {
   const category = requestedCategory && requestedCategory in productCategories
     ? productCategories[requestedCategory as ProductCategory]
     : undefined;
+  const [view, setView] = useState<"table" | "cards">(() => window.matchMedia("(min-width: 768px)").matches ? "table" : "cards");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<InstanceFilter>("all");
@@ -162,8 +175,8 @@ export function InstanceList() {
   return (
     <>
       <LayerCard>
-        <LayerCard.Secondary>产品列表{category && <span className="text-base">· {title}</span>}</LayerCard.Secondary>
-        <LayerCard.Primary>
+        <LayerCard.Secondary>产品列表{category && <span className="text-sm">· {title}</span>}</LayerCard.Secondary>
+        <LayerCard.Primary className={view === "cards" ? "bg-transparent! ring-0! shadow-none!" : undefined}>
           <div className="mb-2 flex min-w-0 flex-wrap items-center gap-3">
             <Input size="sm" aria-label="搜索实例" placeholder="按实例名或 IP 搜索" className="min-w-0 w-full sm:w-auto sm:flex-1" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
             <div className="max-w-full overflow-x-auto">
@@ -171,21 +184,26 @@ export function InstanceList() {
                 { value: "all", label: "全部" }, { value: "active", label: "已激活" }, { value: "pending", label: "待开通" }, { value: "suspended", label: "已暂停" },
               ]} />
             </div>
+            <Tabs variant="segmented" size="sm" aria-label="产品展示形式" value={view} onValueChange={value => setView(value as "table" | "cards")} tabs={[{ value: "table", label: "表格" }, { value: "cards", label: "卡片" }]} />
           </div>
-          <div className="-mx-1 min-w-0 overflow-x-auto text-base"  aria-label="产品列表">
+          {view === "table" ? <div className="-mx-1 min-w-0 overflow-x-auto text-sm"  aria-label="产品列表">
             <PageState loading={query.isLoading || query.isPlaceholderData} keepContent error={query.error ? getApiMessage(query.error) : null}>
-            <Table className="min-w-[900px]">
+            <Table className="min-w-[900px] [&_tbody_tr]:bg-transparent! [&_th]:bg-transparent! [&_th]:text-xs [&_td]:px-1 [&_td]:py-2.5 [&_th]:px-1 [&_th]:pb-2">
               <Table.Header>
-              <Table.Row role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-base font-medium text-kumo-subtle`}>
+              <Table.Row role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-sm font-medium text-kumo-subtle`}>
                 {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "操作"].map(label=><Table.Head role="columnheader" key={label}>{label}</Table.Head>)}
               </Table.Row>
               </Table.Header>
                 <Table.Body role="rowgroup">{instances.map(instance=><ProductRow key={instance.id} instance={instance} />)}</Table.Body>
             </Table>
             </PageState>
-          </div>
-          {!query.isLoading && !query.isPlaceholderData && !query.error && instances.length === 0 && <p className="py-6 text-center text-base text-kumo-subtle">当前条件下暂无产品</p>}
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-3 text-base text-kumo-subtle">
+          </div> : <div className="mt-4 min-w-0" aria-label="产品资源列表">
+            <PageState loading={query.isLoading || query.isPlaceholderData} keepContent error={query.error ? getApiMessage(query.error) : null}>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{instances.map(instance => <ProductRow key={instance.id} instance={instance} card />)}</div>
+            </PageState>
+          </div>}
+          {!query.isLoading && !query.isPlaceholderData && !query.error && instances.length === 0 && <p className="py-6 text-center text-sm text-kumo-subtle">当前条件下暂无产品</p>}
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-3 text-sm text-kumo-subtle">
             <span>{query.isLoading || query.isPlaceholderData ? "正在加载产品…" : `显示 ${instances.length ? (page-1)*instancePageSize+1 : 0}–${(page-1)*instancePageSize+instances.length} 条，共 ${localFilter ? filteredInstances.length : listData?.total ?? 0} 条`}</span>
             {(localFilter ? filteredInstances.length : listData?.total ?? 0) > instancePageSize && <Pagination page={page} setPage={setPage} perPage={instancePageSize} totalCount={localFilter ? filteredInstances.length : listData?.total ?? 0} />}
           </div>
