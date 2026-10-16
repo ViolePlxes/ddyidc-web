@@ -14,8 +14,11 @@ function walk(dir) {
     if (stat.isSymbolicLink()) throw new Error(`Release symlink: ${rel}`);
     if (stat.isDirectory()) { walk(path); continue; }
     if ((name.startsWith('.env') && name !== '.env.example') || /\.(sql|sqlite|db|key|pem|log|tar|gz|zip)$/.test(name)) throw new Error(`Private/runtime file: ${rel}`);
+    // Vite's eight-character content hash is opaque; policy applies to the
+    // asset's meaningful name, not random hash characters (e.g. BsTmOCK3).
+    const policyName=name.replace(/-[a-z0-9_-]{8}(?=\.[a-z0-9]+$)/i,'');
     const backupComponent=/^assets\/backups-[a-z0-9_-]{8,}\.js$/i.test(rel);
-    if (artifact && (!allowed.has(extname(name)) || /fixture|mock/.test(name) || (/backup/.test(name) && !backupComponent))) throw new Error(`Unexpected public artifact: ${rel}`);
+    if (artifact && (!allowed.has(extname(name)) || /fixture|mock/.test(policyName) || (/backup/.test(policyName) && !backupComponent))) throw new Error(`Unexpected public artifact: ${rel}`);
     if (artifact && extname(name)==='.json' && !['version.json','wallet-payment-channels.json'].includes(name)) throw new Error(`Unregistered public data file: ${rel}`);
     if (artifact && ['.js','.html','.json','.txt'].includes(extname(name))) {
       const text = readFileSync(path,'utf8');

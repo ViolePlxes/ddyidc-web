@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: node --test scripts/check-release.test.mjs
       - run: node scripts/check-release.mjs
       - run: node scripts/test-browser-guard.mjs
       - run: npm ci --ignore-scripts --no-audit --no-fund
