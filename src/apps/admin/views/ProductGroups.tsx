@@ -4,7 +4,7 @@ import { invalidateCatalog, publishCatalogChange } from "../../../shared/utils/c
 import { Banner, Button, Checkbox, Input, LayerCard, Select, Sidebar, Switch } from "@cloudflare/kumo";
 import { ArrowDownIcon, ArrowUpIcon, FolderIcon, FolderPlusIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { adminProductGroupsApi, type ProductGroup, type ProductGroupInput } from "../../../shared/api/adminProductGroups";
 import { adminProductsApi } from "../../../shared/api/adminProducts";
 import { getApiMessage } from "../../../shared/api/request";
@@ -84,6 +84,24 @@ function MoveProductsDialog({ source, targets, onClose }: { source: ProductGroup
 
 
 export function ProductGroups() {
+  const workspace = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const element = workspace.current;
+    if (!element) return;
+    const scrollArea = element.closest<HTMLElement>("[data-dashboard-scroll]");
+    const updateHeight = () => {
+      const bottom = scrollArea?.getBoundingClientRect().bottom ?? window.innerHeight;
+      const padding = scrollArea?.firstElementChild ? parseFloat(getComputedStyle(scrollArea.firstElementChild).paddingBottom) || 0 : 16;
+      const top = element.getBoundingClientRect().top + (scrollArea?.scrollTop ?? 0);
+      element.style.setProperty("--product-workspace-height", `${Math.max(160, bottom - top - padding)}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    if (element.parentElement) observer.observe(element.parentElement);
+    if (scrollArea) observer.observe(scrollArea);
+    window.addEventListener("resize", updateHeight);
+    return () => { observer.disconnect(); window.removeEventListener("resize", updateHeight); };
+  }, []);
   const client = useQueryClient();
   const roots = useQuery({ queryKey: ["admin", "product-groups", "0"], queryFn: () => adminProductGroupsApi.list("0") });
   const childrenQueries = useQueries({ queries: (roots.data?.list ?? []).map((root) => ({ queryKey: ["admin", "product-groups", root.id], queryFn: () => adminProductGroupsApi.list(root.id) })) });
@@ -136,11 +154,11 @@ export function ProductGroups() {
     <PageHeader title="商品管理" description="选择左侧分组，在右侧编辑分组和商品。" actions={<Button icon={<PlusIcon />} onClick={() => navigate(null, "0")}>新建一级分组</Button>} />
     {notice ? <Banner variant="alert" title={notice} /> : null}
     {operation.error ? <Banner variant="error" title="操作失败" description={getApiMessage(operation.error)} /> : null}
-    <LayerCard className="overflow-hidden p-0">
-      <Sidebar.Provider contained collapsible="none" mobileBreakpoint={0} className="relative flex w-full flex-col lg:flex-row">
-        <Sidebar className="[--sidebar-width:100%] shrink-0 border-b border-kumo-line lg:[--sidebar-width:16rem] lg:border-r lg:border-b-0">
+    <div ref={workspace} className="min-h-0 lg:h-(--product-workspace-height)"><LayerCard className="h-full min-h-0 overflow-hidden p-0">
+      <Sidebar.Provider contained collapsible="none" mobileBreakpoint={0} className="relative flex min-h-0 w-full flex-col lg:h-full lg:flex-row">
+        <Sidebar className="h-80 min-h-0 [--sidebar-width:100%] shrink-0 lg:h-full border-b border-kumo-line lg:[--sidebar-width:16rem] lg:border-r lg:border-b-0">
           <Sidebar.Header><Input className="w-full" aria-label="搜索分组" placeholder="搜索分组…" value={search} onChange={(e) => setSearch(e.target.value)} /></Sidebar.Header>
-          <Sidebar.Content className="max-h-72 lg:max-h-[70vh]">
+          <Sidebar.Content className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {roots.isLoading ? <Sidebar.Loading /> : <Sidebar.Group><Sidebar.GroupLabel>商品分组</Sidebar.GroupLabel><Sidebar.Menu>
               {visibleRoots.map((root) => {
                 const rootMatches = root.name.toLowerCase().includes(search.trim().toLowerCase());
@@ -157,7 +175,7 @@ export function ProductGroups() {
             </Sidebar.Menu></Sidebar.Group>}
           </Sidebar.Content>
         </Sidebar>
-        <section className="min-w-0 flex-1 p-4 lg:p-6" aria-label="分组编辑与商品列表">
+        <section className="min-h-0 min-w-0 flex-1 p-4 lg:overflow-y-auto lg:overscroll-contain lg:p-6" aria-label="分组编辑与商品列表">
           <PageState loading={roots.isLoading} error={roots.error ? getApiMessage(roots.error) : null}>
             {creating ? <div className="grid gap-5"><h2 className="text-lg font-semibold text-kumo-strong">{creating.parentId === "0" ? "新建一级分组" : "新建二级分组"}</h2><GroupEditor key={`new-${creating.parentId}-${editorRevision}`} parentId={creating.parentId} onDirtyChange={updateDirty} onBusyChange={setPending} onSaved={(id) => { setCreating(null); setSelectedId(id); setDirty(false); }} onCancel={() => { setDirty(false); setCreating(null); }} /></div> : selected ? <div className="grid gap-5">
               <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-kumo-strong">{selected.name}</h2><p className="mt-1 text-base text-kumo-subtle">{selected.parentId === "0" ? "一级分组" : `${all.find((g) => g.id === selected.parentId)?.name ?? "二级分组"} / 二级分组`} · {selected.productCount} 个商品</p></div><div className="flex flex-wrap gap-2">
@@ -175,7 +193,7 @@ export function ProductGroups() {
           </PageState>
         </section>
       </Sidebar.Provider>
-    </LayerCard>
+    </LayerCard></div>
     <DialogPresence>{moveSource ? <MoveProductsDialog source={moveSource} targets={children} onClose={() => setMoveSource(null)} /> : null}</DialogPresence>
     <DialogPresence>{deleteTarget ? <Dialog.Root open onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}><Dialog className="grid gap-4 p-8"><Dialog.Title className="text-2xl font-semibold">删除商品分组</Dialog.Title><Dialog.Description>确定删除“{deleteTarget.name}”？存在子分组或商品时不能删除。</Dialog.Description>{remove.error ? <Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} /> : null}<div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setDeleteTarget(null)}>取消</Button><Button variant="destructive" loading={remove.isPending} onClick={() => remove.mutate(deleteTarget.id)}>确认删除</Button></div></Dialog></Dialog.Root> : null}</DialogPresence>
   </div>;}
