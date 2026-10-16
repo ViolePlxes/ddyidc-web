@@ -1,8 +1,15 @@
-import { Button, LayerCard, Table } from "@cloudflare/kumo";
-import { useEffect, useRef, useState } from "react";
+import { Badge, LayerCard, Link, Table } from "@cloudflare/kumo";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { AdminOrderRow } from "../../../shared/api/adminOverview";
 import { StatusBadge } from "../../../shared/components/StatusBadge";
 import { formatDate, formatMoney, orderStatusCode } from "../../../shared/utils/format";
+
+import { Link as RouterLink } from "react-router-dom";
+import { adminBase } from "../../../shared/utils/adminEntry";
+
+function OrderLink({href, children}: {href: string; children: ReactNode}) {
+  return <Link variant="current" href={href} render={<RouterLink to={href} />}>{children}</Link>;
+}
 
 const columns = [
   { key: "orderNo", label: "订单号", width: 220, min: 140 },
@@ -89,14 +96,14 @@ export function AdminOrdersTable({ rows, adminId }: { rows: AdminOrderRow[]; adm
         </Table.Head>
       ))}</Table.Row></Table.Header>
       <Table.Body>{rows.map(order => <Table.Row key={order.id}>
-        <Table.Cell className="whitespace-normal break-all">{order.orderNo}</Table.Cell>
-        <Table.Cell className="whitespace-normal break-all">{order.customerDisplayName || order.customerId || "—"}</Table.Cell>
-        <Table.Cell className="whitespace-normal break-all">{order.productName || "未命名商品"}</Table.Cell>
+        <Table.Cell className="whitespace-normal break-all">{<OrderLink href={`${adminBase}/orders/${encodeURIComponent(order.id)}`}>{order.orderNo}</OrderLink>}</Table.Cell>
+        <Table.Cell className="whitespace-normal break-all">{order.customerId && order.customerId !== "0" ? <OrderLink href={`${adminBase}/customers/${encodeURIComponent(order.customerId)}/profile`}>{order.customerDisplayName || order.customerId}</OrderLink> : order.customerDisplayName || "—"}</Table.Cell>
+        <Table.Cell className="whitespace-normal break-all">{order.instances?.length ? <div className="grid gap-1">{order.instances.map(instance => <OrderLink key={instance.id} href={`${adminBase}/customers/${encodeURIComponent(instance.customerId)}/instances/${encodeURIComponent(instance.id)}`}>{instance.name || order.productName || "未命名商品"}{order.instances!.length > 1 ? ` · #${instance.id}` : ""}</OrderLink>)}</div> : <span title="尚无当前客户名下的机器关联">{order.productName || "未命名商品"}<span className="block text-kumo-subtle">暂无关联机器</span></span>}</Table.Cell>
         <Table.Cell>{formatMoney(order.payAmount)}</Table.Cell>
-        <Table.Cell>{({ 1: "支付宝", 2: "微信支付", 3: "余额支付" } as Record<number, string>)[order.payType] ?? (order.payType ? "其他支付方式" : "—")}</Table.Cell>
+        <Table.Cell>{order.payType === 1 ? <Badge variant="blue">支付宝支付</Badge> : order.payType === 2 ? <Badge variant="green">微信支付</Badge> : order.payType === 3 ? <Badge variant="warning">余额支付</Badge> : order.payType ? <Badge variant="neutral">其他支付方式</Badge> : "—"}</Table.Cell>
         <Table.Cell className="whitespace-normal">{formatDate(order.createdAt)}</Table.Cell>
         <Table.Cell><StatusBadge status={orderStatusCode(order.status)} /></Table.Cell>
-        <Table.Cell><Button variant="secondary" size="sm" disabled title="详情功能待开放">详情</Button></Table.Cell>
+        <Table.Cell><OrderLink href={`${adminBase}/orders/${encodeURIComponent(order.id)}`}>详情</OrderLink></Table.Cell>
       </Table.Row>)}</Table.Body>
     </Table>
   </LayerCard>;
