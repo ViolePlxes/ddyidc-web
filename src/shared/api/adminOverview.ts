@@ -2,6 +2,7 @@ import type { AxiosResponse } from "axios";
 import { adminRequest, type ApiEnvelope } from "./request";
 
 export interface AdminOrderRow {
+  instances?: { id: string; customerId: string; name: string }[];
   id: string;
   orderNo: string;
   username: string;

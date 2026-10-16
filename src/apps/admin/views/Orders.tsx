@@ -1,6 +1,7 @@
+import {adminBase} from "../../../shared/utils/adminEntry";
 import { Pagination } from "../../../shared/components/Pagination";
-import { useSearchParams } from "react-router-dom";
-import { Button, Input, LayerCard,  Select } from "@cloudflare/kumo";
+import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
+import { Button, Input, LayerCard, Link, Select } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminOverviewApi } from "../../../shared/api/adminOverview";
@@ -50,4 +51,12 @@ export function AdminOrders() {
       <DeliveryTasks />
     </>
   );
+}
+
+
+export function AdminOrderDetail(){
+  const {id = ""}=useParams();
+  const query=useQuery({queryKey:["admin","order-detail",id],queryFn:()=>adminOverviewApi.orders({page:1,pageSize:1,record:id}),enabled:/^\d+$/.test(id)});
+  const order=query.data?.items.find(item=>item.id===id);
+  return <><PageHeader title="订单详情" description="查看订单记录，不执行支付或账务操作。"/><Link variant="current" href={`${adminBase}/orders`} render={<RouterLink to={`${adminBase}/orders`} />}>返回订单管理</Link><PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null} empty={!order&&!query.isLoading&&!query.error} emptyTitle="订单不存在或无权查看">{order&&<AdminOrdersTable rows={[order]} adminId="order-detail"/>}</PageState></>;
 }
