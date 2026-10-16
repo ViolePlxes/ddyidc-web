@@ -48,7 +48,7 @@ export interface NotifyLog {
   target: string;
   templateId?: string;
   contentSnapshot: string;
-  status: "success" | "failed" | "submitted" | "unknown" | "pending";
+  status: "success" | "failed" | "submitted" | "unknown" | "pending" | "delivered" | "delivery_failed" | "receipt_pending" | "receipt_unknown";
   error?: string;
   requestId?: string;
   businessId?: string;
