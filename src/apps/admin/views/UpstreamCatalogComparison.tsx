@@ -1,3 +1,4 @@
+import { ConnectResultPendingError } from "../../../shared/utils/upstreamConnect";
 import { Badge } from "../../../shared/components/Badge";
 import { useMemo, useRef, useState, type DragEvent } from "react";
 import { Banner,  Button, Input, LayerCard, Select, Sidebar, Table } from "@cloudflare/kumo";
@@ -91,11 +92,13 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
   const [secondaryId, setSecondaryId] = useState("");
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
+  const [pendingResult, setPendingResult] = useState(false);
+  const showError = (err: unknown, fallback: string) => { setPendingResult(err instanceof ConnectResultPendingError); setError(err instanceof Error ? err.message : fallback); };
   const roots = props.localCategories.filter(item => !item.parentId || item.parentId === "0");
   const children = props.localCategories.filter(item => item.parentId === primaryId);
   const openAction = (product: ComparisonProduct, groupId = "") => {
     const category = props.localCategories.find(item => item.id === groupId && item.parentId !== "0");
-    setAction(product); setError(""); setPrimaryId(category?.parentId ?? ""); setSecondaryId(category?.id ?? "");
+    setAction(product); setError(""); setPendingResult(false); setPrimaryId(category?.parentId ?? ""); setSecondaryId(category?.id ?? "");
   };
   const beginDrag = (event: DragEvent<HTMLTableRowElement>, product: ComparisonProduct) => {
     if (!props.onConnect || product.mapped || busyId || action || dropInFlight.current) { event.preventDefault(); return; }
@@ -112,14 +115,14 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
     dropInFlight.current = true; setBusyId(product.id); setError("");
     void (async () => {
       try { await props.onConnect!(product, category.id); }
-      catch (err) { setError(err instanceof Error ? err.message : "对接失败，请重试"); }
+      catch (err) { showError(err, "对接失败，请重试"); }
       finally { dropInFlight.current = false; setBusyId(""); }
     })();
   };
   const syncLocal = (product: ComparisonProduct) => {
     if (!props.onSync || busyId || action || dropInFlight.current) return;
     dropInFlight.current = true; setBusyId(product.id); setError("");
-    void props.onSync(product).catch(err => setError(err instanceof Error ? err.message : "同步失败")).finally(() => { dropInFlight.current = false; setBusyId(""); });
+    void props.onSync(product).catch(err => showError(err, "同步失败")).finally(() => { dropInFlight.current = false; setBusyId(""); });
   };
   const execute = async () => {
     if (!action || busyId || dropInFlight.current) return;
@@ -138,11 +141,11 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
         await props.onConnect(selected, secondaryId);
       }
       setAction(null);
-    } catch (err) { setError(err instanceof Error ? err.message : "操作失败，请重试"); }
+    } catch (err) { showError(err, "操作失败，请重试"); }
     finally { setBusyId(""); }
   };
   return <>
-    {!action && error && <div className="mb-4"><Banner variant="error" title="操作未完成" description={error}/></div>}
+    {!action && error && <div className="mb-4"><Banner variant={pendingResult ? "alert" : "error"} title={pendingResult ? "对接结果待确认" : "操作未完成"} description={error}/></div>}
     <div className="grid min-w-0 gap-4 xl:grid-cols-2">
       <CatalogPane title="上游商品" categories={props.upstreamCategories} products={props.upstreamProducts} upstream onAction={props.onConnect ? openAction : undefined} busyId={busyId} onProductDragStart={props.onConnect ? beginDrag : undefined} onProductDragEnd={() => setDraggedId("")}/>
       <CatalogPane title="全部本地商品" categories={props.localCategories} products={props.localProducts} upstream={false} onAction={props.onDisconnect || props.onHide ? openAction : undefined} busyId={busyId} dragging={Boolean(draggedId)} onProductDrop={receiveDrop} onSync={props.onSync ? syncLocal : undefined}/>
@@ -155,8 +158,8 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
           <Select label="本地一级分类" value={primaryId} onValueChange={value => { setPrimaryId(value ?? ""); setSecondaryId(""); }} items={Object.fromEntries(roots.map(item => [item.id, item.name]))}/>
           <Select label="本地二级分类" value={secondaryId} disabled={!primaryId} onValueChange={value => setSecondaryId(value ?? "")} items={Object.fromEntries(children.map(item => [item.id, item.name]))}/>
         </>}
-        {error && <Banner variant="error" title="操作失败" description={error}/>}
-        <div className="flex justify-end gap-2"><Button variant="secondary" disabled={Boolean(busyId)} onClick={() => setAction(null)}>返回</Button><Button variant={action?.mapped ? "destructive" : "primary"} loading={Boolean(busyId)} disabled={!action?.mapped && !secondaryId} onClick={() => { void execute(); }}>{action?.mapped ? action.deletable === false ? "隐藏商品" : "确认取消对接" : "确认对接"}</Button></div>
+        {error && <Banner variant={pendingResult ? "alert" : "error"} title={pendingResult ? "对接结果待确认" : "操作失败"} description={error}/>}
+        <div className="flex justify-end gap-2"><Button variant="secondary" disabled={Boolean(busyId)} onClick={() => setAction(null)}>返回</Button><Button variant={action?.mapped ? "destructive" : "primary"} loading={Boolean(busyId)} disabled={!action?.mapped && !secondaryId} onClick={() => { void execute(); }}>{action?.mapped ? action.deletable === false ? "隐藏商品" : "确认取消对接" : pendingResult ? "核对对接结果" : "确认对接"}</Button></div>
       </Dialog>
     </Dialog.Root>
   </>;

@@ -1,3 +1,6 @@
+import { isAxiosError } from "axios";
+import { connectWithConfirmation } from "../../../shared/utils/upstreamConnect";
+import { useAdminAuthStore } from "../../../shared/stores/staffAuth";
 import { useEffect, useMemo, useState } from "react";
 import { Banner, Button, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +12,7 @@ import { PageState } from "../../../shared/components/PageState";
 import { UpstreamCatalogComparison, type ComparisonProduct } from "./UpstreamCatalogComparison";
 
 export function UpstreamProducts() {
+ const adminId=useAdminAuthStore(state=>state.user?.id);
  const qc=useQueryClient();const [supplierId,setSupplierId]=useState("");const [notice,setNotice]=useState("");const [guardBusy,setGuardBusy]=useState(false);const [showMetrics,setShowMetrics]=useState(false);
  const suppliers=useQuery({queryKey:["admin","upstream-suppliers"],queryFn:upstreamProductsApi.suppliers});
  useEffect(()=>{if(!supplierId&&suppliers.data?.length)setSupplierId(suppliers.data.find(x=>x.status===1)?.id??suppliers.data[0]!.id)},[supplierId,suppliers.data]);
@@ -25,9 +29,16 @@ export function UpstreamProducts() {
  const refresh=async()=>{const results=await Promise.all([mappings.refetch(),local.refetch(),groups.refetch()]);if(results.some(x=>x.isError))setNotice("操作已完成，但部分列表刷新失败，请手动刷新后核对。");await qc.invalidateQueries({queryKey:["products"]})};
  const findLink=async(p:ComparisonProduct)=>{const all=await upstreamProductsApi.allMappings("");const links=all.filter(x=>x.productId===p.localId&&x.supplierId===p.supplierId&&x.upstreamProductId===p.upstreamId);if(links.length!==1)throw new Error("商品关联已变化，请刷新后核对");return links[0]!};
  const connect=async(p:ComparisonProduct,groupId:string)=>{
-  setNotice("");const latest=await upstreamProductsApi.allMappings(supplierId);if(latest.some(x=>x.upstreamProductId===p.id&&x.mode==="sync"&&x.productId&&x.productId!=="0")){await refresh();throw new Error("该商品已对接，请勿重复操作")}
+  setNotice("");if(!adminId)throw new Error("管理员会话未就绪，请刷新后重试");
   const source=catalog.data?.items.find(x=>x.upstreamProductId===p.id);if(!source)throw new Error("上游目录已变化，请刷新后重试");
-  await upstreamProductsApi.create({supplierId,upstreamProductId:Number(p.id),name:source.name,description:source.description,productGroupId:groupId,profitType:2,profitValue:0,renewProfitType:2,renewProfitValue:0,upgradeProfitType:2,upgradeProfitValue:0,priceBasis:"upstream",mode:"sync",autoSetup:true});await refresh();
+  try {
+   const result=await connectWithConfirmation({key:`ddyidc-upstream-connect:${adminId}:${supplierId}:${p.id}`,supplierId,upstreamProductId:p.id,storage:window.localStorage,
+    list:()=>upstreamProductsApi.allMappings(supplierId),
+    create:()=>upstreamProductsApi.create({supplierId,upstreamProductId:Number(p.id),name:source.name,description:source.description,productGroupId:groupId,profitType:2,profitValue:0,renewProfitType:2,renewProfitValue:0,upgradeProfitType:2,upgradeProfitValue:0,priceBasis:"upstream",mode:"sync",autoSetup:true}),
+    uncertain:error=>isAxiosError(error)&&(!error.response||error.response.status>=500||error.response.status===408),
+    onReconciling:()=>setNotice("请求响应未确认，正在查询对接结果，请稍候…")});
+   await refresh();if(result.recovered)setNotice("已核对：商品已对接成功，未重复提交。");else if(result.existing)setNotice("该商品已经对接，已刷新现有映射。");
+  } catch(error) {setNotice("");await refresh();throw error;}
  };
  const disconnect=async(p:ComparisonProduct)=>{setNotice("");const m=await findLink(p);if(!m.deletable){await refresh();throw new Error("该商品存在订单或机器关联，禁止删除，请改为隐藏")};try{await upstreamProductsApi.remove([m.id])}catch(e){await refresh();throw e};await refresh()};
  const sync=async(p:ComparisonProduct)=>{setNotice("");const m=await findLink(p);const result=await upstreamProductsApi.sync(m.id);await refresh();setNotice(`同步完成：价格变更 ${result.summary.price}，库存变更 ${result.summary.stock}，规格变更 ${result.summary.specification}。`)};

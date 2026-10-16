@@ -111,7 +111,7 @@ export const upstreamProductsApi = {
   list: (supplierId?: string) => unwrap(adminRequest.get<ApiEnvelope<{ items: UpstreamProduct[]; total: number; lossGuard: boolean }>>("/upstream/products", { params: { page: 1, pageSize: 100, supplierId: supplierId || undefined } })),
   catalog: (supplierId: string, keyword: string, page: number) => unwrap(adminRequest.get<ApiEnvelope<{ items: CatalogProduct[]; total: number; syncedAt: number; stale: boolean }>>(`/upstream/suppliers/${supplierId}/catalog`, { params: { keyword: keyword || undefined, page, pageSize: 20 } })),
   pull: (supplierId: string) => unwrap(adminRequest.get<ApiEnvelope<{ id: string; status: string }>>(`/upstream/suppliers/${supplierId}/products/pull`)),
-  create: (input: ProductMappingInput) => unwrap(adminRequest.post<ApiEnvelope<UpstreamProduct>>("/upstream/products", input)),
+  create: (input: ProductMappingInput) => unwrap(adminRequest.post<ApiEnvelope<UpstreamProduct>>("/upstream/products", input, { timeout: 120_000 })),
   connect: (supplierId: string, items: CatalogProduct[], groupId: string) => unwrap(adminRequest.post<ApiEnvelope<{ items: UpstreamProduct[]; count: number }>>("/upstream/products/connect", {
     supplierId,
     groupId,
@@ -128,7 +128,7 @@ export const upstreamProductsApi = {
       priceBasis: "upstream",
       autoSetup: true,
     })),
-  })),
+  }, { timeout: 120_000 })),
   remove: (ids: string[]) => unwrap(adminRequest.post<ApiEnvelope<{ deleted: boolean }>>("/upstream/products/batch-delete", { ids })),
   hidden: (id: string, hidden: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ hidden: boolean }>>(`/upstream/products/${id}/hidden`, { hidden })),
   sync: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ status: string; summary: UpstreamChangeSummary }>>(`/upstream/products/${id}/sync`)),
