@@ -5,18 +5,20 @@ import type { TicketAttachment } from "../../api/tickets";
 
 export function AttachmentPicker({
   value,
+  compact = false,
   loading,
   onUpload,
   onChange,
 }: {
   value: TicketAttachment[];
+  compact?: boolean;
   loading: boolean;
   onUpload: (files: File[]) => Promise<void>;
   onChange: (value: TicketAttachment[]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div className="grid gap-2">
+    <div className={`relative gap-2 ${compact ? "flex flex-wrap items-center justify-end" : "grid"}`}>
       <Input
         aria-label="选择工单附件"
         ref={inputRef}
@@ -39,7 +41,7 @@ export function AttachmentPicker({
       >
         上传附件
       </Button>
-      {value.length ? (
+      {compact && value.length ? value.map(item => <span key={item.id} className="inline-flex min-w-0 items-center gap-1 text-sm"><span className="max-w-32 truncate">{item.name}</span><Button variant="ghost" size="sm" shape="square" icon={<TrashIcon/>} aria-label={`移除 ${item.name}`} onClick={()=>onChange(value.filter(entry=>entry.id!==item.id))}/></span>) : value.length ? (
         <LayerCard className=" p-0">
           <ul className="divide-y divide-kumo-line">
             {value.map((item) => (

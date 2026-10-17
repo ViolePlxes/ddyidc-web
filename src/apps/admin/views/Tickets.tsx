@@ -1,3 +1,6 @@
+import { useTicketDraft } from "../../../shared/components/tickets/useTicketDraft";
+import { TicketViewport } from "../../../shared/components/tickets/TicketViewport";
+import { TicketCustomerSidebar } from "../../../shared/components/tickets/TicketCustomerSidebar";
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Dialog } from "../../../shared/components/Dialog";
@@ -7,7 +10,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
-import { adminTicketApi, type TicketAttachment, type TicketDetail, type TicketListResult, type TicketReply, type TicketStatus } from "../../../shared/api/tickets";
+import { adminTicketApi, type TicketDetail, type TicketListResult, type TicketStatus } from "../../../shared/api/tickets";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { AttachmentPicker } from "../../../shared/components/tickets/AttachmentPicker";
@@ -52,7 +55,7 @@ export function AdminTicketList() {
   const receive = useMutation({ mutationFn: adminTicketApi.receive, onSuccess: () => void query.refetch(), onError: (reason) => setNotice(getApiMessage(reason)) });
 
   return (
-    <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
+    <div className="grid w-full min-w-0 gap-5">
       <PageHeader title="工单管理" description={`待接单优先展示${query.data ? ` · ${query.data.unreadCount} 条未读` : ""}`} />
       {notice ? <Banner variant="default" title="工单提醒" description={notice} /> : null}
       <LayerCard className="grid gap-5 px-4 py-3 sm:grid-cols-3">
@@ -145,16 +148,14 @@ function NoteEditDialog({ ticketId, noteId, initialContent, onDone, onError }: {
 
 export function AdminTicketDetail() {
   const { id = "" } = useParams();
+  const { content, richContent, attachments, quote, setContent, setRichContent, setAttachments, setQuote } = useTicketDraft("admin", id);
   const queryClient = useQueryClient();
   const queryKey = ["tickets", "admin", id] as const;
   const query = useQuery({ queryKey, queryFn: () => adminTicketApi.detail(id), enabled: Boolean(id) });
   const prereplies = useQuery({ queryKey: ["tickets", "admin", "prereplies"], queryFn: adminTicketApi.prereplies });
   const [tab, setTab] = useState("conversation");
-  const [content, setContent] = useState("");
-  const [internalNote, setInternalNote] = useState("");
+  const [customerOpen, setCustomerOpen] = useState(false);
   const [noteContent, setNoteContent] = useState("");
-  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
-  const [quote, setQuote] = useState<TicketReply>();
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -175,28 +176,30 @@ export function AdminTicketDetail() {
   }, (query.data?.pollIntervalSeconds ?? 30) * 1000, query.isSuccess);
 
   const refresh = () => { void query.refetch(); void queryClient.invalidateQueries({ queryKey: ["tickets", "admin"] }); };
-  const reply = useMutation({ mutationFn: () => adminTicketApi.reply(id, { content: content.trim(), attachments, quoteReplyId: quote?.id, note: internalNote.trim() || undefined }), onSuccess: (created) => { queryClient.setQueryData<TicketDetail>(queryKey, (current) => current ? { ...current, ticket: { ...current.ticket, status: adminRepliedStatus, lastReplyId: created.id, lastReplyTime: created.createdAt }, replies: [...current.replies, created] } : current); setContent(""); setInternalNote(""); setAttachments([]); setQuote(undefined); refresh(); }, onError: (reason) => setNotice(getApiMessage(reason)) });
+  const reply = useMutation({ mutationFn: () => adminTicketApi.reply(id, { content: content.trim(), richContent, attachments, quoteReplyId: quote?.id }), onSuccess: (created) => { setNotice(null); queryClient.setQueryData<TicketDetail>(queryKey, (current) => current ? { ...current, ticket: { ...current.ticket, status: adminRepliedStatus, lastReplyId: created.id, lastReplyTime: created.createdAt }, replies: [...current.replies, created] } : current); setContent(""); setRichContent(undefined); setAttachments([]); setQuote(undefined); refresh(); }, onError: (reason) => setNotice(getApiMessage(reason)) });
   const action = useMutation({ mutationFn: async (kind: "receive" | "resolve" | "close") => { if (kind === "receive") await adminTicketApi.receive(id); else if (kind === "resolve") await adminTicketApi.resolve(id); else await adminTicketApi.close(id); }, onSuccess: refresh, onError: (reason) => setNotice(getApiMessage(reason)) });
   const addNote = useMutation({ mutationFn: () => adminTicketApi.addNote(id, noteContent), onSuccess: () => { setNoteContent(""); refresh(); }, onError: (reason) => setNotice(getApiMessage(reason)) });
   const deleteNote = useMutation({ mutationFn: (noteId: string) => adminTicketApi.deleteNote(id, noteId), onSuccess: refresh, onError: (reason) => setNotice(getApiMessage(reason)) });
   const upload = async (files: File[]) => { setUploading(true); try { const uploaded = await adminTicketApi.upload(files); setAttachments((value) => [...value, ...uploaded].slice(0, 5)); } catch (reason) { setNotice(getApiMessage(reason)); } finally { setUploading(false); } };
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[700px]">
+    <TicketViewport>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {query.data ? (
-        <div className="grid min-w-0 gap-5">
-          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.clientName || query.data.ticket.clientId}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href={adminPath('/admin/tickets')} variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
+        <div className="flex min-h-0 min-w-0 flex-col gap-3 xl:h-full">
+          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href={adminPath('/admin/tickets')} variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
           <div className="flex flex-wrap gap-2"><Button variant="secondary" icon={<HandPalmIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("receive")}>接单</Button><Button variant="secondary" icon={<CheckCircleIcon />} disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("resolve")}>已解决</Button>{query.data.ticket.status.id === "4" ? <ReopenDialog ticketId={id} updatedAt={query.data.ticket.updatedAt} onDone={refresh} onError={setNotice} /> : <ForwardDialog ticketId={id} onDone={refresh} onError={setNotice} />}<Button variant="secondary-destructive" disabled={query.data.ticket.status.id === "4"} loading={action.isPending} onClick={() => action.mutate("close")}>关闭</Button></div>
-          <LayerCard className="px-4 py-3 sm:px-4 py-3"><dl className="grid gap-5 sm:grid-cols-2"><div><dt className="text-base text-kumo-subtle">工单类型</dt><dd>{query.data.ticket.typeName}</dd></div><div><dt className="text-base text-kumo-subtle">关联产品</dt><dd>{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-base text-kumo-subtle">负责人</dt><dd>{query.data.ticket.adminName || "未接单"}</dd></div><div><dt className="text-base text-kumo-subtle">最后回复</dt><dd>{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
+          <Button variant="secondary" className="xl:hidden" aria-expanded={customerOpen} onClick={() => setCustomerOpen(!customerOpen)}>{customerOpen ? "收起客户资料" : "查看客户资料"}</Button>
+          <div className="grid min-h-0 min-w-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]"><div className="grid min-h-0 min-w-0 gap-3 xl:grid-rows-[auto_minmax(0,1fr)]">
           <Tabs variant="underline" tabs={[{ value: "conversation", label: "对话" }, { value: "notes", label: `内部备注 (${query.data.notes?.length ?? 0})` }, { value: "logs", label: `操作日志 (${query.data.logs?.length ?? 0})` }]} value={tab} onValueChange={setTab} />
-          {tab === "conversation" ? <><TicketConversation replies={query.data.replies} perspective="Admin" onQuote={setQuote} /><ReplyComposer content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}><Select value="none" renderValue={() => "选择预设回复"} onValueChange={(value) => { const selected = prereplies.data?.find((item) => item.id === value); if (selected) setContent(selected.content); }} label="预设回复" hideLabel={false}><Select.Option value="none">选择预设回复</Select.Option>{(prereplies.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.content.slice(0, 30)}</Select.Option>)}</Select><Textarea label="随回复添加内部备注（可选）" rows={3} value={internalNote} onChange={(event) => setInternalNote(event.target.value)} /><AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} /></ReplyComposer></> : null}
-          {tab === "notes" ? <LayerCard className="grid gap-5 px-4 py-3 sm:px-4 py-3"><Textarea label="新增内部备注" rows={4} value={noteContent} onChange={(event) => setNoteContent(event.target.value)} /><div><Button icon={<PlusIcon />} loading={addNote.isPending} disabled={!noteContent.trim()} onClick={() => addNote.mutate()}>添加备注</Button></div><ul className="divide-y divide-kumo-line">{(query.data.notes ?? []).map((note) => <li key={note.id} className="flex items-start gap-3 py-3"><div className="min-w-0 flex-1"><p className="whitespace-pre-wrap text-kumo-default">{note.content}</p><span className="text-base text-kumo-subtle">管理员 {note.adminId} · {new Date(note.createdAt).toLocaleString("zh-CN")}</span></div><div className="flex gap-1"><NoteEditDialog ticketId={id} noteId={note.id} initialContent={note.content} onDone={refresh} onError={setNotice} /><Button variant="ghost" shape="square" size="sm" icon={<TrashIcon />} title="删除备注" aria-label="删除备注" loading={deleteNote.isPending} onClick={() => deleteNote.mutate(note.id)} /></div></li>)}</ul></LayerCard> : null}
-          {tab === "logs" ? <LayerCard className="overflow-x-auto p-0"><Table><Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>说明</Table.Head><Table.Head>操作者</Table.Head></Table.Row></Table.Header><Table.Body>{(query.data.logs ?? []).map((log) => <Table.Row key={log.id}><Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{log.action}</Table.Cell><Table.Cell>{log.detail}</Table.Cell><Table.Cell>{log.actorType} {log.actorId}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard> : null}
+          {<div hidden={tab !== "conversation"} className={`${tab === "conversation" ? "grid" : "hidden"} min-h-0 gap-3 xl:grid-rows-[minmax(0,1fr)_minmax(0,0.8fr)]`}><div className="min-h-0" data-ticket-pane="messages"><TicketConversation key={id} fill replies={query.data.replies} perspective="Admin" onQuote={setQuote} /></div><div className="min-h-0" data-ticket-pane="composer"><ReplyComposer actions={<AttachmentPicker compact value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />} richContent={richContent} onRichContentChange={setRichContent} attachments={attachments} onUploaded={(rows) => setAttachments(current => [...current, ...rows])} onUploadingChange={setUploading} perspective="Admin" content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply || uploading} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}><Select value="none" renderValue={() => "选择预设回复"} onValueChange={(value) => { const selected = prereplies.data?.find((item) => item.id === value); if (selected) { setContent(selected.content); setRichContent(undefined); } }} label="预设回复" hideLabel><Select.Option value="none">选择预设回复</Select.Option>{(prereplies.data ?? []).map((item) => <Select.Option key={item.id} value={item.id}>{item.content.slice(0, 30)}</Select.Option>)}</Select></ReplyComposer></div></div>}
+          {tab === "notes" ? <LayerCard className="grid min-h-0 content-start gap-5 overflow-y-auto px-4 py-3"><Textarea label="新增内部备注" rows={4} value={noteContent} onChange={(event) => setNoteContent(event.target.value)} /><div><Button icon={<PlusIcon />} loading={addNote.isPending} disabled={!noteContent.trim()} onClick={() => addNote.mutate()}>添加备注</Button></div><ul className="divide-y divide-kumo-line">{(query.data.notes ?? []).map((note) => <li key={note.id} className="flex items-start gap-3 py-3"><div className="min-w-0 flex-1"><p className="whitespace-pre-wrap text-kumo-default">{note.content}</p><span className="text-sm text-kumo-subtle">管理员 {note.adminId} · {new Date(note.createdAt).toLocaleString("zh-CN")}</span></div><div className="flex gap-1"><NoteEditDialog ticketId={id} noteId={note.id} initialContent={note.content} onDone={refresh} onError={setNotice} /><Button variant="ghost" shape="square" size="sm" icon={<TrashIcon />} title="删除备注" aria-label="删除备注" loading={deleteNote.isPending} onClick={() => deleteNote.mutate(note.id)} /></div></li>)}</ul></LayerCard> : null}
+          {tab === "logs" ? <LayerCard className="min-h-0 overflow-auto p-0"><Table><Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>说明</Table.Head><Table.Head>操作者</Table.Head></Table.Row></Table.Header><Table.Body>{(query.data.logs ?? []).map((log) => <Table.Row key={log.id}><Table.Cell>{new Date(log.createdAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{log.action}</Table.Cell><Table.Cell>{log.detail}</Table.Cell><Table.Cell>{log.actorType} {log.actorId}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard> : null}
+          </div><div className="order-first min-h-0 xl:order-last"><div data-ticket-pane="customer" className={`${customerOpen ? "block" : "hidden"} min-h-0 xl:block xl:h-full`}><TicketCustomerSidebar key={query.data.ticket.clientId + id} ticket={query.data.ticket} /></div></div></div>
         </div>
       ) : null}
     </PageState>
-    </div>
+    </TicketViewport>
   );
 }

@@ -1,3 +1,4 @@
+import type { RichDocument } from "../components/editor/document";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { adminRequest, type ApiEnvelope, userRequest } from "./request";
 
@@ -27,6 +28,7 @@ export interface TicketType {
 }
 
 export interface TicketReply {
+  richContent?: RichDocument;
   id: string;
   type: "Client" | "Admin";
   relId: string;
@@ -120,6 +122,7 @@ export interface TicketAdmin {
 }
 
 export interface TicketCreateInput {
+  richContent?: RichDocument;
   title: string;
   ticketTypeId: string;
   content: string;
@@ -128,6 +131,7 @@ export interface TicketCreateInput {
 }
 
 export interface TicketReplyInput {
+  richContent?: RichDocument;
   content: string;
   attachments: TicketAttachment[];
   quoteReplyId?: string;

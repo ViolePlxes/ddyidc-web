@@ -1,0 +1,7 @@
+import { useLayoutEffect,useRef,useState,type ReactNode,type CSSProperties } from 'react';
+/** Size the ticket workspace to the remaining dashboard viewport, not the document. */
+export function TicketViewport({children,allSizes=false}:{children:ReactNode;allSizes?:boolean}){
+ const ref=useRef<HTMLDivElement>(null);const [height,setHeight]=useState(640);
+ useLayoutEffect(()=>{const measure=()=>{const el=ref.current;if(!el)return;const top=el.getBoundingClientRect().top+window.scrollY;const main=el.closest("main");const bottom=main?parseFloat(getComputedStyle(main).paddingBottom)||16:16;setHeight(Math.max(320,(window.visualViewport?.height||innerHeight)-top-bottom));};measure();window.addEventListener('resize',measure);window.visualViewport?.addEventListener('resize',measure);const observer=new ResizeObserver(measure);if(ref.current?.parentElement)observer.observe(ref.current.parentElement);return()=>{window.removeEventListener('resize',measure);window.visualViewport?.removeEventListener('resize',measure);observer.disconnect();};},[]);
+ return <div ref={ref} style={{'--ticket-height':`${height}px`} as CSSProperties} className={`min-h-0 min-w-0 w-full ${allSizes ? "h-(--ticket-height) [&>[data-content-fade]]:h-full [&>[data-content-fade]]:min-h-0" : "xl:h-(--ticket-height) xl:[&>[data-content-fade]]:h-full xl:[&>[data-content-fade]]:min-h-0"}`} data-ticket-workspace>{children}</div>;
+}

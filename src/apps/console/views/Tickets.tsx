@@ -1,5 +1,9 @@
+import { useTicketDraft } from "../../../shared/components/tickets/useTicketDraft";
+import { TicketViewport } from "../../../shared/components/tickets/TicketViewport";
+import { TicketReplyEditor } from "../../../shared/components/tickets/TicketReplyEditor";
+import type { RichDocument } from "../../../shared/components/editor/document";
 import { Pagination } from "../../../shared/components/Pagination";
-import { Banner, Button, Input, LayerCard, LinkButton,  Select, Table, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, LinkButton,  Select, Table } from "@cloudflare/kumo";
 import { ArrowLeftIcon, ArrowRightIcon, BellRingingIcon, PlusIcon, TicketIcon, CreditCardIcon, ChatCircleIcon, InfoIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -10,7 +14,6 @@ import {
   type TicketAttachment,
   type TicketDetail,
   type TicketListResult,
-  type TicketReply,
   type TicketStatus,
 } from "../../../shared/api/tickets";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -65,7 +68,7 @@ export function TicketList() {
   }, (query.data?.pollIntervalSeconds ?? 30) * 1000, query.isSuccess);
 
   return (
-    <div className="mx-auto grid w-full min-w-0 max-w-[700px] gap-5">
+    <div className="grid w-full min-w-0 gap-5">
       <PageHeader
         title="工单中心"
         description={`查看处理进度与客服回复${query.data ? ` · ${query.data.unreadCount} 条未读` : ""}`}
@@ -118,6 +121,7 @@ export function TicketCreate() {
   const [choosingType, setChoosingType] = useState(true);
   const [hostId, setHostId] = useState("none");
   const [content, setContent] = useState("");
+  const [richContent, setRichContent] = useState<RichDocument>();
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +136,7 @@ export function TicketCreate() {
   const submit = () => {
     setError(null);
     if (!typeId || !title.trim() || !content.trim()) { setError("请完整填写工单类型、标题和正文。"); return; }
-    create.mutate({ title: title.trim(), ticketTypeId: typeId, content: content.trim(), attachments, hostId: hostId === "none" ? undefined : hostId });
+    create.mutate({ title: title.trim(), ticketTypeId: typeId, content: content.trim(), richContent, attachments, hostId: hostId === "none" ? undefined : hostId });
   };
 
   return (
@@ -159,7 +163,7 @@ export function TicketCreate() {
           <Select.Option value="none">不关联产品</Select.Option>
           {(products.data ?? []).map((item) => <Select.Option key={item.id} value={item.id} disabled={!item.canReply}>{item.name}{item.canReply ? "" : "（已到期）"}</Select.Option>)}
         </Select>
-        <Textarea className="h-[200px] w-full" label="问题描述" rows={9} value={content} maxLength={20000} onChange={(event) => setContent(event.target.value)} />
+        <TicketReplyEditor label="问题描述" text={content} value={richContent} disabled={uploading || create.isPending} attachments={attachments} onUploaded={rows => setAttachments(current => [...current, ...rows])} onUploadingChange={setUploading} onChange={(text, doc) => { setContent(text); setRichContent(doc); }} />
         <AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />
       </div>
         <div className="flex items-center justify-between gap-3 border-t border-kumo-line px-4 py-3"><Button variant="ghost" icon={<ArrowLeftIcon />} onClick={() => setChoosingType(true)}>返回</Button><Button icon={<PlusIcon />} loading={create.isPending} disabled={uploading} onClick={submit}>提交工单</Button></div>
@@ -170,12 +174,10 @@ export function TicketCreate() {
 
 export function TicketDetailPage() {
   const { id = "" } = useParams();
+  const { content, richContent, attachments, quote, setContent, setRichContent, setAttachments, setQuote } = useTicketDraft("user", id);
   const queryClient = useQueryClient();
   const queryKey = ["tickets", "user", id] as const;
   const query = useQuery({ queryKey, queryFn: () => userTicketApi.detail(id), enabled: Boolean(id) });
-  const [content, setContent] = useState("");
-  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
-  const [quote, setQuote] = useState<TicketReply>();
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const lastReplyId = query.data?.ticket.lastReplyId ?? "0";
@@ -195,10 +197,11 @@ export function TicketDetailPage() {
   }, (query.data?.pollIntervalSeconds ?? 30) * 1000, query.isSuccess);
 
   const reply = useMutation({
-    mutationFn: () => userTicketApi.reply(id, { content: content.trim(), attachments, quoteReplyId: quote?.id }),
+    mutationFn: () => userTicketApi.reply(id, { content: content.trim(), richContent, attachments, quoteReplyId: quote?.id }),
     onSuccess: (created) => {
+      setNotice(null);
       queryClient.setQueryData<TicketDetail>(queryKey, (current) => current ? { ...current, ticket: { ...current.ticket, status: userRepliedStatus, lastReplyId: created.id, lastReplyTime: created.createdAt }, replies: [...current.replies, created] } : current);
-      setContent(""); setAttachments([]); setQuote(undefined);
+      setContent(""); setRichContent(undefined); setAttachments([]); setQuote(undefined);
       void queryClient.invalidateQueries({ queryKey: ["tickets", "user"] });
     },
     onError: (reason) => setNotice(getApiMessage(reason)),
@@ -207,25 +210,22 @@ export function TicketDetailPage() {
   const upload = async (files: File[]) => { setUploading(true); try { const uploaded = await userTicketApi.upload(files); setAttachments((value) => [...value, ...uploaded].slice(0, 5)); } catch (reason) { setNotice(getApiMessage(reason)); } finally { setUploading(false); } };
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[700px]">
+    <TicketViewport allSizes>
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null}>
       {query.data ? (
-        <div className="grid min-w-0 gap-5">
-          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton></>} />
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
+          <PageHeader title={query.data.ticket.title} description={`${query.data.ticket.ticketNum} · ${query.data.ticket.typeName}`} actions={<><TicketStatusBadge status={query.data.ticket.status} /><LinkButton href="/console/tickets" variant="secondary" icon={<ArrowLeftIcon />}>返回列表</LinkButton>
+<Button variant="secondary" icon={<BellRingingIcon />} disabled={!query.data.canUrge} loading={action.isPending} onClick={() => action.mutate("urge")}>催单</Button><Button variant="secondary-destructive" disabled={!query.data.canClose} loading={action.isPending} onClick={() => action.mutate("close")}>关闭工单</Button></>} />
           {notice ? <Banner variant="default" title="工单更新" description={notice} /> : null}
-          <LayerCard className=" px-5 py-4 sm:px-6 py-5"><dl className="grid gap-3 sm:grid-cols-3"><div><dt className="text-base text-kumo-subtle">关联产品</dt><dd className="text-kumo-strong">{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-base text-kumo-subtle">负责人</dt><dd className="text-kumo-strong">{query.data.ticket.adminName || "等待接单"}</dd></div><div><dt className="text-base text-kumo-subtle">最后回复</dt><dd className="text-kumo-strong">{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
-          <TicketConversation replies={query.data.replies} perspective="Client" onQuote={setQuote} />
-          <ReplyComposer content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}>
-            <AttachmentPicker value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />
-          </ReplyComposer>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="secondary" icon={<BellRingingIcon />} disabled={!query.data.canUrge} loading={action.isPending} onClick={() => action.mutate("urge")}>催单</Button>
-            <Button variant="secondary-destructive" disabled={!query.data.canClose} loading={action.isPending} onClick={() => action.mutate("close")}>关闭工单</Button>
-          </div>
+          <LayerCard className="shrink-0 px-4 py-3"><dl className="grid grid-cols-3 gap-3"><div><dt className="text-sm text-kumo-subtle">关联产品</dt><dd className="break-words text-kumo-strong">{query.data.ticket.hostName || "未关联"}</dd></div><div><dt className="text-sm text-kumo-subtle">负责人</dt><dd className="break-words text-kumo-strong">{query.data.ticket.adminName || "等待接单"}</dd></div><div><dt className="text-sm text-kumo-subtle">最后回复</dt><dd className="break-words text-kumo-strong">{new Date(query.data.ticket.lastReplyTime).toLocaleString("zh-CN")}</dd></div></dl></LayerCard>
+          <div className="grid min-h-0 flex-1 gap-3 grid-rows-[minmax(0,1fr)_18rem]"><div className="min-h-0" data-ticket-pane="user-messages"><TicketConversation key={id} fill="viewport" replies={query.data.replies} perspective="Client" onQuote={setQuote} /></div><div className="min-h-0" data-ticket-pane="user-composer">
+          <ReplyComposer fillEditor="viewport" actions={<AttachmentPicker compact value={attachments} loading={uploading} onUpload={upload} onChange={setAttachments} />} richContent={richContent} onRichContentChange={setRichContent} attachments={attachments} onUploaded={(rows) => setAttachments(current => [...current, ...rows])} onUploadingChange={setUploading} perspective="Client" content={content} quote={quote} submitting={reply.isPending} disabled={!query.data.canReply || uploading} onContentChange={setContent} onClearQuote={() => setQuote(undefined)} onSubmit={() => reply.mutate()}>
+
+          </ReplyComposer></div></div>
           <span className="sr-only">当前最后回复 ID：{lastReplyId}</span>
         </div>
       ) : null}
     </PageState>
-    </div>
+    </TicketViewport>
   );
 }
