@@ -9,7 +9,7 @@ export function instanceManagementApi(id:string,customerId?:string){
  return {
   status:(signal?:AbortSignal)=>unwrap<LiveInstanceStatus>(client.get(`${path}/status`,{timeout:30000,signal})),
   remark:(remark:string)=>unwrap(client.put(`${path}/remark`,{remark})),
-  edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string})=>unwrap(client.patch(path,data,{timeout:65000})),
+  edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string;productOnly?:boolean})=>unwrap(client.patch(path,data,{timeout:65000})),
   credentials:()=>unwrap<{username:string;password:string;port:string;portIsDefault?:boolean}>(client.post(`${path}/credentials`,{}, {timeout:65000})),
   options:()=>unwrap<{items:RenewalOption[];currentCycle?:string}>(client.get(`${path}/renewal-options`,{timeout:65000})),
   renew:(cycle:string)=>unwrap<RenewalOrder>(client.post(`${path}/renewals`,{cycle},{timeout:65000})),
