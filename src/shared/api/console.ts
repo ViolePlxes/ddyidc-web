@@ -50,6 +50,8 @@ export interface ProductSpec {
 }
 
 export interface ConfigOptionValue {
+  children?: ConfigOptionValue[];
+  priceKnown?: boolean;
   id: string;
   name: string;
   price: number;
@@ -59,6 +61,8 @@ export interface ConfigOptionValue {
 }
 
 export interface ConfigOption {
+  sourceType?: string;
+  visibleWhen?: Array<{optionId: string; values: string[]}>;
   id: string;
   name: string;
   field: string;
@@ -98,7 +102,9 @@ export interface ProductDetail extends CatalogProduct {
   configurable: boolean;
 }
 
+export interface ProductCustomField {id: string; name: string; type: string; required: boolean; choices?: string[]; validation?: string}
 export interface OrderPage {
+  customFields?: ProductCustomField[];
   product: {
     id: string;
     name: string;
@@ -130,7 +136,16 @@ export interface OrderConfigSnapshot {
   passwordMasked?: string;
 }
 
+export interface ProductQuoteInput {localProductId: string; cycle: string; quantity: number; configOptions: Record<string,string>; customFields?: Record<string,string>}
+export interface ProductQuote {token: string; total: string; unit: string; renewal: string; setup: string; currency: string; expiresAt: number; cycle: string; quantity: number}
+
 export interface OrderDraft {
+  requestId?: string;
+  customFields?: Record<string,string>;
+  customFieldSchema?: ProductCustomField[];
+  quoteToken?: string;
+  quoteExpiresAt?: number;
+  requiresQuote?: boolean;
   productId: string;
   productName: string;
   configMode: ProductDetail["configMode"];
@@ -454,7 +469,11 @@ export const consoleApi = {
     ),
   order: (id: string) =>
     unwrap(userRequest.get<ApiEnvelope<Order>>(`/orders/${id}`)),
+  productQuote: (input: ProductQuoteInput, signal?: AbortSignal) => unwrap(userRequest.post<ApiEnvelope<ProductQuote>>("/upstream/quote", input, {signal, timeout:45000})),
   createOrder: (input: {
+    requestId?: string;
+    quoteToken?: string;
+    customFields?: Record<string,string>;
     productId: string;
     specId?: string;
     durationMonth: number;

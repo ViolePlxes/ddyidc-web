@@ -4,14 +4,14 @@ import { PencilSimpleIcon, PlusIcon, PlugsConnectedIcon, TrashIcon, XIcon } from
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getApiMessage } from "../../../shared/api/request";
-import { upstreamAdminApi, type SupplierInput, type UpstreamSupplier } from "../../../shared/api/upstreamAdmin";
+import { adapterModulesApi, upstreamAdminApi, type SupplierInput, type UpstreamSupplier } from "../../../shared/api/upstreamAdmin";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 
 function supplierInput(supplier?: UpstreamSupplier): SupplierInput {
   return {
     name: supplier?.name ?? "",
-    type: supplier?.type === "zjmf" || supplier?.type === "default" ? supplier.type : "finance",
+    type: supplier?.type ?? "finance",
     url: supplier?.url ?? "",
     username: supplier?.username ?? "",
     token: "",
@@ -26,6 +26,12 @@ function supplierInput(supplier?: UpstreamSupplier): SupplierInput {
 function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; onClose: () => void }) {
   const client = useQueryClient();
   const [form, setForm] = useState(() => supplierInput(supplier));
+  const modules=useQuery({queryKey:["admin","adapter-module-options"],queryFn:adapterModulesApi.options});
+  const available=modules.data?.filter(m=>m.capabilities.purchase==="implemented")??[];
+  const systemTypes=Object.fromEntries(available.flatMap(m=>m.variants.map(v=>[v,`${m.name} / ${v}`])));
+  if(supplier&&!systemTypes[supplier.type])systemTypes[supplier.type]=`${supplier.type}（保留原协议）`;
+
+  const credentialFields=(modules.data?.find(module=>module.variants.includes(form.type))?.configFields??[]).filter(field=>["username","token","secret"].includes(field.name));
   const save = useMutation({
     mutationFn: () => supplier
       ? upstreamAdminApi.updateSupplier(supplier.id, form)
@@ -35,7 +41,7 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
       onClose();
     },
   });
-  const invalid = !form.name.trim() || !form.url.trim() || !form.username.trim() || (!supplier && !form.token.trim()) || form.rate <= 0;
+  const invalid = !form.name.trim() || !form.url.trim() || (!supplier && credentialFields.some(field=>field.required&&!form[field.name as "username"|"token"|"secret"].trim())) || form.rate <= 0;
   const update = <K extends keyof SupplierInput>(key: K, value: SupplierInput[K]) => setForm((current) => ({ ...current, [key]: value }));
 
   return (
@@ -50,20 +56,19 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="供应商名称" required value={form.name} onChange={(event) => update("name", event.target.value)} />
-          <Select label="系统类型" value={form.type} onValueChange={(value) => value && update("type", value as SupplierInput["type"])} items={{ finance: "魔方财务系统", zjmf: "智简魔方 V10", default: "兼容类型（历史）" }} />
+          <Select disabled={Boolean(supplier)||modules.isPending||Boolean(modules.error)} label="系统类型" value={form.type} onValueChange={(value) => value && update("type", value as SupplierInput["type"])} items={systemTypes} />
           <Input className="sm:col-span-2" label="接口地址" required placeholder="https://provider.example.com" value={form.url} onChange={(event) => update("url", event.target.value)} description="保存时自动移除末尾斜杠" />
-          <Input label="接口账号" required value={form.username} onChange={(event) => update("username", event.target.value)} />
-          <Input label={supplier ? "接口 Token（留空不修改）" : "接口 Token"} required={!supplier} type="password" autoComplete="new-password" value={form.token} onChange={(event) => update("token", event.target.value)} />
-          <Input label={supplier ? "接口 Secret（留空不修改）" : "接口 Secret（按供应商要求）"} type="password" autoComplete="new-password" value={form.secret} onChange={(event) => update("secret", event.target.value)} />
+          {credentialFields.map(field=>{const name=field.name as "username"|"token"|"secret";return <Input key={name} label={`${field.label}${supplier&&field.secret?"（留空不修改）":""}`} required={!supplier&&field.required} type={field.secret?"password":"text"} autoComplete={field.secret?"new-password":"off"} value={form[name]} onChange={event=>update(name,event.target.value)}/>;})}
           <Input label="汇率" type="number" min={0.0001} step="0.0001" value={form.rate} onChange={(event) => update("rate", Number(event.target.value))} />
           <Input label="币种" value={form.currencyCode} onChange={(event) => update("currencyCode", event.target.value.toUpperCase())} />
           <Input className="sm:col-span-2" label="备注" value={form.remark} onChange={(event) => update("remark", event.target.value)} />
           <Switch className="sm:col-span-2" label="启用供应商" checked={form.status === 1} onCheckedChange={(checked) => update("status", checked ? 1 : 2)} />
         </div>
+        {modules.error ? <Banner variant="error" title="无法读取对接能力" description={getApiMessage(modules.error)}/> : null}
         {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>取消</Button>
-          <Button loading={save.isPending} disabled={invalid} onClick={() => save.mutate()}>保存供应商</Button>
+          <Button loading={save.isPending} disabled={invalid||modules.isPending||Boolean(modules.error)} onClick={() => save.mutate()}>保存供应商</Button>
         </div>
       </Dialog>
     </Dialog.Root>
@@ -73,6 +78,7 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
 export function UpstreamSuppliers() {
   const client = useQueryClient();
   const query = useQuery({ queryKey: ["admin", "upstream-suppliers"], queryFn: upstreamAdminApi.suppliers });
+  const moduleOptions = useQuery({queryKey:["admin","adapter-module-options"],queryFn:adapterModulesApi.options});
   const [editing, setEditing] = useState<UpstreamSupplier | "new" | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UpstreamSupplier | null>(null);
   const [message, setMessage] = useState("");
@@ -108,9 +114,9 @@ export function UpstreamSuppliers() {
             <Table.Body>
               {suppliers.map((supplier) => (
                 <Table.Row key={supplier.id}>
-                  <Table.Cell><div className="grid"><strong className="text-kumo-strong font-medium">{supplier.name}</strong><span className="text-base text-kumo-subtle">#{supplier.id} · {supplier.remark || "无备注"}</span></div></Table.Cell>
-                  <Table.Cell>{supplier.type === "zjmf" ? "智简魔方 V10" : supplier.type === "finance" ? "魔方财务系统" : "兼容类型（历史）"}</Table.Cell>
-                  <Table.Cell><div className="grid"><span>{supplier.url}</span><span className="text-base text-kumo-subtle">{supplier.username}</span></div></Table.Cell>
+                  <Table.Cell><div className="grid"><strong className="text-kumo-strong font-medium">{supplier.name}</strong><span className="text-sm text-kumo-subtle">#{supplier.id} · {supplier.remark || "无备注"}</span></div></Table.Cell>
+                  <Table.Cell>{moduleOptions.data?.find(module=>module.variants.includes(supplier.type))?.name ?? supplier.type} / {supplier.type}</Table.Cell>
+                  <Table.Cell><div className="grid"><span>{supplier.url}</span><span className="text-sm text-kumo-subtle">{supplier.username}</span></div></Table.Cell>
                   <Table.Cell>{supplier.rate.toFixed(4)} {supplier.currencyCode || "CNY"}</Table.Cell>
                   <Table.Cell><Switch label={`启用 ${supplier.name}`} checked={supplier.status === 1} disabled={updateStatus.isPending} onCheckedChange={(checked) => updateStatus.mutate({ supplier, status: checked ? 1 : 2 })} /></Table.Cell>
                   <Table.Cell><div className="flex flex-wrap gap-2">

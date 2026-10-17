@@ -17,7 +17,7 @@ export interface UpstreamSupplier {
 
 export interface SupplierInput {
   name: string;
-  type: "finance" | "zjmf" | "default";
+  type: string;
   url: string;
   username: string;
   token: string;
@@ -68,4 +68,16 @@ export const upstreamAdminApi = {
   testSupplier: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ status: string }>>(`/upstream/suppliers/${id}/test`)),
   orders: (params: { page: number; pageSize: number; keyword?: string; status?: string }) =>
     unwrap(adminRequest.get<ApiEnvelope<UpstreamOrderResult>>("/upstream/orders", { params })),
+};
+
+export interface AdapterModule {
+ configFields?: Array<{name:string;label:string;secret:boolean;required:boolean}>;
+ id: string; name: string; version: string; contractVersion: number; variants: string[];
+ capabilities: Record<string,string>; description: string; status: "enabled"|"sales_stopped"|"disabled";
+ revision: number; suppliers: number; products: number; hosts: number; pendingOrders: number; uninstallable: boolean;
+}
+export const adapterModulesApi = {
+ options: () => unwrap(adminRequest.get<ApiEnvelope<AdapterModule[]>>("/upstream/module-options")),
+ list: () => unwrap(adminRequest.get<ApiEnvelope<AdapterModule[]>>("/upstream/modules")),
+ update: (id: string, status: AdapterModule["status"], revision: number, notes: string) => unwrap(adminRequest.put<ApiEnvelope<{updated:boolean}>>(`/upstream/modules/${id}`,{status,revision,notes})),
 };
