@@ -1,7 +1,7 @@
 import { useCertificationGate } from "../../../shared/components/CertificationGate";
 import { Banner, Button, LayerCard, LinkButton, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckoutPoints } from "../points/CheckoutPoints";
 import { useNavigate } from "react-router-dom";
 import { consoleApi, type Order } from "../../../shared/api/console";
@@ -11,6 +11,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
 import { clearOrderDraft, loadOrderDraft, saveOrderDraft } from "../../../shared/utils/orderDraft";
+import { ProductCustomFields } from "../../../shared/components/ProductCustomFields";
 import { InstancePasswordInput } from "../../../shared/components/InstancePasswordInput";
 import { instancePasswordIssues } from "../../../shared/utils/instancePassword";
 
@@ -28,11 +29,24 @@ export function OrderConfirm() {
     queryFn: () => consoleApi.usableCoupons(Math.round((draft?.totalYuan ?? 0) * 100)),
     enabled: Boolean(draft),
   });
+  const quoteInput=draft?{localProductId:draft.productId,cycle:draft.billingCycle,quantity:draft.quantity,customFields:draft.customFields??{},configOptions:Object.fromEntries(draft.configOptions.map(o=>[o.id,o.value]))}:null;
+  const quoteQuery=useQuery({queryKey:["confirm-product-quote",quoteInput],queryFn:({signal})=>consoleApi.productQuote(quoteInput!,signal),enabled:Boolean(draft?.requiresQuote)&&!createdOrder,retry:false,refetchOnWindowFocus:false,refetchOnReconnect:false});
+  const [quoteExpired,setQuoteExpired]=useState(false);
+  useEffect(()=>{setQuoteExpired(false);if(!quoteQuery.data)return;const timer=window.setTimeout(()=>setQuoteExpired(true),Math.max(0,quoteQuery.data.expiresAt*1000-Date.now()));return ()=>window.clearTimeout(timer);},[quoteQuery.data]);
+  const needsQuote=Boolean(draft?.requiresQuote);
+  const quoteChanged=needsQuote&&quoteQuery.data&&Number(quoteQuery.data.total)!==draft?.totalYuan;
+  const quoteBlocked=needsQuote&&(quoteExpired||!quoteQuery.data||quoteQuery.isFetching||Boolean(quoteQuery.error)||Boolean(quoteChanged));
   const create = useMutation({
     mutationFn: async () => {
       if (!draft) throw new Error("订单配置已失效，请重新选择商品");
       if (passwordIssues.length) throw new Error(passwordIssues.join("；"));
+      if (quoteBlocked) throw new Error("请先确认当前商品报价");
+      const requestId = draft.requestId ?? crypto.randomUUID();
+      if (!draft.requestId) { const next = {...draft, requestId}; saveOrderDraft(next); setDraft(next); }
       return consoleApi.createOrder({
+        requestId,
+        quoteToken: quoteQuery.data?.token ?? draft.quoteToken,
+        customFields:draft.customFields,
         productId: draft.productId,
         specId: draft.selectedSpec?.id,
         durationMonth: draft.durationMonth,
@@ -101,6 +115,11 @@ export function OrderConfirm() {
   return (
     <>
       {certification.feedback}<PageHeader title="确认订单" description="提交前请核对真实商品配置与计费周期。" />
+      {draft.customFieldSchema?.length ? <LayerCard className="px-5 py-4"><ProductCustomFields fields={draft.customFieldSchema} values={draft.customFields??{}} onChange={values=>{const next={...draft,customFields:values};setDraft(next);saveOrderDraft(next);}}/></LayerCard>:null}
+      {needsQuote && quoteQuery.error ? <Banner variant="error" title="无法确认商品报价" description={getApiMessage(quoteQuery.error)} /> : null}
+      {quoteChanged ? <LayerCard className="grid gap-3 px-5 py-4"><Banner title="商品报价已变化" description={`当前总价 ¥${quoteQuery.data!.total}，请确认后继续。`}/><Button onClick={()=>{const next={...draft,totalYuan:Number(quoteQuery.data!.total),unitPriceYuan:Number(quoteQuery.data!.unit),quoteToken:quoteQuery.data!.token};setDraft(next);saveOrderDraft(next);}}>接受当前报价</Button></LayerCard>:null}
+      {needsQuote && quoteExpired ? <Banner title="报价已过期" description="请更新报价后重新确认。"/>:null}
+      {needsQuote ? <Button variant="secondary" loading={quoteQuery.isFetching} onClick={()=>void quoteQuery.refetch()}>更新报价</Button>:null}
       <PageState loading={coupons.isLoading} error={coupons.error ? getApiMessage(coupons.error) : null}>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <LayerCard className=" px-5 py-4">
@@ -136,7 +155,7 @@ export function OrderConfirm() {
           </div>
           {create.error ? <Banner variant="error" title="创建订单失败" description={getApiMessage(create.error)} /> : null}
           <Button
-            disabled={passwordIssues.length > 0 || pointsBusy || coupons.isLoading || coupons.isFetching || Boolean(coupons.error)}
+            disabled={quoteBlocked || passwordIssues.length > 0 || pointsBusy || coupons.isLoading || coupons.isFetching || Boolean(coupons.error)}
             loading={create.isPending || certification.busy}
             onClick={() => void certification.run(() => create.mutate())}
           >

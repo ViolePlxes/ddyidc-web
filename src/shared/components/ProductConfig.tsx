@@ -1,7 +1,10 @@
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, LayerCard, Radio, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, LayerCard, Radio, Select, Table, Tabs } from "@cloudflare/kumo";
 import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { consoleApi } from "../api/console";
+import { getApiMessage } from "../api/request";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -19,8 +22,9 @@ import { instancePasswordIssues } from "../utils/instancePassword";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
-import { choiceLabel, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, withoutZeroPrice } from "../utils/productOptions";
+import { choiceLabel, isQuantityOption, configurationVisible, configurationInitialValue, configurationArray, configurationDisplayValue, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, withoutZeroPrice } from "../utils/productOptions";
 import { Slider } from "../vendor/kumo-slider/Slider";
+import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
 import { ProductSteps } from "./ProductSteps";
 
 const cycleMonths: Record<string, number> = {
@@ -30,11 +34,9 @@ const cycleMonths: Record<string, number> = {
   annually: 12,
 };
 
-const fieldOrder = ["storage_mode", "system_disk", "data_disk", "ip_num", "network", "bandwidth", "defense"];
+const fieldOrder = ["cpu", "memory", "traffic","storage_mode", "system_disk", "data_disk", "ip_num", "network", "bandwidth", "defense"];
 
-function initialValue(option: ConfigOption) {
-  return option.default || option.options[0]?.id || String(option.min ?? "");
-}
+const initialValue = configurationInitialValue;
 
 function quantityOptionPrice(option: ConfigOption, selectedValue: string): number {
   const value = Number(selectedValue);
@@ -85,25 +87,28 @@ function ProductOptionControl({
 }) {
   const pageSize = 25;
   const [quantityPage, setQuantityPage] = useState(() => Math.max(0, Math.floor((Number(value) - option.min) / (option.step || 1) / pageSize)));
+  if (option.optionType==="unsupported") return <Banner variant="error" title="此配置暂不可用" description="该商品配置协议尚未完成验证，请联系管理员。"/>;
+  if(option.optionType==="multi_select") {const values=configurationArray(value);return <div className="flex flex-wrap gap-4">{option.options.map(choice=><Checkbox key={choice.id} label={choiceLabel(choice)} disabled={disabled} checked={values.includes(choice.id)} onCheckedChange={checked=>onChange(JSON.stringify(checked?[...values,choice.id].sort():values.filter(id=>id!==choice.id)))}/>)}</div>;}
+  if(option.optionType==="cascade") {const path=configurationArray(value);const levels: ConfigOption["options"][]=[];let choices=option.options;for(let i=0;i<32&&choices.length;i++){levels.push(choices);const choice=choices.find(c=>c.id===path[i]);choices=choice?.children??[];}return <div className="grid gap-3 sm:grid-cols-2">{levels.map((items,index)=><Select key={index} label={`${option.name} ${index+1}`} value={path[index]??""} items={Object.fromEntries(items.map(c=>[c.id,c.name]))} disabled={disabled} onValueChange={next=>{if(next)onChange(JSON.stringify([...path.slice(0,index),next]));}}/>)}</div>;}
   if (!usesResourceSlider(option)) {
     const quantityCount = Math.floor((option.max - option.min) / (option.step || 1)) + 1;
     const page = Math.min(quantityPage, Math.max(0, Math.ceil(quantityCount / pageSize) - 1));
-    const tabs = option.optionType === "qty"
+    const tabs = isQuantityOption(option)
       ? Array.from({ length: Math.min(pageSize, quantityCount - page * pageSize) }, (_, index) => {
         const quantity = Number((option.min + (page * pageSize + index) * (option.step || 1)).toFixed(8));
         return { value: String(quantity), label: `${quantity} ${option.unit || ""}`.trim(), disabled };
       })
       : option.options.map((choice) => ({ value: choice.id, label: choiceLabel(choice), disabled }));
     return <div className="grid min-w-0 gap-2">
-      <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />
-      {option.optionType === "qty" && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
+      <div className="min-w-0 overflow-x-auto"><Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} /></div>
+      {isQuantityOption(option) && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" size="sm" disabled={disabled || page === 0} onClick={() => setQuantityPage(page - 1)}>上一组</Button>
-        <span className="text-base text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
+        <span className="text-sm text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
         <Button variant="secondary" size="sm" disabled={disabled || (page + 1) * pageSize >= quantityCount} onClick={() => setQuantityPage(page + 1)}>下一组</Button>
       </div> : null}
     </div>;
   }
-  if (option.optionType === "qty") {
+  if (isQuantityOption(option)) {
     const current = Number(value);
     const step = option.step || 1;
     const immutable = disabled || option.min === option.max;
@@ -139,7 +144,7 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePri
     <LayerCard className=" overflow-hidden p-0">
       <div className="grid gap-1 p-5">
         <h2 className="text-lg font-semibold text-kumo-strong">{catalogSelection ? "销售规格" : "计算规格"}</h2>
-        <p className="text-base text-kumo-subtle">规格与价格以当前商品展示为准。</p>
+        <p className="text-sm text-kumo-subtle">规格与价格以当前商品展示为准。</p>
       </div>
       {specs.length ? (
         <Radio.Group aria-label="计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
@@ -168,7 +173,7 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePri
           </Table>
         </Radio.Group>
       ) : (
-        <div className="border-t border-kumo-line p-5 text-base text-kumo-subtle">规格待配置。运营完成商品规格配置后即可购买。</div>
+        <div className="border-t border-kumo-line p-5 text-sm text-kumo-subtle">规格待配置。运营完成商品规格配置后即可购买。</div>
       )}
     </LayerCard>
   );
@@ -190,9 +195,13 @@ export function ProductConfig({
   stepsTarget?: HTMLElement | null;
 }) {
   const navigate = useNavigate();
+  const customFieldSchema=orderPage?.customFields??[];
+  const [customFields,setCustomFields]=useState<Record<string,string>>({});
+  useEffect(()=>setCustomFields({}),[product.id]);
+  const customFieldsMissing=customFieldsIncomplete(customFieldSchema,customFields);
   const options = useMemo(() => orderPage?.configOptions ?? product.configOptions ?? [], [orderPage, product.configOptions]);
-  const cycles = useMemo(() => !product.readOnly && orderPage?.cycles?.some((item) => item.billingcycle in cycleMonths)
-    ? orderPage.cycles.filter((item) => item.billingcycle in cycleMonths)
+  const cycles = useMemo(() => !product.readOnly && orderPage?.cycles?.length
+    ? orderPage.cycles
     : [{ billingcycle: product.cycle || "monthly", label: cycleLabels[product.cycle] ?? product.cycle ?? "月付", price: product.price, setupFee: 0 }], [orderPage, product.cycle, product.price, product.readOnly]);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [selectedSpecId, setSelectedSpecId] = useState(product.specs[0]?.id ?? "");
@@ -210,14 +219,17 @@ export function ProductConfig({
     setSelectedSpecId(product.specs[0]?.id ?? "");
   }, [product.id, options, product.specs]);
 
-  useEffect(() => setCycle(cycles[0]?.billingcycle ?? "monthly"), [product.id, cycles]);
+  useEffect(() => setCycle(cycles.find(c=>c.billingcycle in cycleMonths)?.billingcycle ?? cycles[0]?.billingcycle ?? "monthly"), [product.id, cycles]);
 
   const selectedSpec = product.specs.find((spec) => spec.id === selectedSpecId) ?? product.specs[0] ?? null;
   const dataCenterOption = options.find((option) => option.field === "data_center");
   const imageOption = options.find((option) => option.field === "image");
+  const effectiveSelection=Object.fromEntries(options.map(o=>[o.id,selected[o.id]??initialValue(o)]));
   const displayedOptions = (product.configMode === "fixed" ? [] : options)
+    .filter(option=>configurationVisible(option,effectiveSelection))
     .filter(isAdjustableOption)
-    .filter((option) => !["data_center", "区域", "region", "area", "image", "cpu"].includes(option.field))
+    .filter(option => option.field !== "cpu" || product.configMode === "elastic" || !product.specs.length)
+    .filter((option) => !["data_center", "区域", "region", "area", "image"].includes(option.field))
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
@@ -250,15 +262,14 @@ export function ProductConfig({
 
   const selectedCycle = cycles.find((item) => item.billingcycle === cycle) ?? cycles[0];
   const durationMonth = cycleMonths[selectedCycle?.billingcycle ?? cycle] ?? 1;
-  const selectedOptions = useMemo(() => options.map((option, index) => {
+  const selectedOptions = useMemo(() => options.filter(option=>configurationVisible(option,Object.fromEntries(options.map(o=>[o.id,selected[o.id]??initialValue(o)])))).map((option, index) => {
     const value = selected[option.id] ?? initialValue(option);
-    const choice = option.options.find((item) => item.id === value);
     return {
       id: option.id,
       field: option.field,
       value,
       displayName: option.name || option.field,
-      displayValue: choice?.name ?? `${value}${option.unit ? ` ${option.unit}` : ""}`,
+      displayValue: configurationDisplayValue(option,value),
       position: index,
     };
   }), [options, selected]);
@@ -266,21 +277,33 @@ export function ProductConfig({
 	if (product.readOnly) return 0;
     const value = selected[option.id] ?? initialValue(option);
     if (!isUpstreamProduct(product) && selectedSpec?.priceMode === "fixed" && (option.field === "cpu" || option.field === "memory")) return sum;
-    return sum + (option.optionType === "qty" ? quantityOptionPrice(option, value) : (option.options.find((item) => item.id === value)?.price ?? 0));
+    return sum + (isQuantityOption(option) ? quantityOptionPrice(option, value) : (option.options.find((item) => item.id === value)?.price ?? 0));
   }, 0);
   const monthlyReference = cycles.find((item) => item.billingcycle === "monthly")?.price ?? product.price;
   const cycleDiscount = selectedCycle && monthlyReference > 0 ? selectedCycle.price / (monthlyReference * durationMonth) : 1;
   const monthlySpecPrice = selectedSpec?.price ?? product.price;
   const periodBase = (isUpstreamProduct(product) || !selectedSpec || selectedSpec.priceMode === "upstream") && selectedCycle ? selectedCycle.price : monthlySpecPrice * durationMonth * cycleDiscount;
-  const unitPrice = periodBase + optionPrice * durationMonth + (selectedCycle?.setupFee ?? 0);
-  const total = unitPrice * quantity;
-  const nextRenewal = (periodBase + optionPrice * durationMonth) * quantity;
+  const dynamicPricing = isUpstreamProduct(product) && (options.length > 0 || customFieldSchema.length > 0) && !product.readOnly;
+  const quoteInput = {localProductId: product.id, cycle: selectedCycle?.billingcycle ?? cycle, quantity, customFields,configOptions: Object.fromEntries(selectedOptions.map(option=>[option.id,option.value]))};
+  const quoteKey = JSON.stringify(quoteInput);
+  const [settledQuoteKey,setSettledQuoteKey] = useState(quoteKey);
+  const [quoteExpired,setQuoteExpired] = useState(false);
+  useEffect(()=>{const timer=window.setTimeout(()=>setSettledQuoteKey(quoteKey),300);return ()=>window.clearTimeout(timer);},[quoteKey]);
+  const quoteQuery=useQuery({queryKey:["product-quote",settledQuoteKey],queryFn:({signal})=>consoleApi.productQuote(JSON.parse(settledQuoteKey),signal),enabled:dynamicPricing&&!customFieldsMissing&&Boolean(orderPage)&&settledQuoteKey===quoteKey,retry:false,staleTime:0,refetchOnWindowFocus:false,refetchOnReconnect:false});
+  useEffect(()=>{setQuoteExpired(false);if(!quoteQuery.data)return;const timer=window.setTimeout(()=>setQuoteExpired(true),Math.max(0,quoteQuery.data.expiresAt*1000-Date.now()));return ()=>window.clearTimeout(timer);},[quoteQuery.data]);
+  const liveQuote=settledQuoteKey===quoteKey&&!quoteExpired&&!quoteQuery.isFetching&&!quoteQuery.error?quoteQuery.data:undefined;
+  const invalidCycle=!((selectedCycle?.billingcycle??cycle) in cycleMonths);
+  const quoteBlocked=dynamicPricing&&(!liveQuote||invalidCycle||customFieldsMissing);
+  const unitPrice = dynamicPricing ? Number(liveQuote?.unit ?? 0) : periodBase + optionPrice * durationMonth + (selectedCycle?.setupFee ?? 0);
+  const total = dynamicPricing ? Number(liveQuote?.total ?? 0) : unitPrice * quantity;
+  const nextRenewal = dynamicPricing ? Number(liveQuote?.renewal ?? 0) : (periodBase + optionPrice * durationMonth) * quantity;
   const monthlyEquivalent = durationMonth > 0 ? nextRenewal / durationMonth : nextRenewal;
   const selectedRegion = dataCenterOption?.options.find((item) => item.id === selected[dataCenterOption!.id])?.name ?? "默认地域";
   const outOfStock = selectedSpec?.stock !== null && selectedSpec?.stock !== undefined ? selectedSpec.stock <= 0 : product.stock !== null && product.stock <= 0;
   const specsUnavailable = isUpstreamProduct(product) ? !orderPage : product.specs.length === 0;
 
   const draft = (): OrderDraft => ({
+    customFields,customFieldSchema,quoteToken:liveQuote?.token, quoteExpiresAt:liveQuote?.expiresAt,requiresQuote:dynamicPricing,
     productId: product.id,
     productName: product.name,
     configMode: product.configMode,
@@ -293,7 +316,7 @@ export function ProductConfig({
     unitPriceYuan: unitPrice,
     totalYuan: total,
     hostname: "",
-    password: options.length ? password : "",
+    password: options.length || customFieldSchema.length ? password : "",
   });
 
   const externalBill = billTarget !== undefined;
@@ -311,23 +334,27 @@ export function ProductConfig({
     >
       <div className="grid gap-1">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-base text-kumo-subtle">当前应付</span>
-          {billLoading ? <Badge variant="secondary">正在更新</Badge> : null}
+          <span className="text-sm text-kumo-subtle">当前应付</span>
+          {billLoading || (dynamicPricing && quoteQuery.isFetching) ? <Badge variant="secondary">正在更新</Badge> : null}
         </div>
-        <strong className="text-base font-semibold text-kumo-strong">¥{total.toFixed(2)}</strong>
-        <span className="text-base text-kumo-subtle">{product.name} · 单台本周期 ¥{unitPrice.toFixed(2)}</span>
+        <strong className="text-sm font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
+        <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 {quoteBlocked ? "—" : `¥${unitPrice.toFixed(2)}`}</span>
       </div>
-      <div className="grid gap-2 border-t border-kumo-line pt-4 text-base text-kumo-subtle">
+      <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
         {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>计算规格：{product.name}</span>}
         {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{withoutZeroPrice(item.displayValue)}</span>)}
         <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
         <span>购买数量：{quantity} 台</span>
-        <span>折合月费：¥{monthlyEquivalent.toFixed(2)} / 月</span>
-        <span>下次续费：¥{nextRenewal.toFixed(2)}</span>
+        <span>折合月费：{quoteBlocked ? "—" : `¥${monthlyEquivalent.toFixed(2)}`} / 月</span>
+        <span>下次续费：{quoteBlocked ? "—" : `¥${nextRenewal.toFixed(2)}`}</span>
       </div>
-          <div className="grid gap-2"><span className="text-base font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong font-medium">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
-      <Button disabled={product.readOnly || billLoading || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
+          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong font-medium">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
+      {dynamicPricing && invalidCycle ? <Banner variant="error" title="此计费模式暂不可用" description="请选择已支持的计费周期，或联系管理员。"/> : null}
+      {dynamicPricing && quoteQuery.error ? <Banner variant="error" title="报价未完成" description={getApiMessage(quoteQuery.error)} /> : null}
+      {dynamicPricing && (quoteQuery.error || quoteExpired) ? <Button variant="secondary" loading={quoteQuery.isFetching} onClick={()=>void quoteQuery.refetch()}>重新获取报价</Button> : null}
+      {dynamicPricing && liveQuote ? <span className="text-sm text-kumo-subtle">安装费：¥{liveQuote.setup} · 报价以提交时校验结果为准</span> : null}
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
+      <Button disabled={product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
     </LayerCard>
   );
   return (
@@ -339,12 +366,12 @@ export function ProductConfig({
         <div className="grid gap-5">
         {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} referencePrice={isUpstreamProduct(product) ? product.price : undefined} /> : null}
         {!catalogSelection && selectedSpec ? (
-          <LayerCard className=" px-5 py-4 text-base"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong font-medium">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
+          <LayerCard className=" px-5 py-4 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong font-medium">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
         ) : null}
 
         {displayedOptions.map((option) => {
           const value = selected[option.id] ?? initialValue(option);
-          const isSlider = option.optionType === "qty" && usesResourceSlider(option);
+          const isSlider = isQuantityOption(option) && usesResourceSlider(option);
           return (
             <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
@@ -355,7 +382,7 @@ export function ProductConfig({
 
         {imageOption && imageGroups.length ? (
           <LayerCard id={anchor("images")} className="scroll-mt-4 grid gap-4 px-5 py-4">
-            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-base text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
+            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
             <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
               <div key={group.name} className="overflow-x-auto"><Tabs variant="segmented" aria-label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [imageOption.id]: value }))} tabs={group.child.map((choice) => ({ value: choice.id, label: choiceLabel(choice) }))} /></div>
@@ -365,12 +392,13 @@ export function ProductConfig({
 
         <LayerCard id={anchor("purchase")} className="scroll-mt-4 grid gap-5 px-5 py-4">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
-<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
-          {options.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
+<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, disabled:dynamicPricing&&!(item.billingcycle in cycleMonths), label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${!dynamicPricing && item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
+          {customFieldSchema.length ? <ProductCustomFields fields={customFieldSchema} values={customFields} onChange={setCustomFields}/> : null}
+          {options.length || customFieldSchema.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
         </LayerCard>
 
         {certification.feedback}<Banner variant="error" title="合规警告" description="国内云产品须完成实名认证。严禁搭建色情、赌博、诈骗、挖矿、外挂、扫描、发包、加速、博彩、VOIP 等违法违规业务；严禁对外提供 VPN 服务、DDoS 攻击及其他危害网络安全的用途。" />
-        <LayerCard className=" grid gap-2 px-5 py-4"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-base text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按商品退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
+        <LayerCard className=" grid gap-2 px-5 py-4"><h2 className="text-lg font-semibold text-kumo-strong">退订规则</h2><p className="text-sm text-kumo-subtle">如需退订，请在订单支付前核对配置。已开通资源按商品退订规则处理，部分特殊商品不支持退订。</p></LayerCard>
         </div>
 
         {externalBill ? null : bill}

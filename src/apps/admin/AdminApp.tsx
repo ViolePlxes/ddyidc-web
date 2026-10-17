@@ -123,6 +123,7 @@ const UpstreamProducts = lazy(() =>
     .adminUpstreamProducts()
     .then((module) => ({ default: module.UpstreamProducts })),
 );
+const AdapterModules = lazy(() => import("./views/AdapterModules").then(module=>({default:module.AdapterModules})));
 const UpstreamSuppliers = lazy(() =>
   routeModules
     .adminSuppliers()
@@ -271,6 +272,11 @@ const adminGroups: NavigationGroup[] = [
   {
     label: "上下游",
     items: [
+      {
+        label: "对接能力",
+        href: adminPath('/admin/upstream/modules'),
+        icon: BuildingsIcon,
+      },
       {
         label: "供应商管理",
         href: adminPath('/admin/upstream/suppliers'),
@@ -555,6 +561,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path={adminPath('/admin/upstream/modules')} element={<LazyRoute><AdapterModules /></LazyRoute>} />
             <Route
               path={adminPath('/admin/upstream/suppliers')}
               element={

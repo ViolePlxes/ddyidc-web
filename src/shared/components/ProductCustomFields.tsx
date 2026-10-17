@@ -1,0 +1,6 @@
+import { Banner, Input, Select } from "@cloudflare/kumo";
+import type {ProductCustomField} from "../api/console";
+export function customFieldsIncomplete(fields: ProductCustomField[],values: Record<string,string>) {return fields.some(field=>field.required&&!(values[field.id]??"").trim());}
+export function ProductCustomFields({fields,values,onChange}:{fields:ProductCustomField[];values:Record<string,string>;onChange:(values:Record<string,string>)=>void}){
+ return <div className="grid gap-4 sm:grid-cols-2">{fields.map(field=>field.type==="select"?<Select key={field.id} label={field.name} value={values[field.id]??""} items={Object.fromEntries((field.choices??[]).map(value=>[value,value]))} onValueChange={value=>{if(value!==null)onChange({...values,[field.id]:value});}}/>:["text","password","email"].includes(field.type)?<Input key={field.id} label={field.name} type={field.type} required={field.required} value={values[field.id]??""} maxLength={2048} autoComplete={field.type==="password"?"new-password":"off"} onChange={event=>onChange({...values,[field.id]:event.target.value})}/>:<Banner key={field.id} variant="error" title={`${field.name}暂不可用`} description="此附加字段协议尚未支持，请联系管理员。"/>)}</div>;
+}
