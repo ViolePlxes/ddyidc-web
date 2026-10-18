@@ -76,7 +76,7 @@ export function AdminUpdates() {
     <>
       <PageHeader
         title="更新中心"
-        description="检查 GitHub 私有仓库版本，并安全更新后端服务或前端站点。"
+        description="检查已配置私有仓库的版本，并安全更新后端服务或前端站点。"
         actions={<Button variant="secondary" icon={<ArrowsClockwiseIcon />} loading={check.isPending} disabled={Boolean(running)} onClick={() => check.mutate()}>检查更新</Button>}
       />
       {notice ? <Banner title="更新中心" description={notice} /> : null}
