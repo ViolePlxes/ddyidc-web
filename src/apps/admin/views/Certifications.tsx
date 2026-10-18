@@ -216,7 +216,7 @@ function Detail({
         {record && (
           <>
             <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
-              {record.certifyChannel === "alipay" && record.status === 1
+              {record.type === 1 && record.certifyChannel === "alipay" && record.status === 1
                 ? "待认证"
                 : statuses[record.status]}
             </Badge>
@@ -275,14 +275,14 @@ function Detail({
                 ))}
             </div>
             <div className="flex gap-2">
-              {record.status === 1 && record.certifyChannel !== "alipay" && (
+              {record.status === 1 && (
                 <>
-                  <Button onClick={() => setAction("pass")}>通过</Button>
+                  <Button onClick={() => setAction("pass")}>人工通过</Button>
                   <Button
                     variant="secondary"
                     onClick={() => setAction("reject")}
                   >
-                    拒绝
+                    人工拒绝
                   </Button>
                 </>
               )}
@@ -491,7 +491,7 @@ export function Certifications() {
                     <Table.Cell>{record.documentNumber}</Table.Cell>
                     <Table.Cell>
                       <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
-                        {record.certifyChannel === "alipay" &&
+                        {record.type === 1 && record.certifyChannel === "alipay" &&
                         record.status === 1
                           ? "待认证"
                           : statuses[record.status]}

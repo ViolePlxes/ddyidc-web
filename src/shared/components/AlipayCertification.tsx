@@ -47,7 +47,7 @@ export function AlipayCertification({
   }, []);
   useEffect(() => {
     let active = true;
-    if (info.record?.certifyChannel === "alipay" && info.status !== 2) {
+    if (info.record?.certifyChannel === "alipay" && info.status === 1) {
       void certificationApi
         .alipayCertify()
         .then((value) => {
@@ -83,7 +83,7 @@ export function AlipayCertification({
       try {
         const value = await certificationApi.alipayStatus();
         if (!active) return;
-        if (value.status === 2) {
+        if (value.status === 2 || value.status === 3) {
           setPolling(false);
           setResult(undefined);
           setQr("");
