@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+import { broadcastApi } from "../shared/api/notifications";
+import { MessageButton } from "../shared/components/notifications/MessageButton";
 import { adminPath } from "../shared/utils/adminEntry";
 import { TodoCountBadge } from "../shared/components/TodoCountBadge";
 import { useNavigation } from "../shared/hooks/useNavigation";
@@ -7,6 +10,7 @@ import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
 import { Button, DropdownMenu, LinkButton, Sidebar, Surface } from "@cloudflare/kumo";
 import {
+  BellIcon,
   MoonIcon,
   SunIcon,
   CaretDownIcon,
@@ -76,7 +80,15 @@ export function DashboardLayout({
 }) {
   const scope = user.role === "admin" ? "admin" : user.role === "sales" ? "sales" : "console";
   const navigation = useNavigation(scope, availableGroups);
-  const groups = [...navigation.groups];
+
+  const messagePermissions = useQuery({queryKey:['notification-permissions',user.id],queryFn:broadcastApi.permissions,enabled:scope==='admin',retry:false,refetchOnWindowFocus:false});
+  const groups = navigation.groups.map(group=>({...group,items:[...group.items]}));
+  if(scope==='admin'){
+    const href=adminPath('/admin/messages/broadcasts');
+    for(const group of groups)group.items=group.items.filter(item=>item.href!==href);
+    if(messagePermissions.data?.view){const item={label:'站内消息群发',href,icon:BellIcon};const group=groups.find(group=>group.label==='客户服务');if(group)group.items.push(item);else groups.push({label:'客户服务',items:[item]})}
+  }
+
   if (scope === "console" && !groups.some(group => group.items.some(item => item.href === "/wallet/recharge"))) {
     const rechargeItem = { label: "账户充值", href: "/wallet/recharge", icon: CreditCardIcon };
     const billingIndex = groups.findIndex(group => group.label === "资源与账单");
@@ -235,17 +247,18 @@ export function DashboardLayout({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-kumo-canvas">
         <Surface
           data-dashboard-topbar
-          className="bg-kumo-canvas shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-3 border-b border-kumo-line px-4"
+          className="bg-kumo-canvas shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-1 border-b border-kumo-line px-2 sm:gap-3 sm:px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
+          {scope === "console" && <MessageButton />}
           <LayoutWidthToggle {...layoutWidth} />
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
-          {scope === "console" ? <LinkButton href="/console/help" variant="ghost" size="sm" icon={<QuestionIcon size={16} />}>工单支持</LinkButton> : null}
+          {scope === "console" ? <LinkButton href="/console/help" aria-label="工单支持" variant="ghost" size="sm" icon={<QuestionIcon size={16} />}><span className="hidden sm:inline">工单支持</span></LinkButton> : null}
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={<Button variant="secondary" icon={<UserCircleIcon />} />}
             >
-              {user.name}
+              <span className="max-w-28 truncate sm:max-w-none">{user.name}</span>
               <CaretDownIcon />
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>

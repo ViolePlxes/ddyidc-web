@@ -1,3 +1,4 @@
+import { MessageBroadcasts } from "./views/MessageBroadcasts";
 import { PointsActivities } from "../../shared/components/PointsActivities";
 import { PointsEventTasks } from "../../shared/components/PointsEventTasks";
 import { AdminSecureLogin } from "./views/SecureLogin";
@@ -252,6 +253,7 @@ const adminGroups: NavigationGroup[] = [
     label: "客户服务",
     items: [
       { label: "工单管理", href: adminPath('/admin/tickets'), icon: ChatCenteredTextIcon },
+      { label: "站内消息群发", href: adminPath('/admin/messages/broadcasts'), icon: ChatCenteredTextIcon },
       {
         label: "工单类型",
         href: adminPath('/admin/tickets/types'),
@@ -449,6 +451,10 @@ export function AdminApp() {
         <Route path={adminPath('/admin/login')} element={<AdminLogin />} />
         <Route element={<AdminGuard />}>
           <Route element={<AdminDashboard />}>
+          <Route path={adminPath('/admin/messages/broadcasts')} element={<MessageBroadcasts />} />
+          <Route path={adminPath('/admin/messages/broadcasts/new')} element={<MessageBroadcasts mode="new" />} />
+          <Route path={adminPath('/admin/messages/broadcasts/:id')} element={<MessageBroadcasts mode="detail" />} />
+
             <Route
               path={adminPath('/admin')}
               element={

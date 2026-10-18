@@ -1,3 +1,6 @@
+import { useInboxState } from "../../../shared/components/notifications/MessageButton";
+import { notificationsApi } from "../../../shared/api/notifications";
+import { useTicketNotifications } from "../../../shared/components/notifications/useTicketNotifications";
 import { useTicketDraft } from "../../../shared/components/tickets/useTicketDraft";
 import { TicketViewport } from "../../../shared/components/tickets/TicketViewport";
 import { TicketReplyEditor } from "../../../shared/components/tickets/TicketReplyEditor";
@@ -21,7 +24,6 @@ import { PageState } from "../../../shared/components/PageState";
 import { AttachmentPicker } from "../../../shared/components/tickets/AttachmentPicker";
 import { ReplyComposer, TicketConversation } from "../../../shared/components/tickets/TicketConversation";
 import { TicketStatusBadge } from "../../../shared/components/tickets/TicketStatusBadge";
-import { useVisibilityPolling } from "../../../shared/hooks/useVisibilityPolling";
 
 const userRepliedStatus: TicketStatus = { id: "2", name: "用户已回复", color: "#ff6600", final: false, isDefault: false };
 const adminRepliedStatus: TicketStatus = { id: "3", name: "已回复", color: "#000000", final: true, isDefault: false };
@@ -56,7 +58,7 @@ export function TicketList() {
   const cursor = useRef("");
   useEffect(() => { if (query.data?.serverTime) cursor.current = query.data.serverTime; }, [query.data?.serverTime]);
 
-  useVisibilityPolling(async () => {
+  useTicketNotifications(async () => {
     if (!cursor.current) return;
     const before = queryClient.getQueryData<TicketListResult>(queryKey);
     const delta = await userTicketApi.list({ status: status === "all" ? undefined : status, page, pageSize: 20, since: cursor.current });
@@ -65,7 +67,7 @@ export function TicketList() {
     const gained = Math.max(0, delta.unreadCount - before.unreadCount);
     if (gained) setNewMessageCount((value) => value + gained);
     if (delta.list.length || delta.unreadCount !== before.unreadCount) queryClient.setQueryData(queryKey, mergeTicketList(before, delta));
-  }, (query.data?.pollIntervalSeconds ?? 30) * 1000, query.isSuccess);
+  }, query.isSuccess);
 
   return (
     <div className="grid w-full min-w-0 gap-5">
@@ -182,7 +184,7 @@ export function TicketDetailPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const lastReplyId = query.data?.ticket.lastReplyId ?? "0";
 
-  useVisibilityPolling(async () => {
+  useTicketNotifications(async () => {
     const rows = await userTicketApi.replies(id, queryClient.getQueryData<TicketDetail>(queryKey)?.ticket.lastReplyId ?? "0");
     if (!rows.length) return;
     queryClient.setQueryData<TicketDetail>(queryKey, (current) => {
@@ -194,7 +196,7 @@ export function TicketDetailPage() {
       return { ...current, ticket: { ...current.ticket, status: latest.type === "Admin" ? adminRepliedStatus : userRepliedStatus, lastReplyId: latest.id, lastReplyTime: latest.createdAt, unreadCount: 0 }, replies: [...current.replies, ...additions] };
     });
     setNotice(`收到 ${rows.length} 条新回复，已追加到对话。`);
-  }, (query.data?.pollIntervalSeconds ?? 30) * 1000, query.isSuccess);
+  }, query.isSuccess, id);
 
   const reply = useMutation({
     mutationFn: () => userTicketApi.reply(id, { content: content.trim(), richContent, attachments, quoteReplyId: quote?.id }),
@@ -206,6 +208,9 @@ export function TicketDetailPage() {
     },
     onError: (reason) => setNotice(getApiMessage(reason)),
   });
+  const notificationConnection=useInboxState().connected;
+  const displayedReplyId=query.data?.replies.at(-1)?.id;
+  useEffect(()=>{if(!displayedReplyId||!notificationConnection)return;let active=true;const acknowledge=()=>{if(document.visibilityState!=="visible")return;void notificationsApi.readTicket(id,displayedReplyId).catch(()=>{if(active)setNotice("消息已读状态暂未同步，可在消息中心手动标为已读。");})};acknowledge();document.addEventListener("visibilitychange",acknowledge);return()=>{active=false;document.removeEventListener("visibilitychange",acknowledge)}},[id,displayedReplyId,notificationConnection]);
   const action = useMutation({ mutationFn: async (kind: "urge" | "close") => { if (kind === "urge") await userTicketApi.urge(id); else await userTicketApi.close(id); }, onSuccess: () => void query.refetch(), onError: (reason) => setNotice(getApiMessage(reason)) });
   const upload = async (files: File[]) => { setUploading(true); try { const uploaded = await userTicketApi.upload(files); setAttachments((value) => [...value, ...uploaded].slice(0, 5)); } catch (reason) { setNotice(getApiMessage(reason)); } finally { setUploading(false); } };
 

@@ -1,3 +1,4 @@
+import { Messages, MessageDetail } from "./views/Messages";
 import {
   BellIcon,
   ChatsCircleIcon,
@@ -488,7 +489,8 @@ export function ConsoleApp() {
             <Route path="/console/invoices/titles" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/invoices/addresses" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/transactions" element={<LazyRoute><Transactions /></LazyRoute>} />
-            <Route path="/console/messages" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
+            <Route path="/console/messages" element={<Messages />} />
+            <Route path="/console/messages/:id" element={<MessageDetail />} />
             <Route path="/console/logs" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/api" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
             <Route path="/console/help" element={<LazyRoute><MenuPlaceholder /></LazyRoute>} />
