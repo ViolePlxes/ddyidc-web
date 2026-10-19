@@ -1,7 +1,13 @@
 import type { AxiosResponse } from "axios";
 import { adminRequest, type ApiEnvelope } from "./request";
 
+export interface SupplierSnapshotInfo {
+ enabled:boolean; intervalMinutes:number; state:string; lastSuccessAt:number; lastAttemptAt:number; nextRunAt:number; total:number; completed:number; failed:number; message:string;
+}
+
 export interface UpstreamSupplier {
+  lastSyncedAt?:number;
+  snapshotSync?:SupplierSnapshotInfo;
   id: string;
   name: string;
   type: string;
@@ -61,6 +67,8 @@ async function unwrap<T>(response: Promise<AxiosResponse<ApiEnvelope<T>>>): Prom
 }
 
 export const upstreamAdminApi = {
+  configureSnapshot: (id:string,enabled:boolean,intervalMinutes:number) => unwrap(adminRequest.put<ApiEnvelope<SupplierSnapshotInfo>>(`/upstream/suppliers/${id}/snapshot-sync`,{enabled,intervalMinutes})),
+  startSnapshot: (id:string) => unwrap(adminRequest.post<ApiEnvelope<SupplierSnapshotInfo>>(`/upstream/suppliers/${id}/snapshot-sync`)),
   suppliers: () => unwrap(adminRequest.get<ApiEnvelope<UpstreamSupplier[]>>("/upstream/suppliers")),
   createSupplier: (input: SupplierInput) => unwrap(adminRequest.post<ApiEnvelope<UpstreamSupplier>>("/upstream/suppliers", input)),
   updateSupplier: (id: string, input: SupplierInput) => unwrap(adminRequest.put<ApiEnvelope<UpstreamSupplier>>(`/upstream/suppliers/${id}`, input)),
