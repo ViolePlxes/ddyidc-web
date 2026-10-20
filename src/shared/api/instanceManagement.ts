@@ -1,6 +1,7 @@
+import axios from "axios";
 import type { LiveInstanceStatus } from '../components/InstanceLiveStatus';
 import { adminRequest, userRequest, type ApiEnvelope } from './request';
-export interface RenewalOption {cycle:string;label:string;amount:string;duration:number}
+export interface RenewalOption {cycle:string;label:string;amount:string;duration:number;quoteRevision:string}
 export interface RenewalOrder {id:string;orderId:string;orderNo:string;amount:string;state:string}
 export function instanceManagementApi(id:string,customerId?:string){
  const client=customerId?adminRequest:userRequest;
@@ -12,8 +13,15 @@ export function instanceManagementApi(id:string,customerId?:string){
   edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string;productOnly?:boolean})=>unwrap(client.patch(path,data,{timeout:65000})),
   credentials:()=>unwrap<{username:string;password:string;port:string;portIsDefault?:boolean}>(client.post(`${path}/credentials`,{}, {timeout:65000})),
   options:()=>unwrap<{items:RenewalOption[];currentCycle?:string}>(client.get(`${path}/renewal-options`,{timeout:65000})),
-  renew:(cycle:string)=>unwrap<RenewalOrder>(client.post(`${path}/renewals`,{cycle},{timeout:65000})),
+  renew:(cycle:string,quoteRevision:string,replaceOrderId?:string)=>unwrap<RenewalOrder>(client.post(`${path}/renewals`,{cycle,quoteRevision,replaceOrderId},{timeout:65000})),
   pay:(orderId:string)=>unwrap(client.post(`${path}/renewals/pay`,{orderId},{timeout:120000})),
-  auto:(enabled:boolean)=>unwrap(client.put(`${path}/auto-renew`,{enabled},{timeout:65000})),
+  auto:(enabled:boolean,quoteRevision?:string)=>unwrap(client.put(`${path}/auto-renew`,{enabled,quoteRevision},{timeout:65000})),
  };
+}
+
+export interface RenewalGateError {code:string;oldOrderId?:string;oldAmount?:string;newAmount?:string}
+export function renewalGateError(error:unknown):RenewalGateError|undefined {
+ if(!axios.isAxiosError<ApiEnvelope<RenewalGateError>>(error))return;
+ const gate=error.response?.data.data;
+ if(gate && typeof gate.code==='string' && gate.code.startsWith('RENEWAL_'))return gate;
 }
