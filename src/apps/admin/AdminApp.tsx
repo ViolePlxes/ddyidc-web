@@ -58,6 +58,7 @@ const AdminCustomers = lazy(() =>
     .adminCustomers()
     .then((module) => ({ default: module.AdminCustomers })),
 );
+const RenewalQuoteAudit = lazy(() => import('./views/RenewalQuoteAudit').then(module => ({default: module.RenewalQuoteAudit})));
 const AdminInstances = lazy(() => import('./views/Instances').then(module => ({default: module.AdminInstances})));
 const Certifications = lazy(() => routeModules.adminCertifications().then(module => ({default: module.Certifications})));
 const AdminInstanceDetail = lazy(() => routeModules.adminInstanceDetail().then(module => ({default: module.CustomerInstance})));
@@ -232,6 +233,7 @@ const adminGroups: NavigationGroup[] = [
       { label: "订单管理", href: adminPath('/admin/orders'), icon: ReceiptIcon },
       { label: "客户管理", href: adminPath('/admin/customers'), icon: UsersIcon },
       { label: "产品列表", href: adminPath('/admin/instances'), icon: PackageIcon },
+      { label: "续费报价核查", href: adminPath('/admin/instances/renewal-quote-audit'), icon: PackageIcon },
     ],
   },
   {
@@ -500,6 +502,7 @@ export function AdminApp() {
                 </LazyRoute>
               }
             />
+            <Route path={adminPath('/admin/instances/renewal-quote-audit')} element={<LazyRoute><RenewalQuoteAudit /></LazyRoute>} />
             <Route path={adminPath('/admin/instances')} element={<LazyRoute><AdminInstances /></LazyRoute>} />
             <Route path={adminPath('/admin/customers/:customerId/instances/:instanceId')} element={<LazyRoute><AdminInstanceDetail /></LazyRoute>} />
             <Route path={adminPath('/admin/customers/:customerId/instances/:instanceId/vnc')} element={<LazyRoute><AdminInstanceVnc /></LazyRoute>} />

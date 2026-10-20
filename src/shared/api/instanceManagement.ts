@@ -25,3 +25,9 @@ export function renewalGateError(error:unknown):RenewalGateError|undefined {
  const gate=error.response?.data.data;
  if(gate && typeof gate.code==='string' && gate.code.startsWith('RENEWAL_'))return gate;
 }
+
+export interface RenewalQuoteAuditItem {orderId:string;supplier:string;cycle:string;grossAmount:string;payableAmount:string;state:string;finding:string;hasEvidence:boolean;createdAt:string;evidenceSource?:string;evidenceVerifiedAt?:string;evidenceExpiresAt?:string;snapshotAmount?:string;snapshotVerifiedAt?:string}
+export async function renewalQuoteAudit(page:number,signal?:AbortSignal){
+ const {data}=await adminRequest.get<ApiEnvelope<{items:RenewalQuoteAuditItem[];total:number;page:number;pageSize:number;readOnly:boolean;liveQuote:boolean}>>('/instances/renewal-quote-audit',{params:{page},signal});
+ if(data.code!==0)throw new Error(data.message||'核查记录读取失败');return data.data;
+}
