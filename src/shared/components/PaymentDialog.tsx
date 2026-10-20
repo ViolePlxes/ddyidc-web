@@ -70,6 +70,7 @@ export function PaymentDialog({
     },
   });
   const [checkout, setCheckout] = useState<PaymentCheckout>();
+  const checkoutAmount=checkout?.amount&&/^\d+(?:\.\d{1,2})?$/.test(checkout.amount)?Math.round(Number(checkout.amount)*100):amountCents;
   const [qrImage, setQrImage] = useState<string>();
   const [qrError, setQrError] = useState(false);
   const handledPaymentId = useRef<string | undefined>(undefined);
@@ -177,7 +178,7 @@ export function PaymentDialog({
           <div className="grid min-w-0 gap-2">
             <Dialog.Title className="text-2xl font-semibold">{businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
-              应付 {formatMoney(amountCents)}。支付结果以服务端核对并确认的状态为准。
+              应付 {formatMoney(checkoutAmount)}。支付结果以服务端核对并确认的状态为准。
             </Dialog.Description>
           </div>
           <Dialog.Close render={<Button variant="ghost" shape="square" icon={<XIcon />} aria-label="关闭" />} />
@@ -191,7 +192,7 @@ export function PaymentDialog({
         ) : null}
         {checkout?.wechat && currentState === "pending" && !expired ? (
           <LayerCard className="grid justify-items-center gap-3 px-5 py-4">
-            <strong className="font-medium">请使用微信扫码支付 {formatMoney(amountCents)}</strong>
+            <strong className="font-medium">请使用微信扫码支付 {formatMoney(checkoutAmount)}</strong>
             {qrImage ? <img src={qrImage} width={280} height={280} className="h-auto max-w-full" alt="微信支付二维码" /> : <span>正在生成二维码…</span>}
             {qrError ? <Banner variant="error" title="二维码生成失败" description="请关闭后重新打开支付窗口。" /> : null}
           </LayerCard>
@@ -220,7 +221,7 @@ export function PaymentDialog({
             ? <Button variant="secondary" loading={close.isPending} onClick={() => close.mutate()}>关闭支付单</Button>
             : null}
           {pollingStopped ? <Button variant="secondary" loading={status.isFetching} onClick={() => void status.refetch()}>刷新支付状态</Button> : null}
-          {!checkout && !balancePaid ? <>{businessType !== "recharge" ? <Button variant="primary" disabled={create.isPending} loading={balancePayment.isPending} onClick={() => balancePayment.mutate()}>确认余额支付 {formatMoney(amountCents)}</Button> : null}<Button disabled={create.isPending || balancePayment.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button disabled={balancePayment.isPending} loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
+          {!checkout && !balancePaid ? <>{businessType !== "recharge" ? <Button variant="primary" disabled={create.isPending} loading={balancePayment.isPending} onClick={() => balancePayment.mutate()}>确认余额支付 {formatMoney(checkoutAmount)}</Button> : null}<Button disabled={create.isPending || balancePayment.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button disabled={balancePayment.isPending} loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
           <Dialog.Close render={<Button variant="secondary">{currentState === "paid" || balancePaid ? "完成" : "稍后处理"}</Button>} />
         </div>
       </Dialog>

@@ -7,6 +7,7 @@ export type AlipayCheckoutMode = "page" | "wap";
 export type PaymentState = "pending" | "paid" | "closed" | "failed" | "refunded" | "received_review";
 
 export interface PaymentCheckout {
+  amount?: string;
   paymentId: string;
   payNo: string;
   status: PaymentState;
