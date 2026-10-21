@@ -6,15 +6,15 @@ import { Link } from "react-router-dom";
 import { transfersApi } from "../api/transfers";
 import { getApiMessage } from "../api/request";
 
-export function TransferDialog({ instanceId }: { instanceId: string }) {
+export function TransferDialog({ instanceId, disabled = false }: { instanceId: string; disabled?: boolean }) {
  const client = useQueryClient();
- const [open, setOpen] = useState(false);
+ const [open, setOpen] = useState(()=>!disabled&&new URLSearchParams(window.location.search).get('action')==='transfer');
  const [account, setAccount] = useState("");
  const [password, setPassword] = useState("");
  const status = useQuery({ queryKey: ["transfers", "status", instanceId], queryFn: () => transfersApi.status(instanceId), refetchInterval: false });
  const submit = useMutation({ mutationFn: () => transfersApi.create(instanceId, account.trim(), password), onSuccess: async () => { setPassword(""); setOpen(false); await client.invalidateQueries({ queryKey: ["transfers"] }); }, onSettled: () => setPassword("") });
  if (!status.data?.enabled) return null;
- const busy = status.data.trading || status.data.transferring;
+ const busy = disabled || status.data.trading || status.data.transferring;
  return <Dialog.Root open={open} onOpenChange={(value) => { if (!submit.isPending) { setOpen(value); if(value)void status.refetch(); setPassword(""); submit.reset(); } }}>
   <Dialog.Trigger render={<Button variant="secondary" disabled={busy}>{status.data.trading ? "交易中" : status.data.transferring ? "待接收" : "转让实例"}</Button>} />
   <Dialog className="grid gap-4 p-8">
@@ -23,7 +23,7 @@ export function TransferDialog({ instanceId }: { instanceId: string }) {
    <Input label="接收方用户名 / 手机号 / 邮箱" value={account} onChange={(event) => setAccount(event.target.value)} autoComplete="off" />
    <Input label="你的登录密码（二次验证）" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
    {submit.error && <Banner variant="error" title={getApiMessage(submit.error)} />}
-   <div className="flex flex-wrap items-center justify-between gap-3"><Link to="/console/certification">去实名认证</Link><div className="flex gap-2"><Button variant="secondary" disabled={submit.isPending} onClick={() => setOpen(false)}>取消</Button><Button loading={submit.isPending} disabled={!account.trim() || !password} onClick={() => submit.mutate()}>发送转让请求</Button></div></div>
+   <div className="flex flex-wrap items-center justify-between gap-3"><Link to="/console/certification">去实名认证</Link><div className="flex gap-2"><Button variant="secondary" disabled={submit.isPending} onClick={() => setOpen(false)}>取消</Button><Button loading={submit.isPending} disabled={busy || !account.trim() || !password} onClick={() => submit.mutate()}>发送转让请求</Button></div></div>
   </Dialog>
  </Dialog.Root>;
 }

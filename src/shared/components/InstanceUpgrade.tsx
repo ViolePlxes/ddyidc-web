@@ -15,7 +15,7 @@ export function InstanceUpgrade({ instance, customerId }: { instance: InstanceDe
  const plans = useQuery({ queryKey: ["instance-upgrade-plans", customerId ?? "self", instance.id], retry: false, queryFn: async () => (await client.get<ApiEnvelope<{ items: Plan[] }>>(`${path}/upgrade-options`, { timeout: 65000 })).data.data.items });
  const quote = useMutation({ retry: false, mutationFn: async () => (await client.post<ApiEnvelope<Quote>>(`${path}/upgrade-quote`, { productId: product, cycle, requestId }, { timeout: 90000 })).data.data, onSuccess: () => setOpen(true) });
  const create = useMutation({ retry: false, mutationFn: async () => (await client.post<ApiEnvelope<Quote>>(`${path}/upgrades`, { quoteId: quote.data?.id }, { timeout: 65000 })).data.data, onSuccess: () => { void cache.invalidateQueries({ queryKey: ["orders"] }); } });
- const selected = plans.data?.find(plan => plan.productId === product); const busy = quote.isPending || create.isPending;
+ const selected = plans.data?.find(plan => plan.productId === product); const busy = !!instance.productionLocked || quote.isPending || create.isPending;
  if (instance.readOnly || instance.status === 6) return <Banner title="当前实例暂不能升降配" />;
  return <LayerCard className="grid gap-4 px-6 py-5"><h2 className="text-lg font-semibold">产品升级降级</h2><p className="text-kumo-subtle">仅展示当前服务支持且已上架的方案。核算差价后创建平台订单，支付完成后处理配置变更。涉及返款或数据缩容的方案须先人工核查。</p>
  {plans.isPending ? <p>正在获取可选方案…</p> : null}{plans.error ? <Banner variant="error" title={getApiMessage(plans.error)} /> : null}{plans.data?.length === 0 ? <Banner title="当前服务没有可用的在线升降配方案" description="可联系工作人员核查服务支持的方案。" /> : null}

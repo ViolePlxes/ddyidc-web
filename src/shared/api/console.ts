@@ -295,6 +295,8 @@ export interface ResourceRecord {
 }
 
 export interface InstanceListItem {
+  productionLocked?: boolean;
+  autoRenew?: boolean;
   readOnly?: boolean;
   hostname?: string;
   port?: string;
