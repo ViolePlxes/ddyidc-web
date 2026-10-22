@@ -1,3 +1,4 @@
+import { instanceConfirmationActions } from './InstanceConfirmationActions';
 import { Banner, Button, ButtonGroup, DropdownMenu, LayerDialog, Select } from '@cloudflare/kumo';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,20 +16,21 @@ export function InstanceSetting({ instance, kind, customerId }: { instance: Inst
  const enabled=kind==='lock' ? !!instance.productionLocked : !!instance.autoRenew;
  const options=useQuery({queryKey:['renewal-options',customerId||'self',instance.id],queryFn:api.options,enabled:open&&kind==='auto'&&!enabled,retry:false});
  const [cycle,setCycle]=useState('');
+ const quoteError=kind==='auto'&&!enabled?options.error:null;
  const selected=options.data?.items.find(q=>q.cycle===(cycle||options.data.currentCycle));
  const save=useMutation({mutationFn:()=>kind==='lock'?api.productionLock(!enabled):api.auto(!enabled,selected?.quoteRevision,selected?.cycle),onSuccess:async()=>{
   await Promise.all([client.invalidateQueries({queryKey:['instances']}),client.invalidateQueries({queryKey:['instance-live-status']}),...(customerId?[client.invalidateQueries({queryKey:['admin','customer-instance',customerId,instance.id]})]:[])]);setOpen(false);
  }});
  const title=kind==='lock'?`${enabled?'解除':'开启'}生产锁`:`${enabled?'关闭':'开启'}自动续费`;
- return <LayerDialog.Root open={open} onOpenChange={v=>{if(!save.isPending){setOpen(v);save.reset();setCycle('');}}}>
+ return <LayerDialog.Root open={open} dismissDisabled={save.isPending} onOpenChange={v=>{if(!save.isPending){setOpen(v);save.reset();setCycle('');}}}>
   <Button variant="secondary" size="sm" aria-label={`${kind==='lock'?'生产锁':'自动续费'} ${instance.name} ${enabled?'已开启':'未开启'}`} disabled={instance.readOnly||(kind==='auto'&&(instance.productionLocked||instance.status===6))} onClick={()=>setOpen(true)}>{enabled?'已开启':'未开启'}</Button>
   <LayerDialog.Content><LayerDialog.Title>{title}</LayerDialog.Title>
    <LayerDialog.Description>{kind==='lock'?(enabled?'解除后将恢复服务器操作，请确认由你本人操作。':'开启后禁止开关机、重启、VNC、转让、重装、续费等全部写操作，须手动解除后恢复。'):enabled?'关闭后将不再自动续费，到期将停机，请及时手动续费。':'到期前1天按所选周期创建续费订单，经报价和余额校验后扣费。余额不足不扣费、不续费，并通知充值，到期前每15分钟重试；价格变化须重新确认。'}</LayerDialog.Description>
    <LayerDialog.Body><div className="grid gap-3">
     {kind==='auto'&&!enabled&&<><Select label="自动续费周期" value={cycle||options.data?.currentCycle||''} items={Object.fromEntries((options.data?.items??[]).map(q=>[q.cycle,`${q.label||q.cycle} · ¥${q.amount}`]))} onValueChange={v=>setCycle(v||'')} /><p>默认使用原购买时长。确认扣费金额：{selected?`¥${selected.amount}`:'正在读取核验报价…'}</p></>}
-    {(save.error||options.error)&&<Banner variant="error" title={getApiMessage(save.error||options.error)} />}
+    {(save.error||quoteError)&&<Banner variant="error" title={getApiMessage(save.error||quoteError)} />}
    </div></LayerDialog.Body>
-   <LayerDialog.Actions><Button variant="secondary" disabled={save.isPending} onClick={()=>setOpen(false)}>取消</Button><Button loading={save.isPending} disabled={kind==='auto'&&!enabled&&(!selected||options.isFetching||options.isError)} onClick={()=>save.mutate()}>确认{title}</Button></LayerDialog.Actions>
+   {instanceConfirmationActions({loading:save.isPending,disabled:kind==='auto'&&!enabled&&(!selected||options.isFetching||options.isError),onConfirm:()=>save.mutate(),children:<>确认{title}</>})}
   </LayerDialog.Content>
  </LayerDialog.Root>;
 }
@@ -70,6 +72,6 @@ export function InstanceActions({instance}:{instance:InstanceListItem}) {
    }}>{label}</DropdownMenu.Item>)}
   </DropdownMenu.Content></DropdownMenu>
  </ButtonGroup>{notice&&<span role="status" className="text-sm text-kumo-subtle">{notice}</span>}{detail.error&&<span role="alert">{getApiMessage(detail.error)}</span>}
- <LayerDialog.Root open={!!pending} onOpenChange={v=>{if(!v&&!action.isPending)setPending(undefined)}}><LayerDialog.Content><LayerDialog.Title>确认{operations.find(([key])=>key===pending)?.[1]}</LayerDialog.Title><LayerDialog.Description>{pending?.startsWith('hard_')?'将强制断电，可能丢失数据或损坏文件系统。请确认可以中断业务。':'请确认可以中断当前业务，然后执行服务器操作。'}</LayerDialog.Description><LayerDialog.Body>{action.error&&<Banner variant="error" title={getApiMessage(action.error)} />}</LayerDialog.Body><LayerDialog.Actions><Button variant="secondary" disabled={action.isPending} onClick={()=>setPending(undefined)}>取消</Button><Button disabled={!!locked||!pending} loading={action.isPending} onClick={()=>{if(pending)action.mutate({action:pending})}}>确认执行</Button></LayerDialog.Actions></LayerDialog.Content></LayerDialog.Root>
+ <LayerDialog.Root open={!!pending} dismissDisabled={action.isPending} onOpenChange={v=>{if(!v&&!action.isPending)setPending(undefined)}}><LayerDialog.Content><LayerDialog.Title>确认{operations.find(([key])=>key===pending)?.[1]}</LayerDialog.Title><LayerDialog.Description>{pending?.startsWith('hard_')?'将强制断电，可能丢失数据或损坏文件系统。请确认可以中断业务。':'请确认可以中断当前业务，然后执行服务器操作。'}</LayerDialog.Description><LayerDialog.Body>{action.error&&<Banner variant="error" title={getApiMessage(action.error)} />}</LayerDialog.Body>{instanceConfirmationActions({disabled:!!locked||!pending,loading:action.isPending,onConfirm:()=>{if(pending)action.mutate({action:pending})},children:'确认执行'})}</LayerDialog.Content></LayerDialog.Root>
  </div>;
 }
