@@ -93,11 +93,11 @@ export function ReinstallDialog({
   loading?: boolean;
   onConfirm: (input: InstanceActionInput) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(()=>!disabled&&new URLSearchParams(window.location.search).get('action')==='reinstall');
   const [review, setReview] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [imageId, setImageId] = useState("");
-  const [port, setPort] = useState("");
+  const [port, setPort] = useState(currentPort||"");
   const validPort = /^\d+$/.test(port) && Number(port) >= 1 && Number(port) <= 65535;
   const [formatDataDisk, setFormatDataDisk] = useState(false);
   const images = useQuery({
@@ -145,7 +145,7 @@ export function ReinstallDialog({
         <div className="grid gap-2">
           <Dialog.Title className="text-2xl font-semibold">{review ? "二次确认重装" : "选择重装系统"}</Dialog.Title>
           <Dialog.Description className="text-kumo-subtle">
-            {review ? "请再次核对镜像与端口，确认后将开始重装系统。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
+            {review ? "数据将清空。请再次核对镜像与端口，确认后将开始重装系统。" : "镜像来自该商品订购配置；重装会覆盖系统盘数据。"}
           </Dialog.Description>
         </div>
         {images.isLoading ? <PageState loading><></></PageState> : null}
@@ -248,7 +248,7 @@ export function InstanceConsole() {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 flex-wrap items-center gap-3"><h1 className="break-all text-2xl font-semibold">{instance.name}</h1><CopyValue value={instance.primaryIp} label="实例 IP" /></div>
           <div aria-label="实例操作" className="flex flex-wrap gap-2">
- <TransferDialog instanceId={instanceId} />
+ <TransferDialog instanceId={instanceId} disabled={instance.productionLocked} />
             <ActionDialog label="开机" title="确认开机" description="确认后将启动此实例。" disabled={!capabilities?.start || (live.data?.status ?? instance.status) === 3} loading={action.isPending} onConfirm={() => submit({ action: "start" })} />
             <ActionDialog label="关机" title="确认关机" description="关机将中断实例上的业务，请确认服务已安全停止。" disabled={!capabilities?.stop || instance.status === 4} loading={action.isPending} onConfirm={() => submit({ action: "stop" })} />
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
@@ -292,7 +292,7 @@ export function InstanceConsole() {
           <InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error ? getApiMessage(monitor.error) : undefined} />
         </div> : null}
         {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
-        {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} /> : null}
+        {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} disabled={instance.productionLocked} /> : null}
         {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
           <LayerCard className="grid gap-3 px-5 py-4"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-base text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>

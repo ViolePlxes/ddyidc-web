@@ -8,6 +8,7 @@ export function instanceManagementApi(id:string,customerId?:string){
  const path=customerId?`/customers/${customerId}/instances/${id}`:`/instance/${id}`;
  async function unwrap<T>(p:Promise<{data:ApiEnvelope<T>}>){const {data}=await p;if(data.code!==0)throw new Error(data.message||'请求失败');return data.data}
  return {
+  productionLock:(enabled:boolean)=>unwrap(client.put(`${path}/production-lock`,{enabled,confirmed:true})),
   status:(signal?:AbortSignal)=>unwrap<LiveInstanceStatus>(client.get(`${path}/status`,{timeout:30000,signal})),
   remark:(remark:string)=>unwrap(client.put(`${path}/remark`,{remark})),
   edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string;productOnly?:boolean})=>unwrap(client.patch(path,data,{timeout:65000})),
@@ -15,7 +16,7 @@ export function instanceManagementApi(id:string,customerId?:string){
   options:()=>unwrap<{items:RenewalOption[];currentCycle?:string}>(client.get(`${path}/renewal-options`,{timeout:65000})),
   renew:(cycle:string,quoteRevision:string,replaceOrderId?:string)=>unwrap<RenewalOrder>(client.post(`${path}/renewals`,{cycle,quoteRevision,replaceOrderId},{timeout:65000})),
   pay:(orderId:string)=>unwrap(client.post(`${path}/renewals/pay`,{orderId},{timeout:120000})),
-  auto:(enabled:boolean,quoteRevision?:string)=>unwrap(client.put(`${path}/auto-renew`,{enabled,quoteRevision},{timeout:65000})),
+  auto:(enabled:boolean,quoteRevision?:string,cycle?:string)=>unwrap(client.put(`${path}/auto-renew`,{enabled,quoteRevision,cycle},{timeout:65000})),
  };
 }
 
