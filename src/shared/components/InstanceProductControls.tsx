@@ -1,5 +1,6 @@
+import { ProductionLockEmailDialog } from './ProductionLockEmailDialog';
 import { instanceConfirmationActions } from './InstanceConfirmationActions';
-import { Banner, Button, ButtonGroup, DropdownMenu, LayerDialog, Select } from '@cloudflare/kumo';
+import { Banner, Button, ButtonGroup, DropdownMenu, LayerDialog, Select, Switch } from '@cloudflare/kumo';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -9,32 +10,34 @@ import { instanceManagementApi } from '../api/instanceManagement';
 import { getApiMessage } from '../api/request';
 import { transfersApi } from '../api/transfers';
 
-export function InstanceSetting({ instance, kind, customerId }: { instance: InstanceListItem; kind: 'lock' | 'auto'; customerId?: string }) {
- const [open,setOpen]=useState(false);
- const client=useQueryClient();
- const api=instanceManagementApi(instance.id,customerId);
- const enabled=kind==='lock' ? !!instance.productionLocked : !!instance.autoRenew;
- const options=useQuery({queryKey:['renewal-options',customerId||'self',instance.id],queryFn:api.options,enabled:open&&kind==='auto'&&!enabled,retry:false});
- const [cycle,setCycle]=useState('');
- const quoteError=kind==='auto'&&!enabled?options.error:null;
+
+export function InstanceSetting(props: { instance: InstanceListItem; kind: 'lock' | 'auto'; customerId?: string }) {
+ if (props.kind === 'lock') return <ProductionLockEmailDialog instance={props.instance} customerId={props.customerId} />;
+ return <AutoRenewSetting instance={props.instance} customerId={props.customerId} />;
+}
+
+function AutoRenewSetting({ instance, customerId }: { instance: InstanceListItem; customerId?: string }) {
+ const [open,setOpen]=useState(false);const [cycle,setCycle]=useState('');
+ const client=useQueryClient();const api=instanceManagementApi(instance.id,customerId);
+ const enabled=!!instance.autoRenew;
+ const options=useQuery({queryKey:['renewal-options',customerId||'self',instance.id],queryFn:api.options,enabled:open&&!enabled,retry:false});
  const selected=options.data?.items.find(q=>q.cycle===(cycle||options.data.currentCycle));
- const save=useMutation({mutationFn:()=>kind==='lock'?api.productionLock(!enabled):api.auto(!enabled,selected?.quoteRevision,selected?.cycle),onSuccess:async()=>{
+ const save=useMutation({mutationFn:()=>api.auto(!enabled,selected?.quoteRevision,selected?.cycle),onSuccess:async()=>{
   await Promise.all([client.invalidateQueries({queryKey:['instances']}),client.invalidateQueries({queryKey:['instance-live-status']}),...(customerId?[client.invalidateQueries({queryKey:['admin','customer-instance',customerId,instance.id]})]:[])]);setOpen(false);
  }});
- const title=kind==='lock'?`${enabled?'解除':'开启'}生产锁`:`${enabled?'关闭':'开启'}自动续费`;
- return <LayerDialog.Root open={open} dismissDisabled={save.isPending} onOpenChange={v=>{if(!save.isPending){setOpen(v);save.reset();setCycle('');}}}>
-  <Button variant="secondary" size="sm" aria-label={`${kind==='lock'?'生产锁':'自动续费'} ${instance.name} ${enabled?'已开启':'未开启'}`} disabled={instance.readOnly||(kind==='auto'&&(instance.productionLocked||instance.status===6))} onClick={()=>setOpen(true)}>{enabled?'已开启':'未开启'}</Button>
+ const title=`${enabled?'关闭':'开启'}自动续费`;
+ return <LayerDialog.Root open={open} dismissDisabled={save.isPending} onOpenChange={value=>{if(!save.isPending){setOpen(value);save.reset();setCycle('');}}}>
+  <Switch checked={enabled} label={enabled?'已开启':'未开启'} aria-label={`自动续费 ${instance.name}`} disabled={save.isPending||instance.readOnly||instance.status===6} onCheckedChange={()=>setOpen(true)} />
   <LayerDialog.Content><LayerDialog.Title>{title}</LayerDialog.Title>
-   <LayerDialog.Description>{kind==='lock'?(enabled?'解除后将恢复服务器操作，请确认由你本人操作。':'开启后禁止开关机、重启、VNC、转让、重装、续费等全部写操作，须手动解除后恢复。'):enabled?'关闭后将不再自动续费，到期将停机，请及时手动续费。':'到期前1天按所选周期创建续费订单，经报价和余额校验后扣费。余额不足不扣费、不续费，并通知充值，到期前每15分钟重试；价格变化须重新确认。'}</LayerDialog.Description>
+   <LayerDialog.Description>{enabled?'关闭后将不再自动续费，到期将停机，请及时手动续费。':'到期前1天按所选周期创建续费订单，经报价和余额校验后扣费。余额不足不扣费、不续费，并通知充值，到期前每15分钟重试；价格变化须重新确认。'}</LayerDialog.Description>
    <LayerDialog.Body><div className="grid gap-3">
-    {kind==='auto'&&!enabled&&<><Select label="自动续费周期" value={cycle||options.data?.currentCycle||''} items={Object.fromEntries((options.data?.items??[]).map(q=>[q.cycle,`${q.label||q.cycle} · ¥${q.amount}`]))} onValueChange={v=>setCycle(v||'')} /><p>默认使用原购买时长。确认扣费金额：{selected?`¥${selected.amount}`:'正在读取核验报价…'}</p></>}
-    {(save.error||quoteError)&&<Banner variant="error" title={getApiMessage(save.error||quoteError)} />}
+    {!enabled&&<><Select label="自动续费周期" value={cycle||options.data?.currentCycle||''} items={Object.fromEntries((options.data?.items??[]).map(q=>[q.cycle,`${q.label||q.cycle} · ¥${q.amount}`]))} onValueChange={value=>setCycle(value||'')} /><p>默认使用原购买时长。确认扣费金额：{selected?`¥${selected.amount}`:'正在读取核验报价…'}</p></>}
+    {(save.error||(!enabled&&options.error))&&<Banner variant="error" title={getApiMessage(save.error||options.error)} />}
    </div></LayerDialog.Body>
-   {instanceConfirmationActions({loading:save.isPending,disabled:kind==='auto'&&!enabled&&(!selected||options.isFetching||options.isError),onConfirm:()=>save.mutate(),children:<>确认{title}</>})}
+   {instanceConfirmationActions({destructive:enabled,loading:save.isPending,disabled:!enabled&&(!selected||options.isFetching||options.isError),onConfirm:()=>save.mutate(),children:<>确认{title}</>})}
   </LayerDialog.Content>
  </LayerDialog.Root>;
 }
-
 const operations=[['transfer','转让实例'],['start','开机'],['stop','关机'],['reboot','重启'],['hard_stop','硬关机'],['hard_reboot','硬重启'],['remote','VNC'],['reinstall','重装系统'],['renew','续费']] as const;
 export function InstanceActions({instance}:{instance:InstanceListItem}) {
  const navigate=useNavigate();const client=useQueryClient();
@@ -49,7 +52,8 @@ export function InstanceActions({instance}:{instance:InstanceListItem}) {
  const power=data?.powerStatus?.toLowerCase()||instance.powerStatus?.toLowerCase();
  const busy=['starting','stopping','rebooting','reinstalling','operating','provisioning','migrating'].includes(power||'');
  const disabled=(key:string)=>{
-  if(locked||instance.readOnly||detail.isFetching||!data||busy||data.status===6)return true;
+  if(instance.readOnly||detail.isFetching||!data||busy||data.status===6)return true;
+  if(locked&&key!=='renew')return true;
   if(key==='transfer')return !transfer.data?.enabled||transfer.isFetching||!!transfer.data.trading||!!transfer.data.transferring;
   if(key==='start')return !cap?.start||['running','on'].includes(power||'')||data.status===3;
   if(key==='stop'||key==='hard_stop')return !(key==='stop'?cap?.stop:cap?.hardStop)||['stopped','off'].includes(power||'')||data.status===4;

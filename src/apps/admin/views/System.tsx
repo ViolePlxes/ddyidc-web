@@ -29,6 +29,7 @@ const sceneLabels: Record<string, string> = {
   reset: "找回密码",
   bindMobile: "绑定手机",
   bindEmail: "绑定邮箱",
+  productionLock: "生产锁操作验证码",
   order: "下单成功",
   activation: "开通成功",
   expiry: "到期提醒",
