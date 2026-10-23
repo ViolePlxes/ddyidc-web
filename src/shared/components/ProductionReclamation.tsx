@@ -7,6 +7,7 @@ import { getApiMessage } from "../api/request";
 const categories: Record<string,string>={build_job:"构建任务",staging:"候选程序",previous_backend:"历史后端",previous_frontend:"历史前端",archived_result:"历史更新结果",legacy_program:"历史程序副本",legacy_cache:"历史缓存",registered_copy:"已登记发布副本"};
 const reasons:Record<string,string>={"database recovery data protected":"数据库恢复数据受保护","build unit active":"构建尚未结束","resource in use":"文件仍被占用"};
 const resourceStates:Record<string,string>={pending:"等待回收",blocked:"占用保护",failed:"回收失败",removed:"已回收"};
+const errorText=(error:string)=>({"update recovery pending":"更新恢复尚未完成","update transaction active":"存在进行中的更新","resource reclamation incomplete":"部分资源被占用或回收失败","worker interrupted":"执行中断后等待恢复","reclamation database operation failed":"回收记录写入失败","build unit state unavailable":"构建服务状态不可用","process reference scan denied":"进程引用核验权限不足","production MySQL socket mismatch":"数据库本机连接校验失败"} as Record<string,string>)[error]??"回收校验失败，请检查服务日志";
 const labels: Record<string,string>={pending:"等待回收",preview_ready:"预览完成",preview_pending:"等待预览",running:"正在回收",success:"自动回收正常",failed:"自动回收待处理"};
 const space=(bytes:number|undefined)=>bytes===undefined?"—":`${(bytes/1024**3).toFixed(2)} GiB`;
 export function ProductionReclamation(){
@@ -27,7 +28,7 @@ export function ProductionReclamation(){
  <p>下次重试或巡检：{data.state.nextAttemptAt?new Date(data.state.nextAttemptAt).toLocaleString("zh-CN"):"等待调度"}</p>
  <dl className="grid gap-2 sm:grid-cols-2"><div><dt>状态</dt><dd>{labels[data.state.status]??data.state.status}</dd></div><div><dt>最近完成</dt><dd>{data.state.finishedAt?new Date(data.state.finishedAt).toLocaleString("zh-CN"):"尚未运行"}</dd></div><div><dt>最近磁盘空闲变化</dt><dd>{data.state.summary?.freeBytesDelta===undefined?"—":`${(data.state.summary.freeBytesDelta/1024**3).toFixed(2)} GiB`}</dd></div><div><dt>重试次数</dt><dd>{data.state.attempts}</dd></div></dl>
  {data.resources?.length?<ul className="grid gap-1">{data.resources.slice(0,10).map(resource=><li key={resource.resourceKey}>{resource.taskId?`任务 ${resource.taskId} · `:""}{categories[resource.category]??"系统资源"} · {resourceStates[resource.status]??"待核实"}{resource.lastError?`（${reasons[resource.lastError]??"请检查占用或权限"}）`:""}</li>)}</ul>:null}
- {data.state.lastError?<p>回收结果：{data.state.lastError}</p>:null}
+ {data.state.lastError?<p>回收结果：{errorText(data.state.lastError)}</p>:null}
  <Button variant="secondary" className="w-fit" loading={preview.isPending} disabled={!data.configured||!data.infrastructureReady||data.state.status==="running"} onClick={()=>preview.mutate()}>预览回收范围</Button>
  {data.state.preview?<p>最近预览：发现 {data.state.preview.discovered??0} 项；占用保护 {data.state.preview.blocked??0} 项，不删除文件。</p>:null}
  <Button variant="secondary" className="w-fit" loading={retry.isPending} disabled={!data.configured||!data.infrastructureReady||data.state.status==="running"} onClick={()=>retry.mutate()}>重试自动回收</Button>
@@ -44,7 +45,7 @@ function ReclamationHistory(){
  return <div className="grid gap-2"><h3 className="font-semibold">回收历史</h3>
  {query.error?<Banner variant="error" title="回收历史读取失败" description={getApiMessage(query.error)}/>:null}
  <div className="overflow-x-auto"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>类型</Table.Head><Table.Head>状态</Table.Head><Table.Head>关联更新任务</Table.Head><Table.Head>磁盘空闲变化</Table.Head></Table.Row></Table.Header><Table.Body>
- {(query.data?.items??[]).map(run=><Table.Row key={run.id}><Table.Cell>{new Date(run.startedAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{run.dryRun?"只读预览":"系统回收"}</Table.Cell><Table.Cell>{({success:"已完成",failed:"失败",running:"执行中",interrupted:"中断后恢复"} as Record<string,string>)[run.status]??"待核实"}{run.lastError?`（${run.lastError}）`:""}</Table.Cell><Table.Cell>{[...new Set(run.summary?.resources?.map(item=>item.taskId).filter(id=>id!=="0")??[])].join("、")||"系统资源"}</Table.Cell><Table.Cell>{run.summary?.freeBytesDelta===undefined?"—":`${(run.summary.freeBytesDelta/1024**3).toFixed(2)} GiB`}</Table.Cell></Table.Row>)}
+ {(query.data?.items??[]).map(run=><Table.Row key={run.id}><Table.Cell>{new Date(run.startedAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{run.dryRun?"只读预览":"系统回收"}</Table.Cell><Table.Cell>{({success:"已完成",failed:"失败",running:"执行中",interrupted:"中断后恢复"} as Record<string,string>)[run.status]??"待核实"}{run.lastError?`（${errorText(run.lastError)}）`:""}</Table.Cell><Table.Cell>{[...new Set(run.summary?.resources?.map(item=>item.taskId).filter(id=>id!=="0")??[])].join("、")||"系统资源"}</Table.Cell><Table.Cell>{run.summary?.freeBytesDelta===undefined?"—":`${(run.summary.freeBytesDelta/1024**3).toFixed(2)} GiB`}</Table.Cell></Table.Row>)}
  </Table.Body></Table></div>
  {!query.isLoading&&!query.data?.items.length?<p>暂无回收记录</p>:null}
  <div className="flex items-center justify-between gap-3"><p>第 {page} 页，共 {query.data?.total??0} 条</p><div className="flex gap-2"><Button variant="secondary" disabled={page<=1||query.isFetching} onClick={()=>setPage(value=>value-1)}>上一页</Button><Button variant="secondary" disabled={!query.data||page*20>=query.data.total||query.isFetching} onClick={()=>setPage(value=>value+1)}>下一页</Button></div></div>
