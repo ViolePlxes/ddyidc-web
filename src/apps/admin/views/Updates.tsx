@@ -1,3 +1,4 @@
+import { ProductionReclamation } from "../../../shared/components/ProductionReclamation";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { ArrowsClockwiseIcon, GitBranchIcon } from "@phosphor-icons/react";
@@ -56,7 +57,7 @@ export function AdminUpdates() {
     },
   });
 
-  if (status.isLoading) return <Loader />;
+  if (status.isLoading) return <><ProductionReclamation /><Loader /></>;
   if (status.error || !status.data) {
     return (
       <>
@@ -66,6 +67,7 @@ export function AdminUpdates() {
           actions={<Button variant="secondary" icon={<ArrowsClockwiseIcon />} loading={check.isPending} onClick={() => check.mutate()}>重新同步远端版本</Button>}
         />
         <Banner variant="error" title="更新状态读取失败" description={getApiMessage(check.error ?? status.error)} />
+        <ProductionReclamation />
       </>
     );
   }
@@ -79,6 +81,7 @@ export function AdminUpdates() {
         description="检查已配置私有仓库的版本，并安全更新后端服务或前端站点。"
         actions={<Button variant="secondary" icon={<ArrowsClockwiseIcon />} loading={check.isPending} disabled={Boolean(running)} onClick={() => check.mutate()}>检查更新</Button>}
       />
+      <ProductionReclamation />
       {notice ? <Banner title="更新中心" description={notice} /> : null}
       {operationError ? <Banner variant="error" title="操作失败" description={getApiMessage(operationError)} /> : null}
       {running ? (

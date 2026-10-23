@@ -68,3 +68,20 @@ export async function getUpdateTasks(): Promise<UpdateTask[]> {
   const response = await adminRequest.get<ApiEnvelope<{ items: UpdateTask[] }>>("/update/tasks", { params: { page: 1, pageSize: 50 } });
   return response.data.data.items;
 }
+
+export interface ReclamationStatus {
+ resources?: {resourceKey:string;taskId:number;category:string;status:string;lastError:string}[];
+ configured: boolean; infrastructureReady: boolean; historicalVersions: number; alert: boolean;
+ state: {status: string; attempts: number; lastError: string; finishedAt?: string; nextAttemptAt?: string; preview?: {discovered?:number;blocked?:number}; summary?: {removed?: number; blocked?: number; failed?: number; freeBytesDelta?: number;diskTotalBytes?:number;diskUsedBytes?:number;diskFreeBytes?:number;discoveredBytes?:number;protectedBytes?:number;inodeUsed?:number;inodeTotal?:number}};
+}
+export async function getReclamation(): Promise<ReclamationStatus> {
+ const response=await adminRequest.get<ApiEnvelope<ReclamationStatus>>("/update/reclamation");return response.data.data;
+}
+export async function retryReclamation(): Promise<void> {await adminRequest.post("/update/reclamation/retry");}
+
+export async function previewReclamation(): Promise<void> {await adminRequest.post("/update/reclamation/preview");}
+
+export interface ReclamationRun {id:string;status:string;dryRun:boolean;startedAt:string;finishedAt?:string;lastError:string;summary?:{freeBytesDelta?:number;resources?:{taskId:string}[]}}
+export async function getReclamationHistory(page:number):Promise<{items:ReclamationRun[];total:number}> {
+ const response=await adminRequest.get<ApiEnvelope<{items:ReclamationRun[];total:number}>>("/update/reclamation/history",{params:{page}});const data=response.data.data;return {...data,items:data.items??[]};
+}

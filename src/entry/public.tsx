@@ -1,3 +1,4 @@
+import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import "../shared/hooks/useTheme";
 import "../styles/tailwind.css";
 import { StrictMode } from "react";
@@ -18,7 +19,7 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <TooltipProvider><PublicPortalApp /></TooltipProvider>
+        <TooltipProvider><VersionRefreshNotice /><PublicPortalApp /></TooltipProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
