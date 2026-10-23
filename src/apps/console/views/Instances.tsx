@@ -101,7 +101,7 @@ function instanceStatus(instance: InstanceListItem): StatusCode {
   return "expired";
 }
 
-const productColumns = "align-top";
+const productColumns = "align-middle";
 function expiryLabel(value?: string) {
   if (!value) return "未设置到期时间";
   const time = new Date(value.replace(" ", "T")).getTime();
@@ -154,7 +154,7 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
     <div className="mt-4 flex justify-end">{cells[9]}</div>
     </div>
   </Surface>;
-  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline last:border-b-0`}>{cells.map((cell, index) => <Table.Cell key={index} role="cell" className="text-center align-middle"><div className="flex justify-center [&>div>div]:justify-items-center">{cell}</div></Table.Cell>)}</Table.Row>;
+  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline last:border-b-0`}>{cells.map((cell, index) => <Table.Cell key={index} role="cell" className="text-left align-middle"><div className="flex justify-start">{cell}</div></Table.Cell>)}</Table.Row>;
 
 }
 
@@ -225,7 +225,7 @@ export function InstanceList() {
             <Table className="min-w-[900px] [&_tbody_tr]:bg-transparent! [&_th]:bg-transparent! [&_th]:text-xs [&_td]:px-1 [&_td]:py-2.5 [&_th]:px-1 [&_th]:pb-2">
               <Table.Header>
               <Table.Row role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-sm font-medium text-kumo-subtle`}>
-                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "生产锁", "自动续费", "操作"].map(label=><Table.Head role="columnheader" key={label} className="text-center">{label === '生产锁' ? <ProductSettingLabel kind="lock" /> : label === '自动续费' ? <ProductSettingLabel kind="auto" /> : label}</Table.Head>)}
+                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "生产锁", "自动续费", "操作"].map(label=><Table.Head role="columnheader" key={label} className="text-left align-middle">{label === '生产锁' ? <ProductSettingLabel kind="lock" /> : label === '自动续费' ? <ProductSettingLabel kind="auto" /> : label}</Table.Head>)}
               </Table.Row>
               </Table.Header>
                 <Table.Body role="rowgroup">{instances.map(instance=><ProductRow key={instance.id} instance={instance} />)}</Table.Body>
