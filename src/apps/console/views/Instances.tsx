@@ -1,11 +1,11 @@
 import { Pagination } from "../../../shared/components/Pagination";
-import { Button, ClipboardText, Input, LayerCard, Link,  Tabs, Table, Surface, useKumoToastManager } from "@cloudflare/kumo";
+import { Button, ClipboardText, Input, LayerCard, Link, Popover, Tabs, Table, Surface, useKumoToastManager } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { consoleApi, type InstanceListItem } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
-import { PencilSimpleIcon, WindowsLogoIcon, LinuxLogoIcon, DesktopIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon, WindowsLogoIcon, LinuxLogoIcon, DesktopIcon, QuestionIcon } from "@phosphor-icons/react";
 import { instanceManagementApi } from "../../../shared/api/instanceManagement";
 import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
@@ -14,6 +14,33 @@ import { instanceAddress } from "../../../shared/utils/instanceAddress";
 import { InstanceActions, InstanceSetting } from "../../../shared/components/InstanceProductControls";
 
 const instancePageSize = 10;
+function ProductSettingLabel({ kind }: { kind: 'lock' | 'auto' }) {
+  const label = kind === 'lock' ? '生产锁' : '自动续费';
+  return <span className="inline-flex items-center gap-1 whitespace-nowrap">{label}
+    <Popover.Root>
+      <Popover.Trigger render={<Button type="button" variant="ghost" shape="square" size="sm" className="h-4 w-4 p-0 text-kumo-subtle" aria-label={`${label}使用说明`}><QuestionIcon size={14} aria-hidden /></Button>} />
+      <Popover.Portal><Popover.Positioner side="bottom" align="center" sideOffset={8}>
+        <Popover.Popup className="w-80 max-w-[calc(100vw-2rem)] text-left text-sm font-normal">
+          <Popover.Arrow />
+          <Popover.Title>{label}</Popover.Title>
+          <Popover.Description>{kind === 'lock' ? '保护重要服务器，防止误操作。' : '到期前自动续费，减少忘记续费导致的停机。'}</Popover.Description>
+          <div className="mt-3 grid gap-3">
+            {kind === 'lock' ? <>
+              <p>开启后，开关机、重启、VNC、转让、重装等写操作会被禁止，需手动解除后恢复。</p>
+              <p><span className="font-medium">如何操作：</span>点击开关，按弹窗提示完成邮箱验证并确认。未绑定邮箱时，可在同一弹窗内绑定。解除时也需要验证和确认。</p>
+              <p className="text-kumo-subtle">生产锁不影响续费，手动续费和自动续费均可正常使用。</p>
+            </> : <>
+              <p><span className="font-medium">如何开启：</span>点击开关，选择续费周期，核对金额与扣费规则后确认。周期默认使用原购买时长。</p>
+              <p>系统在到期前1天检查余额，并按核验后的当前价格发起续费。余额不足不扣费、不续费，会通知你充值；价格变化需重新确认。</p>
+              <p><span className="font-medium">如何关闭：</span>再次点击开关并确认。关闭后到期将停机，请提前手动续费；生产锁开启时，自动续费仍可正常执行。</p>
+            </>}
+            <Popover.Close render={<Button variant="secondary" size="sm" className="justify-self-end" />}>知道了</Popover.Close>
+          </div>
+        </Popover.Popup>
+      </Popover.Positioner></Popover.Portal>
+    </Popover.Root>
+  </span>;
+}
 const instanceStaleTime = 5 * 60 * 1000;
 const instanceCacheTime = 30 * 60 * 1000;
 
@@ -122,12 +149,12 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
     <div className="pointer-events-none relative [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
     <div className="mb-4 flex items-start justify-between gap-3">{cells[0]}{cells[1]}</div>
     <dl className="grid gap-3 text-sm">
-      {[["IP", 2], ["到期时间", 3], ["费用", 4], ["系统", 5], ["备注", 6], ["生产锁",7], ["自动续费",8]].map(([label, index]) => <div key={label} className="grid grid-cols-[5rem_minmax(0,1fr)] items-start gap-3"><dt className="text-kumo-subtle">{label}</dt><dd className="min-w-0 break-words">{cells[Number(index)]}</dd></div>)}
+      {[["IP", 2], ["到期时间", 3], ["费用", 4], ["系统", 5], ["备注", 6], ["生产锁",7], ["自动续费",8]].map(([label, index]) => <div key={label} className="grid grid-cols-[5rem_minmax(0,1fr)] items-start gap-3"><dt className="text-kumo-subtle">{label === '生产锁' ? <ProductSettingLabel kind="lock" /> : label === '自动续费' ? <ProductSettingLabel kind="auto" /> : label}</dt><dd className="min-w-0 break-words">{cells[Number(index)]}</dd></div>)}
     </dl>
     <div className="mt-4 flex justify-end">{cells[9]}</div>
     </div>
   </Surface>;
-  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline last:border-b-0`}>{cells.map((cell, index) => <Table.Cell key={index} role="cell">{cell}</Table.Cell>)}</Table.Row>;
+  return <Table.Row role="row" className={`${productColumns} border-b border-kumo-hairline last:border-b-0`}>{cells.map((cell, index) => <Table.Cell key={index} role="cell" className="text-center align-middle"><div className="flex justify-center [&>div>div]:justify-items-center">{cell}</div></Table.Cell>)}</Table.Row>;
 
 }
 
@@ -198,7 +225,7 @@ export function InstanceList() {
             <Table className="min-w-[900px] [&_tbody_tr]:bg-transparent! [&_th]:bg-transparent! [&_th]:text-xs [&_td]:px-1 [&_td]:py-2.5 [&_th]:px-1 [&_th]:pb-2">
               <Table.Header>
               <Table.Row role="row" className={`${productColumns} border-b border-kumo-fill px-1 pb-2 text-sm font-medium text-kumo-subtle`}>
-                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "生产锁", "自动续费", "操作"].map(label=><Table.Head role="columnheader" key={label}>{label}</Table.Head>)}
+                {["产品/主机名", "状态", "IP", "到期时间", "费用", "系统", "备注", "生产锁", "自动续费", "操作"].map(label=><Table.Head role="columnheader" key={label} className="text-center">{label === '生产锁' ? <ProductSettingLabel kind="lock" /> : label === '自动续费' ? <ProductSettingLabel kind="auto" /> : label}</Table.Head>)}
               </Table.Row>
               </Table.Header>
                 <Table.Body role="rowgroup">{instances.map(instance=><ProductRow key={instance.id} instance={instance} />)}</Table.Body>

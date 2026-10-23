@@ -8,7 +8,9 @@ export function instanceManagementApi(id:string,customerId?:string){
  const path=customerId?`/customers/${customerId}/instances/${id}`:`/instance/${id}`;
  async function unwrap<T>(p:Promise<{data:ApiEnvelope<T>}>){const {data}=await p;if(data.code!==0)throw new Error(data.message||'请求失败');return data.data}
  return {
-  productionLock:(enabled:boolean)=>unwrap(client.put(`${path}/production-lock`,{enabled,confirmed:true})),
+  productionLockEmail:()=>unwrap<{hasEmail:boolean;emailHint:string}>(client.get(`${path}/production-lock/email`)),
+  sendProductionLockEmail:(enabled:boolean,email?:string)=>unwrap<{expiresIn:number}>(client.post(`${path}/production-lock/email/send`,{enabled,email},{timeout:30000})),
+  productionLock:(enabled:boolean,email:string|undefined,code:string)=>unwrap(client.put(`${path}/production-lock`,{enabled,confirmed:true,email,code})),
   status:(signal?:AbortSignal)=>unwrap<LiveInstanceStatus>(client.get(`${path}/status`,{timeout:30000,signal})),
   remark:(remark:string)=>unwrap(client.put(`${path}/remark`,{remark})),
   edit:(data:{upstreamInstanceId?:string;createdAt?:string;activatedAt?:string;productOnly?:boolean})=>unwrap(client.patch(path,data,{timeout:65000})),
