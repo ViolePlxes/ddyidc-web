@@ -8,6 +8,7 @@ const categories: Record<string,string>={build_job:"构建任务",staging:"候�
 const reasons:Record<string,string>={"database recovery data protected":"数据库恢复数据受保护","build unit active":"构建尚未结束","resource in use":"文件仍被占用"};
 const resourceStates:Record<string,string>={pending:"等待回收",blocked:"占用保护",failed:"回收失败",removed:"已回收"};
 const labels: Record<string,string>={pending:"等待回收",preview_ready:"预览完成",preview_pending:"等待预览",running:"正在回收",success:"自动回收正常",failed:"自动回收待处理"};
+const space=(bytes:number|undefined)=>bytes===undefined?"—":`${(bytes/1024**3).toFixed(2)} GiB`;
 export function ProductionReclamation(){
  const client=useQueryClient();
  const query=useQuery({queryKey:["admin","reclamation"],queryFn:getReclamation,refetchInterval:30_000,retry:false});
@@ -21,6 +22,9 @@ export function ProductionReclamation(){
  {!data.configured||!data.infrastructureReady?<Banner variant="alert" title="自动回收尚未就绪" description="需完成生产服务器绑定、增量迁移及回收服务安装。开发环境不启用。"/>:null}
  {data.alert?<Banner variant="error" title="自动回收需要处理" description="回收服务心跳过期或连续失败，请检查服务及资源占用，不要手动删除运行文件。"/>:null}
  <p>最近巡检磁盘可用：{data.state.summary?.diskFreeBytes===undefined?"—":`${(data.state.summary.diskFreeBytes/1024**3).toFixed(2)} GiB`}；发现资源：{data.state.summary?.discoveredBytes===undefined?"—":`${(data.state.summary.discoveredBytes/1024**3).toFixed(2)} GiB`}</p>
+ <p>磁盘总量：{space(data.state.summary?.diskTotalBytes)}；已用：{space(data.state.summary?.diskUsedBytes)}；inode：{data.state.summary?.inodeUsed??"—"} / {data.state.summary?.inodeTotal??"—"}</p>
+ <p>受保护资源：{space(data.state.summary?.protectedBytes)}；已回收 {data.state.summary?.removed??0} 项；占用保护 {data.state.summary?.blocked??0} 项；失败 {data.state.summary?.failed??0} 项。</p>
+ <p>下次重试或巡检：{data.state.nextAttemptAt?new Date(data.state.nextAttemptAt).toLocaleString("zh-CN"):"等待调度"}</p>
  <dl className="grid gap-2 sm:grid-cols-2"><div><dt>状态</dt><dd>{labels[data.state.status]??data.state.status}</dd></div><div><dt>最近完成</dt><dd>{data.state.finishedAt?new Date(data.state.finishedAt).toLocaleString("zh-CN"):"尚未运行"}</dd></div><div><dt>最近磁盘空闲变化</dt><dd>{data.state.summary?.freeBytesDelta===undefined?"—":`${(data.state.summary.freeBytesDelta/1024**3).toFixed(2)} GiB`}</dd></div><div><dt>重试次数</dt><dd>{data.state.attempts}</dd></div></dl>
  {data.resources?.length?<ul className="grid gap-1">{data.resources.slice(0,10).map(resource=><li key={resource.resourceKey}>{resource.taskId?`任务 ${resource.taskId} · `:""}{categories[resource.category]??"系统资源"} · {resourceStates[resource.status]??"待核实"}{resource.lastError?`（${reasons[resource.lastError]??"请检查占用或权限"}）`:""}</li>)}</ul>:null}
  {data.state.lastError?<p>回收结果：{data.state.lastError}</p>:null}
