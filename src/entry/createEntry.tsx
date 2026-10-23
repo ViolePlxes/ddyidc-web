@@ -1,3 +1,4 @@
+import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import { adminPath } from "../shared/utils/adminEntry";
 import "../shared/hooks/useTheme";
 import { subscribeCatalogChanges } from "../shared/utils/catalogCache";
@@ -169,7 +170,7 @@ export function createEntry(App: ComponentType) {
             <LinkProvider component={RouterLink}>
               <TooltipProvider>
                 <Toasty>
-                  <RouteErrorBoundary><App /></RouteErrorBoundary>
+                  <VersionRefreshNotice /><RouteErrorBoundary><App /></RouteErrorBoundary>
                 </Toasty>
               </TooltipProvider>
             </LinkProvider>
