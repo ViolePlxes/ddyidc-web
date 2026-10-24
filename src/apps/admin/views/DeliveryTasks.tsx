@@ -6,7 +6,7 @@ import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/a
 import { PageState } from "../../../shared/components/PageState";
 
 interface DeliveryTask { id: string; taskKey: string; businessId: string; status: string; attempt: number; safeError: string; availableAt: string; reviewNote?: string }
-const labels: Record<string, string> = { pending: "待执行", running: "执行中", unknown: "结果待核实", succeeded: "已完成", cancelled: "已取消" };
+const labels: Record<string, string> = { pending: "待执行", running: "执行中", unknown: "结果待核实", succeeded: "已完成", failed: "执行失败", cancelled: "已取消" };
 export function DeliveryTasks() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<DeliveryTask>();
