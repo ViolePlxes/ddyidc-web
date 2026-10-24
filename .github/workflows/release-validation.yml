@@ -24,6 +24,7 @@ jobs:
       - run: node --test scripts/upstream-connect.test.mjs
       - run: node --test scripts/instance-address.test.mjs scripts/instance-dialog.test.mjs
       - run: node --test scripts/promo-invite.test.mjs
+      - run: node --test scripts/domain-navigation.test.mjs
       - run: npx tsc -b
       - run: npm run build
         env:

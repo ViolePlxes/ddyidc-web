@@ -181,6 +181,7 @@ const PointsSignin = lazy(() => routeModules.consolePoints().then((module)=>({de
 const PointsTasks = lazy(() => routeModules.consolePoints().then((module)=>({default:module.PointsTasks})));
 const PointsMall = lazy(() => routeModules.consolePoints().then((module)=>({default:module.PointsMall})));
 const PointsOrders = lazy(() => routeModules.consolePoints().then((module)=>({default:module.PointsOrders})));
+const Domains = lazy(() => routeModules.consoleDomains().then(module => ({default: module.Domains})));
 const CdnOverview = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnOverview})));
 const CdnPackages = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnPackages})));
 const CdnUsage = lazy(() => routeModules.consoleCdnsell().then((module)=>({default:module.CdnUsage})));
@@ -352,6 +353,10 @@ export function ConsoleApp() {
                   <ConsoleHome />
                 </LazyRoute>
               }
+            />
+            <Route
+              path="/console/domains/*"
+              element={<LazyRoute><Domains /></LazyRoute>}
             />
             <Route
               path="/console/components"

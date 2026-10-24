@@ -6,6 +6,7 @@ export const routeModules = {
   portalAgreement: () => import("../../apps/portal/views/Agreement"),
   portalGroupBuy: () => import("../../apps/portal/groupbuy"),
   portalMarketplace: () => import("../../apps/portal/marketplace"),
+  consoleDomains: () => import("../../apps/console/domains"),
   consoleHome: () => import("../../apps/console/views/Home"),
   consoleComponents: () => import("../../apps/console/views/Components"),
   consoleProducts: () => import("../../apps/console/views/Products"),
@@ -154,6 +155,7 @@ const routeLoaders: Array<
   [(path) => path === "/console/marketplace", routeModules.consoleMarketplace],
   [(path) => path.startsWith("/console/points"), routeModules.consolePoints],
   [(path) => path.startsWith("/console/cdnsell"), routeModules.consoleCdnsell],
+  [(path) => path === "/console/domains" || path.startsWith("/console/domains/"), routeModules.consoleDomains],
   [(path) => path === adminPath('/admin'), routeModules.adminHome],
   [(path) => path === adminPath('/admin/products'), routeModules.adminProducts],
   [

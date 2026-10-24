@@ -48,6 +48,7 @@ const navigationCategories: Record<string, string> = {
   概览: "业务管理",
   商品管理: "业务管理",
   上下游: "业务管理",
+  域名服务: "服务管理",
   产品与服务: "服务管理",
   资源与账单: "服务管理",
   "CDN 加速": "服务管理",
