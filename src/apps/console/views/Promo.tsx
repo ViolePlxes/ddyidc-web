@@ -11,7 +11,7 @@ import {
 } from "@cloudflare/kumo";
 import { PromoCouponForm, PromoCouponBatches } from "./PromoCouponPanel";
 import { pointsApi } from "../../../shared/api/points";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuthStore } from "../../../shared/stores/auth";
 import { consoleApi } from "../../../shared/api/console";
@@ -20,6 +20,9 @@ import { MetricGrid } from "../../../shared/components/MetricGrid";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { formatMoney } from "../../../shared/utils/format";
+import { usePromoQueries } from "./usePromoQueries";
+import { PromoInviteDialog } from "./PromoInviteDialog";
+import { promoInviteState } from "../../../shared/utils/promoInvite";
 
 function CustomerCouponRow({
   customerId,
@@ -62,30 +65,13 @@ function CustomerCouponRow({
 export function Promo() {
   const userId = useAuthStore((s) => s.user?.id);
   const [expandedCustomer, setExpandedCustomer] = useState<string>();
-  const [customCode, setCustomCode] = useState("");
   const [view, setView] = useState("customers");
   const [search, setSearch] = useState("");
   const [rewardPage, setRewardPage] = useState(1);
   const [referralPage, setReferralPage] = useState(1);
-  const queryClient = useQueryClient();
-  const config = useQuery({
-    queryKey: ["marketing", "public-config"],
-    queryFn: consoleApi.marketingConfig,
-  });
-  const invite = useQuery({
-    queryKey: ["promo", "invite"],
-    queryFn: consoleApi.invite,
-  });
-  const overview = useQuery({
-    queryKey: ["promo", "overview"],
-    queryFn: consoleApi.promoOverview,
-  });
-  const earnings = useQuery({
-    queryKey: ["promo", "earnings"],
-    queryFn: consoleApi.earnings,
-  });
+  const { config, invite, overview, earnings } = usePromoQueries();
   const records = useQuery({
-    queryKey: ["promo", "records", rewardPage],
+    queryKey: ["promo", userId, "records", rewardPage],
     queryFn: () => consoleApi.rewardRecords(rewardPage, 20),
   });
   const children = useQuery({
@@ -96,28 +82,21 @@ export function Promo() {
     queryKey: ["points", "public-rules"],
     queryFn: pointsApi.rules,
   });
-  const create = useMutation({
-    mutationFn: () => consoleApi.createInvite(customCode.trim()),
-    onSuccess: async () => {
-      setCustomCode("");
-      await queryClient.invalidateQueries({ queryKey: ["promo"] });
-    },
-  });
   const data = overview.data;
   const summary = earnings.data;
   const currentInvite = invite.data?.invite;
   const inviteCode = currentInvite?.code || data?.inviteCode;
-  const canApply =
-    !currentInvite || currentInvite.status === 2 || currentInvite.status === 3;
+  const inviteState = promoInviteState(currentInvite, config.data?.inviteEnabled === true, data?.promoLinkPath, window.location.origin);
+  const canApply = inviteState.canApply;
   const inviteStatus = currentInvite
     ? ({ 0: "待审核", 1: "已通过", 2: "已停用", 3: "已驳回" }[
         currentInvite.status
       ] ?? "状态未知")
     : "状态读取中";
-  const link = data?.promoLinkPath
-    ? new URL(data.promoLinkPath, window.location.origin).href
-    : "";
+  const link = inviteState.link;
   const metrics = [
+    { label: "今日已结算收益", value: summary?.todaySettled === undefined ? "—" : formatMoney(summary.todaySettled), hint: "按北京时间的实际结算时间统计" },
+    { label: "昨日已结算收益", value: summary?.yesterdaySettled === undefined ? "—" : formatMoney(summary.yesterdaySettled), hint: "不含待结算、冻结及已回收奖励" },
     { label: "已推广客户", value: String(data?.registrations ?? 0), hint: "" },
     {
       label: "已结算收益",
@@ -143,12 +122,12 @@ export function Promo() {
       : (records.data?.total ?? 0);
   const setPage = view === "customers" ? setReferralPage : setRewardPage;
   const loading =
-    invite.isLoading ||
+    config.isLoading || invite.isLoading ||
     overview.isLoading ||
     earnings.isLoading ||
     records.isLoading;
   const error =
-    invite.error ?? overview.error ?? earnings.error ?? records.error;
+    config.error ?? invite.error ?? overview.error ?? earnings.error ?? records.error;
 
   return (
     <>
@@ -185,20 +164,7 @@ export function Promo() {
           ) : null}
           {canApply ? (
             <LayerCard className=" grid gap-4 px-5 py-4">
-              <Input
-                label="自定义优惠码（可选）"
-                value={customCode}
-                onChange={(event) => setCustomCode(event.target.value)}
-                disabled={!config.data?.inviteEnabled}
-              />
-              <Button
-                className="justify-self-start"
-                loading={create.isPending}
-                disabled={!config.data?.inviteEnabled}
-                onClick={() => create.mutate()}
-              >
-                {currentInvite ? "重新申请优惠码" : "生成优惠码"}
-              </Button>
+              <div className="justify-self-start"><PromoInviteDialog invite={currentInvite} enabled={config.data?.inviteEnabled === true} review={config.data?.inviteReview === true} triggerLabel={currentInvite ? "重新申请优惠码" : "自定义优惠码"} /></div>
               {!config.data?.inviteEnabled ? (
                 <Banner
                   variant="alert"
@@ -207,13 +173,6 @@ export function Promo() {
                 />
               ) : null}
             </LayerCard>
-          ) : null}
-          {create.error ? (
-            <Banner
-              variant="error"
-              title="优惠码生成失败"
-              description={getApiMessage(create.error)}
-            />
           ) : null}
           <MetricGrid metrics={metrics} />
           <LayerCard className=" grid gap-3 px-5 py-4">

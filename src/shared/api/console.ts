@@ -226,6 +226,11 @@ export interface Earnings {
   pending: number;
   settled: number;
   frozen: number;
+  /** Existing marketing monetary boundary is integer cents. */
+  todaySettled?: number;
+  yesterdaySettled?: number;
+  day?: string;
+  timezone?: string;
 }
 
 export interface RewardRecord {

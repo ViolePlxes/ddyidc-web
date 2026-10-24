@@ -13,6 +13,7 @@ import { MiniTrend } from "../../../shared/components/TrendChart";
 import { getLoginDevices } from "../../../shared/api/auth";
 import { certificationApi } from "../../../shared/api/certification";
 import { useAuthStore } from "../../../shared/stores/auth";
+import { HomeReferralPanel } from "./HomeReferralPanel";
 
 function RecentRow({ icon, title, category, href, description }: { icon: ReactNode; title: string; category: string; href: string; description?: string }) {
   return <Link href={href} variant="plain" title={description || `${category} / ${title}`}
@@ -64,17 +65,18 @@ export function ConsoleHome() {
     { key: "delivery" as const, title: "边缘节点分发总量", value: cdn.data?.distributedBytes !== undefined ? traffic(cdn.data.distributedBytes) : "—", hint: cdn.data ? "累计已确认分发流量（含超额用量）· 图表为每日分发流量（GB）" : cdnHint, href: "/console/cdnsell/statistics/traffic", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
     { key: "traffic" as const, title: "流量情况", value: cdn.data ? `今日 ${traffic(cdn.data.todayBytes)}` : "—", hint: cdn.data ? `资源包剩余 ${traffic(cdn.data.remainingBytes)} · ${cdn.data.activeDomains} 个加速域名 · 每日流量（GB）` : cdnHint, href: "/console/cdnsell/usage", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
   ];
-  return <div className="mx-auto grid w-full max-w-5xl gap-10 pb-8">
-    <section className="grid gap-8 pt-6 md:pt-10">
-      <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2">
+  return <div className="mx-auto grid w-full max-w-7xl items-start gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2 pt-6 md:pt-10 lg:col-start-1">
         {certification.data?.status === 2 && user ? <span className="text-base text-kumo-subtle">ID：{user.id}</span> : null}
         <Text as="h1" variant="heading" size="lg">{displayName}，欢迎您</Text>
         {certification.data && certification.data.status !== 2 ? <Button variant="outline" size="sm" onClick={() => navigate("/console/certification")}>去实名认证<CaretRightIcon aria-hidden size={12} /></Button> : null}
         <span className="text-base text-kumo-subtle">当前登录 IP：{loginIp || (devices.isPending ? "读取中…" : "暂无记录")}</span>
       </div>
-      <Button variant="outline" className="h-12 w-full justify-start gap-3 hover:bg-kumo-tint" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
+      <Button variant="outline" className="mx-auto h-12 w-full max-w-5xl justify-start gap-3 hover:bg-kumo-tint lg:col-start-1 lg:row-start-2" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
         <span className="flex-1 text-left text-kumo-subtle">搜索页面、产品和服务…</span><kbd className="text-base text-kumo-subtle">Ctrl K</kbd>
       </Button>
+    <div className="mx-auto grid w-full min-w-0 max-w-5xl gap-10 pb-8 lg:col-start-1 lg:row-start-3">
+    <section className="grid gap-8">
       <div className="grid gap-8 md:grid-cols-3">
         <section aria-label="快捷入口" className="min-w-0">
           <RecentHeading title="快捷入口" />
@@ -125,5 +127,7 @@ export function ConsoleHome() {
       </PageState>
       <p className="text-base text-kumo-subtle">数量与余额为当前值；分发总量为累计已确认计量流量，流量图表按北京时间逐日汇总，今日数据尚未结束。{overview.data ? ` 账户数据更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}` : ""}</p>
     </section>
+    </div>
+    <HomeReferralPanel />
   </div>;
 }
