@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import test from 'node:test';
+import ts from 'typescript';
+const compile = source => ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;
+const catalogUrl='data:text/javascript;base64,'+Buffer.from(compile(await readFile(new URL('../src/shared/domains/catalog.ts',import.meta.url),'utf8'))).toString('base64');
+const {domainSections,domainHref}=await import(catalogUrl);
+const navigationSource=await readFile(new URL('../src/shared/domains/navigation.ts',import.meta.url),'utf8');
+const navigation=compile(navigationSource).replace(/from ["']\.\/catalog["']/g,`from '${catalogUrl}'`).replace(/import .*? from ["']@phosphor-icons\/react["'];?/g,'const GlobeIcon = () => null;');
+const {withDomainNavigation}=await import('data:text/javascript;base64,'+Buffer.from(navigation).toString('base64'));
+test('all 57 documented capabilities have entry points and routes are unique',()=>{
+ const refs=new Set(domainSections.flatMap(s=>s.pages.flatMap(p=>p.capabilities.flatMap(c=>c.refs))));
+ const expected=['1.1',...Array.from({length:22},(_,i)=>`3.${i+1}`),...Array.from({length:12},(_,i)=>`3.${i+28}`),...Array.from({length:12},(_,i)=>`4.${i+1}`),...Array.from({length:5},(_,i)=>`5.${i+1}`),'market.full','market.new','market.removed','market.detail','market.buy'];
+ assert.deepEqual([...refs].sort(),expected.sort());
+ const paths=domainSections.flatMap(s=>[domainHref(s),...s.pages.map(p=>domainHref(s,p))]);
+ assert.equal(new Set(paths).size,paths.length);
+ assert.equal(domainSections.length,8);
+ assert.equal(domainSections.flatMap(s=>s.pages).length,25);
+});
+test('saved menu customization and absence are respected',()=>{
+ assert.deepEqual(withDomainNavigation([]),[]);
+ const groups=[{label:'管理员自定义分组',items:[{label:'自定义解析',href:'/console/domains/dns',id:'saved',icon:null},{label:'其他',href:'/console/orders',icon:null}]}];
+ const result=withDomainNavigation(groups);
+ assert.equal(result[0].label,groups[0].label);
+ assert.equal(result[0].items[0].label,'自定义解析');
+ assert.equal(result[0].items[0].id,'saved');
+ assert.deepEqual(result[0].items[0].children.map(c=>c.label),['解析记录','DNS 服务器','自建 DNS 主机','DNSSEC']);
+ assert.equal(result[0].items[1],groups[0].items[1]);
+ assert.equal(groups[0].items[0].children,undefined);
+ assert.equal(result.length,1);
+});

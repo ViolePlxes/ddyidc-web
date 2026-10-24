@@ -1,3 +1,4 @@
+import { withDomainNavigation } from "../domains/navigation";
 import { adminPath } from "../utils/adminEntry";
 import { useInstanceDetailRoute } from './useInstanceDetailRoute';
 import { transfersApi } from "../api/transfers";
@@ -61,7 +62,7 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
  for(const group of groups)for(const item of group.items)if(item.href===statisticsHref){item.children=Object.entries({bandwidth:"带宽数据统计",traffic:"流量数据统计",requests:"访问数据统计",hit:"命中率统计",status:"状态码统计",distribution:"数据分布统计",uv:"独立IP数据统计",live:"直播数据统计",comparison:"带宽环比"}).map(([kind,label])=>({label,href:statisticsHref+"/"+kind,icon:item.icon}))}
  if(statisticsItem){const base=scope==="admin"?adminPath("/admin/cdnsell"):"/console/cdnsell";const group=groups.find(group=>group.items.some(item=>plugin(item.href)==="cdnsell"));if(group){group.items=group.items.filter(item=>![base+"/certs",base+"/ipcheck",base+"/tools"].includes(item.href));group.items.push({label:"高级工具",href:base+"/tools",icon:statisticsItem.icon,children:Object.entries({certificates:"证书管理",csr:"CSR证书管理","auto-refresh":"CDN自动刷新",ipcheck:"IP检测"}).map(([key,label])=>({label,href:base+"/tools/"+key,icon:statisticsItem.icon}))})}}
  const adminGroups = scope === "admin" ? mergeProductNavigation(groups) : groups;
- return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : groups };
+ return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : scope === 'console' ? withDomainNavigation(groups) : groups };
 }
 
 function mergeProductNavigation(groups: NavigationGroup[]): NavigationGroup[] {
