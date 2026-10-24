@@ -29,9 +29,9 @@ function AutoRenewSetting({ instance, customerId }: { instance: InstanceListItem
  return <LayerDialog.Root open={open} dismissDisabled={save.isPending} onOpenChange={value=>{if(!save.isPending){setOpen(value);save.reset();setCycle('');}}}>
   <Switch checked={enabled} label={enabled?'已开启':'未开启'} aria-label={`自动续费 ${instance.name}`} disabled={save.isPending||instance.readOnly||instance.status===6} onCheckedChange={()=>setOpen(true)} />
   <LayerDialog.Content><LayerDialog.Title>{title}</LayerDialog.Title>
-   <LayerDialog.Description>{enabled?'关闭后将不再自动续费，到期将停机，请及时手动续费。':'到期前1天按所选周期创建续费订单，经报价和余额校验后扣费。余额不足不扣费、不续费，并通知充值，到期前每15分钟重试；价格变化须重新确认。'}</LayerDialog.Description>
+   <LayerDialog.Description>{enabled?'关闭后将不再自动续费，到期将停机，请及时手动续费。':'到期前1天按所选周期和当时价格创建续费订单，余额充足时自动扣费。余额不足不扣费、不续费，并通知充值，到期前每15分钟重试。'}</LayerDialog.Description>
    <LayerDialog.Body><div className="grid gap-3">
-    {!enabled&&<><Select label="自动续费周期" value={cycle||options.data?.currentCycle||''} items={Object.fromEntries((options.data?.items??[]).map(q=>[q.cycle,`${q.label||q.cycle} · ¥${q.amount}`]))} onValueChange={value=>setCycle(value||'')} /><p>默认使用原购买时长。确认扣费金额：{selected?`¥${selected.amount}`:'正在读取核验报价…'}</p></>}
+    {!enabled&&<><Select label="自动续费周期" value={cycle||options.data?.currentCycle||''} items={Object.fromEntries((options.data?.items??[]).map(q=>[q.cycle,`${q.label||q.cycle} · ¥${q.amount}`]))} onValueChange={value=>setCycle(value||'')} /><p>默认使用原购买时长。当前续费金额：{selected?`¥${selected.amount}`:'正在读取价格…'}，实际扣费以续费时价格为准。</p></>}
     {(save.error||(!enabled&&options.error))&&<Banner variant="error" title={getApiMessage(save.error||options.error)} />}
    </div></LayerDialog.Body>
    {instanceConfirmationActions({destructive:enabled,loading:save.isPending,disabled:!enabled&&(!selected||options.isFetching||options.isError),onConfirm:()=>save.mutate(),children:<>确认{title}</>})}
