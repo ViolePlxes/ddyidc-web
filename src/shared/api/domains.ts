@@ -22,7 +22,13 @@ export const domainsApi={
  createOrder:async(quoteId:string)=>result(await userRequest.post<ApiEnvelope<DomainPurchase>>('/domains/orders',{quoteId,confirmed:true})),
  reconcile:async(orderId:string)=>result(await userRequest.post<ApiEnvelope<{updated:boolean}>>('/domains/reconcile',{orderId})),
 };
+export interface AdminDomainAsset extends DomainAsset {customerId:string;customerName:string;updatedAt:string}
+export interface AdminDomainPage {items:AdminDomainAsset[];total:number;page:number;pageSize:number;summary:{total:number;active:number;pending:number;expired:number;expiring:number;reviewOrders:number}}
+export interface AdminDomainDetail {asset:AdminDomainAsset;orders:DomainOrder[];operations:DomainRecord[]}
 export const domainsAdminApi={
+ assets:async(params:{keyword:string;status:string;expiry:string;page:number;pageSize:number})=>result(await adminRequest.get<ApiEnvelope<AdminDomainPage>>('/domains/assets',{params})),
+ asset:async(id:string)=>result(await adminRequest.get<ApiEnvelope<AdminDomainDetail>>('/domains/asset',{params:{id}})),
+ refreshAsset:async(id:string)=>result(await adminRequest.post<ApiEnvelope<{updated:boolean}>>('/domains/asset/refresh',{id,confirmed:true})),
  feed:async(action:string)=>result(await adminRequest.post<ApiEnvelope<{url:string}>>('/domains/feeds',{action})),
  settings:async()=>result(await adminRequest.get<ApiEnvelope<DomainSettings>>('/domains/settings')),
  saveSettings:async(value:DomainSettings)=>result(await adminRequest.put<ApiEnvelope<{saved:boolean}>>('/domains/settings',value)),
