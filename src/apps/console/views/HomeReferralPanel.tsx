@@ -1,5 +1,5 @@
 import { MiniTrend } from "../../../shared/components/TrendChart";
-import { Banner, Button, ClipboardText, Collapsible, LayerCard, Link, Text } from "@cloudflare/kumo";
+import { Banner, Button, ClipboardText, LayerCard, Link, Text } from "@cloudflare/kumo";
 import { ArrowUpRightIcon, LinkIcon } from "@phosphor-icons/react";
 import { formatMoney } from "../../../shared/utils/format";
 import { promoInviteState } from "../../../shared/utils/promoInvite";
@@ -24,27 +24,17 @@ export function HomeReferralPanel({kind}:{kind:"earnings"|"link"}) {
         <Text as="h3" variant="secondary" size="sm">每日收益</Text>
         <Link href="/console/promo" className="inline-flex items-center gap-1 text-sm">我的推广<ArrowUpRightIcon aria-hidden size={14} /></Link>
       </div>
-      <Text as="p" variant="heading1">{money(summary?.todaySettled)}</Text>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      {daily.length>0?<Text as="p" variant="heading1">{money(summary?.todaySettled)}</Text>:null}
+      {daily.length>0?<div className="flex flex-wrap items-center gap-x-4 gap-y-1">
        <Text variant="secondary" size="sm">今日已结算 · 北京时间</Text>
        <Text variant="secondary" size="sm">昨日 {money(summary?.yesterdaySettled)}</Text>
        <Text variant="secondary" size="sm">累计 {money(summary?.settled)}</Text>
-      </div>
+      </div>:null}
       <div className="min-h-0 min-w-0 flex-1">
-       {daily.length?<MiniTrend height={90} title="每日已结算收益（元）" values={daily} money/>:<Text variant="secondary" size="sm">{earnings.isPending?"正在读取收益趋势…":"暂无每日收益数据"}</Text>}
+       {earnings.isPending?<Text variant="secondary" size="sm">正在读取收益趋势…</Text>:!earnings.error?<MiniTrend height={90} title="每日已结算收益（元）" values={daily} money/>:null}
       </div>
       {earnings.error ? <div className="grid gap-2"><Banner variant="error" title="收益读取失败" description={getApiMessage(earnings.error)} /><Button variant="secondary" size="sm" onClick={() => void earnings.refetch()}>重试</Button></div> : null}
-      <Collapsible.Root>
-        <Collapsible.DefaultTrigger>如何获得推广收益？</Collapsible.DefaultTrigger>
-        <Collapsible.DefaultPanel>
-          <div className="grid gap-3 py-2 text-sm text-kumo-subtle">
-            <p>在“我的推广”设置优惠码，将专属优惠链接分享给好友。</p>
-            <p>好友通过链接注册并完成符合规则的订单后，可获得推广奖励。每日收益按北京时间的实际结算时间统计，仅包含当前仍为已结算状态的奖励，不含待结算、冻结或已回收奖励。</p>
-            <p>金额与“我的推广”共用数据，具体奖励、结算状态及明细以推广规则和记录为准。</p>
-            <Link href="/console/promo">查看推广规则与明细</Link>
-          </div>
-        </Collapsible.DefaultPanel>
-      </Collapsible.Root>
+
     </LayerCard>;
   return <LayerCard className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-y-auto bg-kumo-base px-4 pt-3 pb-2">
     <div className="flex items-center gap-2"><LinkIcon size={16}/><Text as="h3" variant="secondary" size="sm">专属优惠链接</Text></div>
