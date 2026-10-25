@@ -110,22 +110,22 @@ export function ConsoleHome() {
       </div>
       <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 grid-cols-1 gap-3 px-5 py-4">
+          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 grid-cols-1 content-start gap-3 bg-kumo-base px-5 py-4">
             <Link href={m.href} variant="plain" aria-label={`查看${m.title}`} className="absolute inset-0 z-10" />
-            <div className="flex items-center justify-between gap-3"><Text>{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
-            <Text as="p" variant="body" size="base">{m.value}</Text>
+            <div className="flex items-center justify-between gap-3"><Text variant="secondary" size="sm">{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
+            <Text as="p" variant="heading1">{m.value}</Text>
             {m.key === "balance" ? <div className="relative z-20 flex flex-wrap gap-2">
               <Button variant="primary" size="sm" onClick={() => navigate("/wallet/recharge")}>充值</Button>
               <Button variant="secondary" size="sm" onClick={() => navigate("/wallet/consume-records")}>明细</Button>
             </div> : null}
-            <span className="min-w-0 whitespace-normal break-words text-base text-kumo-subtle">{m.hint}</span>
+            <Text variant="secondary" size="sm">{m.hint}</Text>
             <div className="relative z-20 min-w-0 cursor-pointer" onClick={() => navigate(m.href)}>
               <MiniTrend title={m.key === "delivery" || m.key === "traffic" ? "每日分发流量（GB）" : m.hint} money={m.key === "balance"} values={m.values} valueFormat={m.valueFormat} />
             </div>
           </LayerCard>)}
         </div>
       </PageState>
-      <p className="text-base text-kumo-subtle">数量与余额为当前值；分发总量为累计已确认计量流量，流量图表按北京时间逐日汇总，今日数据尚未结束。{overview.data ? ` 账户数据更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}` : ""}</p>
+      <Text variant="secondary" size="sm">数量与余额为当前值；分发总量为累计已确认计量流量，流量图表按北京时间逐日汇总，今日数据尚未结束。{overview.data ? ` 账户数据更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}` : ""}</Text>
     </section>
     </div>
     <HomeReferralPanel />
