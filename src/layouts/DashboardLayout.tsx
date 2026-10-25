@@ -1,3 +1,5 @@
+import { LegalDocumentDialog } from "../shared/components/LegalDocumentDialog";
+import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { broadcastApi } from "../shared/api/notifications";
 import { MessageButton } from "../shared/components/notifications/MessageButton";
@@ -8,7 +10,7 @@ import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
 import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
 import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
-import { Button, DropdownMenu, LinkButton, Sidebar, Surface } from "@cloudflare/kumo";
+import { Button, DropdownMenu, LinkButton, Link as KumoLink, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   BellIcon,
   MoonIcon,
@@ -143,11 +145,12 @@ export function DashboardLayout({
 
   return (
     <Sidebar.Provider
+      style={{ "--sidebar-bg": "var(--color-kumo-canvas)" } as CSSProperties}
       defaultOpen
       peekable
       className="h-svh max-h-svh overflow-hidden font-sans"
     >
-      <Sidebar aria-label="主导航" className="antialiased">
+      <Sidebar aria-label="主导航" className="antialiased bg-kumo-canvas">
         <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
@@ -159,7 +162,7 @@ export function DashboardLayout({
                   className="flex w-full min-w-0 items-center justify-start gap-2 text-left"
                 >
                   <CubeIcon className="size-4 shrink-0 text-kumo-brand" weight="duotone" />
-                  <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">DDYIDC</span>
+                  <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">ddoidc.com</span>
                   <span className="w-4 shrink-0 overflow-hidden transition-[width] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:w-0">
                     <CaretUpDownIcon className="size-4 text-kumo-subtle" />
                   </span>
@@ -241,7 +244,7 @@ export function DashboardLayout({
             </Sidebar.Group>
           ))}
         </Sidebar.Content>
-        <Sidebar.Footer>
+        <Sidebar.Footer className="h-12 shrink-0 justify-center border-t border-kumo-line bg-kumo-canvas">
           <Sidebar.Trigger />
         </Sidebar.Footer>
       </Sidebar>
@@ -299,6 +302,14 @@ export function DashboardLayout({
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
         </main>
+        <footer className="flex h-12 shrink-0 items-center justify-center gap-4 overflow-x-auto border-t border-kumo-line bg-kumo-canvas px-4 text-sm whitespace-nowrap" aria-label="平台页脚">
+          <KumoLink href="https://docs.ddoidc.com" variant="current">支持</KumoLink>
+          <span aria-hidden="true" className="text-kumo-subtle">|</span>
+          <LegalDocumentDialog kind="service" label="服务条款"/>
+          <span aria-hidden="true" className="text-kumo-subtle">|</span>
+          <LegalDocumentDialog kind="privacy" label="隐私政策"/>
+          <span className="text-kumo-subtle">© {new Date().getFullYear()} ddoidc.com</span>
+        </footer>
       </div>
     </Sidebar.Provider>
   );
