@@ -294,14 +294,14 @@ export function DashboardLayout({
           </DropdownMenu>
         </Surface>
         <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
+         <div className="flex min-h-full flex-col">
           <div
             data-layout-width={contentWidth}
-            className={`${contentContainerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            className={`flex-1 ${contentContainerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             {todoReturn ? <div className="mb-3"><Link to={todoReturn}><Button variant="secondary">返回待办列表</Button></Link></div> : null}
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
-        </main>
         <footer className="flex h-12 shrink-0 items-center justify-center gap-4 overflow-x-auto border-t border-kumo-line bg-kumo-canvas px-4 text-sm whitespace-nowrap" aria-label="平台页脚">
           <KumoLink href="https://docs.ddoidc.com" variant="current">支持</KumoLink>
           <span aria-hidden="true" className="text-kumo-subtle">|</span>
@@ -310,6 +310,8 @@ export function DashboardLayout({
           <LegalDocumentDialog kind="privacy" label="隐私政策"/>
           <span className="text-kumo-subtle">© {new Date().getFullYear()} ddoidc.com</span>
         </footer>
+         </div>
+        </main>
       </div>
     </Sidebar.Provider>
   );
