@@ -30,7 +30,7 @@ export const domainSections: DomainSection[] = [
   ] },
   { key: "billing", title: "续费与赎回", description: "按当前报价续费，或处理进入赎回阶段的域名。", pages: [
     { key: "renew", title: "域名续费", description: "选择本人域名和续费年限，核对价格及续费后的到期时间。", capabilities: [capability("查询续费价格", ["3.14"]), capability("提交域名续费", ["3.2"], { paid: true, note: "通过平台订单付款，并核对原到期时间，防止同一周期重复执行。" })] },
-    { key: "redeem", title: "域名赎回", description: "核实域名赎回资格及费用，提交申请后跟踪实际处理状态。", capabilities: [capability("提交赎回并查询结果", ["3.28"], { approval: true, paid: true, note: "能力需单独开通；资格与费用确认后才允许提交。" })] },
+    { key: "redeem", title: "域名赎回", description: "核实域名赎回资格及费用，提交申请后跟踪实际处理状态。", capabilities: [capability("提交赎回并查询结果", ["3.28"], { paid: true, note: "赎回前核对资格与费用，提交后跟踪实际处理结果。" })] },
   ] },
   { key: "transfers", title: "转入与过户", description: "将其他注册商的域名转入，或变更当前域名的持有人。", pages: [
     { key: "import", title: "域名转入", description: "填写域名和转移码，检查转入条件及价格，选择注册信息模板。", capabilities: [capability("验证转入资格与费用", ["5.2"]), capability("提交转入申请", ["5.1"], { paid: true, note: "默认保留原 DNS；域名管理密码不能替代转移码。" })] },
