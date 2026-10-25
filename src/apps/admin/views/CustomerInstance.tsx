@@ -1,6 +1,7 @@
+import { instanceListReturnPath } from '../../../shared/utils/instanceListDisplay';
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
-import { InstanceCredentials, InstanceRemark, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
+import { InstanceCredentials, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
 import { Banner, Breadcrumbs, Button, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
@@ -56,7 +57,7 @@ export function CustomerInstance(){
  const reinstall=<ReinstallDialog key={instanceId} instanceId={instanceId} currentPort={query.data?.port} scope={`admin-${customerId}`} loadImages={api.images} disabled={!caps?.reinstall} loading={action.isPending} onConfirm={submit}/>;
  const config=(fields:string[],names:string[]=[])=>item?configValue(item,fields,names):'—';
  const requestedReturn=search.get('returnTo')||'';
- const listPath=/^\/admin\/instances(?:\?[^#]*)?$/.test(requestedReturn)?requestedReturn:`${adminBase}/customers/${customerId}/products`;
+ const listPath=instanceListReturnPath(requestedReturn,adminBase,`${adminBase}/customers/${customerId}/products`);
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href={adminPath('/admin/customers')}>客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
   <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-base text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
@@ -71,7 +72,7 @@ export function CustomerInstance(){
       {label:'所属客户',value:<Link className="text-kumo-link hover:underline" to={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`#${customerId}`}</Link>},
       {label:'产品名称',value:item.productName},{label:'实例编号',value:item.name},{label:'实例状态',value:<InstanceStatusControl live={live} fallback={item.powerStatus}/>},
       {label:'模块类型',value:item.moduleType||'—'},{label:'上游实例 ID',value:item.upstreamInstanceId||'—'},
-      {label:'备注信息',value:<InstanceRemark key={instanceId} instance={item} customerId={customerId}/>},{label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},
+      {label:'备注信息',value:<span>{item.remark||'未填写备注'}</span>},{label:'数据中心',value:config(['data_center','region'],['数据中心','区域'])},{label:'创建时间',value:formatDate(item.createdAt)},{label:'开通时间',value:item.activatedAt?formatDate(item.activatedAt):'—'},
      ]}/><InfoGroup title="财务信息" rows={[
       {label:'计费周期',value:cycleLabels[item.billingCycle||'']||item.billingCycle||'—'},{label:'到期时间',value:item.expiresAt?formatDate(item.expiresAt):'—'},
       {label:'关联订单',value:<InstanceOrder instance={item} customerId={customerId}/>},
