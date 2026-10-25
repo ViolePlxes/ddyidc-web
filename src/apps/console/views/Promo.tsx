@@ -162,9 +162,10 @@ export function Promo() {
               </div>
             </LayerCard>
           ) : null}
+          {currentInvite?.pendingCode ? <Banner title={`自定义优惠码 ${currentInvite.pendingCode} 正在审核`} description="审核期间当前优惠码与优惠链接仍可使用。" /> : null}
           {canApply ? (
             <LayerCard className=" grid gap-4 px-5 py-4">
-              <div className="justify-self-start"><PromoInviteDialog invite={currentInvite} enabled={config.data?.inviteEnabled === true} review={config.data?.inviteReview === true} triggerLabel={currentInvite ? "重新申请优惠码" : "自定义优惠码"} /></div>
+              <div className="justify-self-start"><PromoInviteDialog invite={currentInvite} enabled={config.data?.inviteEnabled === true} review={config.data?.inviteReview === true} triggerLabel="自定义优惠码" /></div>
               {!config.data?.inviteEnabled ? (
                 <Banner
                   variant="alert"

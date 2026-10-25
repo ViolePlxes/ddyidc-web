@@ -18,6 +18,7 @@ export interface MarketingInvite {
   id: string;
   userId: string;
   code: string;
+  pendingCode?: string;
   status: number;
   rejectReason?: string;
   inviteCount: number;
