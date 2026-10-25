@@ -1,6 +1,6 @@
 import {Banner,Input,LayerDialog,Select,Table,Text} from '@cloudflare/kumo';
 import {useMutation,useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {domainsApi,type DomainActionResult,type DomainAsset,type DomainField,type DomainOperation,type DomainQuote,type DomainTemplate} from '../../../shared/api/domains';
 import {getApiMessage} from '../../../shared/api/request';
@@ -28,13 +28,14 @@ function FieldControl({field,operation,value,onChange,assets,templates}:{field:D
  if(choices)return <Select label={label} value={value} onValueChange={v=>onChange(v??'')} items={choices} placeholder="请选择"/>;
  return <Input label={label} type={field.secret?'password':field.numeric?'number':'text'} value={value} onChange={event=>onChange(event.target.value)} required={field.required} autoComplete="off"/>;
 }
-export function DomainOperationDialog({operation,title,assets,templates,onClose}:{operation:DomainOperation;title:string;assets:DomainAsset[];templates:DomainTemplate[];onClose:()=>void}) {
+export function DomainOperationDialog({open,operation,title,assets,templates,onClose}:{open:boolean;operation:DomainOperation;title:string;assets:DomainAsset[];templates:DomainTemplate[];onClose:()=>void}) {
  const cache=useQueryClient();const navigate=useNavigate();const [params,setParams]=useState<Record<string,string>>({});const [requestId,setRequestId]=useState(()=>crypto.randomUUID());const [quote,setQuote]=useState<DomainQuote>();const [result,setResult]=useState<DomainActionResult>();
- const fields=operation.fields.filter(field=>!field.hidden);const [fileError,setFileError]=useState('');
+ const fields=(['3.3','4.4'].includes(operation.key)?[]:operation.fields).filter(field=>!field.hidden);const [fileError,setFileError]=useState('');
  const action=useMutation({mutationFn:async()=>{const input={action:operation.key,params,requestId,confirmed:true};if(operation.paid){setQuote(await domainsApi.quote(input));return}setResult(await domainsApi.execute(input))},onSettled:()=>cache.invalidateQueries({queryKey:['domains']})});
  const purchase=useMutation({mutationFn:()=>{if(!quote)throw Error('请先获取报价');return domainsApi.createOrder(quote.id)},onSuccess:async value=>{await cache.invalidateQueries({queryKey:['domains']});onClose();navigate(`/console/orders/${value.orderId}`)}});
+ useEffect(()=>{if(open){setParams({});setQuote(undefined);setResult(undefined);setRequestId(crypto.randomUUID());setFileError('');action.reset();purchase.reset()}},[open,operation.key]);
  const pending=action.isPending||purchase.isPending;const missing=fields.some(field=>field.required&&!params[field.key]?.trim());const destructive=/删除|撤销|关闭/.test(title);
- return <LayerDialog.Root open dismissDisabled={pending} onOpenChange={open=>{if(!open&&!pending)onClose()}}><LayerDialog.Content>
+ return <LayerDialog.Root open={open} dismissDisabled={pending} onOpenChange={open=>{if(!open&&!pending)onClose()}}><LayerDialog.Content>
   <LayerDialog.Title>{title}</LayerDialog.Title><LayerDialog.Description>{operation.paid?'核对域名、年限和当前报价后创建平台订单，再选择支付方式。':'请核对本次操作的域名和填写内容，提交后可查看处理记录。'}</LayerDialog.Description>
   <LayerDialog.Body><div className="grid max-h-[60vh] gap-4 overflow-y-auto text-sm">
    <fieldset disabled={pending} className="grid gap-4 sm:grid-cols-2">{fields.map(field=><FieldControl key={field.key} field={field} operation={operation} assets={assets} templates={templates} value={params[field.key]??''} onChange={value=>{if(pending)return;setParams(previous=>({...previous,[field.key]:value}));setQuote(undefined);setResult(undefined);setRequestId(crypto.randomUUID());action.reset();purchase.reset();if(field.key==='file_org')setFileError(value?'':'请选择4MB以内的JPEG或PNG图片')}}/>)}</fieldset>

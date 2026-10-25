@@ -23,6 +23,7 @@ export const domainsApi={
  reconcile:async(orderId:string)=>result(await userRequest.post<ApiEnvelope<{updated:boolean}>>('/domains/reconcile',{orderId})),
 };
 export const domainsAdminApi={
+ feed:async(action:string)=>result(await adminRequest.post<ApiEnvelope<{url:string}>>('/domains/feeds',{action})),
  settings:async()=>result(await adminRequest.get<ApiEnvelope<DomainSettings>>('/domains/settings')),
  saveSettings:async(value:DomainSettings)=>result(await adminRequest.put<ApiEnvelope<{saved:boolean}>>('/domains/settings',value)),
  orders:async()=>result(await adminRequest.get<ApiEnvelope<DomainOrder[]>>('/domains/operations')),
