@@ -1,7 +1,7 @@
 import { Button, DropdownMenu, Empty, LayerCard, Link, Select, Text } from "@cloudflare/kumo";
 import { ArrowClockwiseIcon, CaretRightIcon, CubeIcon, DotsThreeIcon, MagnifyingGlassIcon, TicketIcon, WalletIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { cdnsellApi, probeCdnsell } from "../../../shared/api/cdnsell";
 import { consoleApi } from "../../../shared/api/console";
@@ -63,18 +63,21 @@ export function ConsoleHome() {
     { key: "balance" as const, title: "余额", value: overview.data ? `¥${Number(overview.data.balance).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—", hint: "每日可用余额净变动（元）", href: "/console/finance", values: metricValues("balance"), valueFormat: undefined },
     { key: "active" as const, title: "激活产品数量", value: overview.data?.active ?? "—", hint: "当前运行中 · 图表为每日激活记录", href: "/console/instances", values: metricValues("active"), valueFormat: undefined },
     { key: "delivery" as const, title: "边缘节点分发总量", value: cdn.data?.distributedBytes !== undefined ? traffic(cdn.data.distributedBytes) : "—", hint: cdn.data ? "累计已确认分发流量（含超额用量）· 图表为每日分发流量（GB）" : cdnHint, href: "/console/cdnsell/statistics/traffic", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
-    { key: "traffic" as const, title: "流量情况", value: cdn.data ? `今日 ${traffic(cdn.data.todayBytes)}` : "—", hint: cdn.data ? `资源包剩余 ${traffic(cdn.data.remainingBytes)} · ${cdn.data.activeDomains} 个加速域名 · 每日流量（GB）` : cdnHint, href: "/console/cdnsell/usage", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
+    { key: "traffic" as const, title: "流量情况", value: cdn.data ? traffic(cdn.data.todayBytes) : "—", hint: cdn.data ? `资源包剩余 ${traffic(cdn.data.remainingBytes)} · ${cdn.data.activeDomains} 个加速域名 · 每日流量（GB）` : cdnHint, href: "/console/cdnsell/usage", values: dailyValues, valueFormat: (value: number) => traffic(value * 1024 ** 3) },
   ];
-  return <div className="mx-auto grid w-full max-w-7xl items-start gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+  return <div className="mx-auto grid w-full max-w-[1000px] items-start gap-8">
       <div className="flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2 pt-6 md:pt-10 lg:col-start-1">
         {certification.data?.status === 2 && user ? <span className="text-base text-kumo-subtle">ID：{user.id}</span> : null}
         <Text as="h1" variant="heading" size="lg">{displayName}，欢迎您</Text>
         {certification.data && certification.data.status !== 2 ? <Button variant="outline" size="sm" onClick={() => navigate("/console/certification")}>去实名认证<CaretRightIcon aria-hidden size={12} /></Button> : null}
         <span className="text-base text-kumo-subtle">当前登录 IP：{loginIp || (devices.isPending ? "读取中…" : "暂无记录")}</span>
       </div>
-      <Button variant="outline" className="mx-auto h-12 w-full max-w-5xl justify-start gap-3 hover:bg-kumo-tint lg:col-start-1 lg:row-start-2" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
-        <span className="flex-1 text-left text-kumo-subtle">搜索页面、产品和服务…</span><kbd className="text-base text-kumo-subtle">Ctrl K</kbd>
-      </Button>
+      <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-2xl bg-kumo-elevated p-1.5 ring ring-kumo-hairline lg:col-start-1 lg:row-start-2">
+       <Button variant="outline" className="h-10 w-full justify-start gap-3 rounded-xl bg-kumo-control px-3 shadow-md hover:bg-kumo-control" icon={<MagnifyingGlassIcon />} onClick={() => window.dispatchEvent(new Event("ddyidc:open-search"))}>
+        <span className="flex-1 text-left font-normal text-kumo-subtle">搜索页面、产品和服务…</span>
+        <span className="flex items-center gap-1" aria-hidden="true"><kbd className="border border-kumo-line bg-kumo-canvas px-1 text-xs font-normal text-kumo-subtle">Ctrl</kbd><kbd className="border border-kumo-line bg-kumo-canvas px-1 text-xs font-normal text-kumo-subtle">K</kbd></span>
+       </Button>
+      </div>
     <div className="mx-auto grid w-full min-w-0 max-w-5xl gap-10 pb-8 lg:col-start-1 lg:row-start-3">
     <section className="grid gap-8">
       <div className="grid gap-8 md:grid-cols-3">
@@ -100,7 +103,7 @@ export function ConsoleHome() {
         </section>
       </div>
     </section>
-    <section aria-label="账户数据分析" className="grid gap-4">
+    <section aria-label="账户数据分析" className="mx-auto grid w-full max-w-[1000px] gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Text as="h2" variant="heading">账户数据分析</Text>
         <div className="flex items-center gap-2">
@@ -109,8 +112,8 @@ export function ConsoleHome() {
         </div>
       </div>
       <PageState loading={overview.isLoading} error={overview.error ? getApiMessage(overview.error) : null}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {metrics.map(m => <LayerCard key={m.key} className="group relative grid min-w-0 grid-cols-1 content-start gap-3 bg-kumo-base px-5 py-4">
+        <div className="grid auto-rows-[241px] grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {metrics.map(m => <Fragment key={m.key}><LayerCard className={`${m.key === "balance" ? "sm:col-span-2 lg:col-span-3" : "lg:col-span-2"} group relative flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-hidden bg-kumo-base px-4 pt-3 pb-2`}>
             <Link href={m.href} variant="plain" aria-label={`查看${m.title}`} className="absolute inset-0 z-10" />
             <div className="flex items-center justify-between gap-3"><Text variant="secondary" size="sm">{m.key === "balance" ? "账户余额" : m.title}</Text><CaretRightIcon aria-hidden size={16} className="text-kumo-subtle motion-safe:transition-transform motion-safe:group-hover:translate-x-1" /></div>
             <Text as="p" variant="heading1">{m.value}</Text>
@@ -119,15 +122,14 @@ export function ConsoleHome() {
               <Button variant="secondary" size="sm" onClick={() => navigate("/wallet/consume-records")}>明细</Button>
             </div> : null}
             <Text variant="secondary" size="sm">{m.hint}</Text>
-            <div className="relative z-20 min-w-0 cursor-pointer" onClick={() => navigate(m.href)}>
-              <MiniTrend title={m.key === "delivery" || m.key === "traffic" ? "每日分发流量（GB）" : m.hint} money={m.key === "balance"} values={m.values} valueFormat={m.valueFormat} />
+            <div className="relative z-20 mt-auto min-h-0 min-w-0 flex-1 cursor-pointer" onClick={() => navigate(m.href)}>
+              <MiniTrend height={80} title={m.key === "delivery" || m.key === "traffic" ? "每日分发流量（GB）" : m.hint} money={m.key === "balance"} values={m.values} valueFormat={m.valueFormat} />
             </div>
-          </LayerCard>)}
+          </LayerCard>{m.key==="balance"?<HomeReferralPanel kind="earnings"/>:null}</Fragment>)}
         </div>
       </PageState>
       <Text variant="secondary" size="sm">数量与余额为当前值；分发总量为累计已确认计量流量，流量图表按北京时间逐日汇总，今日数据尚未结束。{overview.data ? ` 账户数据更新于 ${new Date(overview.data.asOf).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}` : ""}</Text>
     </section>
     </div>
-    <HomeReferralPanel />
   </div>;
 }
