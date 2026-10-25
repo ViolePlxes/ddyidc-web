@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ChartPalette, LayerCard, TimeseriesChart } from "@cloudflare/kumo";
 import { useTheme } from "../hooks/useTheme";
@@ -24,8 +24,23 @@ echarts.use([
   TooltipComponent,
 ]);
 
+/** Decorative placeholder only: the wave never represents measured data. */
+export function NoDataWave({height=140}:{height?:number}) {
+ const gradient=useId().replace(/:/g, "");
+ const points=Array.from({length:61},(_,i)=>{const x=i*400/60;const y=40+8*Math.sin(i*0.24)+5*Math.cos(i*0.61)+3*Math.sin(i*0.89);return `${i?"L":"M"}${x.toFixed(2)},${y.toFixed(2)}`}).join(" ");
+ return <div role="img" aria-label="暂无趋势数据" className="relative -mx-4 h-full min-h-20 overflow-hidden" style={{minHeight:height}}>
+  <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 400 110" preserveAspectRatio="none" className="absolute inset-0 block h-full w-full">
+   <defs><linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--color-kumo-line)" stopOpacity="0.15"/><stop offset="100%" stopColor="var(--color-kumo-line)" stopOpacity="0"/></linearGradient></defs>
+   <path d={`${points} L400,110 L0,110 Z`} fill={`url(#${gradient})`}/>
+   <path d={points} fill="none" stroke="var(--color-kumo-line)" strokeOpacity="0.6" strokeWidth="1" vectorEffect="non-scaling-stroke"/>
+  </svg>
+  <span className="pointer-events-none absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-kumo-base px-2 py-1 text-xs font-medium text-kumo-subtle ring ring-kumo-line">无数据</span>
+ </div>;
+}
+
 export function MiniTrend({ title, values, money = false, valueFormat, height = 140 }: { height?: number; title: string; values: [number, number][]; money?: boolean; valueFormat?: (value: number) => string }) {
   const { theme } = useTheme();
+  if(values.length===0) return <NoDataWave height={height}/>;
   return <TimeseriesChart echarts={echarts} height={height} isDarkMode={theme === "dark"}
     ariaDescription={title} xAxisTickCount={3} yAxisTickCount={2}
     tooltipValueFormat={(value) => valueFormat ? valueFormat(value) : money ? `${value.toFixed(2)} 元` : `${value} 个`}
