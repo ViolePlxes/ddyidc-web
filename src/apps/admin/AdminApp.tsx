@@ -224,6 +224,7 @@ const AdminCdnConfigCenter = lazy(() => routeModules.adminCdnsell().then((module
 
 const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 
+const AdminDomains = lazy(() => routeModules.adminDomains().then(module => ({default: module.AdminDomains})));
 const Navigation = lazy(() => routeModules.adminNavigation().then(module => ({ default: module.Navigation })));
 const adminGroups: NavigationGroup[] = [
   {
@@ -529,6 +530,10 @@ export function AdminApp() {
                   <AdminUpdates />
                 </LazyRoute>
               }
+            />
+            <Route
+              path={adminPath('/admin/domains')}
+              element={<LazyRoute><AdminDomains /></LazyRoute>}
             />
             <Route
               path={adminPath('/admin/tickets')}

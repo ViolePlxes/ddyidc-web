@@ -30,6 +30,7 @@ export const routeModules = {
   consoleMarketplace: () => import("../../apps/console/marketplace"),
   consolePoints: () => import("../../apps/console/points"),
   consoleCdnsell: () => import("../../apps/console/cdnsell"),
+  adminDomains: () => import("../../apps/admin/domains"),
   adminHome: () => import("../../apps/admin/views/Home"),
   adminProducts: () => import("../../apps/admin/views/Products"),
   adminProductGroups: () => import("../../apps/admin/views/ProductGroups"),
@@ -156,6 +157,7 @@ const routeLoaders: Array<
   [(path) => path.startsWith("/console/points"), routeModules.consolePoints],
   [(path) => path.startsWith("/console/cdnsell"), routeModules.consoleCdnsell],
   [(path) => path === "/console/domains" || path.startsWith("/console/domains/"), routeModules.consoleDomains],
+  [(path) => path === adminPath('/admin/domains'), routeModules.adminDomains],
   [(path) => path === adminPath('/admin'), routeModules.adminHome],
   [(path) => path === adminPath('/admin/products'), routeModules.adminProducts],
   [
