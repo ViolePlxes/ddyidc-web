@@ -1,5 +1,4 @@
 import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
-import { useSearchParams } from "react-router-dom";
 import { Banner, Button, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,59 +10,9 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { formatDate, formatMoney } from "../../../shared/utils/format";
 
-const inviteStatuses = { all: "全部状态", "0": "待审核", "1": "已启用", "2": "已禁用", "3": "已驳回" };
 const rewardStatuses = { all: "全部状态", "0": "待结算", "1": "已结算", "2": "已冻结", "3": "已回收" };
 
-export function AdminInvites() {
-  const [params] = useSearchParams();
-  const client = useQueryClient();
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("all");
-  const [draftKeyword, setDraftKeyword] = useState(() => params.get("keyword") ?? "");
-  const [keyword, setKeyword] = useState(() => params.get("keyword") ?? "");
-  const [message, setMessage] = useState("");
-  const pageSize = 10;
-  const query = useQuery({
-    queryKey: ["admin", "marketing", "invites", page, status, keyword],
-    queryFn: () => adminMarketingApi.invites({ page, pageSize, keyword: keyword || undefined, status: status === "all" ? undefined : status }),
-  });
-  const change = useMutation({
-    mutationFn: async ({ id, action }: { id: string; action: "approve" | "disable" | "enable" }) => {
-      if (action === "approve") await adminMarketingApi.reviewInvite(id, true);
-      else await adminMarketingApi.setInviteStatus(id, action === "enable" ? 1 : 2);
-    },
-    onSuccess: async () => {
-      setMessage("优惠码状态已更新");
-      await client.invalidateQueries({ queryKey: ["admin", "marketing", "invites"] });
-    },
-  });
-  const rows = (query.data?.list ?? []).map((row) => ({
-    id: row.id,
-    primary: row.code,
-    secondary: row.username || row.userId,
-    meta: `使用 ${row.inviteCount} 次 · ${formatDate(row.createdAt)} · ${inviteStatuses[String(row.status) as keyof typeof inviteStatuses] ?? "未知状态"}`,
-    status: row.status === 1 ? "running" as const : row.status === 0 ? "pending" as const : "suspended" as const,
-  }));
-
-  return (
-    <>
-      <PageHeader title="优惠码管理" description="申请记录、使用次数和审核状态均来自营销服务。" />
-      {message ? <Banner variant="default" title={message} /> : null}
-      {change.error ? <Banner variant="error" title="状态更新失败" description={getApiMessage(change.error)} /> : null}
-      <LayerCard className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_12rem_auto]">
-        <Input aria-label="优惠码关键词" placeholder="优惠码或用户账号…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
-        <Select aria-label="优惠码状态" value={status} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} items={inviteStatuses} />
-        <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
-      </LayerCard>
-      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无优惠码记录">
-        <DataTable rows={rows} primaryLabel="优惠码" secondaryLabel="所属用户" amountLabel="操作" withPagination page={page} onPageChange={setPage} perPage={pageSize} totalCount={query.data?.total ?? 0} showActions={false} />
-        <LayerCard className="mt-3 grid gap-2 px-4 py-3">
-          {(query.data?.list ?? []).map((row) => <div key={row.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-kumo-line py-2"><span className="text-base text-kumo-subtle">{row.code} · {row.username || row.userId}</span><div className="flex gap-2">{row.status === 0 ? <Button size="sm" loading={change.isPending && change.variables?.id === row.id} onClick={() => change.mutate({ id: row.id, action: "approve" })}>通过审核</Button> : null}{row.status === 1 ? <Button size="sm" variant="secondary" onClick={() => change.mutate({ id: row.id, action: "disable" })}>停用</Button> : null}{row.status === 2 ? <Button size="sm" variant="secondary" onClick={() => change.mutate({ id: row.id, action: "enable" })}>启用</Button> : null}</div></div>)}
-        </LayerCard>
-      </PageState>
-    </>
-  );
-}
+export {AdminCodeManagement as AdminInvites} from './PromoCodeManagement';
 
 export function AdminRewards() {
   const client = useQueryClient();
@@ -171,5 +120,5 @@ export function AdminMarketingConfig() {
   useEffect(() => { if (query.data) setValues(Object.fromEntries(query.data.items.map((item) => [item.key, item.value]))); }, [query.data]);
   const save = useMutation({ mutationFn: () => adminMarketingApi.saveConfig(values), onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "marketing", "config"] }) });
   const items = useMemo(() => query.data?.items ?? [], [query.data]);
-  return <><PageHeader title="营销配置" description="完整展示并保存服务端 marketing.* 配置，不使用前端默认值。" actions={<Button loading={save.isPending} disabled={query.isLoading || !items.length} onClick={() => save.mutate()}>保存配置</Button>} />{save.error ? <Banner variant="error" title="配置保存失败" description={getApiMessage(save.error)} /> : null}{save.isSuccess ? <Banner variant="default" title="营销配置已保存" /> : null}<PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !items.length} emptyTitle="暂无营销配置"><LayerCard className="grid gap-5 px-4 py-3">{items.map((item) => booleanKeys.has(item.key) ? <Switch key={item.key} label={item.description} checked={["1", "true", "on"].includes(values[item.key] ?? "")} onCheckedChange={(checked) => setValues((current) => ({ ...current, [item.key]: checked ? "1" : "0" }))} /> : <Input key={item.key} label={item.description} description={item.key} value={values[item.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [item.key]: event.target.value }))} />)}</LayerCard></PageState></>;
+  return <><PageHeader title="营销配置" description="完整展示并保存服务端 marketing.* 配置，不使用前端默认值。" actions={<Button loading={save.isPending} disabled={query.isLoading || !items.length} onClick={() => save.mutate()}>保存配置</Button>} />{save.error ? <Banner variant="error" title="配置保存失败" description={getApiMessage(save.error)} /> : null}{save.isSuccess ? <Banner variant="default" title="营销配置已保存" /> : null}<PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !items.length} emptyTitle="暂无营销配置"><LayerCard className="grid gap-5 px-4 py-3">{items.map((item) => booleanKeys.has(item.key) ? <Switch key={item.key} disabled={item.key === "marketing.invite.review_enabled"} label={item.key === "marketing.invite.review_enabled" ? "自定义优惠码必须人工审核" : item.description} checked={["1", "true", "on"].includes(values[item.key] ?? "")} onCheckedChange={(checked) => setValues((current) => ({ ...current, [item.key]: checked ? "1" : "0" }))} /> : <Input key={item.key} label={item.description} description={item.key} value={values[item.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [item.key]: event.target.value }))} />)}</LayerCard></PageState></>;
 }
