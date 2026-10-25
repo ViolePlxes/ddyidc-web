@@ -22,7 +22,7 @@ jobs:
       - run: node scripts/test-browser-guard.mjs
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node --test scripts/upstream-connect.test.mjs
-      - run: node --test scripts/instance-address.test.mjs scripts/instance-dialog.test.mjs
+      - run: node --test scripts/instance-address.test.mjs scripts/instance-dialog.test.mjs scripts/instance-list-display.test.mjs
       - run: node --test scripts/promo-invite.test.mjs
       - run: node --test scripts/domain-navigation.test.mjs
       - run: npx tsc -b
