@@ -107,6 +107,7 @@ export function DashboardLayout({
   const todoReturn = location.pathname.startsWith(adminPath('/admin/')) && typeof requestedReturn === "string" && /^\/dd-admin-[a-z0-9]{24,64}\/todos(?:\/[a-z-]+)?(?:\?[^#]*)?$/.test(requestedReturn) ? requestedReturn : null;
   const { theme, toggleTheme } = useTheme();
   const layoutWidth = useLayoutWidth(user);
+  const isConsoleHome = location.pathname.replace(/\/$/, "") === "/console";
   const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
   const contentWidth = isProductCatalog ? "wide" : layoutWidth.width;
   const contentContainerClassName = isProductCatalog ? "w-full" : layoutWidth.containerClassName;
@@ -142,6 +143,15 @@ export function DashboardLayout({
     location.pathname === href ||
     (!["/console", adminPath('/admin'), "/sales"].includes(href) &&
       location.pathname.startsWith(`${href}/`));
+
+  const dashboardFooter = (<footer className="flex h-12 shrink-0 items-center justify-center gap-4 overflow-x-auto border-t border-kumo-line bg-kumo-canvas px-4 text-sm whitespace-nowrap" aria-label="平台页脚">
+          <KumoLink href="https://docs.ddoidc.com" variant="current">支持</KumoLink>
+          <span aria-hidden="true" className="text-kumo-subtle">|</span>
+          <LegalDocumentDialog kind="service" label="服务条款"/>
+          <span aria-hidden="true" className="text-kumo-subtle">|</span>
+          <LegalDocumentDialog kind="privacy" label="隐私政策"/>
+          <span className="text-kumo-subtle">© {new Date().getFullYear()} ddoidc.com</span>
+        </footer>);
 
   return (
     <Sidebar.Provider
@@ -302,16 +312,10 @@ export function DashboardLayout({
             {todoReturn ? <div className="mb-3"><Link to={todoReturn}><Button variant="secondary">返回待办列表</Button></Link></div> : null}
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
-        <footer className="flex h-12 shrink-0 items-center justify-center gap-4 overflow-x-auto border-t border-kumo-line bg-kumo-canvas px-4 text-sm whitespace-nowrap" aria-label="平台页脚">
-          <KumoLink href="https://docs.ddoidc.com" variant="current">支持</KumoLink>
-          <span aria-hidden="true" className="text-kumo-subtle">|</span>
-          <LegalDocumentDialog kind="service" label="服务条款"/>
-          <span aria-hidden="true" className="text-kumo-subtle">|</span>
-          <LegalDocumentDialog kind="privacy" label="隐私政策"/>
-          <span className="text-kumo-subtle">© {new Date().getFullYear()} ddoidc.com</span>
-        </footer>
+        {!isConsoleHome && dashboardFooter}
          </div>
         </main>
+        {isConsoleHome && dashboardFooter}
       </div>
     </Sidebar.Provider>
   );
