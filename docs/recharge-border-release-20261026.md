@@ -1,0 +1,1 @@
+充值页无框容器继承了Kumo LayerCard的overflow-hidden，导致支付方式的外圈被裁切。仅将该容器设为overflow-visible，保留组件样式及支付逻辑。VM只读真实组件预览已核对完整外圈；无后端或数据库变更。
