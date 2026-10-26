@@ -161,7 +161,7 @@ export function WalletRecharge() {
         {bank.data.instructions ? <p className="mt-3 whitespace-pre-wrap">{bank.data.instructions}</p> : null}
       </section></> : !bank.isLoading && !bank.error ? <p className="text-sm text-kumo-subtle">配置后可用</p> : null}
     </section> : <>
-    <LayerCard className={`wallet-recharge-main grid gap-6 bg-transparent p-0 shadow-none ring-0${attempt || message ? " lg:grid-cols-2" : ""}`}>
+    <LayerCard className={`wallet-recharge-main grid gap-6 overflow-visible bg-transparent p-0 shadow-none ring-0${attempt || message ? " lg:grid-cols-2" : ""}`}>
       <form className="wallet-recharge-form" onSubmit={submit}>
         <Radio.Group legend="支付方式" appearance="card" orientation="vertical" value={channel ?? ""} disabled={locked} onValueChange={value => { if (value === "alipay" || value === "wechat") setSelected(value); }} className="w-full">
           {methods.map(method => <Radio.Item key={method.value} value={method.value} className="wallet-payment-method" label={<img src={`/payment-logos/${method.value}.svg`} alt={method.label} />} disabled={!channels.data?.[method.value]} description={!channels.data?.[method.value] ? "暂未开放" : undefined} />)}
