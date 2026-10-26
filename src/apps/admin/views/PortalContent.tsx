@@ -1,4 +1,5 @@
-import { Banner, Button, Input, LayerCard, LayerDialog, Select, Sidebar, Switch, Table, Textarea } from '@cloudflare/kumo';
+import { Banner, Button, Collapsible, Input, InputGroup, LayerCard, LayerDialog, Select, Switch, Table, Text, Textarea } from '@cloudflare/kumo';
+import { MagnifyingGlassIcon, SlidersIcon } from '@phosphor-icons/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -11,6 +12,14 @@ import { blankSEO, previewPortalContent, rollbackPortalRevision, portalMediaURL,
 
 const RichTextEditor = lazy(() => import('../../../shared/components/editor/RichTextEditor'));
 const sections = [['site', '站务信息'], ['seo', 'SEO 管理'], ['navigation', '导航设置'], ['footer', '底部链接'], ['modules', '页面与模块'], ['articles', '新闻公告'], ['help', '帮助文档'], ['categories', '分类管理'], ['media', '媒体管理'], ['revisions', '版本记录']] as const;
+const menuGroups = [
+  { label: '基础配置', keys: ['site', 'seo'] },
+  { label: '菜单设置', keys: ['navigation', 'footer'] },
+  { label: '模块管理', keys: ['modules'] },
+  { label: '页面内容', keys: ['articles', 'help', 'categories'] },
+  { label: '自定义与资源', keys: ['media'] },
+  { label: '发布管理', keys: ['revisions'] },
+];
 const queryKey = ['admin', 'portal-content'];
 
 function SEOFields({ value, change }: { value: PortalSEO; change: (value: PortalSEO) => void }) {
@@ -27,6 +36,8 @@ export function PortalContent() {
   const [dirty, setDirty] = useState(false);
   const [selected, setSelected] = useState('');
   const [search, setSearch] = useState('');
+  const [menuSearch, setMenuSearch] = useState('');
+  const [showMenu, setShowMenu] = useState(true);
   const [categoryName, setCategoryName] = useState('');
   const [categoryKind, setCategoryKind] = useState<'news' | 'help'>('news');
   const contentType = section === 'help' ? 'help' : 'news';
@@ -60,9 +71,20 @@ export function PortalContent() {
   const disabled = save.isPending || rollback.isPending;
   const articleBody = page?.modules?.find(module => module.type === 'feature_sections');
   return <div className="flex min-h-[calc(100svh-58px)] min-w-0 flex-col md:flex-row">
-    <aside className="w-full shrink-0 border-b border-kumo-line bg-kumo-base px-3 py-4 md:w-72 md:border-r md:border-b-0" aria-label="内容管理二级菜单"><h2 className="mb-3 px-3 font-medium">前台内容</h2><nav aria-label="内容管理栏目"><Sidebar.Menu>{sections.map(([key, label]) => <Sidebar.MenuItem key={key}><Sidebar.MenuButton onClick={() => { navigate(adminPath(`/admin/content/${key}`)); setSelected(''); }} aria-current={section === key ? 'page' : undefined} active={section === key}>{label}</Sidebar.MenuButton></Sidebar.MenuItem>)}</Sidebar.Menu></nav></aside>
-    <div className="grid min-w-0 flex-1 content-start gap-5 p-5">
-    <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-xl font-semibold">前台内容管理</h1><div className="flex gap-2"><Button disabled={disabled || !dirty} loading={save.isPending && !confirm} onClick={() => save.mutate(false)}>保存草稿</Button><Button disabled={disabled || preview.isPending} loading={preview.isPending} onClick={() => preview.mutate(page?.path ?? "/")}>预览草稿</Button><Button variant="primary" disabled={disabled} onClick={() => { save.reset(); setConfirm(true); }}>发布站点</Button></div></div>
+    {showMenu && <aside className="w-full shrink-0 border-b border-kumo-line bg-kumo-base md:w-72 md:border-r md:border-b-0" aria-label="内容管理二级菜单">
+      <div className="sticky top-0 border-b border-kumo-line bg-kumo-base p-3"><InputGroup><InputGroup.Addon><MagnifyingGlassIcon size={16} /></InputGroup.Addon><InputGroup.Input aria-label="搜索内容菜单" placeholder="搜索菜单…" value={menuSearch} onChange={event => setMenuSearch(event.target.value)} /></InputGroup></div>
+      <nav aria-label="内容管理栏目">{menuGroups.map(group => {
+        const items = sections.filter(([key, label]) => group.keys.includes(key) && (!menuSearch.trim() || `${group.label} ${label}`.toLowerCase().includes(menuSearch.trim().toLowerCase())));
+        if (!items.length) return null;
+        return <Collapsible.Root key={`${group.label}-${menuSearch ? 'search' : section}`} defaultOpen={Boolean(menuSearch) || group.keys.includes(section)} className="min-w-0 border-b border-kumo-line">
+          <Collapsible.DefaultTrigger className="min-h-10 w-full px-3 py-2.5 text-left"><Text as="span" size="sm" bold>{group.label}</Text></Collapsible.DefaultTrigger>
+          <Collapsible.Panel><div className="ml-5 min-w-0 pl-3">{items.map(([key, label]) => <div key={key} className="relative before:absolute before:-left-3 before:top-5 before:w-3 before:border-t before:border-kumo-line after:absolute after:top-0 after:bottom-0 after:-left-3 after:border-l after:border-kumo-line last:after:bottom-auto last:after:h-5"><Button variant="ghost" className="min-h-10 h-auto w-full justify-start rounded-none px-3 py-2.5 text-left shadow-none" aria-current={section === key ? 'page' : undefined} onClick={() => { navigate(adminPath(`/admin/content/${key}`)); setSelected(''); }}><Text as="span" size="sm" bold={section === key}>{label}</Text></Button></div>)}</div></Collapsible.Panel>
+        </Collapsible.Root>;
+      })}{menuSearch.trim() && !sections.some(([key, label]) => menuGroups.some(group => group.keys.includes(key) && `${group.label} ${label}`.toLowerCase().includes(menuSearch.trim().toLowerCase()))) ? <p role="status" className="p-3 text-sm text-kumo-subtle">没有匹配的菜单</p> : null}</nav>
+    </aside>}
+    <div className="grid min-w-0 flex-1 content-start gap-5">
+    <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-kumo-line px-4 py-3"><div className="flex items-center gap-3"><Button variant="secondary" shape="square" aria-label={showMenu ? '收起内容菜单' : '展开内容菜单'} aria-expanded={showMenu} icon={<SlidersIcon />} onClick={() => setShowMenu(value => !value)} /><Text as="span" size="sm">前台内容 / {sections.find(([key]) => key === section)?.[1] ?? '内容管理'}</Text></div><div className="flex flex-wrap gap-2"><Button disabled={disabled || !dirty} loading={save.isPending && !confirm} onClick={() => save.mutate(false)}>保存草稿</Button><Button disabled={disabled || preview.isPending} loading={preview.isPending} onClick={() => preview.mutate(page?.path ?? "/")}>预览草稿</Button><Button variant="primary" disabled={disabled} onClick={() => { save.reset(); setConfirm(true); }}>发布站点</Button></div></div>
+    <div className="grid min-w-0 content-start gap-4 px-4 pb-4"><Text as="h1" variant="heading">{sections.find(([key]) => key === section)?.[1] ?? '前台内容管理'}</Text>
     <p className="text-sm text-kumo-subtle">草稿版本 {document.revision} · {dirty ? '有未保存修改' : '已读取保存版本'}。发布会使整个站点草稿生效，仅超级管理员可操作。</p>
     {preview.error ? <Banner variant="error" title="预览失败" description={getApiMessage(preview.error)} /> : null}
     {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
@@ -84,5 +106,5 @@ export function PortalContent() {
     <LayerDialog.Root open={mediaOpen} onOpenChange={setMediaOpen}><LayerDialog.Content size="xl" closeLabel="关闭"><LayerDialog.Title>选择封面图片</LayerDialog.Title><LayerDialog.Body><PortalMedia onSelect={item => { if (page && articleBody) updatePage({ ...page, modules: page.modules!.map(module => module.id === articleBody.id ? { ...module, image: portalMediaURL(item.id), alt: item.name } : module) }); setMediaOpen(false); }} /></LayerDialog.Body></LayerDialog.Content></LayerDialog.Root>
     <LayerDialog.Root open={Boolean(rollbackTarget)} dismissDisabled={rollback.isPending} onOpenChange={open => { if (!open) setRollbackTarget(null); }}><LayerDialog.Content><LayerDialog.Title>确认回滚并发布版本 {rollbackTarget?.revision}？</LayerDialog.Title><LayerDialog.Description>该版本将替换整个站点的当前草稿并立即发布，包括导航和全部文章。现有版本保留在历史记录中。</LayerDialog.Description><LayerDialog.Body>{rollback.error ? <Banner variant="error" title="回滚失败" description={getApiMessage(rollback.error)} /> : null}</LayerDialog.Body><LayerDialog.Actions dismissLabel="取消"><LayerDialog.Action variant="destructive" disabled={rollback.isPending || dirty} loading={rollback.isPending} onClick={() => rollback.mutate()}>确认回滚并发布</LayerDialog.Action></LayerDialog.Actions></LayerDialog.Content></LayerDialog.Root>
     <LayerDialog.Root open={confirm} dismissDisabled={disabled} onOpenChange={setConfirm}><LayerDialog.Content><LayerDialog.Title>确认发布整个站点？</LayerDialog.Title><LayerDialog.Description>站务信息、SEO、导航和所有页面草稿将一起生效。隐藏文章不会公开。发布失败时保留原公开版本。</LayerDialog.Description><LayerDialog.Body>{save.error ? <Banner variant="error" title="发布失败" description={getApiMessage(save.error)} /> : null}</LayerDialog.Body><LayerDialog.Actions dismissLabel="取消"><LayerDialog.Action variant="primary" loading={disabled} disabled={disabled} onClick={() => save.mutate(true)}>确认发布</LayerDialog.Action></LayerDialog.Actions></LayerDialog.Content></LayerDialog.Root>
-  </div></div>;
+  </div></div></div>;
 }
