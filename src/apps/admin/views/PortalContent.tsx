@@ -1,4 +1,5 @@
 import { resolveContentMenu } from '../../../shared/utils/contentMenu';
+import { useContentDraft } from '../../../shared/components/ContentDraftBoundary';
 import { Banner, Button, Collapsible, Input, InputGroup, LayerCard, LayerDialog, Select, Switch, Table, Text, Textarea } from '@cloudflare/kumo';
 import { MagnifyingGlassIcon, SlidersIcon } from '@phosphor-icons/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
@@ -19,6 +20,7 @@ function SEOFields({ value, change }: { value: PortalSEO; change: (value: Portal
 }
 
 export function PortalContent() {
+  const { draft, update: updateDraft } = useContentDraft();
   const navigate = useNavigate();
   const { section: routeSection = 'site' } = useParams();
   const { root: menuRoot, item: menuItem, section } = resolveContentMenu(routeSection);
@@ -27,8 +29,8 @@ export function PortalContent() {
   const query = useQuery({ queryKey, queryFn: getPortalContent, refetchOnWindowFocus: false });
   const history = useQuery({ queryKey: [...queryKey, 'revisions'], queryFn: getPortalRevisions, enabled: section === 'revisions' });
   const client = useQueryClient();
-  const [document, setDocument] = useState<PortalDocument>();
-  const [dirty, setDirty] = useState(false);
+  const [document, setDocument] = useState<PortalDocument | undefined>(draft.document);
+  const [dirty, setDirty] = useState(draft.dirty);
   const [selected, setSelected] = useState('');
   const [search, setSearch] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
@@ -41,11 +43,7 @@ export function PortalContent() {
   const [previewHTML, setPreviewHTML] = useState('');
   const [rollbackTarget, setRollbackTarget] = useState<{ id: string; revision: number } | null>(null);
   useEffect(() => { if (query.data && !dirty) setDocument(query.data); }, [query.data, dirty]);
-  useEffect(() => {
-    const guard = (event: BeforeUnloadEvent) => { if (dirty) event.preventDefault(); };
-    window.addEventListener('beforeunload', guard);
-    return () => window.removeEventListener('beforeunload', guard);
-  }, [dirty]);
+  useEffect(() => { updateDraft({ document, dirty }); }, [document, dirty, updateDraft]);
   const change = (value: PortalDocument) => { setDocument(value); setDirty(true); save.reset(); };
   const save = useMutation({ mutationFn: (publish: boolean) => {
     if (!document) throw new Error('请先加载内容');
@@ -78,7 +76,7 @@ export function PortalContent() {
       })}{menuSearch.trim() && !menuGroups.some(group => group.items.some(item => `${group.label} ${item.label}`.toLowerCase().includes(menuSearch.trim().toLowerCase()))) ? <p role="status" className="p-3 text-sm text-kumo-subtle">没有匹配的菜单</p> : null}</nav>
     </aside>}
     <div className="grid min-w-0 flex-1 content-start gap-5">
-    <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-kumo-line px-4 py-3"><div className="flex items-center gap-3"><Button variant="secondary" shape="square" aria-label={showMenu ? '收起内容菜单' : '展开内容菜单'} aria-expanded={showMenu} icon={<SlidersIcon />} onClick={() => setShowMenu(value => !value)} /><Text as="span" size="sm">{menuRoot.label} / {sectionTitle}</Text></div><div className="flex flex-wrap gap-2"><Button disabled={disabled || !dirty || section === 'pending'} loading={save.isPending && !confirm} onClick={() => save.mutate(false)}>保存草稿</Button><Button disabled={disabled || preview.isPending || section === 'pending'} loading={preview.isPending} onClick={() => preview.mutate(page?.path ?? "/")}>预览草稿</Button><Button variant="primary" disabled={disabled || section === 'pending'} onClick={() => { save.reset(); setConfirm(true); }}>发布站点</Button></div></div>
+    <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-kumo-line px-4 py-3"><div className="flex items-center gap-3"><Button variant="secondary" shape="square" aria-label={showMenu ? '收起内容菜单' : '展开内容菜单'} aria-expanded={showMenu} icon={<SlidersIcon />} onClick={() => setShowMenu(value => !value)} /></div><div className="flex flex-wrap gap-2"><Button disabled={disabled || !dirty || section === 'pending'} loading={save.isPending && !confirm} onClick={() => save.mutate(false)}>保存草稿</Button><Button disabled={disabled || preview.isPending || section === 'pending'} loading={preview.isPending} onClick={() => preview.mutate(page?.path ?? "/")}>预览草稿</Button><Button variant="primary" disabled={disabled || section === 'pending'} onClick={() => { save.reset(); setConfirm(true); }}>发布站点</Button></div></div>
     <div className="grid min-w-0 content-start gap-4 px-4 pb-4"><Text as="h1" variant="heading">{sectionTitle}</Text>
     {section !== 'pending' && <p className="text-sm text-kumo-subtle">草稿版本 {document.revision} · {dirty ? '有未保存修改' : '已读取保存版本'}。发布会使整个站点草稿生效，仅超级管理员可操作。</p>}
     {preview.error ? <Banner variant="error" title="预览失败" description={getApiMessage(preview.error)} /> : null}
