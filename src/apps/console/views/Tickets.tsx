@@ -1,3 +1,4 @@
+import { useConsoleDraftField, useConsoleUnsaved } from '../../../shared/components/ConsoleDraftBoundary';
 import { useInboxState } from "../../../shared/components/notifications/MessageButton";
 import { notificationsApi } from "../../../shared/api/notifications";
 import { useTicketNotifications } from "../../../shared/components/notifications/useTicketNotifications";
@@ -118,16 +119,17 @@ export function TicketCreate() {
   const navigate = useNavigate();
   const types = useQuery({ queryKey: ["tickets", "types"], queryFn: userTicketApi.types });
   const products = useQuery({ queryKey: ["tickets", "products"], queryFn: userTicketApi.products });
-  const [title, setTitle] = useState("");
-  const [typeId, setTypeId] = useState("");
+  const [title, setTitle] = useConsoleDraftField("ticket-create/title", "");
+  const [typeId, setTypeId] = useConsoleDraftField("ticket-create/type", "");
   const [choosingType, setChoosingType] = useState(true);
-  const [hostId, setHostId] = useState("none");
-  const [content, setContent] = useState("");
-  const [richContent, setRichContent] = useState<RichDocument>();
-  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
+  const [hostId, setHostId] = useConsoleDraftField("ticket-create/host", "none");
+  const [content, setContent] = useConsoleDraftField("ticket-create/content", "");
+  const [richContent, setRichContent] = useConsoleDraftField<RichDocument | undefined>("ticket-create/rich", undefined);
+  const [attachments, setAttachments] = useConsoleDraftField<TicketAttachment[]>("ticket-create/attachments", []);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const create = useMutation({ mutationFn: userTicketApi.create, onSuccess: (result) => navigate(`/console/tickets/${result.ticket.id}`), onError: (reason) => setError(getApiMessage(reason)) });
+  const saved = useConsoleUnsaved("ticket-create", Boolean(title.trim() || content.trim() || attachments.length || uploading));
+  const create = useMutation({ mutationFn: userTicketApi.create, onSuccess: (result) => { saved(); navigate(`/console/tickets/${result.ticket.id}`); }, onError: (reason) => setError(getApiMessage(reason)) });
 
   const upload = async (files: File[]) => {
     setUploading(true); setError(null);
@@ -182,6 +184,7 @@ export function TicketDetailPage() {
   const query = useQuery({ queryKey, queryFn: () => userTicketApi.detail(id), enabled: Boolean(id) });
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  useConsoleUnsaved("ticket-reply:" + id, Boolean(content.trim() || attachments.length || uploading));
   const lastReplyId = query.data?.ticket.lastReplyId ?? "0";
 
   useTicketNotifications(async () => {

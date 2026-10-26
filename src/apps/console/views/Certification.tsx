@@ -1,3 +1,4 @@
+import { useConsoleUnsaved } from '../../../shared/components/ConsoleDraftBoundary';
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { AlipayCertification } from "../../../shared/components/AlipayCertification";
@@ -42,6 +43,7 @@ export function Certification() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  useConsoleUnsaved("certification", busy || Object.entries(form).some(([key, value]) => value !== empty[key as keyof CertificationInput]));
   const update = (key: keyof CertificationInput, value: string | number) =>
     setForm((old) => ({ ...old, [key]: value }));
   const data = query.data;

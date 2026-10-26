@@ -13,6 +13,8 @@ import {
 } from "@cloudflare/kumo";
 import {
   BrowserRouter,
+  createBrowserRouter,
+  RouterProvider,
   Link,
   useLocation,
   useNavigationType,
@@ -134,7 +136,7 @@ function RuntimeReady() {
   return null;
 }
 
-export function createEntry(App: ComponentType) {
+export function createEntry(App: ComponentType, options: { dataRouter?: boolean } = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -146,6 +148,7 @@ export function createEntry(App: ComponentType) {
   });
   let host: RootHost | null = null;
   let stopCatalogListener: (() => void) | undefined;
+  let dataRouter: ReturnType<typeof createBrowserRouter> | undefined;
 
   function render(props: MicroAppProps = {}) {
     if (window.__ddyBrowserGuard && !window.__ddyBrowserGuard.checkStyles()) return;
@@ -160,21 +163,13 @@ export function createEntry(App: ComponentType) {
       "view-transitions-supported",
       "startViewTransition" in document,
     );
+    const content = <><ScrollRestoration /><RoutePrefetch /><LinkProvider component={RouterLink}><TooltipProvider><Toasty><VersionRefreshNotice /><RouteErrorBoundary><App /></RouteErrorBoundary></Toasty></TooltipProvider></LinkProvider></>;
+    if (options.dataRouter && !dataRouter) dataRouter = createBrowserRouter([{ path: '*', element: content }]);
     host.__ddyidcRoot.render(
       <StrictMode>
         <RuntimeReady />
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <ScrollRestoration />
-            <RoutePrefetch />
-            <LinkProvider component={RouterLink}>
-              <TooltipProvider>
-                <Toasty>
-                  <VersionRefreshNotice /><RouteErrorBoundary><App /></RouteErrorBoundary>
-                </Toasty>
-              </TooltipProvider>
-            </LinkProvider>
-          </BrowserRouter>
+          {dataRouter ? <RouterProvider router={dataRouter} /> : <BrowserRouter>{content}</BrowserRouter>}
         </QueryClientProvider>
       </StrictMode>,
     );
@@ -187,6 +182,8 @@ export function createEntry(App: ComponentType) {
       stopCatalogListener?.();
       stopCatalogListener = undefined;
       host?.__ddyidcRoot?.unmount();
+      dataRouter?.dispose();
+      dataRouter = undefined;
       if (host) delete host.__ddyidcRoot;
       host = null;
     },

@@ -2,6 +2,7 @@ import { LegalDocumentDialog } from "../shared/components/LegalDocumentDialog";
 import { DashboardBreadcrumbs } from '../shared/components/DashboardBreadcrumbs';
 import { ContentDraftBoundary } from '../shared/components/ContentDraftBoundary';
 import { resolveContentMenu } from '../shared/utils/contentMenu';
+import { ConsoleDraftBoundary } from '../shared/components/ConsoleDraftBoundary';
 import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { broadcastApi } from "../shared/api/notifications";
@@ -161,7 +162,7 @@ export function DashboardLayout({
         </footer>);
 
   return (
-    <ContentDraftBoundary key={`${scope}:${user.id}`}><Sidebar.Provider
+    <ConsoleDraftBoundary enabled={scope === 'console'} key={`${scope}:${user.id}`}><ContentDraftBoundary><Sidebar.Provider
       style={{ "--sidebar-bg": "var(--color-kumo-canvas)" } as CSSProperties}
       defaultOpen
       peekable
@@ -271,16 +272,16 @@ export function DashboardLayout({
           className="bg-kumo-canvas shadow-none ring-0 z-10 flex h-[58px] shrink-0 items-center justify-end gap-1 border-b border-kumo-line px-2 sm:gap-3 sm:px-4"
         >
           <Sidebar.Trigger className="md:hidden" />
-          {scope === 'admin' && <DashboardBreadcrumbs groups={groups} />}
+          {(scope === 'admin' || scope === 'console') && <DashboardBreadcrumbs groups={groups} scope={scope} />}
           {scope === "console" && <MessageButton />}
-          <span className={scope === 'admin' ? 'hidden sm:contents' : 'contents'}><LayoutWidthToggle {...layoutWidth} /></span>
+          <span className={scope !== 'sales' ? 'hidden sm:contents' : 'contents'}><LayoutWidthToggle {...layoutWidth} /></span>
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
           {scope === "console" ? <LinkButton href="/console/help" aria-label="工单支持" variant="ghost" size="sm" icon={<QuestionIcon size={16} />}><span className="hidden sm:inline">工单支持</span></LinkButton> : null}
           <DropdownMenu>
             <DropdownMenu.Trigger
               render={<Button variant="secondary" aria-label="账户菜单" icon={<UserCircleIcon />} />}
             >
-              <span className={scope === 'admin' ? 'hidden max-w-28 truncate sm:inline sm:max-w-none' : 'max-w-28 truncate sm:max-w-none'}>{user.name}</span>
+              <span className={scope !== 'sales' ? 'hidden max-w-28 truncate sm:inline sm:max-w-none' : 'max-w-28 truncate sm:max-w-none'}>{user.name}</span>
               <CaretDownIcon />
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
@@ -325,6 +326,6 @@ export function DashboardLayout({
         </main>
         {scope !== "admin" && isConsoleHome && dashboardFooter}
       </div>
-    </Sidebar.Provider></ContentDraftBoundary>
+    </Sidebar.Provider></ContentDraftBoundary></ConsoleDraftBoundary>
   );
 }
