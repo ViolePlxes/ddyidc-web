@@ -109,8 +109,9 @@ export function DashboardLayout({
   const layoutWidth = useLayoutWidth(user);
   const isConsoleHome = location.pathname.replace(/\/$/, "") === "/console";
   const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
-  const contentWidth = isProductCatalog ? "wide" : layoutWidth.width;
-  const contentContainerClassName = isProductCatalog ? "w-full" : layoutWidth.containerClassName;
+  const isContentManagement = location.pathname === adminPath('/admin/content') || location.pathname.startsWith(adminPath('/admin/content/'));
+  const contentWidth = isProductCatalog || isContentManagement ? "wide" : layoutWidth.width;
+  const contentContainerClassName = isProductCatalog || isContentManagement ? "w-full" : layoutWidth.containerClassName;
   const standalonePaths = ["/console", "/console/products", adminPath('/admin')];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
@@ -236,7 +237,7 @@ export function DashboardLayout({
                         {group.items.map((item) => item.children?.length ? (
                           <Sidebar.MenuItem key={item.id ?? item.href}>
                             <Sidebar.Collapsible key={`${item.href}:${location.pathname}`} defaultOpen={item.children.some(child=>isItemActive(child.href))}>
-                              <Sidebar.CollapsibleTrigger render={<Sidebar.MenuSubButton active={item.children.some(child=>isItemActive(child.href))}><item.icon className="mr-2 size-4 shrink-0" />{item.label}<Sidebar.MenuChevron /></Sidebar.MenuSubButton>} />
+                              <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton active={item.children.some(child=>isItemActive(child.href))}><item.icon className="mr-2 size-4 shrink-0" />{item.label}<Sidebar.MenuChevron /></Sidebar.MenuButton>} />
                               <Sidebar.CollapsibleContent><Sidebar.MenuSub>{item.children.map(child=><Sidebar.MenuSubButton key={child.href} href={child.href} active={location.pathname===child.href} aria-current={location.pathname===child.href?"page":undefined}>{child.label}</Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
                             </Sidebar.Collapsible>
                           </Sidebar.MenuItem>
@@ -307,15 +308,15 @@ export function DashboardLayout({
          <div className="flex min-h-full flex-col">
           <div
             data-layout-width={contentWidth}
-            className={`flex-1 ${contentContainerClassName} ${density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            className={`flex-1 ${contentContainerClassName} ${isContentManagement ? "p-0" : density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             {todoReturn ? <div className="mb-3"><Link to={todoReturn}><Button variant="secondary">返回待办列表</Button></Link></div> : null}
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />
           </div>
-        {!isConsoleHome && dashboardFooter}
+        {scope !== "admin" && !isConsoleHome && dashboardFooter}
          </div>
         </main>
-        {isConsoleHome && dashboardFooter}
+        {scope !== "admin" && isConsoleHome && dashboardFooter}
       </div>
     </Sidebar.Provider>
   );

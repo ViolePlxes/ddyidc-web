@@ -119,8 +119,46 @@ function versionAsset(): Plugin {
   };
 }
 
+function portalContentAssets(): Plugin {
+  return {
+    name: 'ddyidc-portal-content-assets',
+    apply: 'build',
+    generateBundle: {
+      order: 'post',
+      handler(_options, bundle) {
+        const styles = Object.keys(bundle).filter(name => name.startsWith('assets/') && name.endsWith('.css')).map(name => '/' + name);
+        if (!styles.length) this.error('门户内容缺少构建样式资源');
+        const runtime = readFileSync(resolve(__dirname, 'src/apps/portal/content-runtime.js'), 'utf8');
+        const script = `assets/portal-content-${createHash('sha256').update(runtime).digest('hex').slice(0,16)}.js`;
+        this.emitFile({ type: 'asset', fileName: script, source: runtime });
+        this.emitFile({ type: 'asset', fileName: 'portal/themes.json', source: JSON.stringify([{ id: 'cloudflare-reference', label: '门户内容', version: 1, schemaVersion: 1 }]) });
+        this.emitFile({ type: 'asset', fileName: 'portal/cloudflare-reference.json', source: JSON.stringify({ theme: 'cloudflare-reference', version: 1, styles, script: '/' + script }) });
+        this.emitFile({ type: 'asset', fileName: 'portal/cloudflare-reference.html', source: readFileSync(resolve(__dirname, 'src/apps/portal/content-document.html'), 'utf8') });
+      },
+    },
+  };
+}
+
+function portalPreviewAssets(): Plugin {
+  return {
+    name: 'ddyidc-local-portal-preview-assets',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        const path = (request.url ?? '').split('?')[0];
+        if (!/^\/assets\/[A-Za-z0-9_.-]+\.(css|woff2?)$/.test(path) && !/^\/assets\/portal-content-[a-f0-9]{16}\.js$/.test(path)) return next();
+        void readFile(resolve(__dirname, 'dist', path.slice(1))).then(data => {
+          response.setHeader('Content-Type', path.endsWith('.js') ? 'application/javascript' : path.endsWith('.css') ? 'text/css' : path.endsWith('.woff2') ? 'font/woff2' : 'font/woff');
+          response.setHeader('Cache-Control', 'no-store');
+          response.end(data);
+        }).catch(() => next());
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [entryRewrite(), versionAsset(), {
+  plugins: [entryRewrite(), versionAsset(), portalContentAssets(), portalPreviewAssets(), {
     name: "ddyidc-browser-guard",
     transformIndexHtml(_html, context) {
       const source = readFileSync(resolve(__dirname, "public/browser-guard.js"), "utf8");
