@@ -25,6 +25,7 @@ import {
   GiftIcon,
 } from "@phosphor-icons/react";
 import { lazy } from "react";
+const PortalContent = lazy(() => import('./views/PortalContent').then(module => ({ default: module.PortalContent })));
 const AdminBackups = lazy(() => routeModules.adminBackups().then(module => ({ default: module.AdminBackups })));
 const SocialLoginSettings = lazy(() => import("./views/SocialLogin").then(module => ({ default: module.SocialLoginSettings })));
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
@@ -227,6 +228,7 @@ const foreignSessions = ["/api/v1/auth/me", "/admin/v1/sales/auth/me"];
 const AdminDomains = lazy(() => routeModules.adminDomains().then(module => ({default: module.AdminDomains})));
 const Navigation = lazy(() => routeModules.adminNavigation().then(module => ({ default: module.Navigation })));
 const adminGroups: NavigationGroup[] = [
+  { label: '前台内容', items: [{ label: '内容管理', href: adminPath('/admin/content/site'), icon: MegaphoneIcon }] },
   {
     label: "概览",
     items: [
@@ -454,6 +456,7 @@ export function AdminApp() {
         <Route path={adminPath('/admin/login')} element={<AdminLogin />} />
         <Route element={<AdminGuard />}>
           <Route element={<AdminDashboard />}>
+          <Route path={adminPath('/admin/content/:section?')} element={<LazyRoute><PortalContent /></LazyRoute>} />
           <Route path={adminPath('/admin/messages/broadcasts')} element={<MessageBroadcasts />} />
           <Route path={adminPath('/admin/messages/broadcasts/new')} element={<MessageBroadcasts mode="new" />} />
           <Route path={adminPath('/admin/messages/broadcasts/:id')} element={<MessageBroadcasts mode="detail" />} />

@@ -1,0 +1,28 @@
+import { Banner, Button, Input, LayerDialog, Select, Switch, Textarea } from '@cloudflare/kumo';
+import { useState } from 'react';
+import { PortalMedia } from './PortalMedia';
+import { portalMediaURL, type PortalDocument, type PortalModule } from '../../../shared/api/portalContent';
+
+const moduleTypes = [{ value: 'hero', label: '主视觉' }, { value: 'banner_carousel', label: '轮播图' }, { value: 'announcement_bar', label: '公告栏' }, { value: 'feature_sections', label: '图文模块' }, { value: 'news_announcements', label: '新闻入口' }, { value: 'partner_logos', label: '合作伙伴' }, { value: 'final_cta', label: '行动区' }];
+interface ContentItem { id: string; title: string; text: string; image: string; alt: string; href: string; label: string; category: string }
+const stringValue = (value: unknown) => typeof value === 'string' ? value : '';
+
+export function PortalModules({ document, change }: { document: PortalDocument; change: (value: PortalDocument) => void }) {
+  const pages = document.pages.filter(page => page.kind === 'page');
+  const [pageID, setPageID] = useState('');
+  const page = pages.find(page => page.id === pageID) ?? pages[0];
+  const [moduleID, setModuleID] = useState('');
+  const [type, setType] = useState('banner_carousel');
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const module = page?.modules?.find(module => module.id === moduleID) ?? page?.modules?.[0];
+  if (!page) return <p>暂无普通内容页面。</p>;
+  const updatePage = (value: typeof page) => change({ ...document, pages: document.pages.map(item => item.id === page.id ? value : item) });
+  const update = (value: PortalModule) => updatePage({ ...page, modules: page.modules!.map(item => item.id === value.id ? value : item) });
+  const items = (Array.isArray(module?.items) ? module.items : []) as ContentItem[];
+  return <div className="grid gap-5"><h2 className="text-lg font-semibold">页面与模块</h2><Select label="选择页面" value={page.id} items={pages.map(page => ({ value: page.id, label: `${page.title} · ${page.path}` }))} onValueChange={value => { setPageID(value ?? ''); setModuleID(''); }} /><div className="grid gap-4 md:grid-cols-2"><Input label="页面标题" value={page.title} onChange={event => updatePage({ ...page, title: event.target.value })} /><Input label="页面路径" value={page.path} disabled={page.path === '/'} onChange={event => updatePage({ ...page, path: event.target.value })} /></div><Switch label="发布时公开页面" disabled={page.path === '/'} checked={page.enabled} onCheckedChange={enabled => updatePage({ ...page, enabled })} /><div className="flex flex-wrap items-end gap-3"><Select label="模块类型" value={type} items={moduleTypes} onValueChange={value => setType(value ?? 'banner_carousel')} /><Button disabled={(page.modules?.length ?? 0) >= 100} onClick={() => { const id = `module-${crypto.randomUUID()}`; updatePage({ ...page, modules: [...(page.modules ?? []), { id, type, title: '新模块', text: '', enabled: false, sort: (page.modules?.length ?? 0) * 10, items: [] }] }); setModuleID(id); }}>添加草稿模块</Button></div>
+    {module && <><Select label="选择模块" value={module.id} items={(page.modules ?? []).map(item => ({ value: item.id, label: `${item.title || item.type} · ${item.enabled ? '启用' : '隐藏'}` }))} onValueChange={value => setModuleID(value ?? '')} /><Switch label="启用此模块" checked={module.enabled} onCheckedChange={enabled => update({ ...module, enabled })} /><Input label="显示顺序（数字越小越靠前）" type="number" min={0} max={10000} value={module.sort} onChange={event => update({ ...module, sort: Number(event.target.value) || 0 })} />{(['title', 'eyebrow', 'label', 'href', 'image', 'alt'] as const).map(key => <Input key={key} label={{ title: '模块标题', eyebrow: '模块副标题', label: '按钮文字', href: '按钮链接', image: '模块图片地址', alt: '图片替代文字' }[key]} value={stringValue(module[key])} onChange={event => update({ ...module, [key]: event.target.value })} />)}<Button onClick={() => setMediaOpen(true)}>从媒体库选择模块图片</Button>{module.richContent ? <Banner title="该模块使用富文本，请在新闻或帮助编辑器修改正文" /> : <Textarea label="模块说明" rows={4} value={module.text} onChange={event => update({ ...module, text: event.target.value })} />}
+      {module.type === 'banner_carousel' && <><Switch label="自动轮播" checked={module.autoPlay === true} onCheckedChange={autoPlay => update({ ...module, autoPlay })} /><Input label="轮播间隔（秒，1–60）" type="number" min={1} max={60} value={typeof module.interval === 'number' ? module.interval : 5} onChange={event => update({ ...module, interval: Number(event.target.value) || 5 })} /></>}
+      <h3 className="font-medium">模块条目</h3>{items.map((item, index) => <div key={item.id || index} className="grid gap-3 border-l border-kumo-line pl-4">{(['title', 'text', 'image', 'alt', 'href', 'label'] as const).map(key => <Input key={key} label={{ title: '条目标题', text: '条目说明', image: '条目图片', alt: '条目图片替代文字', href: '条目链接', label: '条目按钮文字' }[key]} value={item[key] ?? ''} onChange={event => update({ ...module, items: items.map((row, i) => i === index ? { ...row, [key]: event.target.value } : row) })} />)}<Button onClick={() => update({ ...module, items: items.filter((_, i) => i !== index) })}>移除草稿条目</Button></div>)}<Button disabled={items.length >= 200} onClick={() => update({ ...module, items: [...items, { id: crypto.randomUUID(), title: '', text: '', image: '', alt: '', href: '', label: '', category: '' }] })}>添加条目</Button></>}
+    <LayerDialog.Root open={mediaOpen} onOpenChange={setMediaOpen}><LayerDialog.Content size="xl" closeLabel="关闭"><LayerDialog.Title>选择模块图片</LayerDialog.Title><LayerDialog.Body><PortalMedia onSelect={item => { if (module) update({ ...module, image: portalMediaURL(item.id), alt: item.name }); setMediaOpen(false); }} /></LayerDialog.Body></LayerDialog.Content></LayerDialog.Root>
+  </div>;
+}
