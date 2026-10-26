@@ -2,6 +2,14 @@
 @import "@cloudflare/kumo/styles";
 @import "tailwindcss";
 
+/* User-approved navigation surface; do not change the page/card palette. */
+:root {
+  --ddy-navigation-bg: #fbfbfb;
+}
+:root[data-mode="dark"] {
+  --ddy-navigation-bg: var(--color-kumo-base);
+}
+
 /* Match the Kumo docs font; bundle it so VM/offline deployments render alike. */
 @font-face {
   font-family: "Inter";

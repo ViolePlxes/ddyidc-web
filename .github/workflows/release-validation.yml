@@ -25,6 +25,7 @@ jobs:
       - run: node --test scripts/instance-address.test.mjs scripts/instance-dialog.test.mjs scripts/instance-list-display.test.mjs
       - run: node --test scripts/promo-invite.test.mjs
       - run: node --test scripts/domain-navigation.test.mjs
+      - run: node --test scripts/content-menu.test.mjs
       - run: npx tsc -b
       - run: npm run build
         env:
