@@ -1,3 +1,4 @@
+import { contentMenuRoots } from '../utils/contentMenu';
 import { withDomainNavigation } from "../domains/navigation";
 import { adminPath } from "../utils/adminEntry";
 import { useInstanceDetailRoute } from './useInstanceDetailRoute';
@@ -64,7 +65,16 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
  const adminGroups = scope === "admin" ? mergeProductNavigation(groups) : groups;
  if (scope === 'admin' && query.isSuccess) {
   const content = availableItems.find(item => item.href === adminPath('/admin/content/site'));
-  if (content && !adminGroups.some(group => group.items.some(item => item.href === content.href))) adminGroups.push({ label: '前台内容', items: [content] });
+  if (content) {
+   const children = contentMenuRoots.map(root => ({ label: root.label, href: adminPath('/admin/content/' + root.groups[0]!.items[0]!.id), icon: content.icon }));
+   let found = false;
+   for (const group of adminGroups) group.items = group.items.flatMap(item => {
+    if (item.href !== content.href) return [item];
+    found = true;
+    return children;
+   });
+   if (!found) adminGroups.push({ label: '前台内容', items: children });
+  }
  }
  return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : scope === 'console' ? withDomainNavigation(groups) : groups };
 }

@@ -141,6 +141,8 @@ export function DashboardLayout({
   };
 
   const isItemActive = (href: string) =>
+    (href === adminPath('/admin/content/site') && isContentManagement) ||
+    (href.includes('/content/') && href.includes('--') && location.pathname.startsWith(`${href.split('--')[0]}--`)) ||
     location.pathname === href ||
     (!["/console", adminPath('/admin'), "/sales"].includes(href) &&
       location.pathname.startsWith(`${href}/`));
@@ -161,7 +163,7 @@ export function DashboardLayout({
       peekable
       className="h-svh max-h-svh overflow-hidden font-sans"
     >
-      <Sidebar aria-label="主导航" className="antialiased bg-kumo-canvas">
+      <Sidebar aria-label="主导航" className="antialiased bg-kumo-base [--sidebar-bg:var(--ddy-navigation-bg)]">
         <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
@@ -238,7 +240,7 @@ export function DashboardLayout({
                           <Sidebar.MenuItem key={item.id ?? item.href}>
                             <Sidebar.Collapsible key={`${item.href}:${location.pathname}`} defaultOpen={item.children.some(child=>isItemActive(child.href))}>
                               <Sidebar.CollapsibleTrigger render={<Sidebar.MenuButton active={item.children.some(child=>isItemActive(child.href))}><item.icon className="mr-2 size-4 shrink-0" />{item.label}<Sidebar.MenuChevron /></Sidebar.MenuButton>} />
-                              <Sidebar.CollapsibleContent><Sidebar.MenuSub>{item.children.map(child=><Sidebar.MenuSubButton key={child.href} href={child.href} active={location.pathname===child.href} aria-current={location.pathname===child.href?"page":undefined}>{child.label}</Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
+                              <Sidebar.CollapsibleContent><Sidebar.MenuSub>{item.children.map(child=><Sidebar.MenuSubButton key={child.href} href={child.href} active={isItemActive(child.href)} aria-current={isItemActive(child.href)?"page":undefined}>{child.label}</Sidebar.MenuSubButton>)}</Sidebar.MenuSub></Sidebar.CollapsibleContent>
                             </Sidebar.Collapsible>
                           </Sidebar.MenuItem>
                         ) : (
@@ -255,7 +257,7 @@ export function DashboardLayout({
             </Sidebar.Group>
           ))}
         </Sidebar.Content>
-        <Sidebar.Footer className="h-12 shrink-0 justify-center border-t border-kumo-line bg-kumo-canvas">
+        <Sidebar.Footer className="h-12 shrink-0 justify-center border-t border-kumo-line bg-(--ddy-navigation-bg)">
           <Sidebar.Trigger />
         </Sidebar.Footer>
       </Sidebar>
