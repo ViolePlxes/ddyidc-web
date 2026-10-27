@@ -33,3 +33,8 @@ export async function uploadPortalMedia(file: File) {
   return unwrap((await adminRequest.post<ApiEnvelope<PortalMediaItem>>('/portal/media', form, { headers: { 'Content-Type': 'multipart/form-data' } })).data);
 }
 export const blankSEO = (): PortalSEO => ({ title: '', keywords: '', description: '', image: '', noIndex: false });
+
+export interface PortalTheme { id: string; label: string; version: number; schemaVersion: number }
+export interface PortalCatalogProduct { id: string; name: string; summary: string; price: string; group: string; cycle: string }
+export async function getPortalThemes() { return unwrap((await adminRequest.get<ApiEnvelope<{ themes: PortalTheme[] }>>('/portal/themes')).data).themes; }
+export async function getPortalProducts() { return unwrap((await adminRequest.get<ApiEnvelope<PortalCatalogProduct[]>>('/portal/products')).data); }
