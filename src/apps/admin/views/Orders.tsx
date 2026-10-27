@@ -1,7 +1,8 @@
+import { AdminRechargeOrders } from './AdminRechargeOrders';
 import {adminBase} from "../../../shared/utils/adminEntry";
 import { Pagination } from "../../../shared/components/Pagination";
 import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
-import { Button, Input, LayerCard, Link, Select } from "@cloudflare/kumo";
+import { Button, Input, LayerCard, Link, Select, Tabs } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminOverviewApi } from "../../../shared/api/adminOverview";
@@ -15,6 +16,7 @@ import { DeliveryTasks } from "./DeliveryTasks";
 
 export function AdminOrders() {
   const [params, setParams] = useSearchParams(); const record=params.get("record") ?? "";
+  const recharges = params.get("category") === "recharge";
   const adminId = useAdminAuthStore(state => state.user?.id ?? "anonymous");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
@@ -23,6 +25,7 @@ export function AdminOrders() {
   const pageSize = 10;
   const query = useQuery({
     queryKey: ["admin", "orders", page, status, keyword, record],
+    enabled: !recharges,
     queryFn: () => adminOverviewApi.orders({ page, pageSize, status: status === "all" ? undefined : status, keyword: keyword || undefined, record:record||undefined }),
   });
   const rows = query.data?.items ?? [];
@@ -30,6 +33,8 @@ export function AdminOrders() {
   return (
     <>
       <PageHeader title="订单管理" description="按真实订单数据筛选和分页查看。" />
+      <Tabs variant="underline" value={recharges ? "recharge" : "business"} onValueChange={value=>setParams(value === "recharge" ? {category:"recharge"} : {})} tabs={[{value:"business",label:"业务订单"},{value:"recharge",label:"充值订单"}]} />
+      {recharges ? <AdminRechargeOrders /> : <>
       {record ? <div className="flex items-center gap-3"><span>已定位订单：{record}</span><Button variant="secondary" onClick={()=>setParams({})}>清除对象定位</Button></div> : null}
       <LayerCard className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_12rem_auto]">
         <Input aria-label="订单关键词" placeholder="订单号、客户或商品…" value={draftKeyword} onChange={(event) => setDraftKeyword(event.target.value)} />
@@ -49,6 +54,7 @@ export function AdminOrders() {
       </PageState>
       <ReceiptReviews />
       <DeliveryTasks />
+      </>}
     </>
   );
 }

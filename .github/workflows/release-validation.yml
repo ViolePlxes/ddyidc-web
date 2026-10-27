@@ -26,6 +26,7 @@ jobs:
       - run: node --test scripts/promo-invite.test.mjs
       - run: node --test scripts/domain-navigation.test.mjs
       - run: node --test scripts/content-menu.test.mjs scripts/content-scopes.test.mjs
+      - run: node --test scripts/admin-recharges.test.mjs
       - run: node --test scripts/admin-breadcrumbs.test.mjs
       - run: node --test scripts/console-breadcrumbs.test.mjs
       - run: npx tsc -b
