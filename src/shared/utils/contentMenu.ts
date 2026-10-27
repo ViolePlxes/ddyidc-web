@@ -67,7 +67,7 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--30",
             "label": "Html编辑",
-            "section": "pending"
+            "section": "htmlEditor"
           }
         ]
       },
@@ -82,7 +82,7 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--5",
             "label": "菜单全局",
-            "section": "pending"
+            "section": "menuSettings"
           }
         ]
       },
@@ -92,17 +92,17 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--6",
             "label": "首页轮播",
-            "section": "pending"
+            "section": "carousel"
           },
           {
             "id": "frontend--7",
             "label": "轮播下方",
-            "section": "pending"
+            "section": "belowCarousel"
           },
           {
             "id": "frontend--8",
             "label": "轮播全局",
-            "section": "pending"
+            "section": "carouselSettings"
           }
         ]
       },
@@ -112,17 +112,17 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--9",
             "label": "公司环境",
-            "section": "pending"
+            "section": "environment"
           },
           {
             "id": "frontend--10",
             "label": "荣耀证书",
-            "section": "pending"
+            "section": "honors"
           },
           {
             "id": "frontend--11",
             "label": "许可证书",
-            "section": "pending"
+            "section": "licenses"
           }
         ]
       },
@@ -142,7 +142,7 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--14",
             "label": "产品模块",
-            "section": "pending"
+            "section": "productModules"
           }
         ]
       },
@@ -152,52 +152,52 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--15",
             "label": "页面绑定",
-            "section": "pending"
+            "section": "pages"
           },
           {
             "id": "frontend--16",
             "label": "百站赞助",
-            "section": "pending"
+            "section": "sponsors"
           },
           {
             "id": "frontend--17",
             "label": "简介|资质",
-            "section": "pending"
+            "section": "about"
           },
           {
             "id": "frontend--18",
             "label": "解决方案",
-            "section": "pending"
+            "section": "solutions"
           },
           {
             "id": "frontend--19",
             "label": "服务保障",
-            "section": "pending"
+            "section": "guarantees"
           },
           {
             "id": "frontend--20",
             "label": "推广返利",
-            "section": "pending"
+            "section": "referralPage"
           },
           {
             "id": "frontend--21",
             "label": "代理合作",
-            "section": "pending"
+            "section": "agency"
           },
           {
             "id": "frontend--22",
             "label": "宝塔面板",
-            "section": "pending"
+            "section": "panel"
           },
           {
             "id": "frontend--23",
             "label": "活动页面",
-            "section": "pending"
+            "section": "campaignPage"
           },
           {
             "id": "frontend--24",
             "label": "新闻帮助",
-            "section": "pending"
+            "section": "newsHelp"
           }
         ]
       },
@@ -207,12 +207,12 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "frontend--25",
             "label": "发布活动",
-            "section": "pending"
+            "section": "campaignCreate"
           },
           {
             "id": "frontend--26",
             "label": "活动列表",
-            "section": "pending"
+            "section": "campaignList"
           },
           {
             "id": "frontend--27",
@@ -439,7 +439,7 @@ export const contentMenuRoots: ContentMenuRoot[] = [
           {
             "id": "plugins--6",
             "label": "主题管理",
-            "section": "pending"
+            "section": "themes"
           }
         ]
       }
