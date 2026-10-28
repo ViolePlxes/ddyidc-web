@@ -68,7 +68,7 @@ export function InstanceActions({instance}:{instance:InstanceListItem}) {
  },onError:()=>remoteWindow.current?.close(),onSettled:()=>{remoteWindow.current=null;}});
  return <div className="grid gap-1"><ButtonGroup aria-label={`管理 ${instance.name}`}>
   <Button variant="secondary" size="sm" onClick={()=>navigate(`/console/instances/${instance.id}`)}>控制台</Button>
-  <DropdownMenu onOpenChange={setMenu}><DropdownMenu.Trigger render={<Button variant="secondary" size="sm" shape="square" disabled={action.isPending} aria-label={`更多操作 ${instance.name}`}><CaretDownIcon /></Button>} /><DropdownMenu.Content>
+  <DropdownMenu onOpenChange={setMenu}><DropdownMenu.Trigger render={<Button variant="secondary" size="sm" shape="square" disabled={action.isPending||instance.deliveryPending} aria-label={`更多操作 ${instance.name}`}><CaretDownIcon /></Button>} /><DropdownMenu.Content>
    {operations.map(([key,label])=><DropdownMenu.Item key={key} disabled={disabled(key)} onClick={()=>{
     if(key==='remote'){const target=window.open('about:blank','_blank');if(!target){setNotice('请允许弹出窗口后重试');return;}target.opener=null;remoteWindow.current=target;action.mutate({action:'remote'});return;}
     if(['transfer','reinstall','renew'].includes(key)){navigate(`/console/instances/${instance.id}?action=${key}`);return;}
