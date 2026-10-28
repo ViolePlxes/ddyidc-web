@@ -301,6 +301,8 @@ export interface ResourceRecord {
 }
 
 export interface InstanceListItem {
+	/** Paid product awaiting a confirmed machine binding. */
+	deliveryPending?: boolean;
   productionLocked?: boolean;
   autoRenew?: boolean;
   readOnly?: boolean;
