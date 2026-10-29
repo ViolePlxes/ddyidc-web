@@ -1,3 +1,4 @@
+import "../shared/utils/retiredLayoutPreferences";
 import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import "../shared/hooks/useTheme";
 import "../styles/tailwind.css";

@@ -12,8 +12,6 @@ import { TodoCountBadge } from "../shared/components/TodoCountBadge";
 import { useNavigation } from "../shared/hooks/useNavigation";
 import { Banner } from "@cloudflare/kumo";
 import { useTheme } from "../shared/hooks/useTheme";
-import { useLayoutWidth } from "../shared/hooks/useLayoutWidth";
-import { LayoutWidthToggle } from "../shared/components/LayoutWidthToggle";
 import { Button, DropdownMenu, LinkButton, Link as KumoLink, Sidebar, Surface } from "@cloudflare/kumo";
 import {
   BellIcon,
@@ -110,12 +108,8 @@ export function DashboardLayout({
   const requestedReturn: unknown = (location.state as { todoReturn?: unknown } | null)?.todoReturn;
   const todoReturn = location.pathname.startsWith(adminPath('/admin/')) && typeof requestedReturn === "string" && /^\/dd-admin-[a-z0-9]{24,64}\/todos(?:\/[a-z-]+)?(?:\?[^#]*)?$/.test(requestedReturn) ? requestedReturn : null;
   const { theme, toggleTheme } = useTheme();
-  const layoutWidth = useLayoutWidth(user);
   const isConsoleHome = location.pathname.replace(/\/$/, "") === "/console";
-  const isProductCatalog = location.pathname.replace(/\/$/, "") === "/console/products";
   const isContentManagement = location.pathname === adminPath('/admin/content') || location.pathname.startsWith(adminPath('/admin/content/'));
-  const contentWidth = isProductCatalog || isContentManagement ? "wide" : layoutWidth.width;
-  const contentContainerClassName = isProductCatalog || isContentManagement ? "w-full" : layoutWidth.containerClassName;
   const standalonePaths = ["/console", "/console/products", adminPath('/admin')];
   const topItems = groups.flatMap((group) => group.items)
     .filter((item) => standalonePaths.includes(item.href))
@@ -274,7 +268,6 @@ export function DashboardLayout({
           <Sidebar.Trigger className="md:hidden" />
           {(scope === 'admin' || scope === 'console') && <DashboardBreadcrumbs groups={groups} scope={scope} />}
           {scope === "console" && <MessageButton />}
-          <span className={scope !== 'sales' ? 'hidden sm:contents' : 'contents'}><LayoutWidthToggle {...layoutWidth} /></span>
           <Button variant="ghost" shape="square" aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"} icon={theme === "dark" ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
           {scope === "console" ? <LinkButton href="/console/help" aria-label="工单支持" variant="ghost" size="sm" icon={<QuestionIcon size={16} />}><span className="hidden sm:inline">工单支持</span></LinkButton> : null}
           <DropdownMenu>
@@ -315,8 +308,7 @@ export function DashboardLayout({
         <main className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]" data-dashboard-scroll>
          <div className="flex min-h-full flex-col">
           <div
-            data-layout-width={contentWidth}
-            className={`flex-1 ${contentContainerClassName} ${isContentManagement ? "p-0" : density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
+            className={`flex-1 w-full ${isContentManagement ? "p-0" : density === "compact" ? "p-3 md:p-4 lg:p-5" : "p-4 md:p-6 lg:p-8"}`}
           >
             {todoReturn ? <div className="mb-3"><Link to={todoReturn}><Button variant="secondary">返回待办列表</Button></Link></div> : null}
             <RouteOutlet className={`grid ${density === "compact" ? "gap-4" : "gap-6"}`} />

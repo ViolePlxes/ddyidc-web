@@ -1,3 +1,4 @@
+import "../shared/utils/retiredLayoutPreferences";
 import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import { adminPath } from "../shared/utils/adminEntry";
 import "../shared/hooks/useTheme";
