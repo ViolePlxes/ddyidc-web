@@ -111,7 +111,7 @@ function expiryLabel(value?: string) {
   return `${Math.ceil(delta / 86400000)}天后到期`;
 }
 function HostnameCopy({value}:{value:string}) {
-  return <InlineCopyText variant="body" size="base" value={value} labels={{copyAction:"复制主机名",copied:"已复制"}}>{value}</InlineCopyText>;
+  return <InlineCopyText className="w-fit leading-[normal]" value={value} labels={{copyAction:"复制主机名",copied:"已复制"}}>{value}</InlineCopyText>;
 }
 
 function ProductRow({ instance, card = false }: { instance: InstanceListItem; card?: boolean }) {
@@ -135,7 +135,7 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
   const cells = [
 <div key="0" className="min-w-0"><div className="grid min-w-0 gap-1"><Link href={`/console/instances/${instance.id}`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><HostnameCopy value={data.hostname || instance.name} /></div></div>,
 <div key="1" className="min-w-0"><StatusBadge status={instanceStatus(instance)} /></div>,
-<div key="2" className="min-w-0">{address ? <InlineCopyText variant="body" size="base" value={address} labels={{copyAction:"复制连接地址",copied:"已复制"}}>{address}</InlineCopyText> : "未获取"}</div>,
+<div key="2" className="min-w-0">{address ? <InlineCopyText className="w-fit leading-[normal]" value={address} labels={{copyAction:"复制连接地址",copied:"已复制"}}>{address}</InlineCopyText> : "未获取"}</div>,
 <div key="3" className="min-w-0"><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-sm text-kumo-subtle">{instance.deliveryPending ? "开通后更新" : expiryLabel(instance.expiresAt)}</span></div></div>,
 <div key="4" className="min-w-0"><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-sm text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></div>,
 <div key="5" className="min-w-0"><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></div>,
