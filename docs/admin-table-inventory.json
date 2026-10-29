@@ -1,0 +1,412 @@
+[
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:4",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:5",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/index.tsx",
+    "tableId": "apps/admin/cdnsell/index.tsx:6",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/p2.tsx",
+    "tableId": "apps/admin/cdnsell/p2.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/p2.tsx",
+    "tableId": "apps/admin/cdnsell/p2.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/cdnsell/p2.tsx",
+    "tableId": "apps/admin/cdnsell/p2.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/domains/DomainManagement.tsx",
+    "tableId": "apps/admin/domains/DomainManagement.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/domains/DomainManagement.tsx",
+    "tableId": "apps/admin/domains/DomainManagement.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/domains/DomainManagement.tsx",
+    "tableId": "apps/admin/domains/DomainManagement.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/groupbuy/index.tsx",
+    "tableId": "apps/admin/groupbuy/index.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/groupbuy/Leaders.tsx",
+    "tableId": "apps/admin/groupbuy/Leaders.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/groupbuy/Leaders.tsx",
+    "tableId": "apps/admin/groupbuy/Leaders.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/marketplace/index.tsx",
+    "tableId": "apps/admin/marketplace/index.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/marketplace/index.tsx",
+    "tableId": "apps/admin/marketplace/index.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/marketplace/index.tsx",
+    "tableId": "apps/admin/marketplace/index.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/marketplace/index.tsx",
+    "tableId": "apps/admin/marketplace/index.tsx:4",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/marketplace/index.tsx",
+    "tableId": "apps/admin/marketplace/index.tsx:5",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/points/Coupons.tsx",
+    "tableId": "apps/admin/points/Coupons.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/points/EventTasks.tsx",
+    "tableId": "apps/admin/points/EventTasks.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/points/index.tsx",
+    "tableId": "apps/admin/points/index.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/points/index.tsx",
+    "tableId": "apps/admin/points/index.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/points/index.tsx",
+    "tableId": "apps/admin/points/index.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/AdminRechargeOrders.tsx",
+    "tableId": "apps/admin/views/AdminRechargeOrders.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/AdminRechargeOrders.tsx",
+    "tableId": "apps/admin/views/AdminRechargeOrders.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Backups.tsx",
+    "tableId": "apps/admin/views/Backups.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Certifications.tsx",
+    "tableId": "apps/admin/views/Certifications.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/CustomerDetail.tsx",
+    "tableId": "apps/admin/views/CustomerDetail.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/CustomerFinance.tsx",
+    "tableId": "apps/admin/views/CustomerFinance.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/CustomerFinance.tsx",
+    "tableId": "apps/admin/views/CustomerFinance.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/CustomerInstance.tsx",
+    "tableId": "apps/admin/views/CustomerInstance.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/CustomerInstance.tsx",
+    "tableId": "apps/admin/views/CustomerInstance.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Customers.tsx",
+    "tableId": "apps/admin/views/Customers.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/DeliveryTasks.tsx",
+    "tableId": "apps/admin/views/DeliveryTasks.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Instances.tsx",
+    "tableId": "apps/admin/views/Instances.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Instances.tsx",
+    "tableId": "apps/admin/views/Instances.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Marketing.tsx",
+    "tableId": "apps/admin/views/Marketing.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/MessageBroadcasts.tsx",
+    "tableId": "apps/admin/views/MessageBroadcasts.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/NotificationTasks.tsx",
+    "tableId": "apps/admin/views/NotificationTasks.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/NotificationTasks.tsx",
+    "tableId": "apps/admin/views/NotificationTasks.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PortalContent.tsx",
+    "tableId": "apps/admin/views/PortalContent.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PortalContent.tsx",
+    "tableId": "apps/admin/views/PortalContent.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PortalContent.tsx",
+    "tableId": "apps/admin/views/PortalContent.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PortalContentExtensions.tsx",
+    "tableId": "apps/admin/views/PortalContentExtensions.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PortalContentExtensions.tsx",
+    "tableId": "apps/admin/views/PortalContentExtensions.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PromoCodeManagement.tsx",
+    "tableId": "apps/admin/views/PromoCodeManagement.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PromoCodeManagement.tsx",
+    "tableId": "apps/admin/views/PromoCodeManagement.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/PromoCodeManagement.tsx",
+    "tableId": "apps/admin/views/PromoCodeManagement.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/ReceiptReviews.tsx",
+    "tableId": "apps/admin/views/ReceiptReviews.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/RenewalQuoteAudit.tsx",
+    "tableId": "apps/admin/views/RenewalQuoteAudit.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/System.tsx",
+    "tableId": "apps/admin/views/System.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/System.tsx",
+    "tableId": "apps/admin/views/System.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TicketConfig.tsx",
+    "tableId": "apps/admin/views/TicketConfig.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TicketConfig.tsx",
+    "tableId": "apps/admin/views/TicketConfig.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TicketConfig.tsx",
+    "tableId": "apps/admin/views/TicketConfig.tsx:3",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Tickets.tsx",
+    "tableId": "apps/admin/views/Tickets.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Tickets.tsx",
+    "tableId": "apps/admin/views/Tickets.tsx:2",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TodoAuditHistory.tsx",
+    "tableId": "apps/admin/views/TodoAuditHistory.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TodoExpiryReminder.tsx",
+    "tableId": "apps/admin/views/TodoExpiryReminder.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/TodoProductProblems.tsx",
+    "tableId": "apps/admin/views/TodoProductProblems.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Todos.tsx",
+    "tableId": "apps/admin/views/Todos.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/Updates.tsx",
+    "tableId": "apps/admin/views/Updates.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/UpstreamCatalogComparison.tsx",
+    "tableId": "apps/admin/views/UpstreamCatalogComparison.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/UpstreamProducts.tsx",
+    "tableId": "apps/admin/views/UpstreamProducts.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/apps/admin/views/UpstreamSuppliers.tsx",
+    "tableId": "apps/admin/views/UpstreamSuppliers.tsx:1",
+    "scope": "admin"
+  },
+  {
+    "file": "src/shared/components/BalanceTransactions.tsx",
+    "tableId": "shared/components/BalanceTransactions.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/BalanceWithdrawals.tsx",
+    "tableId": "shared/components/BalanceWithdrawals.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/DataTable.tsx",
+    "tableId": "shared/components/DataTable.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/LoginDevices.tsx",
+    "tableId": "shared/components/LoginDevices.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/PointsActivities.tsx",
+    "tableId": "shared/components/PointsActivities.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/PointsEventTasks.tsx",
+    "tableId": "shared/components/PointsEventTasks.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/ProductConfig.tsx",
+    "tableId": "shared/components/ProductConfig.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/ProductionReclamation.tsx",
+    "tableId": "shared/components/ProductionReclamation.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/TransfersPage.tsx",
+    "tableId": "shared/components/TransfersPage.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/VideoBindings.tsx",
+    "tableId": "shared/components/VideoBindings.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/cdnsell/AdvancedToolsPage.tsx",
+    "tableId": "shared/components/cdnsell/AdvancedToolsPage.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/cdnsell/StatisticsPage.tsx",
+    "tableId": "shared/components/cdnsell/StatisticsPage.tsx:1",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/cdnsell/StatisticsPage.tsx",
+    "tableId": "shared/components/cdnsell/StatisticsPage.tsx:2",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/cdnsell/StatisticsPage.tsx",
+    "tableId": "shared/components/cdnsell/StatisticsPage.tsx:3",
+    "scope": "shared-admin-only"
+  },
+  {
+    "file": "src/shared/components/skeletons/index.tsx",
+    "tableId": "shared/components/skeletons/index.tsx:1",
+    "scope": "shared-admin-only"
+  }
+]

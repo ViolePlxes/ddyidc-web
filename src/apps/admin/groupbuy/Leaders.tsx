@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { groupBuyAdminApi } from "../../../shared/api/groupbuy";
@@ -61,7 +62,7 @@ export function GroupBuyAdminLeaders() {
         emptyTitle="暂无拼团记录"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/groupbuy/Leaders.tsx:1">
             <Table.Header variant="compact">
               <Table.Row>
                 <Table.Head>团长</Table.Head>
@@ -126,7 +127,7 @@ export function GroupBuyAdminLeaders() {
             empty={!detail.isLoading && !detail.data?.members.length}
             emptyTitle="暂无成员"
           >
-            <Table>
+            <Table tableId="apps/admin/groupbuy/Leaders.tsx:2">
               <Table.Header variant="compact">
                 <Table.Row>
                   <Table.Head>成员</Table.Head>

@@ -1,3 +1,4 @@
+import {AdminTableScope} from './AdminTableScope';
 import { MessageBroadcasts } from "./views/MessageBroadcasts";
 import { PointsActivities } from "../../shared/components/PointsActivities";
 import { PointsEventTasks } from "../../shared/components/PointsEventTasks";
@@ -451,7 +452,7 @@ function AdminDashboard() {
 
 export function AdminApp() {
   return (
-    <Routes>
+    <AdminTableScope><Routes>
       <Route element={<AdminSessionBoundary />}>
         <Route path={adminPath('/admin/login')} element={<AdminLogin />} />
         <Route element={<AdminGuard />}>
@@ -768,6 +769,6 @@ export function AdminApp() {
         </Route>
         <Route path="*" element={<ForbiddenPage loginPath={adminPath('/admin/login')} />} />
       </Route>
-    </Routes>
+    </Routes></AdminTableScope>
   );
 }

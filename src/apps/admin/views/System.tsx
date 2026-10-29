@@ -1,6 +1,7 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { SMSReceiptQuery } from "./SMSReceiptQuery";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -105,7 +106,7 @@ function NoticeReviews() {
     <div><Button disabled={mutation.isPending} onClick={() => void query.refetch()}>刷新</Button></div>
     {query.isLoading ? <Loader /> : null}
     {query.error ? <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} /> : null}
-    <LayerCard><Table><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
+    <LayerCard><Table tableId="apps/admin/views/System.tsx:1"><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
       <Table.Body>{(query.data ?? []).map(row => <Table.Row key={row.id}><Table.Cell>{row.id}</Table.Cell><Table.Cell>#{row.customerId}</Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.attempts}</Table.Cell><Table.Cell><Button disabled={mutation.isPending || row.status === "retry_pending"} onClick={() => { setSelected(row); setReason(""); mutation.reset(); }}>处置</Button></Table.Cell></Table.Row>)}</Table.Body>
     </Table>{query.data?.length === 0 ? <p className="p-4">暂无待处置通知。</p> : null}</LayerCard>
     {selected ? <LayerCard className="grid gap-3 px-4 py-3">
@@ -257,7 +258,7 @@ function NotifyLogs() {
   if (query.error) return <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} />;
   return (
     <LayerCard className="p-0">
-      <Table>
+      <Table tableId="apps/admin/views/System.tsx:2">
         <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>场景 / 通道</Table.Head><Table.Head>目标</Table.Head><Table.Head>状态</Table.Head><Table.Head>回执 / 错误</Table.Head></Table.Row></Table.Header>
         <Table.Body>
           {rows.map((log) => (

@@ -1,6 +1,7 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, Checkbox, LayerCard, Radio, Select, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, LayerCard, Radio, Select, Tabs } from "@cloudflare/kumo";
 import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { consoleApi } from "../api/console";
@@ -150,7 +151,7 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePri
       </div>
       {specs.length ? (
         <Radio.Group aria-label="计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
-          <Table>
+          <Table tableId="shared/components/ProductConfig.tsx:1">
             <Table.Header variant="compact">
               <Table.Row>
                 <Table.Head>实例规格</Table.Head><Table.Head>vCPU</Table.Head><Table.Head>内存</Table.Head>

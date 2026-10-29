@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { Pagination } from "./Pagination";
-import { Button, LayerCard,  Table } from "@cloudflare/kumo";
+import { Button, LayerCard} from "@cloudflare/kumo";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -56,7 +57,7 @@ export function DataTable({
   return (
     <div className="grid gap-3">
       <LayerCard className=" overflow-x-auto p-0">
-        <Table>
+        <Table tableId="shared/components/DataTable.tsx:1">
           <Table.Header variant="compact">
             <Table.Row>
               {selectable ? (

@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Link, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Link} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
@@ -56,7 +57,7 @@ export function ReceiptReviews() {
     {reconcile.error ? <Banner variant="error" title="渠道核对失败" description={getApiMessage(reconcile.error)} /> : null}
     {reconcile.data ? <Banner title="渠道查询已完成" description={`返回状态：${reconcile.data.status}。仅验真的成功收款进入本地状态处理，不会再次扣款。`} /> : null}
     <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && !query.data?.length} emptyTitle="暂无待核对收款">
-      <Table><Table.Header><Table.Row>{["支付单", "业务 / 客户", "渠道 / 金额", "原因", "状态", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
+      <Table tableId="apps/admin/views/ReceiptReviews.tsx:1"><Table.Header><Table.Row>{["支付单", "业务 / 客户", "渠道 / 金额", "原因", "状态", "操作"].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
         <Table.Body>{query.data?.map(row => <Table.Row key={row.paymentId}>
           <Table.Cell>{row.payNo}</Table.Cell><Table.Cell>{row.businessId} / {row.customerId}</Table.Cell>
           <Table.Cell>{row.channel} · ¥{row.amount}</Table.Cell><Table.Cell>{reasons[row.reason] ?? row.reason}</Table.Cell>
