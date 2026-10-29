@@ -22,7 +22,7 @@ import { instancePasswordIssues } from "../utils/instancePassword";
 import { cycleLabels } from "../utils/format";
 import { saveOrderDraft } from "../utils/orderDraft";
 import { isUpstreamProduct } from "../utils/productCatalog";
-import { choiceLabel, isQuantityOption, configurationVisible, configurationInitialValue, configurationArray, configurationDisplayValue, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, withoutZeroPrice } from "../utils/productOptions";
+import { choiceLabel, isQuantityOption, configurationVisible, configurationInitialValue, configurationArray, configurationDisplayValue, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, isResourceOption, optionValueCount, withoutZeroPrice } from "../utils/productOptions";
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
 import { ProductSteps } from "./ProductSteps";
@@ -74,7 +74,7 @@ function optionTitle(field: string, fallback: string) {
   return labels[field] ?? fallback;
 }
 
-function ProductOptionControl({
+export function ProductOptionControl({
   option,
   value,
   disabled,
@@ -91,7 +91,7 @@ function ProductOptionControl({
   if(option.optionType==="multi_select") {const values=configurationArray(value);return <div className="flex flex-wrap gap-4">{option.options.map(choice=><Checkbox key={choice.id} label={choiceLabel(choice)} disabled={disabled} checked={values.includes(choice.id)} onCheckedChange={checked=>onChange(JSON.stringify(checked?[...values,choice.id].sort():values.filter(id=>id!==choice.id)))}/>)}</div>;}
   if(option.optionType==="cascade") {const path=configurationArray(value);const levels: ConfigOption["options"][]=[];let choices=option.options;for(let i=0;i<32&&choices.length;i++){levels.push(choices);const choice=choices.find(c=>c.id===path[i]);choices=choice?.children??[];}return <div className="grid gap-3 sm:grid-cols-2">{levels.map((items,index)=><Select key={index} label={`${option.name} ${index+1}`} value={path[index]??""} items={Object.fromEntries(items.map(c=>[c.id,c.name]))} disabled={disabled} onValueChange={next=>{if(next)onChange(JSON.stringify([...path.slice(0,index),next]));}}/>)}</div>;}
   if (!usesResourceSlider(option)) {
-    const quantityCount = Math.floor((option.max - option.min) / (option.step || 1)) + 1;
+    const quantityCount = optionValueCount(option);
     const page = Math.min(quantityPage, Math.max(0, Math.ceil(quantityCount / pageSize) - 1));
     const tabs = isQuantityOption(option)
       ? Array.from({ length: Math.min(pageSize, quantityCount - page * pageSize) }, (_, index) => {
@@ -100,7 +100,9 @@ function ProductOptionControl({
       })
       : option.options.map((choice) => ({ value: choice.id, label: choiceLabel(choice), disabled }));
     return <div className="grid min-w-0 gap-2">
-      <div className="min-w-0 overflow-x-auto"><Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} /></div>
+      <div className={tabs.length <= 6 ? "min-w-0 overflow-x-auto p-1" : "min-w-0 overflow-x-auto"}>{tabs.length <= 6
+        ? <Radio.Group appearance="segmented" aria-label={option.name} value={value} onValueChange={onChange} disabled={disabled}>{tabs.map(choice => <Radio.Item key={choice.value} value={choice.value} label={choice.label} disabled={choice.disabled} />)}</Radio.Group>
+        : <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />}</div>
       {isQuantityOption(option) && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" size="sm" disabled={disabled || page === 0} onClick={() => setQuantityPage(page - 1)}>上一组</Button>
         <span className="text-sm text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
@@ -371,11 +373,11 @@ export function ProductConfig({
 
         {displayedOptions.map((option) => {
           const value = selected[option.id] ?? initialValue(option);
-          const isSlider = isQuantityOption(option) && usesResourceSlider(option);
+          const isFixedResource = isQuantityOption(option) && isResourceOption(option);
           return (
             <LayerCard id={anchor(`option-${option.id}`)} key={`${option.id}-${option.field}`} className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
               <div><h2 className="text-lg font-semibold text-kumo-strong">{optionTitle(option.field, option.name || option.field)}</h2></div>
-              <ProductOptionControl option={option} value={value} disabled={isSlider && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
+              <ProductOptionControl option={option} value={value} disabled={isFixedResource && product.configMode === "fixed"} onChange={(next) => setSelected((current) => ({ ...current, [option.id]: next }))} />
             </LayerCard>
           );
         })}

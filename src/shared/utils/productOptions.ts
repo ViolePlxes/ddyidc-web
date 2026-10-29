@@ -1,8 +1,18 @@
 import type { ConfigOption, ConfigOptionValue } from "../api/console";
 
-export function usesResourceSlider(option: ConfigOption) {
+export function isResourceOption(option: ConfigOption) {
   return /^(ip|ip_num|ip_count|bandwidth|upstream_bandwidth|downstream_bandwidth|cpu|memory|traffic|disk|disk_size|hard_disk|data_disk|system_disk)$/.test(option.field.toLowerCase())
     || /^(公网\s*IP|IP\s*(数量|个数)|带宽|流入带宽|流出带宽|数据盘|硬盘|系统盘)(容量|大小|数量|上限)?$/i.test(option.name.trim());
+}
+
+// Price tiers are not values: size the control using the actual selectable range.
+export function optionValueCount(option: ConfigOption) {
+  return isQuantityOption(option)
+    ? Math.max(1, Math.floor((option.max - option.min) / (option.step || 1) + 1e-8) + 1)
+    : option.options.length;
+}
+export function usesResourceSlider(option: ConfigOption) {
+  return isResourceOption(option) && optionValueCount(option) > 6;
 }
 
 // A qty's options are price tiers, not selectable values. A single tier can
