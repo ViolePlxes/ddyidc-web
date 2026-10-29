@@ -33,7 +33,7 @@ function primaryGroupId(product: ProductSummary) {
   return product.parentGroupId && product.parentGroupId !== "0" ? product.parentGroupId : product.groupId;
 }
 
-function buildPrimaryGroups(products: ProductSummary[], groups: ProductGroupSummary[]) {
+export function buildPrimaryGroups(products: ProductSummary[], groups: ProductGroupSummary[]) {
   const result = new Map<string, string>();
   for (const group of groups.filter((item) => item.parentId === "0").sort((left, right) => left.sort - right.sort)) {
     result.set(group.id, group.name);
@@ -44,6 +44,26 @@ function buildPrimaryGroups(products: ProductSummary[], groups: ProductGroupSumm
   }
   return result;
 }
+
+export function ProductCategories({ primaryGroups, selectedGroup, children, secondary, loading, onPrimaryChange, onSecondaryChange }: {
+ primaryGroups: Map<string,string>; selectedGroup: string; children: ProductGroupSummary[]; secondary?: ProductGroupSummary; loading: boolean; onPrimaryChange: (value:string)=>void; onSecondaryChange:(value:string)=>void;
+}) { return (<LayerCard className="grid min-w-0 gap-3 px-4 py-3" aria-label="产品分类">
+              <div className="flex min-w-0 items-center gap-3">
+                <strong className="shrink-0 whitespace-nowrap font-medium">一级分类</strong>
+                <div className="min-w-0 overflow-x-auto p-1"><Tabs variant="segmented" listClassName="w-max"
+                  tabs={Array.from(primaryGroups, ([value, label]) => ({ value, label }))}
+                  value={selectedGroup} onValueChange={(value) => { onPrimaryChange(value); }}
+                /></div>
+              </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <strong className="shrink-0 whitespace-nowrap font-medium">二级分类</strong>
+                <div className="min-w-0 overflow-x-auto p-1">{children.length ? <Tabs variant="segmented"
+                  listClassName="w-max"
+                  tabs={children.map((group) => ({ value: group.id, label: group.name, className: "shrink-0 whitespace-nowrap" }))}
+                  value={secondary?.id ?? ""} onValueChange={(value) => { onSecondaryChange(value); }}
+                /> : <span>{loading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>}</div>
+              </div>
+            </LayerCard>); }
 
 function PublicProductCatalog() {
   const query = useProducts();
@@ -198,23 +218,9 @@ function IntegratedProductCatalog() {
             {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
           </aside>
           <div className="grid min-w-0 gap-5">
-            <LayerCard className=" grid gap-4 px-4 py-3">
-              <div className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
-                <strong className="font-medium">一级分类</strong>
-                <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented"
-                  tabs={Array.from(primaryGroups, ([value, label]) => ({ value, label }))}
-                  value={selectedGroup} onValueChange={(value) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); }}
-                /></div>
-              </div>
-              <div className="grid min-w-0 gap-3">
-                <strong className="font-medium">二级分类</strong>
-                <div className="min-w-0">{children.length ? <Tabs variant="segmented"
-                  listClassName="h-auto flex-wrap gap-y-1 overflow-x-visible overflow-y-visible"
-                  tabs={children.map((group) => ({ value: group.id, label: group.name, className: "min-h-8 max-w-full whitespace-normal break-words text-left" }))}
-                  value={secondary?.id ?? ""} onValueChange={(value) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); }}
-                /> : <span>{productsQuery.isLoading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>}</div>
-              </div>
-            </LayerCard>
+            <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
+              onPrimaryChange={value=>{setSelectedGroup(value);setSelectedSecondaryId("");setSelectedProductId("");setPage(1);}}
+              onSecondaryChange={value=>{setSelectedSecondaryId(value);setSelectedProductId("");setPage(1);}} />
 
             <LayerCard id="catalog-specifications" className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
               <h2>计算规格</h2>
