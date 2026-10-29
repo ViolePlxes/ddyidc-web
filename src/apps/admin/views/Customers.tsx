@@ -1,3 +1,4 @@
+import { AdminTableCopyText } from "../../../shared/components/AdminTableCopyText";
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
@@ -148,15 +149,15 @@ function customerLink(customer: AdminCustomerRow, value: string) {
 function renderCell(column: ColumnKey, customer: AdminCustomerRow): ReactNode {
   switch (column) {
     case "id":
-      return customerLink(customer, customer.id);
+      return <AdminTableCopyText value={customer.id} label="用户 ID">{customerLink(customer, customer.id)}</AdminTableCopyText>;
     case "displayName":
-      return customerLink(customer, customer.displayName || customer.username);
+      return <AdminTableCopyText value={customer.displayName || customer.username} label="客户姓名">{customerLink(customer, customer.displayName || customer.username)}</AdminTableCopyText>;
     case "realnameStatus":
       return realnameBadge(customer.realnameStatus);
     case "phone":
-      return customer.phone || "—";
+      return <AdminTableCopyText value={customer.phone} label="联系方式"/>;
     case "email":
-      return customer.email || "—";
+      return <AdminTableCopyText value={customer.email} label="邮箱"/>;
     case "status":
       return customer.status === 1 ? (
         <Badge variant="success">已启用</Badge>
@@ -170,7 +171,7 @@ function renderCell(column: ColumnKey, customer: AdminCustomerRow): ReactNode {
     case "country":
       return customer.country || "—";
     case "address":
-      return customer.address || "—";
+      return <AdminTableCopyText value={customer.address} label="地址"/>;
     case "language":
       return customer.language || "—";
     case "remark":

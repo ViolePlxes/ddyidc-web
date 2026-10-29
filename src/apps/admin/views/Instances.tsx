@@ -1,3 +1,4 @@
+import { AdminTableCopyText } from "../../../shared/components/AdminTableCopyText";
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
@@ -5,7 +6,7 @@ import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadg
 import { Dialog } from "../../../shared/components/Dialog";
 import { localDateTime } from "../../../shared/utils/localDate";
 import { DateRangeField } from "../../../shared/components/DateField";
-import { Banner, Button, Checkbox, DropdownMenu, Input, LayerCard,  Select, Table, Tabs, ClipboardText, Link as KumoLink } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, DropdownMenu, Input, LayerCard,  Select, Table, Tabs, InlineCopyText, Link as KumoLink } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -23,7 +24,7 @@ const columns=[['identity','实例 ID / 编号'],['product','商品 / 标识'],[
 type Column=typeof columns[number][0];
 const defaults:Column[]=['identity','product','customer','realName','ip','status','expires','amount','supplier'];
 function stored<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}}
-function CopyableIp({ip}:{ip:string}){return <div className="flex items-center gap-1"><span>{ip}</span><ClipboardText text={ip} size="sm" tooltip={{text:"复制 IP",copiedText:"已复制"}} labels={{copyAction:`复制 IP ${ip}`}} className="border-0 ring-0 shadow-none [&>span:first-child]:hidden [&>button]:border-l-0! [&>button]:px-1" /></div>}
+function CopyableIp({ip}:{ip:string}){return <InlineCopyText variant="body" size="base" value={ip} labels={{copyAction:"复制 IP",copied:"已复制"}}>{ip}</InlineCopyText>}
 function date(value:string|null|undefined){return value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'—'}
 
 export function AdminInstances(){
@@ -53,16 +54,16 @@ export function AdminInstances(){
  const returnTo=`${adminBase}/instances${queryString?'?'+queryString:''}`;
  const detail=(r:ManagedInstance,logs=false)=>`${adminBase}/customers/${encodeURIComponent(r.customerId)}/instances/${encodeURIComponent(r.id)}?returnTo=${encodeURIComponent(returnTo)}${logs?'&tab=logs':''}`;
  function cell(r:ManagedInstance,c:Column):ReactNode{switch(c){
-  case 'identity':return <div className="grid gap-1"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.id}</KumoLink><span className="text-sm text-kumo-subtle">{r.instanceNo}</span></div>;
-  case 'product':return <div className="grid gap-1"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.productName}</KumoLink><span className="text-sm text-kumo-subtle">{r.hostname||'—'}</span></div>;
-  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><KumoLink variant="current" render={<Link to={`${adminBase}/customers/${encodeURIComponent(r.customerId)}/profile`}/>}>{r.username||r.customerId}</KumoLink><span className="text-sm">{r.phone||r.email||'—'}</span></div>;
+  case 'identity':return <div className="grid gap-1"><AdminTableCopyText value={r.id} label="实例 ID"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.id}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.instanceNo} label="实例编号"/></div>;
+  case 'product':return <div className="grid gap-1"><AdminTableCopyText value={r.productName} label="商品名"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.productName}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.hostname} label="主机名"/></div>;
+  case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><AdminTableCopyText value={r.username||r.customerId} label="客户账号"><KumoLink variant="current" render={<Link to={`${adminBase}/customers/${encodeURIComponent(r.customerId)}/profile`}/>}>{r.username||r.customerId}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.phone||r.email} label="联系方式"/></div>;
   case 'ip':return <div className="grid gap-1">{r.primaryIp?<CopyableIp ip={r.primaryIp}/>:'—'}{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><CopyableIp key={ip} ip={ip}/>)}</div>;
   case 'status':return <div className="grid gap-1"><MachineStatusBadge status={r.status} label={statusNames[r.status]||'未知'}/><div className="flex flex-wrap items-center gap-1"><MachineStatusBadge status={r.powerStatus} label={powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}/><span className="text-sm text-kumo-subtle">（缓存）</span></div>{r.errorCount>0&&<Link className="text-sm text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
   case 'expires':return <div className="grid gap-1"><span>{date(r.expiresAt)}</span><span className="text-sm text-kumo-subtle">{expiryRemaining(r.expiresAt,now)}</span></div>;
   case 'amount':return <div className="grid gap-1"><span>{r.renewalAmount===null?'待同步报价':`¥${r.renewalAmount}`}</span><span className="text-sm text-kumo-subtle">{cycleLabels[r.cycle]||r.cycle||'周期待同步'}</span>{r.renewalAmount!==null&&r.renewalStale?<span className="text-sm text-kumo-subtle">最近有效报价 · {date(r.renewalSyncedAt?new Date(r.renewalSyncedAt*1000).toISOString():null)}</span>:null}</div>;
-  case 'realName':return <div className="grid gap-1">{r.realName?.trim()?<KumoLink variant="current" render={<Link to={`${adminBase}/certifications?customerId=${encodeURIComponent(r.customerId)}${r.realNameRecordId?`&record=${encodeURIComponent(r.realNameRecordId)}`:''}`}/>}>{r.realName}</KumoLink>:<span>未实名</span>}<span className="text-sm text-kumo-subtle">{r.customerId}</span></div>;
+  case 'realName':return <div className="grid gap-1">{r.realName?.trim()?<AdminTableCopyText value={r.realName} label="实名姓名"><KumoLink variant="current" render={<Link to={`${adminBase}/certifications?customerId=${encodeURIComponent(r.customerId)}${r.realNameRecordId?`&record=${encodeURIComponent(r.realNameRecordId)}`:''}`}/>}>{r.realName}</KumoLink></AdminTableCopyText>:<span>未实名</span>}<AdminTableCopyText value={r.customerId} label="用户 ID"/></div>;
   case 'supplier':return r.supplierName||'—';case 'created':return <div className="grid gap-1"><span>{date(r.activatedAt)}</span><span className="text-sm text-kumo-subtle">创建 {date(r.createdAt)}</span></div>;
-  case 'order':return r.orderNo||'—';case 'resource':return r.upstreamInstanceId||'—';case 'synced':return date(r.lastSyncedAt);case 'auto':return r.autoRenew?'开启':'关闭';case 'system':return <div className="grid gap-1"><span>{r.operatingSystem||'—'}</span>{r.config.map((c,i)=><span key={`${c.field}-${i}`} className="text-sm text-kumo-subtle">{({cpu:'CPU',memory:'内存',system_disk:'系统盘',data_disk:'数据盘',bandwidth:'带宽',region:'地区',data_center:'机房',network:'线路',defense:'防御'} as Record<string,string>)[c.field]||c.field}：{c.value}</span>)}</div>;
+  case 'order':return <AdminTableCopyText value={r.orderNo} label="订单号"/>;case 'resource':return <AdminTableCopyText value={r.upstreamInstanceId} label="资源 ID"/>;case 'synced':return date(r.lastSyncedAt);case 'auto':return r.autoRenew?'开启':'关闭';case 'system':return <div className="grid gap-1"><span>{r.operatingSystem||'—'}</span>{r.config.map((c,i)=><span key={`${c.field}-${i}`} className="text-sm text-kumo-subtle">{({cpu:'CPU',memory:'内存',system_disk:'系统盘',data_disk:'数据盘',bandwidth:'带宽',region:'地区',data_center:'机房',network:'线路',defense:'防御'} as Record<string,string>)[c.field]||c.field}：{c.value}</span>)}</div>;
  }}
  const filterSelect=(label:string,field:string,items:Record<string,string>)=>{const fallback=field==='sort'?'createdAt':field==='direction'?'desc':'';return <Select label={label} value={search.get(field)||fallback} items={fallback?items:{'':'全部',...items}} onValueChange={v=>change(field,v||fallback)}/>};
  const optionItems=(kind:string)=>Object.fromEntries((options.data?.[kind]||[]).map(o=>[o.id,o.name]));

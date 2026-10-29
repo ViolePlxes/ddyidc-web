@@ -1,3 +1,4 @@
+import { AdminTableCopyText } from "../../../shared/components/AdminTableCopyText";
 import { Badge, LayerCard, Link, Table } from "@cloudflare/kumo";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { AdminOrderRow } from "../../../shared/api/adminOverview";
@@ -96,8 +97,8 @@ export function AdminOrdersTable({ rows, adminId }: { rows: AdminOrderRow[]; adm
         </Table.Head>
       ))}</Table.Row></Table.Header>
       <Table.Body>{rows.map(order => <Table.Row key={order.id}>
-        <Table.Cell className="whitespace-normal break-all">{<OrderLink href={`${adminBase}/orders/${encodeURIComponent(order.id)}`}>{order.orderNo}</OrderLink>}</Table.Cell>
-        <Table.Cell className="whitespace-normal break-all">{order.customerId && order.customerId !== "0" ? <OrderLink href={`${adminBase}/customers/${encodeURIComponent(order.customerId)}/profile`}>{order.customerDisplayName || order.customerId}</OrderLink> : order.customerDisplayName || "—"}</Table.Cell>
+        <Table.Cell className="whitespace-normal break-all">{<AdminTableCopyText value={order.orderNo} label="订单号"><OrderLink href={`${adminBase}/orders/${encodeURIComponent(order.id)}`}>{order.orderNo}</OrderLink></AdminTableCopyText>}</Table.Cell>
+        <Table.Cell className="whitespace-normal break-all">{order.customerId && order.customerId !== "0" ? <AdminTableCopyText value={order.customerId} label="用户 ID"><OrderLink href={`${adminBase}/customers/${encodeURIComponent(order.customerId)}/profile`}>{order.customerDisplayName || order.customerId}</OrderLink></AdminTableCopyText> : order.customerDisplayName || "—"}</Table.Cell>
         <Table.Cell className="whitespace-normal break-all">{order.instances?.length ? <div className="grid gap-1">{order.instances.map(instance => <OrderLink key={instance.id} href={`${adminBase}/customers/${encodeURIComponent(instance.customerId)}/instances/${encodeURIComponent(instance.id)}`}>{instance.name || order.productName || "未命名商品"}{order.instances!.length > 1 ? ` · #${instance.id}` : ""}</OrderLink>)}</div> : <span title="尚无当前客户名下的机器关联">{order.productName || "未命名商品"}<span className="block text-kumo-subtle">暂无关联机器</span></span>}</Table.Cell>
         <Table.Cell>{formatMoney(order.payAmount)}</Table.Cell>
         <Table.Cell>{order.payType === 1 ? <Badge variant="blue">支付宝</Badge> : order.payType === 2 ? <Badge variant="green">微信</Badge> : order.payType === 3 ? <Badge variant="warning">余额支付</Badge> : order.payType ? <Badge variant="neutral">其他支付方式</Badge> : "—"}</Table.Cell>

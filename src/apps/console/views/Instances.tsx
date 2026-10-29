@@ -1,5 +1,5 @@
 import { Pagination } from "../../../shared/components/Pagination";
-import { Banner, Button, ClipboardText, Input, LayerCard, Link, Popover, Tabs, Table, Surface, useKumoToastManager } from "@cloudflare/kumo";
+import { Banner, Button, InlineCopyText, Input, LayerCard, Link, Popover, Tabs, Table, Surface } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -111,9 +111,9 @@ function expiryLabel(value?: string) {
   return `${Math.ceil(delta / 86400000)}天后到期`;
 }
 function HostnameCopy({value}:{value:string}) {
-  const toast=useKumoToastManager();
-  return <Button variant="ghost" size="sm" className="h-auto justify-start break-all text-left" aria-label={`复制主机名 ${value}`} onClick={()=>{void navigator.clipboard.writeText(value).then(()=>toast.add({title:"已复制主机名",timeout:2500})).catch(()=>toast.add({title:"复制失败，请重试",timeout:2500}));}}>{value}</Button>;
+  return <InlineCopyText variant="body" size="base" value={value} labels={{copyAction:"复制主机名",copied:"已复制"}}>{value}</InlineCopyText>;
 }
+
 function ProductRow({ instance, card = false }: { instance: InstanceListItem; card?: boolean }) {
   const client = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -135,7 +135,7 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
   const cells = [
 <div key="0" className="min-w-0"><div className="grid min-w-0 gap-1"><Link href={`/console/instances/${instance.id}`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><HostnameCopy value={data.hostname || instance.name} /></div></div>,
 <div key="1" className="min-w-0"><StatusBadge status={instanceStatus(instance)} /></div>,
-<div key="2" className="min-w-0">{address ? <ClipboardText text={address} size="sm" labels={{ copyAction: `复制连接地址 ${address}` }} className="w-fit max-w-full border-0 ring-0 shadow-none [&>span:first-child]:grow-0 [&>span:first-child]:ps-0 [&>span:first-child]:pe-1 [&>button]:border-l-0! [&>button]:px-1" /> : "未获取"}</div>,
+<div key="2" className="min-w-0">{address ? <InlineCopyText variant="body" size="base" value={address} labels={{copyAction:"复制连接地址",copied:"已复制"}}>{address}</InlineCopyText> : "未获取"}</div>,
 <div key="3" className="min-w-0"><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-sm text-kumo-subtle">{instance.deliveryPending ? "开通后更新" : expiryLabel(instance.expiresAt)}</span></div></div>,
 <div key="4" className="min-w-0"><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-sm text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></div>,
 <div key="5" className="min-w-0"><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></div>,
