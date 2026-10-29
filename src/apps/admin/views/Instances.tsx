@@ -24,7 +24,7 @@ const columns=[['identity','实例 ID / 编号'],['product','商品 / 标识'],[
 type Column=typeof columns[number][0];
 const defaults:Column[]=['identity','product','customer','realName','ip','status','expires','amount','supplier'];
 function stored<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}}
-function CopyableIp({ip}:{ip:string}){return <InlineCopyText variant="body" size="base" value={ip} labels={{copyAction:"复制 IP",copied:"已复制"}}>{ip}</InlineCopyText>}
+function CopyableIp({ip}:{ip:string}){return <InlineCopyText className="w-fit leading-[normal]" value={ip} labels={{copyAction:"复制 IP",copied:"已复制"}}>{ip}</InlineCopyText>}
 function date(value:string|null|undefined){return value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'—'}
 
 export function AdminInstances(){
