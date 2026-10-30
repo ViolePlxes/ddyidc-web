@@ -12,5 +12,6 @@ export function adminInstanceApi(customerId:string,instanceId:string) {
     images:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceImages>>(`${path}/images`,{timeout:30000})),
     monitor:()=>unwrap(adminRequest.get<ApiEnvelope<InstanceMonitor>>(`${path}/monitor`,{timeout:30000})),
     action:(input:InstanceActionInput)=>unwrap(adminRequest.post<ApiEnvelope<InstanceActionResult>>(`${path}/action`,input,{timeout:65000})),
+    remove:(input:{reason:string;confirm?:string;force?:boolean})=>unwrap(adminRequest.delete<ApiEnvelope<{deleted:boolean}>>(path,{data:input,timeout:30000})),
   };
 }
