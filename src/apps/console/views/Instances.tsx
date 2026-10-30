@@ -83,9 +83,16 @@ async function loadInstances() {
 
 type InstanceFilter = "all" | "active" | "pending" | "suspended";
 
+function expiredByDate(instance: InstanceListItem) {
+  const raw = instance.expiresAt;
+  if (!raw) return false;
+  const time = new Date(String(raw).replace(" ", "T")).getTime();
+  return Number.isFinite(time) && time <= Date.now();
+}
+
 function matchesFilter(instance: InstanceListItem, filter: InstanceFilter) {
   const power = instance.powerStatus?.toLowerCase();
-  if (filter === "active") return [3, 4].includes(instance.status) && !["suspended", "deleted", "expired", "fault"].includes(power ?? "");
+  if (filter === "active") return [3, 4].includes(instance.status) && !["suspended", "deleted", "expired", "fault"].includes(power ?? "") && !expiredByDate(instance);
   if (filter === "pending") return [1, 2].includes(instance.status);
   if (filter === "suspended") return instance.status !== 6 && power === "suspended";
   return true;
@@ -94,6 +101,7 @@ function matchesFilter(instance: InstanceListItem, filter: InstanceFilter) {
 function instanceStatus(instance: InstanceListItem): StatusCode {
   const { status } = instance;
   if (status !== 6 && instance.powerStatus?.toLowerCase() === "suspended") return "suspended";
+  if ((status === 3 || status === 4) && expiredByDate(instance)) return "expired";
   if (status === 3) return "running";
   if (status === 1 || status === 2) return "provisioning";
   if (status === 4) return "stopped";
