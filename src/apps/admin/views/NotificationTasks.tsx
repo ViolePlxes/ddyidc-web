@@ -9,12 +9,12 @@ import { Link } from 'react-router-dom';
 import { digestAdmin, type DigestTask } from '../../../shared/api/notifyAdmin';
 import { getApiMessage } from '../../../shared/api/request';
 import { DateRangeField } from '../../../shared/components/DateField';
+import { NotificationContent } from '../../../shared/components/NotificationContent';
 import { Dialog } from '../../../shared/components/Dialog';
 import { PageHeader } from '../../../shared/components/PageHeader';
 
 const statuses: Record<string,string> = {pending:'等待发送', sending:'发送中', submitted:'服务商已接收', delivered:'已送达', failed:'失败', unknown:'结果待核对', skipped:'已跳过', canceled:'已取消', not_submitted:'确认未提交', retry_approved:'重试已批准', collected:'已合并', settings_changed:'配置变更', sms_template_apply:'短信模板申请'};
 const timestamp = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', {timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '未记录';
-const plainContent = (html?: string) => (html ?? '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|h[1-6]|li)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
 
 export function NotificationTasks() {
  const cache = useQueryClient();
@@ -69,7 +69,7 @@ export function NotificationTasks() {
        <dt className="text-kumo-subtle">批次编号</dt><dd className="break-all">{previewTask.id}</dd>
        {previewTask.error?<><dt className="text-kumo-subtle">错误</dt><dd className="break-all">{previewTask.error}</dd></>:null}
       </dl>
-      <div className="mt-4 grid gap-2"><p className="text-sm font-medium">内容</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md border border-kumo-line bg-kumo-recessed p-3 text-sm">{plainContent(previewTask.contentSnapshot)||'未记录内容快照'}</pre></div>
+      <div className="mt-4 grid gap-2"><p className="text-sm font-medium">内容</p><div className="max-h-80 overflow-auto"><NotificationContent html={previewTask.contentSnapshot} /></div></div>
      </>:null}
     </LayerDialog.Body>
    </LayerDialog.Content>

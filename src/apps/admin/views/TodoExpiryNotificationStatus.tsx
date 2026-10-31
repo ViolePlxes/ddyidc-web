@@ -2,6 +2,7 @@ import { LayerDialog } from "@cloudflare/kumo";
 import { useState } from "react";
 import { Badge } from "../../../shared/components/Badge";
 import { adminRequest,type ApiEnvelope } from "../../../shared/api/request";
+import { NotificationContent } from "../../../shared/components/NotificationContent";
 import type { TodoEntry } from "../../../shared/api/adminTodos";
 interface Reminder {Channel:string;Status:string;Error:string;BusinessID:string;Target?:string;Content?:string;CreatedAt:string}
 const statuses: Record<string, {label: string; variant: "neutral" | "success" | "warning" | "error"}> = {
@@ -51,7 +52,7 @@ export function TodoExpiryNotificationStatus({row}: {row: TodoEntry}) {
        <dt className="text-kumo-subtle">批次 / 日志</dt><dd className="break-all">{detail.record.BusinessID||"—"}</dd>
        {detail.record.Error?<><dt className="text-kumo-subtle">错误</dt><dd className="break-all">{detail.record.Error}</dd></>:null}
       </dl>
-      <div className="mt-4 grid gap-2"><p className="text-sm font-medium">内容</p><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md border border-kumo-line bg-kumo-recessed p-3 text-sm">{detail.record.Content||"未记录内容快照"}</pre></div>
+      <div className="mt-4 grid gap-2"><p className="text-sm font-medium">内容</p><div className="max-h-80 overflow-auto"><NotificationContent html={detail.record.Content} /></div></div>
      </>:<p className="text-sm text-kumo-subtle">暂无该渠道的提醒记录。</p>}
     </LayerDialog.Body>
    </LayerDialog.Content>
