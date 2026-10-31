@@ -6,6 +6,7 @@ export interface BackupConfig {
   bucket: string;
   prefix: string;
   retentionDays: number;
+  retentionCount: number;
   accessKeyMasked: string;
   secretConfigured: boolean;
 }

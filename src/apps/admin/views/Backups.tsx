@@ -8,7 +8,7 @@ import { backupAdmin, type BackupInput, type BackupJob } from "../../../shared/a
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 
-const initial: BackupInput = { enabled: false, endpoint: "https://oss-cn-hangzhou.aliyuncs.com", bucket: "", prefix: "ddyidc/", retentionDays: 30, accessKeyId: "", accessKeySecret: "" };
+const initial: BackupInput = { enabled: false, endpoint: "https://oss-cn-hangzhou.aliyuncs.com", bucket: "", prefix: "ddyidc/", retentionDays: 30, retentionCount: 2, accessKeyId: "", accessKeySecret: "" };
 const statuses = { queued: "等待执行", running: "执行中", success: "成功", failed: "失败", interrupted: "已中断", awaiting_review: "已导入，待运维核对放行", released: "运维已核对放行" };
 const kinds = { manual: "手动备份", scheduled: "定时备份", restore: "恢复" };
 const regions = { "https://oss-cn-hangzhou.aliyuncs.com": "华东 1 · 杭州", "https://oss-cn-shenzhen.aliyuncs.com": "华南 1 · 深圳", "https://oss-cn-beijing.aliyuncs.com": "华北 2 · 北京", "https://oss-cn-qingdao.aliyuncs.com": "华北 1 · 青岛", "https://oss-cn-chengdu.aliyuncs.com": "西南 1 · 成都", custom: "其他地域" };
@@ -24,7 +24,7 @@ export function AdminBackups() {
   const [confirmation, setConfirmation] = useState("");
   const config = useQuery({ queryKey: ["admin", "backup", "config"], queryFn: backupAdmin.config });
   const history = useQuery({ queryKey: ["admin", "backup", "history", page], queryFn: () => backupAdmin.history(page), refetchInterval: (query) => query.state.data?.activeId ? 2_000 : false });
-  useEffect(() => { if (config.data) { const { enabled, endpoint, bucket, prefix, retentionDays } = config.data; setForm({ enabled, endpoint, bucket, prefix, retentionDays, accessKeyId: "", accessKeySecret: "" }); } }, [config.data]);
+  useEffect(() => { if (config.data) { const { enabled, endpoint, bucket, prefix, retentionDays, retentionCount } = config.data; setForm({ enabled, endpoint, bucket, prefix, retentionDays, retentionCount: retentionCount ?? 2, accessKeyId: "", accessKeySecret: "" }); } }, [config.data]);
   const refresh = () => cache.invalidateQueries({ queryKey: ["admin", "backup"] });
   const save = useMutation({ mutationFn: backupAdmin.save, onSuccess: (value) => { cache.setQueryData(["admin", "backup", "config"], value); setNotice("配置已加密保存，密钥不会回显。"); } });
   const test = useMutation({ mutationFn: backupAdmin.test, onSuccess: () => setNotice("连接成功：已确认私有 Bucket，完成备份前缀查询和探针写入、删除。") });
@@ -50,7 +50,7 @@ export function AdminBackups() {
           <Select label="地域" items={regions} value={form.endpoint in regions ? form.endpoint : "custom"} onValueChange={(value) => setForm({ ...form, endpoint: value === "custom" ? "https://oss-" : value || initial.endpoint })} />
           <Input label="Endpoint" value={form.endpoint} description="阿里云 OSS 地域 HTTPS 地址，不使用 CDN 域名" onChange={(event) => setForm({ ...form, endpoint: event.target.value })} />
           <Input label="上传路径前缀" value={form.prefix} onChange={(event) => setForm({ ...form, prefix: event.target.value })} />
-          <Input label="OSS 保留天数" type="number" min={1} max={3650} value={form.retentionDays} onChange={(event) => setForm({ ...form, retentionDays: Number(event.target.value) })} />
+          <Input label="OSS 保留份数" type="number" min={1} max={3650} value={form.retentionCount} description="只保留最近 N 份，其余自动删除；设为 0 时改用保留天数" onChange={(event) => setForm({ ...form, retentionCount: Number(event.target.value) })} />
         </div>
         <div className="flex flex-wrap gap-3"><Button type="submit" loading={save.isPending} disabled={busy}>保存配置</Button><Button type="button" variant="secondary" loading={test.isPending} disabled={busy || save.isPending} onClick={() => test.mutate()}>测试已保存配置</Button></div>
       </form>
