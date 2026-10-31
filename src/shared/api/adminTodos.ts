@@ -9,7 +9,7 @@ export interface AdminTodo {
   oldestAt?: string;
 }
 export interface AdminTodos { items: AdminTodo[]; total: number; complete: boolean; sampledAt: string }
-export interface TodoEntry { automaticCertification?: boolean; expiryNotifications?: { sms: string; email: string }; id: string; source: string; customerId: string; customerName: string; customerRealName?: string; machines?: { id: string; ipAddress: string; hostname?: string }[]; title: string; number: string; status: string; amount: string; refundableAmount?: string; orderId: string; instanceId: string; createdAt: string; updatedAt: string; href: string; lastAdminId?: string; actions?: string[]; revision?: string; ipAddress?: string; expiresAt?: string | null; billingCycle?: string;
+export interface TodoEntry { automaticCertification?: boolean; expiryNotifications?: { sms: string; email: string }; id: string; source: string; customerId: string; customerName: string; customerRealName?: string; machines?: { id: string; ipAddress: string; hostname?: string }[]; title: string; number: string; status: string; reason?: string; amount: string; refundableAmount?: string; orderId: string; instanceId: string; createdAt: string; updatedAt: string; href: string; lastAdminId?: string; actions?: string[]; revision?: string; ipAddress?: string; expiresAt?: string | null; billingCycle?: string;
   renewalSyncedAt?: number;
   renewalStale?: boolean; upstreamOrderId?: string; upstreamBillingUrl?: string }
 export interface ManualProductResult { processed: boolean; outcome: string; message: string; status: "normal" | "review"; facts?: { Status: number; PowerStatus: string; ExpiresAt: string | null; QueriedAt: string; PrimaryIP: string } }
