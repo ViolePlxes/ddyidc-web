@@ -35,7 +35,7 @@ export function TodoExpiryNotificationStatus({row}: {row: TodoEntry}) {
  return <div className="grid gap-1.5">
   {([['sms','短信'],['email','邮件']] as const).map(([channel,label])=>{
    const status = channel==="sms"&&row.expiryNotifications?.sms==="success" ? {label:"已提交",variant:"warning" as const} : row.expiryNotifications ? statuses[row.expiryNotifications[channel]] ?? {label: "待核查",variant: "warning" as const} : {label: "未获取",variant: "neutral" as const};
-   return <div key={channel} className="flex items-center gap-2"><span>{label}</span><button type="button" className="rounded-sm underline decoration-dotted underline-offset-4 hover:text-kumo-strong" title={`查看${label}通知内容`} onClick={()=>{void open(channel,label);}}><Badge variant={status.variant}>{status.label}</Badge></button></div>;
+   return <div key={channel} className="flex items-center gap-2"><span>{label}</span><button type="button" className="cursor-pointer rounded-sm underline decoration-dotted underline-offset-4 hover:text-kumo-strong" title={`查看${label}通知内容`} onClick={()=>{void open(channel,label);}}><Badge variant={status.variant}>{status.label}</Badge></button></div>;
   })}
   {detail?<LayerDialog.Root open onOpenChange={(open:boolean)=>{if(!open)setDetail(undefined);}}>
    <LayerDialog.Content size="lg" closeLabel="关闭">
