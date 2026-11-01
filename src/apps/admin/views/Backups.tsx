@@ -1,7 +1,8 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Loader,  Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Loader,  Select, Switch} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { backupAdmin, type BackupInput, type BackupJob } from "../../../shared/api/backupAdmin";
@@ -62,7 +63,7 @@ export function AdminBackups() {
     </LayerCard.Primary></LayerCard>
     <LayerCard >
       <LayerCard.Secondary><div className="p-5"><h2 className="text-lg font-semibold">备份历史</h2><p className="text-base text-kumo-subtle">显示最近 100 条任务。本地保留每日 7 天、每周 28 天、每月 370 天；OSS 按配置仅清理本系统记录的对象。</p></div></LayerCard.Secondary><LayerCard.Primary className="overflow-x-auto">
-      <Table><Table.Header><Table.Row>{["时间 / 类型", "状态", "本地大小", "OSS 大小", "OSS 对象", "耗时", "结果说明", "操作"].map((label) => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
+      <Table tableId="apps/admin/views/Backups.tsx:1"><Table.Header><Table.Row>{["时间 / 类型", "状态", "本地大小", "OSS 大小", "OSS 对象", "耗时", "结果说明", "操作"].map((label) => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header>
         <Table.Body>{(history.data?.items ?? []).map((job) => <Table.Row key={job.id}>
           <Table.Cell><div>{timestamp(job.createdAt)}</div><div className="text-base text-kumo-subtle">{kinds[job.kind]}</div></Table.Cell>
           <Table.Cell><Badge variant={job.status === "success" ? "success" : job.status === "failed" || job.status === "interrupted" ? "error" : "warning"}>{statuses[job.status]}</Badge></Table.Cell>

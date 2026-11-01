@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select, Switch} from "@cloudflare/kumo";
 import { PencilSimpleIcon, PlusIcon, PlugsConnectedIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -120,7 +121,7 @@ export function UpstreamSuppliers() {
       {updateStatus.error ? <Banner variant="error" title="状态更新失败" description={getApiMessage(updateStatus.error)} /> : null}
       <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && suppliers.length === 0} emptyTitle="暂无供应商">
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/views/UpstreamSuppliers.tsx:1">
             <Table.Header variant="compact"><Table.Row><Table.Head>供应商</Table.Head><Table.Head>系统类型</Table.Head><Table.Head>接口地址 / 账号</Table.Head><Table.Head>汇率</Table.Head><Table.Head>状态</Table.Head><Table.Head>上次同步时间</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
             <Table.Body>
               {suppliers.map((supplier) => (

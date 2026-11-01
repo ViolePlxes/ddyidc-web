@@ -1,8 +1,9 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { instanceListReturnPath } from '../../../shared/utils/instanceListDisplay';
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
-import { Banner, Breadcrumbs, Button, Dialog, Input, LayerCard, Select, Table, Tabs } from '@cloudflare/kumo';
+import { Banner, Breadcrumbs, Button, Dialog, Input, LayerCard, Select,  Tabs } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -95,11 +96,11 @@ export function CustomerInstance(){
         <div className="flex justify-end gap-2"><Button variant="secondary" disabled={remove.isPending} onClick={()=>setDeleteOpen(false)}>取消</Button><Button variant="destructive" loading={remove.isPending} disabled={deleteReason.trim().length<2||(needsConfirm&&deleteConfirm.trim()!==(item?.name??''))} onClick={()=>remove.mutate()}>确认删除</Button></div>
       </Dialog>
     </Dialog.Root>
-    {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
+    {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table tableId="apps/admin/views/CustomerInstance.tsx:1"><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
     {tab==='upgrade'&&<InstanceUpgrade instance={item} customerId={customerId}/>}
     {tab==='security'&&<InstanceSecurityGroups instanceId={item.id} customerId={customerId} disabled={item.productionLocked}/>}
     {tab==='monitor'&&<InstanceMonitoring monitor={monitor.data} loading={monitor.isLoading} error={monitor.error?getApiMessage(monitor.error):undefined}/>}
-    {tab==='logs'&&<LayerCard className="overflow-x-auto p-0"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>状态</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header><Table.Body>{item.events.length?item.events.map(e=><Table.Row key={e.id}><Table.Cell>{formatDate(e.createdAt)}</Table.Cell><Table.Cell>{actions[e.type]||e.type}</Table.Cell><Table.Cell>{e.status===1?'处理中':e.status===2?'成功':'失败'}</Table.Cell><Table.Cell>{e.type==='import'?'已拉取真实实例信息并完成绑定':e.message||'—'}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
+    {tab==='logs'&&<LayerCard className="overflow-x-auto p-0"><Table tableId="apps/admin/views/CustomerInstance.tsx:2"><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>操作</Table.Head><Table.Head>状态</Table.Head><Table.Head>说明</Table.Head></Table.Row></Table.Header><Table.Body>{item.events.length?item.events.map(e=><Table.Row key={e.id}><Table.Cell>{formatDate(e.createdAt)}</Table.Cell><Table.Cell>{actions[e.type]||e.type}</Table.Cell><Table.Cell>{e.status===1?'处理中':e.status===2?'成功':'失败'}</Table.Cell><Table.Cell>{e.type==='import'?'已拉取真实实例信息并完成绑定':e.message||'—'}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={4}>暂无操作记录</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
    </>}
   </PageState>
  </div>;

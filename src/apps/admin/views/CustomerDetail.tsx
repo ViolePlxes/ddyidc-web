@@ -1,3 +1,4 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
@@ -6,7 +7,7 @@ import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { ImportInstanceDialog } from "./ImportInstanceDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";
-import { Banner, Breadcrumbs, Button, Input, LayerCard,  Select, Switch, Table, Tabs, Text, Textarea } from "@cloudflare/kumo";
+import { Banner, Breadcrumbs, Button, Input, LayerCard,  Select, Switch, Tabs, Text, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   parsePhoneNumberFromString,
@@ -117,7 +118,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
         emptyTitle="暂无记录"
       >
         <div className="overflow-x-auto">
-          <Table>
+          <Table tableId="apps/admin/views/CustomerDetail.tsx:1">
             <Table.Header>
               <Table.Row>
                 {headers.map((h) => (

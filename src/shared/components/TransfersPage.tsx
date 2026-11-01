@@ -1,6 +1,7 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { adminPath, adminBase } from "../utils/adminEntry";
 import { Dialog } from "./Dialog";
-import { Banner, Button, LayerCard, Switch, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Switch, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -32,7 +33,7 @@ export function TransfersPage({ admin = false }: { admin?: boolean }) {
   {message && <Banner title={message} />}
   {!admin && <Tabs value={tab} onValueChange={setTab} tabs={[{ value: "all", label: "全部记录" }, { value: "pending", label: "本页待我接收" }]} />}
   <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !rows.length} emptyTitle="暂无转让记录">
-   <LayerCard className="overflow-x-auto"><Table><Table.Header><Table.Row>{["实例 / 转让编号", "发起人 → 接收人", "来源 / 关联交易", "状态", "时间", ...(admin ? ["审计 / 风控"] : ["操作"])].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header><Table.Body>{rows.map(row => <Table.Row key={row.id}>
+   <LayerCard className="overflow-x-auto"><Table tableId="shared/components/TransfersPage.tsx:1"><Table.Header><Table.Row>{["实例 / 转让编号", "发起人 → 接收人", "来源 / 关联交易", "状态", "时间", ...(admin ? ["审计 / 风控"] : ["操作"])].map(label => <Table.Head key={label}>{label}</Table.Head>)}</Table.Row></Table.Header><Table.Body>{rows.map(row => <Table.Row key={row.id}>
     <Table.Cell><Link to={admin ? `${adminBase}/customers/${row.toCustomerId}` : `/console/instances/${row.instanceId}`}>{row.instanceId}</Link><p className="text-base text-kumo-subtle">{row.id}</p></Table.Cell>
     <Table.Cell>#{row.fromCustomerId} → #{row.toCustomerId}</Table.Cell><Table.Cell>{row.source === "direct" ? "直连转让" : row.source === "marketplace_refund" ? "市场退款返还" : "市场成交"}<p>{row.marketOrderId !== "0" ? row.marketOrderId : "—"}</p></Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{new Date(row.updatedAt).toLocaleString()}</Table.Cell>
     <Table.Cell>{admin ? <><p>{row.operatorIp} / {row.receiverIp || "—"}</p><p>{row.riskFlag ? "风险标记：短期再次转让或往返过户" : "无风险标记"}</p><p>原订单：{row.sourceOrderId}</p></> : row.status === "pending" ? <div className="flex gap-2">{row.toCustomerId === String(user?.id) ? <><Button onClick={() => setConfirm({ row, action: "accept" })}>接收</Button><Button variant="secondary" onClick={() => setConfirm({ row, action: "reject" })}>拒绝</Button></> : <Button variant="secondary" onClick={() => setConfirm({ row, action: "cancel" })}>取消转让</Button>}</div> : "—"}</Table.Cell>

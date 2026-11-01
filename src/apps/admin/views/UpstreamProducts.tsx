@@ -1,8 +1,9 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { isAxiosError } from "axios";
 import { connectWithConfirmation } from "../../../shared/utils/upstreamConnect";
 import { useAdminAuthStore } from "../../../shared/stores/staffAuth";
 import { useEffect, useMemo, useState } from "react";
-import { Banner, Button, LayerCard, Select, Switch, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Select, Switch} from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { upstreamProductsApi } from "../../../shared/api/upstreamProducts";
 import { adminProductsApi } from "../../../shared/api/adminProducts";
@@ -53,7 +54,7 @@ export function UpstreamProducts() {
    {supplierId&&<UpstreamCatalogComparison key={supplierId} upstreamCategories={catalog.data?.categories??[]} upstreamProducts={upstreamRows} localCategories={groups.data??[]} localProducts={localRows} onConnect={connect} onDisconnect={disconnect} onHide={hide} onSync={sync}/>}
   </PageState>
   <div className="mt-4"><Button variant="secondary" onClick={()=>setShowMetrics(v=>!v)}>{showMetrics?"收起访问统计":"访问统计"}</Button></div>
-  {showMetrics&&<LayerCard className="mt-3 overflow-auto px-4 py-3"><h2 className="mb-3 font-semibold">上游访问频率</h2>{traffic.error&&<Banner variant="error" title="统计读取失败" description={getApiMessage(traffic.error)}/>}<Table><Table.Header><Table.Row><Table.Head>供应商</Table.Head><Table.Head>最近1分钟</Table.Head><Table.Head>最近5分钟</Table.Head><Table.Head>最近15分钟</Table.Head><Table.Head>平均间隔（秒）</Table.Head></Table.Row></Table.Header><Table.Body>{(traffic.data?.items??[]).map(x=><Table.Row key={x.supplierId}><Table.Cell>{x.name}</Table.Cell><Table.Cell>{x.oneMinute}</Table.Cell><Table.Cell>{x.fiveMinutes}</Table.Cell><Table.Cell>{x.fifteenMinutes}</Table.Cell><Table.Cell>{x.averageInterval?.toFixed(2)??"—"}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>}
+  {showMetrics&&<LayerCard className="mt-3 overflow-auto px-4 py-3"><h2 className="mb-3 font-semibold">上游访问频率</h2>{traffic.error&&<Banner variant="error" title="统计读取失败" description={getApiMessage(traffic.error)}/>}<Table tableId="apps/admin/views/UpstreamProducts.tsx:1"><Table.Header><Table.Row><Table.Head>供应商</Table.Head><Table.Head>最近1分钟</Table.Head><Table.Head>最近5分钟</Table.Head><Table.Head>最近15分钟</Table.Head><Table.Head>平均间隔（秒）</Table.Head></Table.Row></Table.Header><Table.Body>{(traffic.data?.items??[]).map(x=><Table.Row key={x.supplierId}><Table.Cell>{x.name}</Table.Cell><Table.Cell>{x.oneMinute}</Table.Cell><Table.Cell>{x.fiveMinutes}</Table.Cell><Table.Cell>{x.fifteenMinutes}</Table.Cell><Table.Cell>{x.averageInterval?.toFixed(2)??"—"}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>}
 
  </>;
 }
