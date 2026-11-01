@@ -81,6 +81,7 @@ export function InstanceRenewal({instance,customerId}:{instance:InstanceDetail;c
 }
 export function InstanceOrder({instance,customerId}:{instance:InstanceDetail;customerId?:string}){
  if(instance.orderNo)return <Link className="text-kumo-link hover:underline" to={customerId?`${adminBase}/customers/${customerId}/orders`:`/console/orders/${instance.orderId}`}>{instance.orderNo}</Link>;
- if(instance.upstreamOrderNo||instance.upstreamOrderId)return <div className="grid gap-1"><span>{instance.upstreamOrderNo||instance.upstreamOrderId}</span>{instance.invoiceId&&<span>账单 #{instance.invoiceId}</span>}{instance.firstPayment&&<span>首付 ¥{instance.firstPayment}</span>}<span className="text-base text-kumo-subtle">已开通服务的原始订单，无重复收费</span></div>;
- return <>未返回订单信息</>;
+ // 上游订单号、发票号与首付金额属于平台采购数据，只允许后台排障视图展示。
+ if(customerId&&(instance.upstreamOrderNo||instance.upstreamOrderId))return <div className="grid gap-1"><span>{instance.upstreamOrderNo||instance.upstreamOrderId}</span>{instance.invoiceId&&<span>账单 #{instance.invoiceId}</span>}{instance.firstPayment&&<span>首付 ¥{instance.firstPayment}</span>}<span className="text-base text-kumo-subtle">上游原始订单，仅内部核对使用</span></div>;
+ return <span className="text-base text-kumo-subtle">原始订单由平台管理，无需重复支付；如需核对请联系客服</span>;
 }

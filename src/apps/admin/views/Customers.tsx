@@ -1,9 +1,10 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { AdminTableCopyText } from "../../../shared/components/AdminTableCopyText";
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
-import { Banner, Button, DropdownMenu, Input, LayerCard,  Select, Table, Tooltip } from "@cloudflare/kumo";
+import { Banner, Button, DropdownMenu, Input, LayerCard,  Select, Tooltip } from "@cloudflare/kumo";
 import {
   CaretDownIcon,
   PlusIcon,
@@ -472,7 +473,7 @@ export function AdminCustomers() {
       >
         <div className="grid gap-3">
           <LayerCard className="overflow-x-auto p-0">
-            <Table>
+            <Table tableId="apps/admin/views/Customers.tsx:1">
               <Table.Header variant="compact">
                 <Table.Row>
                   {renderedColumns.map((column) => (

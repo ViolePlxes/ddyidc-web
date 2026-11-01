@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { useState } from "react";
-import { Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getReclamation, retryReclamation, previewReclamation, getReclamationHistory } from "../api/updateAdmin";
 import { getApiMessage } from "../api/request";
@@ -44,7 +45,7 @@ function ReclamationHistory(){
  const query=useQuery({queryKey:["admin","reclamation","history",page],queryFn:()=>getReclamationHistory(page),refetchInterval:30_000,retry:false});
  return <div className="grid gap-2"><h3 className="font-semibold">回收历史</h3>
  {query.error?<Banner variant="error" title="回收历史读取失败" description={getApiMessage(query.error)}/>:null}
- <div className="overflow-x-auto"><Table><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>类型</Table.Head><Table.Head>状态</Table.Head><Table.Head>关联更新任务</Table.Head><Table.Head>磁盘空闲变化</Table.Head></Table.Row></Table.Header><Table.Body>
+ <div className="overflow-x-auto"><Table tableId="shared/components/ProductionReclamation.tsx:1"><Table.Header><Table.Row><Table.Head>时间</Table.Head><Table.Head>类型</Table.Head><Table.Head>状态</Table.Head><Table.Head>关联更新任务</Table.Head><Table.Head>磁盘空闲变化</Table.Head></Table.Row></Table.Header><Table.Body>
  {(query.data?.items??[]).map(run=><Table.Row key={run.id}><Table.Cell>{new Date(run.startedAt).toLocaleString("zh-CN")}</Table.Cell><Table.Cell>{run.dryRun?"只读预览":"系统回收"}</Table.Cell><Table.Cell>{({success:"已完成",failed:"失败",running:"执行中",interrupted:"中断后恢复"} as Record<string,string>)[run.status]??"待核实"}{run.lastError?`（${errorText(run.lastError)}）`:""}</Table.Cell><Table.Cell>{[...new Set(run.summary?.resources?.map(item=>item.taskId).filter(id=>id!=="0")??[])].join("、")||"系统资源"}</Table.Cell><Table.Cell>{run.summary?.freeBytesDelta===undefined?"—":`${(run.summary.freeBytesDelta/1024**3).toFixed(2)} GiB`}</Table.Cell></Table.Row>)}
  </Table.Body></Table></div>
  {!query.isLoading&&!query.data?.items.length?<p>暂无回收记录</p>:null}

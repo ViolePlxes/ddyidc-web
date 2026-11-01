@@ -1,7 +1,8 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Banner, Button, LayerCard, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard} from "@cloudflare/kumo";
 import { getLoginDevices, revokeLoginDevice } from "../api/auth";
 import { getApiMessage } from "../api/request";
 import { clearRefreshSession } from "../api/refreshSession";
@@ -30,7 +31,7 @@ export function LoginDevices() {
     <p className="text-base text-kumo-subtle">最多同时登录 10 台设备，超过后最早登录的设备会自动下线。下线设备后，该设备的访问与续期权限立即失效。</p>
     {(devices.error || revoke.error) && <Banner variant="error" title="操作失败" description={getApiMessage(devices.error ?? revoke.error)} />}
     {message && <Banner variant="default" title={message} />}
-    {devices.isPending ? <p>正在读取登录设备…</p> : <div className="overflow-x-auto"><Table>
+    {devices.isPending ? <p>正在读取登录设备…</p> : <div className="overflow-x-auto"><Table tableId="shared/components/LoginDevices.tsx:1">
       <Table.Header><Table.Row><Table.Head>浏览器 / 系统</Table.Head><Table.Head>IP</Table.Head><Table.Head>登录时间</Table.Head><Table.Head>最后活跃</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
       <Table.Body>{devices.data?.map((device) => <Table.Row key={device.id}>
         <Table.Cell><span title={device.browser}>{browserName(device.browser)}</span> {device.current && <Badge>当前设备</Badge>}</Table.Cell>

@@ -1,8 +1,9 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { ProductionReclamation } from "../../../shared/components/ProductionReclamation";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { ArrowsClockwiseIcon, GitBranchIcon } from "@phosphor-icons/react";
-import { Banner, Button, LayerCard, Loader, Meter, Table } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Loader, Meter} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -100,7 +101,7 @@ export function AdminUpdates() {
       </div>
       <LayerCard >
         <LayerCard.Secondary><div className="p-5"><h2 className="font-medium text-kumo-strong">更新历史</h2><p className="text-base text-kumo-subtle">记录触发时间、功能提交、分支、版本结果与回滚状态。</p></div></LayerCard.Secondary><LayerCard.Primary>
-        <Table>
+        <Table tableId="apps/admin/views/Updates.tsx:1">
           <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>目标 / 状态</Table.Head><Table.Head>功能 / 分支</Table.Head><Table.Head>版本 / 提交变化</Table.Head><Table.Head>日志摘要 / 回滚</Table.Head></Table.Row></Table.Header>
           <Table.Body>
             {(history.data ?? []).map((task) => (

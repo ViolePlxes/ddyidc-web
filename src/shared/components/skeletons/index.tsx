@@ -1,4 +1,5 @@
-import { LayerCard, Sidebar, SkeletonLine, Surface, Table } from "@cloudflare/kumo";
+import {ScopedTable as Table} from '../ScopedTable';
+import { LayerCard, Sidebar, SkeletonLine, Surface} from "@cloudflare/kumo";
 import { catalogColumns, catalogLayout } from "../../utils/productCatalog";
 
 
@@ -71,7 +72,7 @@ export function ProductSpecTableSkeleton() {
     <LayerCard className=" grid min-w-0 gap-4 px-5 py-4" role="status" aria-label="正在加载计算规格">
       <h2>计算规格</h2>
       <div className="overflow-x-auto" aria-hidden="true">
-        <Table className="whitespace-nowrap">
+        <Table tableId="shared/components/skeletons/index.tsx:1" className="whitespace-nowrap">
           <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
           <Table.Body>{Array.from({ length: 10 }, (_, row) => <Table.Row key={row}>
             {catalogColumns.map((name, column) => <Table.Cell key={name}><SkeletonLine className={`h-5 ${column === 0 ? "w-52" : "w-12"}`} /></Table.Cell>)}

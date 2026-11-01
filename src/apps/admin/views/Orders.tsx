@@ -2,7 +2,7 @@ import { AdminRechargeOrders } from './AdminRechargeOrders';
 import {adminBase} from "../../../shared/utils/adminEntry";
 import { Pagination } from "../../../shared/components/Pagination";
 import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
-import { Button, Input, LayerCard, Link, Select, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Link, Select, Tabs } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminOverviewApi } from "../../../shared/api/adminOverview";
@@ -24,8 +24,9 @@ export function AdminOrders() {
   const [keyword, setKeyword] = useState("");
   const pageSize = 10;
   const query = useQuery({
-    queryKey: ["admin", "orders", page, status, keyword, record],
+    queryKey: ["admin", adminId, "orders", page, status, keyword, record],
     enabled: !recharges,
+    placeholderData: (previous,previousQuery)=>previousQuery?.queryKey[1]===adminId?previous:undefined,
     queryFn: () => adminOverviewApi.orders({ page, pageSize, status: status === "all" ? undefined : status, keyword: keyword || undefined, record:record||undefined }),
   });
   const rows = query.data?.items ?? [];
@@ -41,9 +42,10 @@ export function AdminOrders() {
         <Select aria-label="订单状态" value={status} onValueChange={(value) => { setStatus(value ?? "all"); setPage(1); }} items={{ all: "全部状态", "1": "待支付", "2": "已支付", "3": "已取消", "4": "已退款", "5": "部分退款", "6": "已完成" }} />
         <Button variant="secondary" onClick={() => { setKeyword(draftKeyword.trim()); setPage(1); }}>筛选</Button>
       </LayerCard>
-      <PageState loading={query.isLoading} error={query.error ? getApiMessage(query.error) : null} empty={!query.isLoading && !query.error && rows.length === 0} emptyTitle="暂无订单">
+      <div className="grid min-w-0 gap-3" aria-busy={query.isFetching}>
+        {query.error?<Banner variant="error" title="订单加载失败" description={getApiMessage(query.error)}/>:null}
         <div className="grid min-w-0 gap-3">
-        <AdminOrdersTable key={adminId} rows={rows} adminId={adminId} />
+        <AdminOrdersTable key={adminId} rows={rows} adminId={adminId} loading={query.isPending} />
         <Pagination
           page={page}
           setPage={setPage}
@@ -51,7 +53,7 @@ export function AdminOrders() {
           totalCount={query.data?.total ?? 0}
         />
         </div>
-      </PageState>
+      </div>
       <ReceiptReviews />
       <DeliveryTasks />
       </>}

@@ -1,6 +1,7 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { SMSReceiptQuery } from "./SMSReceiptQuery";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Loader, Select, Switch, Tabs, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -105,7 +106,7 @@ function NoticeReviews() {
     <div><Button disabled={mutation.isPending} onClick={() => void query.refetch()}>刷新</Button></div>
     {query.isLoading ? <Loader /> : null}
     {query.error ? <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} /> : null}
-    <LayerCard><Table><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
+    <LayerCard><Table tableId="apps/admin/views/System.tsx:1"><Table.Header><Table.Row><Table.Head>通知编号</Table.Head><Table.Head>客户</Table.Head><Table.Head>状态</Table.Head><Table.Head>发送次数</Table.Head><Table.Head>操作</Table.Head></Table.Row></Table.Header>
       <Table.Body>{(query.data ?? []).map(row => <Table.Row key={row.id}><Table.Cell>{row.id}</Table.Cell><Table.Cell>#{row.customerId}</Table.Cell><Table.Cell>{labels[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.attempts}</Table.Cell><Table.Cell><Button disabled={mutation.isPending || row.status === "retry_pending"} onClick={() => { setSelected(row); setReason(""); mutation.reset(); }}>处置</Button></Table.Cell></Table.Row>)}</Table.Body>
     </Table>{query.data?.length === 0 ? <p className="p-4">暂无待处置通知。</p> : null}</LayerCard>
     {selected ? <LayerCard className="grid gap-3 px-4 py-3">
@@ -134,6 +135,16 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
   const [config, setConfig] = useState<NotifyConfig | null>(null);
   const [testScene, setTestScene] = useState("register");
   const [testTarget, setTestTarget] = useState("");
+  const phoneTarget = /^1\d{10}$/.test(testTarget.trim());
+  const smsScenes = (templatesQuery.data ?? []).filter(template => template.enabled && template.channel !== 'email' && (config?.sms.templates[template.scene] ?? '').trim() !== '').map(template => template.scene);
+  const sceneOptions = phoneTarget ? Object.fromEntries(Object.entries(sceneLabels).filter(([scene]) => smsScenes.includes(scene))) : sceneLabels;
+  const changeTestTarget = (value: string) => {
+    setTestTarget(value);
+    if (/^1\d{10}$/.test(value.trim()) && smsScenes.length && !smsScenes.includes(testScene)) {
+      const next = smsScenes.includes('expiry_digest') ? 'expiry_digest' : smsScenes[0];
+      if (next) setTestScene(next);
+    }
+  };
 
   useEffect(() => { if (configQuery.data) setConfig(configQuery.data); }, [configQuery.data]);
 
@@ -203,13 +214,14 @@ function NotifySettings({ onSaved }: { onSaved: (message: string) => void }) {
         <div className="grid gap-4 md:grid-cols-2">
           <Switch label="启用实例到期提醒" checked={config.expiry.enabled} onCheckedChange={(enabled) => setConfig({ ...config, expiry: { ...config.expiry, enabled } })} />
           <Input label="提前提醒天数" type="number" min={1} max={30} value={String(config.expiry.daysBefore)} onChange={(event) => setConfig({ ...config, expiry: { ...config.expiry, daysBefore: Number(event.target.value) } })} />
-          <Select label="测试场景" value={testScene} onValueChange={(value) => value && setTestScene(value)} items={Object.fromEntries(Object.entries(sceneLabels).map(([key, label]) => [key, label]))} />
-          <Input label="测试手机号或邮箱" placeholder="仅成功接收一次即可停止测试" value={testTarget} onChange={(event) => setTestTarget(event.target.value)} />
+          <Select label="测试场景" value={testScene} onValueChange={(value) => value && setTestScene(value)} items={sceneOptions} />
+          <Input label="测试手机号或邮箱" placeholder="手机号只能测试已启用短信通道的场景" value={testTarget} onChange={(event) => changeTestTarget(event.target.value)} />
         </div>
+        <p className="text-sm text-kumo-subtle">短信测试只能选择已启用短信通道、且配置了模板编号的场景；「到期提醒（expiry）」仅支持邮件，短信请选择「汇总到期提醒」。</p>
         {save.error || test.error ? <Banner variant="error" title="操作失败" description={getApiMessage(save.error ?? test.error)} /> : null}
         <div className="flex flex-wrap gap-2">
           <Button loading={save.isPending} onClick={() => save.mutate()}>保存通知配置</Button>
-          <Button variant="secondary" loading={test.isPending} disabled={!testTarget.trim()} onClick={() => test.mutate()}>发送真实测试通知</Button>
+          <Button variant="secondary" loading={test.isPending} disabled={!testTarget.trim() || (phoneTarget && !smsScenes.length)} onClick={() => test.mutate()}>发送真实测试通知</Button>
         </div>
       </LayerCard.Primary></LayerCard>
     </div>
@@ -257,7 +269,7 @@ function NotifyLogs() {
   if (query.error) return <Banner variant="error" title="读取失败" description={getApiMessage(query.error)} />;
   return (
     <LayerCard className="p-0">
-      <Table>
+      <Table tableId="apps/admin/views/System.tsx:2">
         <Table.Header variant="compact"><Table.Row><Table.Head>时间</Table.Head><Table.Head>场景 / 通道</Table.Head><Table.Head>目标</Table.Head><Table.Head>状态</Table.Head><Table.Head>回执 / 错误</Table.Head></Table.Row></Table.Header>
         <Table.Body>
           {rows.map((log) => (

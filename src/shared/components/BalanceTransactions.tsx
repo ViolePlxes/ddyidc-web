@@ -1,5 +1,6 @@
+import {ScopedTable as Table} from './ScopedTable';
 import { Pagination } from "./Pagination";
-import { Banner,Button,Input,LayerCard,Link,Select,Tabs,Table } from "@cloudflare/kumo";
+import { Banner,Button,Input,LayerCard,Link,Select,Tabs} from "@cloudflare/kumo";
 import { usePrefetchedLedger } from "./usePrefetchedLedger";
 import { useEffect,useState } from "react";
 import { getBalanceStatement,exportBalanceStatement,type BalanceFilters } from "../api/balanceTransactions";
@@ -51,7 +52,7 @@ export function BalanceTransactions(){
     {query.error&&data&&<Banner variant="error" title="流水更新失败，请重试" description={getApiMessage(query.error)}/>}
     <PageState loading={query.isLoading&&!data} error={query.error&&!data?getApiMessage(query.error):null} empty={!query.isLoading&&!query.error&&data?.items.length===0} emptyTitle="暂无符合条件的余额流水">
      <div className="-mx-1 min-w-0 overflow-x-auto text-base" aria-busy={query.isFetching}>
-      <Table role="table" aria-label="余额流水记录" className="min-w-[66rem]">
+      <Table tableId="shared/components/BalanceTransactions.tsx:1" role="table" aria-label="余额流水记录" className="min-w-[66rem]">
        <Table.Header><Table.Row role="row" className="align-top border-b border-kumo-fill px-1 pb-2 text-base font-medium text-kumo-subtle">{['时间','类型','可用余额变动','可用余额前 → 后','冻结余额前 → 后','客户说明','流水编号','关联业务'].map((v,i)=><Table.Head role="columnheader" className={i>=2&&i<=4?'text-right':''} key={v}>{v}</Table.Head>)}</Table.Row></Table.Header>
        <Table.Body role="rowgroup">{data?.items.map((row,index)=><Table.Row role="row" key={row.id} className={`align-top py-2.5 ${index<data.items.length-1?'border-b border-kumo-hairline':''}`}>
         <Table.Cell role="cell" className="whitespace-nowrap tabular-nums">{displayTime(row.createdAt)}</Table.Cell><Table.Cell role="cell" className="font-medium text-kumo-default">{row.typeLabel}</Table.Cell><Table.Cell role="cell" className="text-right font-medium tabular-nums">{row.amount.startsWith('-')?row.amount:`+${row.amount}`}</Table.Cell><Table.Cell role="cell" className="text-right tabular-nums text-kumo-subtle">{row.balanceBefore} → {row.balanceAfter}</Table.Cell><Table.Cell role="cell" className="text-right tabular-nums text-kumo-subtle">{row.frozenBefore} → {row.frozenAfter}</Table.Cell><Table.Cell role="cell" className="break-words">{row.description}</Table.Cell><Table.Cell role="cell">#{row.id}</Table.Cell><Table.Cell role="cell">{row.href?<Link href={row.href}>查看订单</Link>:row.relatedType==='balance_withdrawal'?`提现 #${row.relatedId}`:'—'}</Table.Cell>

@@ -1,8 +1,9 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { Pagination } from "../../../shared/components/Pagination";
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
-import { Banner, Button, Input, LayerCard,  Select, Switch, Table, Tabs, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard,  Select, Switch, Tabs, Textarea } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -458,7 +459,7 @@ export function Certifications() {
             <Banner variant="error" title={getApiMessage(query.error)} />
           )}
           <div className="overflow-x-auto">
-            <Table>
+            <Table tableId="apps/admin/views/Certifications.tsx:1">
               <Table.Header>
                 <Table.Row>
                   {[

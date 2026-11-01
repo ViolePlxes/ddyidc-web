@@ -1,7 +1,8 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { ConnectResultPendingError } from "../../../shared/utils/upstreamConnect";
 import { Badge } from "../../../shared/components/Badge";
 import { useMemo, useRef, useState, type DragEvent } from "react";
-import { Banner,  Button, Input, LayerCard, Select, Sidebar, Table } from "@cloudflare/kumo";
+import { Banner,  Button, Input, LayerCard, Select, Sidebar} from "@cloudflare/kumo";
 import { Dialog } from "../../../shared/components/Dialog";
 import { DotsSixVerticalIcon, FolderIcon, SquaresFourIcon } from "@phosphor-icons/react";
 
@@ -58,7 +59,7 @@ function CatalogPane({ title, categories, products, upstream, onAction, busyId, 
       </Sidebar>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="grid gap-3 border-b border-kumo-line p-4"><div className="flex items-center justify-between gap-2"><h3 className="truncate text-base font-medium">{categoryName}</h3><span className="shrink-0 text-base text-kumo-subtle">{visible.length} 个</span></div><Input aria-label={`搜索${title}`} placeholder="搜索商品名称或编号" value={keyword} onChange={event => { setKeyword(event.target.value); setPage(1); }} /></div>
-        <div aria-label={`${title}商品列表`} className={`min-h-0 flex-1 overflow-auto ${dragging && dropTarget === "list" ? "bg-kumo-tint ring-1 ring-inset ring-kumo-line" : ""}`} onDragOver={event => dragOver(event, "list")} onDragLeave={dragLeave} onDrop={event => drop(event, categories.some(item => item.id === selected && item.parentId !== "0") ? selected : "")}><Table>
+        <div aria-label={`${title}商品列表`} className={`min-h-0 flex-1 overflow-auto ${dragging && dropTarget === "list" ? "bg-kumo-tint ring-1 ring-inset ring-kumo-line" : ""}`} onDragOver={event => dragOver(event, "list")} onDragLeave={dragLeave} onDrop={event => drop(event, categories.some(item => item.id === selected && item.parentId !== "0") ? selected : "")}><Table tableId="apps/admin/views/UpstreamCatalogComparison.tsx:1">
           <Table.Header variant="compact"><Table.Row><Table.Head>商品</Table.Head><Table.Head>{upstream ? "成本参考" : "售价"}</Table.Head><Table.Head>对接状态</Table.Head>{onAction && <Table.Head>操作</Table.Head>}</Table.Row></Table.Header>
           <Table.Body>{visible.slice((currentPage - 1) * 20, currentPage * 20).map(item => <Table.Row key={item.id} draggable={Boolean(upstream && onProductDragStart && !item.mapped && !busyId)} onDragStart={event => onProductDragStart?.(event, item)} onDragEnd={onProductDragEnd} className={upstream && !item.mapped && onProductDragStart ? "cursor-grab active:cursor-grabbing" : undefined}>
             <Table.Cell><div className="grid gap-1"><span className="flex items-center gap-1 text-base font-medium">{upstream && !item.mapped && onProductDragStart && <DotsSixVerticalIcon aria-hidden="true" className="size-4 shrink-0 text-kumo-subtle"/>}{item.name}</span><span className="text-base text-kumo-subtle">#{item.id}</span>{item.counterpartName && <span className="text-base text-kumo-subtle">{upstream ? "本地：" : "供应商："}{item.counterpartName}</span>}</div></Table.Cell>

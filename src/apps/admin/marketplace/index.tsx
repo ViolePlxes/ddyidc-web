@@ -1,8 +1,9 @@
+import {ScopedTable as Table} from '../../../shared/components/ScopedTable';
 import { adminBase } from "../../../shared/utils/adminEntry";
 import { Badge } from "../../../shared/components/Badge";
 import { Link, useSearchParams } from "react-router-dom";
 import { marketplaceFlowLabel } from "../../../shared/components/MarketplaceStatusBadge";
-import { Banner, Button, Input, LayerCard, Select, Switch, Table, Textarea } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select, Switch, Textarea } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
@@ -157,7 +158,7 @@ export function MarketplaceAdminListings() {
         emptyTitle="暂无挂牌"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/marketplace/index.tsx:1">
             <Table.Header>
               <Table.Row>
                 <Table.Head>挂牌</Table.Head>
@@ -274,7 +275,7 @@ export function MarketplaceAdminOrders() {
         emptyTitle="暂无交易订单"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/marketplace/index.tsx:2">
             <Table.Header>
               <Table.Row>
                 <Table.Head>订单</Table.Head>
@@ -381,7 +382,7 @@ export function MarketplaceAdminFlows() {
         emptyTitle="暂无流水"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/marketplace/index.tsx:3">
             <Table.Header>
               <Table.Row>
                 <Table.Head>流水号</Table.Head>
@@ -437,7 +438,7 @@ export function MarketplaceAdminWithdrawals() {
         emptyTitle="暂无提现申请"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/marketplace/index.tsx:4">
             <Table.Header>
               <Table.Row>
                 <Table.Head>提现单</Table.Head>
@@ -498,7 +499,7 @@ export function MarketplaceAdminReports() {
         emptyTitle="暂无举报"
       >
         <LayerCard className="overflow-x-auto p-0">
-          <Table>
+          <Table tableId="apps/admin/marketplace/index.tsx:5">
             <Table.Header>
               <Table.Row>
                 <Table.Head>挂牌</Table.Head>
