@@ -7,9 +7,9 @@
 .asp-panel{display:grid;grid-template-columns:1fr 2fr;background:#fff;border-radius:16px;box-shadow:0 8px 24px -4px #0000000f,0 16px 56px -12px #1366ec26;opacity:0;transform:translateY(48px);overflow:hidden}
 .asp-feature{position:relative;padding:24px;min-width:0;border-right:1px solid #e0e0e0}
 .asp-feature-media{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.asp-feature-media img,.asp-feature-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
-.asp-feature-media video{opacity:0;transition:opacity .3s ease-in-out}
-.asp-feature.is-playing video{opacity:1;transition:opacity 0s ease-in-out}
+.asp-feature-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+
+
 .asp-feature-content{position:relative}
 .ali-home .asp-feature-content h3{font-size:26px;line-height:40px;font-weight:600;color:#191c21;margin:0}
 .ali-home .asp-feature-content ul{list-style:none;margin:12px 0 0;padding:0}
@@ -42,7 +42,7 @@
  .ali-home .asp-heading{max-width:340px;font-size:26px;line-height:39px;margin-bottom:40px;padding:0}
  .asp-panel{grid-template-columns:1fr}
  .asp-feature{padding:24px 16px 232px;border-right:0;border-bottom:1px solid #e0e0e0}
- .asp-feature-media img,.asp-feature-media video{object-fit:contain;object-position:right bottom;width:100%;height:100%}
+ .asp-feature-media img{object-fit:contain;object-position:right bottom;width:100%;height:100%}
  .asp-cards{grid-template-columns:1fr;grid-auto-rows:auto}
  .asp-cell{padding:0 16px;border:0!important}
  .asp-card{padding:16px 0;border-radius:0;border-bottom:1px solid #dadee5}
@@ -50,6 +50,8 @@
  .asp-title{flex-wrap:wrap}.asp-primary{margin-top:24px}
  .ali-home .asp-card>p{min-height:0}
 }
-@media(prefers-reduced-motion:reduce){.asp-heading span{opacity:1;filter:none;animation:none!important}.asp-panel{opacity:1;transform:none;animation:none!important}.asp-card:before,.asp-title h3{transition:none!important}.asp-feature video{display:none}}
+@media(prefers-reduced-motion:reduce){.asp-heading span{opacity:1;filter:none;animation:none!important}.asp-panel{opacity:1;transform:none;animation:none!important}.asp-card:before,.asp-title h3{transition:none!important}}
 /* Both section backgrounds meet at the same white base with no rectangular cut. */
 .asp-background{mask-image:linear-gradient(to bottom,transparent 0%,#000 16%,#000 80%,transparent 100%)}
+
+.asp-feature-media{top:auto;height:260px}.asp-feature-media img{object-fit:contain;object-position:center}
