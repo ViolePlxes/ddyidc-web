@@ -1,0 +1,55 @@
+/* Public reference: Adc2025Box 0.1.6, Grid 0.1.2, LinkBox 0.1.7. */
+.ali-home.ali-home-polished .ali-source-platform{position:relative;isolation:isolate;padding:80px 0;min-height:0;background:#fff;overflow:hidden}
+.asp-background{position:absolute;inset:0;z-index:-1;background:#fff url('./platform-background.png') center/100% 100% no-repeat}
+.asp-width{width:calc(min(1920px,100vw) - 160px);margin-inline:auto}
+.ali-home .asp-heading{font-size:44px;line-height:66px;font-weight:600;color:#191c21;text-align:center;margin:0 auto 56px;padding-inline:16px}
+.asp-heading span{opacity:0;filter:blur(20px)}
+.asp-panel{display:grid;grid-template-columns:1fr 2fr;background:#fff;border-radius:16px;box-shadow:0 8px 24px -4px #0000000f,0 16px 56px -12px #1366ec26;opacity:0;transform:translateY(48px);overflow:hidden}
+.asp-feature{position:relative;padding:24px;min-width:0;border-right:1px solid #e0e0e0}
+.asp-feature-media{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.asp-feature-media img,.asp-feature-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.asp-feature-media video{opacity:0;transition:opacity .3s ease-in-out}
+.asp-feature.is-playing video{opacity:1;transition:opacity 0s ease-in-out}
+.asp-feature-content{position:relative}
+.ali-home .asp-feature-content h3{font-size:26px;line-height:40px;font-weight:600;color:#191c21;margin:0}
+.ali-home .asp-feature-content ul{list-style:none;margin:12px 0 0;padding:0}
+.ali-home .asp-feature-content li{display:flex;align-items:flex-start;gap:4px;margin:6px 0 0;font-size:14px;line-height:24px;color:#4b4f58}
+.ali-home .asp-feature-content li:first-child{margin-top:0}
+.asp-feature-content li>svg{flex-shrink:0;margin:4px;color:#1366ec}
+.asp-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 24px;margin-top:32px;border-radius:8px;background:url('./hero-primary.png') center/cover;color:#fff!important;font-size:14px;line-height:44px;font-weight:500;box-shadow:inset 0 0 12px -6px #fff9,inset 0 8px 32px -16px #fffc}
+.asp-cards{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:194px;min-width:0}
+.asp-cell{position:relative;padding:8px;min-width:0}
+.asp-cell:nth-child(odd){border-right:1px solid #e0e0e0}
+.asp-cell:nth-child(-n+4){border-bottom:1px solid #e0e0e0}
+.asp-card{display:block;position:relative;padding:16px;border-radius:16px;isolation:isolate;overflow:hidden}
+.asp-card:before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(253deg,rgba(55,0,255,.05),rgba(0,98,255,.05));opacity:0;transition:opacity .3s ease-in-out}
+.asp-card:hover:before,.asp-card:focus-visible:before{opacity:1}
+.asp-icon{display:block;width:40px;height:40px;color:#1366ec}
+.asp-title{display:flex;align-items:center;gap:8px;margin-top:16px;min-width:0}
+.ali-home .asp-title h3{font-size:18px;line-height:28px;font-weight:600;color:#191c21;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s ease-in-out}
+.asp-card:hover h3{color:#1366ec}
+.asp-badge{display:inline-flex;align-items:center;flex-shrink:0;gap:4px;height:20px;padding:0 4px;border-radius:2px;background:linear-gradient(78deg,rgba(133,110,250,.1),rgba(19,102,236,.1) 50%,rgba(0,135,245,.1));color:#6c717a;font-size:12px;line-height:20px}
+.asp-badge>svg{width:16px;height:16px;color:#1366ec}
+.ali-home .asp-card>p{font-size:14px;line-height:24px;color:#6c717a;margin:12px 0 0;min-height:48px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.is-exposed .asp-heading span{opacity:1;filter:none;animation:asp-fadein .3s linear backwards}
+.is-exposed .asp-panel{opacity:1;transform:none;animation:asp-slideup .3s linear backwards}
+@keyframes asp-fadein{from{opacity:0;filter:blur(20px)}to{opacity:1;filter:blur(0)}}
+@keyframes asp-slideup{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1055px){
+ .ali-home.ali-home-polished .ali-source-platform{padding:40px 0}
+ .asp-background{background-image:url('./platform-background-mobile.png')}
+ .asp-width{width:calc(100% - 32px)}
+ .ali-home .asp-heading{max-width:340px;font-size:26px;line-height:39px;margin-bottom:40px;padding:0}
+ .asp-panel{grid-template-columns:1fr}
+ .asp-feature{padding:24px 16px 232px;border-right:0;border-bottom:1px solid #e0e0e0}
+ .asp-feature-media img,.asp-feature-media video{object-fit:contain;object-position:right bottom;width:100%;height:100%}
+ .asp-cards{grid-template-columns:1fr;grid-auto-rows:auto}
+ .asp-cell{padding:0 16px;border:0!important}
+ .asp-card{padding:16px 0;border-radius:0;border-bottom:1px solid #dadee5}
+ .asp-cell:last-child .asp-card{border-bottom:0}
+ .asp-title{flex-wrap:wrap}.asp-primary{margin-top:24px}
+ .ali-home .asp-card>p{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.asp-heading span{opacity:1;filter:none;animation:none!important}.asp-panel{opacity:1;transform:none;animation:none!important}.asp-card:before,.asp-title h3{transition:none!important}.asp-feature video{display:none}}
+/* Both section backgrounds meet at the same white base with no rectangular cut. */
+.asp-background{mask-image:linear-gradient(to bottom,transparent 0%,#000 16%,#000 80%,transparent 100%)}

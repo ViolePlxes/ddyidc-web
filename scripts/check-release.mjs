@@ -18,7 +18,8 @@ function walk(dir) {
     // asset's meaningful name, not random hash characters (e.g. BsTmOCK3).
     const policyName=name.replace(/-[a-z0-9_-]{8}(?=\.[a-z0-9]+$)/i,'');
     const backupComponent=/^assets\/backups-[a-z0-9_-]{8,}\.js$/i.test(rel);
-    if (artifact && (!allowed.has(extname(name)) || /fixture|mock/.test(policyName) || (/backup/.test(policyName) && !backupComponent))) throw new Error(`Unexpected public artifact: ${rel}`);
+    const marketingVideo=/^assets\/(hero-reference|exp-main|exp-[1-6]|platform-preview|rem-solution-video)-[a-z0-9_-]{8}\.mp4$/i.test(rel);
+    if (artifact && ((!allowed.has(extname(name)) && !marketingVideo) || /fixture|mock/.test(policyName) || (/backup/.test(policyName) && !backupComponent))) throw new Error(`Unexpected public artifact: ${rel}`);
     const portalManifest=['portal/themes.json','portal/cloudflare-reference.json'].includes(rel);
     if (artifact && extname(name)==='.json' && !['version.json','wallet-payment-channels.json'].includes(name) && !portalManifest) throw new Error(`Unregistered public data file: ${rel}`);
     if (artifact && ['.js','.html','.json','.txt'].includes(extname(name))) {

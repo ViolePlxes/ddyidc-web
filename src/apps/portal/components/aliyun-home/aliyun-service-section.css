@@ -1,0 +1,48 @@
+/* Geometry and interaction aligned to public Aliyun modules: double-columns 0.1.0 / ai-exp-card 0.1.3. */
+.ali-home.ali-home-polished .ali-home-source-exp{display:grid;position:relative;min-height:0;padding:0;isolation:isolate;background:#fff;border-radius:32px 32px 0 0}
+.asx-width{width:calc(min(1920px,100vw) - 160px);margin:0 auto}
+.asx-background,.asx-foreground{grid-area:1/1}
+.asx-background{min-height:100%;pointer-events:none}
+.asx-background-inner{position:sticky;top:0;height:min(100vh,100%);padding:80px 0;background:url('./exp-background.png') center/100% 100% no-repeat}
+.asx-grid,.asx-foreground{display:grid;grid-template-columns:1fr 1fr;gap:72px}
+.asx-left{min-width:0;pointer-events:auto}
+.ali-home .asx-left h2{max-width:440px;font-size:44px;line-height:64px;font-weight:600;color:#191c21;margin:0}
+.asx-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;margin-top:32px;padding:0 24px;border-radius:8px;background:url('./hero-primary.png') center/cover;color:#fff!important;font-size:14px;font-weight:500;box-shadow:inset 0 0 8px -4px #fff9,inset 0 6px 28px -14px #fffc}
+.asx-main-preview{display:block;margin-top:56px;border-radius:16px;overflow:hidden}
+.asx-main-preview .asx-media{width:100%;height:auto;aspect-ratio:16/9}
+.asx-foreground{position:relative;z-index:1;pointer-events:none;padding:80px 0}
+.asx-rows{grid-column:2;pointer-events:auto;min-width:0}
+.asx-row{display:flex;align-items:stretch;padding:24px 0;border-bottom:1px solid #dadee5}
+.asx-row:first-child{padding-top:0}
+.asx-content{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.asx-content>svg{display:block;width:28px;height:28px;color:#191c21}
+.asx-title-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ali-home .asx-title-line h3{font-size:18px;line-height:28px;font-weight:600;color:#181818;transition:color .3s ease-in-out;margin:0}
+.asx-title-line>span{padding:0 8px;font-size:12px;line-height:20px;border-radius:2px;color:#4b4f58;background:linear-gradient(72deg,rgba(133,110,250,.1),rgba(19,102,236,.1) 50%,rgba(0,135,245,.1))}
+.ali-home .asx-content>p{font-size:14px;line-height:24px;color:#6c717a;margin:24px 0 0}
+.asx-row:hover h3{color:#1366ec}
+.asx-media{position:relative;flex-shrink:0;width:256px;height:144px;margin-left:40px;border-radius:12px;overflow:hidden;align-self:center}
+.asx-media.is-main{margin-left:0}
+.asx-media img,.asx-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.asx-media video{opacity:0;transition:opacity .3s ease-in-out;pointer-events:none}
+.asx-media.is-playing video{opacity:1;transition:opacity 0s ease-in-out}
+.asx-row:hover .asx-media video{opacity:1}
+@media(max-width:1055px){
+ .ali-home.ali-home-polished .ali-home-source-exp{display:block;border-radius:24px 24px 0 0}
+ .asx-width{width:calc(100% - 32px)}
+ .asx-background-inner{position:static;height:auto;padding:40px 0;background:none}
+ .asx-grid,.asx-foreground{display:block}
+ .ali-home .asx-left h2{max-width:none;font-size:26px;line-height:40px}
+ .asx-button{margin-top:24px}.asx-main-preview{margin-top:32px}
+ .asx-foreground{padding:0 0 40px}
+ .asx-row{display:block;padding:20px 0}.asx-row:first-child{padding-top:0}
+ .asx-title-line{margin-top:8px}.ali-home .asx-content>p{margin-top:8px}
+ .asx-media{width:100%;height:auto;aspect-ratio:16/9;margin:12px 0 0}
+ .asx-content>svg{width:28px;height:28px}
+}
+@media(prefers-reduced-motion:reduce){.asx-media video{display:none}.asx-title-line h3{transition:none!important}}
+/* Fade only the background paint; sticky content and media stay fully opaque. */
+@media(min-width:1056px){
+ .asx-background-inner{background:none;isolation:isolate}
+ .asx-background-inner:before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('./exp-background.png') center/100% 100% no-repeat;mask-image:linear-gradient(to bottom,transparent 0%,#000 12%,#000 74%,transparent 100%)}
+}
