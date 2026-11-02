@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { adminInstanceApi } from '../../../shared/api/adminInstance';
+import { adminInstancesApi } from '../../../shared/api/adminInstances';
 import { customerDetailApi } from '../../../shared/api/customerDetail';
 import type { InstanceActionInput } from '../../../shared/api/console';
 import { getApiMessage } from '../../../shared/api/request';
@@ -62,9 +63,25 @@ export function CustomerInstance(){
  const [deleteOpen,setDeleteOpen]=useState(false);const [deleteReason,setDeleteReason]=useState('');const [deleteConfirm,setDeleteConfirm]=useState('');
  const needsConfirm=Boolean(item?.upstreamInstanceId);
  const remove=useMutation({mutationFn:()=>api.remove({reason:deleteReason.trim(),confirm:deleteConfirm.trim()||undefined,force:needsConfirm}),onSuccess:async()=>{setDeleteOpen(false);await client.invalidateQueries({queryKey:['admin','customer-records',customerId,'products']});navigate(listPath)}});
+ const [syncing,setSyncing]=useState(false);
+ const syncUpstream=async()=>{
+   if(!item)return;
+   setSyncing(true);setNotice('');
+   try{
+     const task=await adminInstancesApi.sync([{id:instanceId,customerId,ownershipVersion:item.ownershipVersion??''}],crypto.randomUUID());
+     let current=task;
+     for(let i=0;i<40&&['pending','running'].includes(current.state);i++){
+       await new Promise(resolve=>setTimeout(resolve,1500));
+       current=await adminInstancesApi.task(current.id);
+     }
+     if(current.state==='success'){setNotice('已从上游重新拉取机器信息');await query.refetch();}
+     else setNotice(current.items?.[0]?.message||'拉取未完成，请稍后重试');
+   }catch(e){setNotice(e instanceof Error?e.message:'拉取上游信息失败');}
+   finally{setSyncing(false);}
+ };
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href={adminPath('/admin/customers')}>客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
-  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-base text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
+  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-base text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Button variant="secondary" loading={syncing} disabled={action.isPending||!item} onClick={()=>{void syncUpstream();}}>拉取上游信息</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
   <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'upgrade',label:'产品升级降级'},{value:'security',label:'安全组'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
   <PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null}>
    {item&&<>
