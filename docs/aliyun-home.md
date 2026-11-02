@@ -106,3 +106,16 @@ VM预览home-shared-preview.html加载实际PortalLayout；home-public-preview.h
 按用户要求，industryReferences 与 resourceCTA 两个可见性开关暂为 false；场景参考和底部选择云资源不挂载，不留空占位。保留实现以便后续启用。发布整合 README 交接包的后台单实例同步与 ownershipVersion 类型，不包含尚未验收的拼团后台/支付业务更改。共享头尾仅复用在两种官网首页入口；控制台后台样式保持。
 
 媒体为静态展示资源。MP4 产物只放行 assets 下固定营销名称+Vite八字符哈希，前端产物策略和后端更新器均有拒绝任意视频的测试。需先安装配套后端再更新前端，不需新增表/数据库迁移。生产由用户手动安装。
+
+
+## 2026-11-03 自有静态SVG替换（本地，未推送）
+
+按用户最新要求，移除官网首页全部阿里云视频、相关视频海报和播放/悬停播放逻辑。Hero改owned-hero.svg静态云计算资源拓扑，标题“多多云计算，按需选配”。六项服务、控制台平台与五项方案预览统一使用owned-cloud/order/security/edge/domain/support/console.svg；capability大卡改owned-capability.svg，无外部品牌UI截图和假播放入口。全部为自绘path/shape/text SVG，无嵌入位图、外部链接或脚本。SVG内中文为功能示意，并非真实账户资源数据。保留原有布局、渐变、标题入场与分类切换；保留先前隐藏的行业参考和底部资源CTA。
+
+源路径：src/apps/portal/components/aliyun-home；基于最新main f90b1bc2bd6e38e7163c6f3cae869506aa28b2c4，新本地分支feature/owned-home-visuals-20261103。后端完全不变。仅本地预览，不提交/推送/上线，后端v0.1.169与前端v0.1.204远端标签不改。
+
+验证：VM npm run build（含TypeScript）通过39.20s；浏览器证据owned-home-browser-20261103.log，截图owned-home-hero-20261103.png与owned-home-solutions-20261103.png。后续最终资源路径复验见同名日志。
+
+## v0.1.205 发布范围
+
+首页原视频及关联海报/播放控件改为自绘静态SVG，首屏标题改为“多多云计算”；产品分类区取消固定最小高度和空白网格行，按各分类实际内容收缩。之前隐藏的行业参考和底部资源CTA继续隐藏。共享头尾、业务接口和后端保持不变。无数据库迁移。基于最新main f90b1bc2bd6e38e7163c6f3cae869506aa28b2c4，测试证据owned-home-browser-20261103.log、natural-products-browser-20261103.log。生产由用户手动更新。
