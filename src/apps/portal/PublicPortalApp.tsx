@@ -1,3 +1,4 @@
+import {SiteHeader,SiteFooter} from '../../shared/components/marketing';
 import {PortalShell} from './components/PortalShell';
 import {PortalHomeContent} from './components/PortalHomeContent';
 import {useLocation} from 'react-router-dom';
@@ -86,5 +87,6 @@ function Product() {
 
 export function PublicPortalApp() {
  const homepage=useLocation().pathname==='/';
+ if(homepage)return <div className="flex min-h-svh flex-col bg-kumo-base text-base text-kumo-default"><SiteHeader action={<><a href={`${consoleOrigin}/console`}>控制台</a><a href={`${consoleOrigin}/login`} className="marketing-tc-account">登录</a></>}/><main className="flex-1 pt-14 min-[1121px]:pt-16"><Home/></main><SiteFooter variant="tencent"/></div>;
  return <PortalShell loginHref={`${consoleOrigin}/login`} consoleHref={`${consoleOrigin}/console`} legalOrigin={consoleOrigin} mainClassName={homepage?'flex-1':'mx-auto w-full max-w-6xl flex-1 px-5 py-8 md:px-8'}><Routes><Route path="/" element={<Home/>}/><Route path="/products" element={<Products/>}/><Route path="/products/:id" element={<Product/>}/><Route path="*" element={<PageHeader title="页面不存在" description="请返回首页查看公开内容。"/>}/></Routes></PortalShell>;
 }

@@ -1,0 +1,138 @@
+/* Adapted from unslop by Damir Sokolovsky, CC BY 4.0.
+   https://github.com/heydamir/unslop — variant B, product-led cloud resource workspace. */
+.ali-home-unslopped{--ah-blue:#1762c4;--ah-ink:#18212f;--ah-muted:#626d7c;background:#fff;color:#18212f;font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}
+.ali-home-unslopped *,.ali-home-unslopped *:before,.ali-home-unslopped *:after{animation:none!important;backdrop-filter:none!important}
+.ali-home-unslopped .ali-home-reveal{opacity:1;transform:none;transition:none}
+.ali-home-unslopped section{background:#fff;border-radius:0;box-shadow:none;min-height:0}
+.ali-home-unslopped .ali-home-wrap{width:calc(100% - 96px);max-width:1360px}
+.ali-home-unslopped .ali-home-section-heading{text-align:left;margin-bottom:48px;display:flex;align-items:end}
+.ali-home-unslopped .ali-home-section-heading h2{font-size:36px;line-height:48px;font-weight:500;color:#18212f}
+.ali-home-unslopped .ali-home-section-heading p{margin-inline:0;color:#626d7c}
+.ali-home-unslopped .ali-home-section-heading>a{justify-content:flex-start;margin-top:0;color:#18212f}
+.ali-home-unslopped .ali-home-visual,.ali-home-unslopped .ali-home-globe,.ali-home-unslopped .ali-home-benefit-art{display:none!important}
+.ali-home-unslopped .ali-home-sticky-section{margin-top:0;padding-block:80px;background:#f5f7fa}
+.ali-home-unslopped .ali-home-sticky-grid{grid-template-columns:1fr 1.5fr;gap:80px}
+.ali-home-unslopped .ali-home-sticky-art{top:104px}
+.ali-home-unslopped .ali-home-sticky-art h2{font-size:36px;line-height:52px;font-weight:500}
+.ali-home-unslopped .ali-home-sticky-art>a{margin-top:32px}
+.ali-home-unslopped .ali-home-sticky-item{padding:24px 0;min-height:0;border-color:#dfe4eb}
+.ali-home-unslopped .ali-home-sticky-item:first-child{padding-top:0}
+.ali-home-unslopped .ali-home-sticky-item>svg{position:static;width:20px;height:20px;color:#626d7c;margin:0 0 12px}
+.ali-home-unslopped .ali-home-sticky-item h3{width:100%;font-size:20px;line-height:28px;font-weight:500}
+.ali-home-unslopped .ali-home-sticky-item>p{width:100%;min-height:0;font-size:14px;line-height:24px;margin-top:8px;color:#626d7c}
+.ali-home-unslopped .ali-home-sticky-item .ali-home-text-action{margin-top:12px}
+.ali-home-unslopped .ali-home-platform-grid{grid-template-columns:1fr 1fr;gap:32px;min-height:0}
+.ali-home-unslopped .ali-home-platform-feature{padding:32px;background:#f5f7fa;border:1px solid #e1e6ec;border-radius:16px}
+.ali-home-unslopped .ali-home-platform-feature h3{font-size:24px;line-height:36px;font-weight:500}
+.ali-home-unslopped .ali-home-platform-feature>.unslop-resource-preview{margin-top:32px;box-shadow:none}
+.ali-home-unslopped .ali-home-platform-feature>.unslop-resource-preview .urp-summary{display:none}
+.ali-home-unslopped .ali-home-platform-feature>.unslop-resource-preview .urp-body{padding:20px}
+.ali-home-unslopped .ali-home-platform-cards{gap:0 24px;align-content:start}
+.ali-home-unslopped .ali-home-platform-cards>a{background:#fff;border:0;border-bottom:1px solid #e1e6ec;border-radius:0;min-height:152px;padding:24px 0;box-shadow:none}
+.ali-home-unslopped .ali-home-platform-cards>a:hover{box-shadow:none;background:#f9fafb}
+.ali-home-unslopped .ali-home-platform-cards>a>svg:first-child{width:20px;height:20px;color:#626d7c}
+.ali-home-unslopped .ali-home-platform-cards h3{font-size:18px;line-height:28px;margin-top:12px;font-weight:500}
+.ali-home-unslopped .ali-home-platform-cards p{font-size:14px;line-height:24px;margin-top:4px}
+.ali-home-unslopped .ali-home-exp-grid{background:none;padding:0;gap:24px}
+.ali-home-unslopped .ali-home-exp-card,.ali-home-unslopped .ali-home-exp-card:first-child{display:block;min-height:0;border:1px solid #e1e6ec;border-radius:12px;background:#fff;box-shadow:none;transform:none}
+.ali-home-unslopped .ali-home-exp-card>div:last-child{padding:32px}
+.ali-home-unslopped .ali-home-exp-card:hover{transform:none;box-shadow:none;background:#f8fafc}
+.ali-home-unslopped .ali-home-exp-card h3{margin:0;font-size:24px;line-height:36px;font-weight:500}
+.ali-home-unslopped .ali-home-products,.ali-home-unslopped .ali-home-benefits{background:#f5f7fa}
+.ali-home-unslopped .ali-home-product-panel{padding:0;border-radius:0;background:none;box-shadow:none}
+.ali-home-unslopped .ali-home-categories button{border-radius:8px;color:#626d7c;font-size:16px}
+.ali-home-unslopped .ali-home-categories button.is-active{background:#e9eef5;color:#18212f;font-weight:500}
+.ali-home-unslopped .ali-home-featured-products{gap:16px}
+.ali-home-unslopped .ali-home-featured-products article{height:224px;background:#fff;border:1px solid #e1e6ec;border-radius:12px;box-shadow:none;padding:24px}
+.ali-home-unslopped .ali-home-featured-products article>svg{width:20px;height:20px;color:#626d7c}
+.ali-home-unslopped .ali-home-featured-products h3{font-size:18px;line-height:28px;margin-top:16px}
+.ali-home-unslopped .ali-home-soft-button{background:#edf1f6;border:1px solid #dce2ea;color:#18212f;border-radius:8px;box-shadow:none}
+.ali-home-unslopped .ali-home-normal-products{background:#fff;border:1px solid #e1e6ec;border-radius:12px;box-shadow:none;margin-top:16px}
+.ali-home-unslopped .ali-home-normal-products>a{min-height:104px;padding:16px}
+.ali-home-unslopped .ali-home-normal-products>a>svg:first-child{width:20px;height:20px;color:#626d7c}
+.ali-home-unslopped .ali-home-solution-frame{background:#f5f7fa;border:1px solid #e1e6ec;border-radius:16px;padding:24px;min-height:0}
+.ali-home-unslopped .ali-home-solution-list{width:50%}
+.ali-home-unslopped .ali-home-solution-item{border-radius:8px;border-color:#dfe4eb}
+.ali-home-unslopped .ali-home-solution-item.is-active{background:#fff;box-shadow:none}
+.ali-home-unslopped .ali-home-solution-item.is-active>button{color:#18212f}
+.ali-home-unslopped .ali-home-solution-detail{transition:none}
+.ali-home-unslopped .ali-home-solution-caption{padding:40px}
+.ali-home-unslopped .ali-home-solution-caption h3{font-size:32px;line-height:44px;font-weight:500}
+.ali-home-unslopped .ali-home-benefit-grid{gap:16px;grid-template-rows:repeat(3,minmax(144px,auto))}
+.ali-home-unslopped .ali-home-benefit-grid>a{background:#fff;border:1px solid #e1e6ec;border-radius:12px;padding:24px;box-shadow:none;transform:none}
+.ali-home-unslopped .ali-home-benefit-grid>a:hover{transform:none;box-shadow:none;border-color:#adb8c7}
+.ali-home-unslopped .ali-home-benefit-grid h3{font-size:20px;font-weight:500;line-height:28px}
+.ali-home-unslopped .ali-home-benefit-grid p{padding-right:0;margin-top:8px}
+.ali-home-unslopped .ali-home-scenario-tabs button.is-active{color:#18212f;border-color:#1762c4}
+.ali-home-unslopped .ali-home-scenario-panel{min-height:280px;background:#f5f7fa;border:1px solid #e1e6ec;border-radius:12px;padding:40px}
+.ali-home-unslopped .ali-home-scenario-panel>div:first-child{width:100%}
+.ali-home-unslopped .ali-home-scenario-panel h3{font-size:32px;font-weight:500;line-height:44px}
+.ali-home-unslopped .ali-home-network{background:#f5f7fa}
+.ali-home-unslopped .ali-home-network-stats{max-width:none;margin:48px 0}
+.ali-home-unslopped .ali-home-network-stats strong{font-size:28px;font-weight:500;color:#18212f}
+.ali-home-unslopped .ali-home-trust-row{justify-content:flex-start;gap:24px}
+.ali-home-unslopped .ali-home-trust-row svg,.ali-home-unslopped .ali-home-start-links svg{color:#626d7c}
+.ali-home-unslopped .ali-home-start{background:#fff}
+.ali-home-unslopped .ali-home-start-main h2{font-weight:500;font-size:36px;line-height:48px}
+.ali-home-unslopped .ali-home-button{border-radius:8px;box-shadow:none;min-width:0}
+.ali-home-unslopped .ali-home-button.is-primary{background:#1762c4;color:#fff}
+.ali-home-unslopped .ali-home-button.is-secondary{background:#fff;border:1px solid #cfd6e1;color:#18212f;box-shadow:none}
+.ali-home-unslopped .ali-home-text-action svg{transform:none!important}
+.ali-home-unslopped a,.ali-home-unslopped button{transition:color 160ms cubic-bezier(.22,1,.36,1),background-color 160ms cubic-bezier(.22,1,.36,1),border-color 160ms cubic-bezier(.22,1,.36,1)}
+.ali-home-unslopped .unslop-hero{padding-top:72px}
+.unslop-hero-top{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;padding-bottom:72px}
+.unslop-kicker{font-size:14px;line-height:24px;color:#626d7c;margin-bottom:24px!important}
+.unslop-hero-copy h1{font-size:60px;line-height:1.16;font-weight:500;color:#18212f;letter-spacing:0}
+.unslop-hero-description{max-width:480px;font-size:16px;line-height:28px;margin-top:24px!important;color:#626d7c}
+.unslop-hero-actions{display:flex;gap:12px;margin-top:32px}
+.unslop-hero-actions a{display:inline-flex;align-items:center;justify-content:center;gap:24px;height:48px;padding:0 24px;border-radius:8px;font-size:14px;font-weight:500}
+.unslop-hero-actions .unslop-primary{background:#1762c4;color:#fff}.unslop-hero-actions .unslop-primary:hover{background:#124fa2}
+.unslop-hero-actions .unslop-secondary{background:#fff;border:1px solid #cfd6e1;color:#18212f}
+.unslop-hero-entries{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:32px 0;border-top:1px solid #e1e6ec;gap:40px}
+.unslop-hero-entries h3{display:flex;align-items:center;justify-content:space-between;font-size:16px;line-height:24px;font-weight:500}
+.unslop-hero-entries p{font-size:14px;line-height:24px;color:#626d7c;margin-top:8px!important}
+.unslop-resource-preview{border:1px solid #dce2ea;border-radius:16px;background:#fff;box-shadow:0 8px 24px #18212f0a;overflow:hidden;min-width:0}
+.urp-heading{height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e1e6ec}
+.urp-heading>span{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}.urp-heading small{font-size:12px;color:#626d7c}
+.urp-body{padding:32px}.urp-summary>p{font-size:12px;color:#626d7c}.urp-summary h3{margin-top:12px!important;font-size:28px;line-height:40px;font-weight:500}
+.urp-summary>span{display:block;margin-top:16px;color:#626d7c;font-size:12px}
+.urp-table{margin-top:32px}.urp-table-head{display:flex;justify-content:space-between;font-size:12px;color:#626d7c;padding-bottom:12px;border-bottom:1px solid #e1e6ec}
+.urp-row{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid #edf0f4}.urp-row>svg{color:#626d7c}
+.urp-row>div{flex:1;min-width:0}.urp-row strong{display:block;font-size:14px;font-weight:500;line-height:24px}.urp-row small{display:block;font-size:12px;color:#626d7c;line-height:20px}
+.urp-row>span{font-size:12px;color:#1762c4;white-space:nowrap}.urp-foot{display:flex;justify-content:space-between;gap:16px;margin-top:24px;font-size:12px;color:#626d7c}
+body:has(.ali-home-unslopped) .marketing-aliyun-header{background:#ffffffed;backdrop-filter:none}
+body:has(.ali-home-unslopped) .marketing-aliyun-header .marketing-tc-account{background:#18212f;color:#fff}
+body:has(.ali-home-unslopped) .marketing-tencent-footer{background:#f5f7fa;color:#18212f}
+@media(max-width:1055px){
+ .ali-home-unslopped .ali-home-wrap{width:calc(100% - 32px)}
+ .ali-home-unslopped .unslop-hero{padding-top:40px}
+ .unslop-hero-top{gap:32px;padding-bottom:40px}.unslop-hero-copy h1{font-size:40px;line-height:52px}
+ .urp-body{padding:24px}.urp-summary h3{font-size:24px;line-height:32px}
+ .ali-home-unslopped .ali-home-section-heading{display:block;margin-bottom:32px}
+ .ali-home-unslopped .ali-home-section-heading h2,.ali-home-unslopped .ali-home-sticky-art h2{font-size:28px;line-height:40px}
+ .ali-home-unslopped .ali-home-sticky-grid{gap:32px;grid-template-columns:1fr 1fr}
+ .ali-home-unslopped .ali-home-platform-grid{grid-template-columns:1fr}
+ .ali-home-unslopped .ali-home-sticky-section{padding-block:56px}
+ .ali-home-unslopped .ali-home-platform-feature>.unslop-resource-preview{display:none}
+ .ali-home-unslopped .ali-home-solution-list{width:50%}.ali-home-unslopped .ali-home-solution-caption{padding:24px}
+ .ali-home-unslopped .ali-home-solution-caption h3{font-size:24px;line-height:36px}
+ .ali-home-unslopped .ali-home-featured-products article{padding:16px}
+ .unslop-hero-entries{gap:24px;grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+ .unslop-hero-top{grid-template-columns:1fr;gap:32px}.unslop-hero-copy h1{font-size:36px;line-height:44px}
+ .unslop-hero-description{font-size:14px;line-height:24px}.unslop-hero-actions a{padding:0 16px;gap:12px;flex:1}
+ .unslop-kicker{margin-bottom:16px!important}.urp-heading{padding-inline:20px}.urp-body{padding:20px}.urp-summary h3{font-size:24px}
+ .ali-home-unslopped .ali-home-sticky-grid{grid-template-columns:1fr;gap:32px}.ali-home-unslopped .ali-home-sticky-art{position:static}
+ .ali-home-unslopped .ali-home-solution-list{width:100%}.ali-home-unslopped .ali-home-solution-frame{padding:12px}
+ .ali-home-unslopped .ali-home-solution-art{min-height:0}.ali-home-unslopped .ali-home-solution-caption{padding:24px 12px}
+ .ali-home-unslopped .ali-home-benefit-grid{grid-template-columns:1fr;grid-template-rows:none}
+ .ali-home-unslopped .ali-home-benefit-grid>a{grid-column:auto!important;grid-row:auto!important;min-height:0;padding:24px}
+ .ali-home-unslopped .ali-home-scenario-panel{min-height:0;padding:24px}
+ .ali-home-unslopped .ali-home-featured-products article{height:208px;padding:24px}
+ .ali-home-unslopped .ali-home-start-main h2{font-size:28px;line-height:40px}
+}
+.ali-home-unslopped .ali-home-sticky-section{border-radius:0;box-shadow:none}
+/* Product previews inherit no full-size illustration rules from their host card. */
+.ali-home-unslopped .ali-home-platform-feature svg{width:20px;height:20px;flex-shrink:0}
+.ali-home-unslopped .ali-home-start-links>a>svg:first-child{color:#626d7c}

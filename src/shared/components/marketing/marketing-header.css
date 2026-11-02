@@ -1,0 +1,119 @@
+/* Tencent public navigation structure: 62px desktop bar; 56px mobile bar. */
+.marketing-tc-header{position:relative;height:0;z-index:60;color:#16181a;font:14px/1.5 Arial,"Microsoft Yahei",sans-serif;-webkit-font-smoothing:antialiased;text-align:left}
+.marketing-tc-header *{box-sizing:border-box}.marketing-tc-header a{color:inherit;text-decoration:none}.marketing-tc-header button,.marketing-tc-header input{font:inherit}
+.marketing-tc-top{position:relative;z-index:3;display:flex;align-items:center;height:62px;padding-left:20px;background:transparent}
+.marketing-tc-logo{display:flex;align-items:center;gap:3px;width:78px;height:18px;margin-right:32px;flex-shrink:0;color:#16181a!important}.marketing-tc-logo strong{font-size:14px;line-height:18px;font-weight:500;letter-spacing:0}.marketing-tc-logo>span{font-size:12px;color:#5f6670;border-left:1px solid #dcdfe5;padding-left:12px;margin-left:6px}
+.marketing-tc-nav{position:relative;flex:1;min-width:0;padding-right:723px}.marketing-tc-header .pls-nav-list{display:flex;flex-wrap:wrap;height:62px;overflow:hidden;list-style:none;padding:0;margin:0}.marketing-tc-header .pls-nav-item{flex-shrink:0}.marketing-tc-header .pls-nav-list>.is-model>a{position:relative;display:block;font-weight:500;font-size:14px;line-height:62px;padding:0 28px 0 12px}.marketing-tc-header .pls-nav-list>.is-model>a:after{content:"";position:absolute;right:12px;top:23px;width:1px;height:16px;background:#d8dce5}.marketing-tc-header .pls-nav-model-text{position:relative;display:inline-block;background:linear-gradient(90deg,#0b8dff 0%,#216eed 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent;overflow:hidden}.marketing-tc-header .pls-nav-model-text:after{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(120deg,transparent 0%,#ffffff1a 40%,#ffffff4d 50%,#ffffff1a 60%,transparent 100%);animation:marketing-model-shine 5s ease-in-out infinite}@keyframes marketing-model-shine{0%{left:-100%}50%{left:100%}100%{left:100%}}.marketing-tc-nav-item{flex-shrink:0}.marketing-tc-nav-item>a,.marketing-tc-nav-item>button{position:relative;display:block;height:62px;padding:0 12px;border:0;border-radius:0;background:transparent;color:#16181a;font-size:14px;font-weight:500;line-height:62px;white-space:nowrap;cursor:pointer}
+.marketing-tc-nav-item>a:hover,.marketing-tc-nav-item>button:hover,.marketing-tc-nav-item>button[aria-expanded=true]{color:#0052d9;background:transparent}
+.marketing-tc-tools{position:absolute;right:0;top:0;display:flex;align-items:center;height:62px;white-space:nowrap}.marketing-tc-tools>a,.marketing-tc-actions>a{display:flex;align-items:center;gap:6px;margin-right:24px;color:#16181a;font-size:14px;font-weight:500;line-height:62px}.marketing-tc-tools>a:hover,.marketing-tc-actions>a:hover{color:#0052d9}.marketing-tc-actions{height:100%;display:flex;align-items:center}.marketing-tc-actions>.marketing-tc-register{height:62px;padding:0 20px;margin-right:0;background:#0052d9;color:#fff;transition:background-color .3s ease-in-out}.marketing-tc-actions>.marketing-tc-register:hover{background:#2670e8;color:#fff}
+.marketing-tc-toggle{display:none}.marketing-tc-header a:focus-visible,.marketing-tc-header button:focus-visible{outline:2px solid #0052d9;outline-offset:-2px}
+@keyframes marketing-tc-panel-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1460px){.marketing-tc-tools>a,.marketing-tc-actions>a{margin-right:16px}}
+@media(max-width:1280px){.marketing-tc-region,.marketing-tc-support,.marketing-tc-docs{display:none!important}.marketing-tc-nav-item>a,.marketing-tc-nav-item>button{padding-inline:10px}}
+@media(max-width:1120px){.marketing-tc-top{height:56px;padding:0 16px}.marketing-tc-logo{margin:0}.marketing-tc-logo strong{font-size:18px}.marketing-tc-logo>span{display:none}.marketing-tc-tools{height:56px;gap:18px}.marketing-tc-actions{display:none}.marketing-tc-toggle{display:flex;align-items:center;justify-content:center;padding:4px;border:0;background:transparent;color:#16181a;cursor:pointer}.marketing-tc-nav{display:none;position:absolute;top:100%;left:0;width:100%;height:auto;background:#fff;padding:8px 16px 16px;border-bottom:1px solid #e5e8ed;max-height:calc(100svh - 56px);overflow:auto}.marketing-tc-nav.is-open{display:flex;flex-direction:column}.marketing-tc-nav-item>a,.marketing-tc-nav-item>button{width:100%;text-align:left;height:46px;line-height:46px;padding-inline:12px}}
+@media(prefers-reduced-motion:reduce){.marketing-tc-header *{animation:none!important;transition:none!important;backdrop-filter:none}}
+
+/* Exact air-theme declarations ported from Tencent's public portal-kit stylesheet. */
+.marketing-tc-header .pls-nav-mod{position:fixed;left:0;top:0;width:100%;box-sizing:border-box}
+.marketing-tc-header .pls-nav-mod:before{content:"";position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(255,255,255,.4);backdrop-filter:blur(10px)}
+.marketing-tc-header:hover .pls-nav-mod:before{background:#fff}
+.marketing-tc-header .marketing-tc-logo svg{color:#00b4df}
+.marketing-tc-actions>.marketing-tc-account{justify-content:center;width:36px;height:36px;margin-right:18px;margin-left:0;background:#ff8027;border:2px solid #fff;border-radius:50%;color:#fff;line-height:32px;font-size:16px;box-shadow:0 2px 8px #ffa36233}
+
+@media(min-width:1921px){.marketing-tc-nav{padding-right:623px}}
+@media(min-width:1461px) and (max-width:1920px){.marketing-tc-nav{padding-right:557px}}
+@media(min-width:1281px) and (max-width:1460px){.marketing-tc-nav{padding-right:480px}}
+@media(min-width:1121px) and (max-width:1280px){.marketing-tc-nav{padding-right:340px}}
+@media(max-width:1120px){.marketing-tc-header .pls-nav-mod:before{background:#fff}.marketing-tc-logo{width:auto}.marketing-tc-logo strong{font-size:16px}.marketing-tc-nav{padding-right:16px;flex:none}.marketing-tc-header .pls-nav-list{height:auto;display:block;overflow:visible}.marketing-tc-header .pls-nav-list>.is-model>a{line-height:46px;padding:0 12px}.marketing-tc-header .pls-nav-list>.is-model>a:after{display:none}.marketing-tc-tools{position:static}.marketing-tc-header .marketing-tc-docs{display:none}}
+
+.marketing-tc-header .pls-nav-top-logo>svg{height:18px}.marketing-tc-header .pls-nav-top:after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background-color:#fff;opacity:.4;pointer-events:none}
+
+/* CF public NavigationContainer/B: 820px, p-2 outer frame, three divided columns. */
+.marketing-cf-dropdown{position:absolute;top:calc(100% + 8px);z-index:4;width:min(820px,calc(100vw - 32px));padding:8px;background:#fafafa;border:1px solid #ededed;border-radius:12px;box-shadow:0 1px 2px #00000005,0 8px 24px #00000005;transform-origin:top;transition:left .2s ease-out;overflow:hidden;box-sizing:border-box}
+.marketing-cf-dropdown[hidden]{display:none}.marketing-cf-menu-grid{display:grid;overflow:hidden;border:1px solid #ededed;border-radius:6px;background:#fff}.marketing-cf-menu-column{display:grid;gap:2px;padding:8px;min-width:0}.marketing-cf-menu-column+.marketing-cf-menu-column{border-left:1px solid #f5f5f5}
+.marketing-cf-menu-column>a{display:flex;align-items:flex-start;gap:8px;padding:16px 20px;border:1px solid transparent;border-radius:6px;color:#404040;transition:background-color .2s ease-out,border-color .2s ease-out}
+.marketing-cf-menu-column>a>svg{width:16px;height:16px;flex-shrink:0;color:#727272}.marketing-cf-menu-copy{display:flex;min-width:0;flex-direction:column;gap:6px}.marketing-cf-menu-copy>strong{font-size:14px;line-height:14px;font-weight:500;color:#404040}.marketing-cf-menu-copy>span{font-size:14px;line-height:17.5px;color:#727272;font-weight:400}
+.marketing-cf-menu-column>a:hover,.marketing-cf-menu-column>a:focus-visible{background:#f5f5f5;border-color:#ededed;color:#262626;outline:none}
+.marketing-tc-nav-item>button[aria-expanded=true]{isolation:isolate;background:transparent;box-shadow:none;color:#262626}
+@keyframes marketing-cf-menu-enter{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@media(max-width:1120px){.marketing-cf-dropdown{left:16px!important;top:calc(100% + 8px);max-height:calc(100svh - 80px);overflow:auto}.marketing-cf-menu-grid{grid-template-columns:1fr!important}.marketing-cf-menu-column{grid-template-rows:none!important}.marketing-cf-menu-column+.marketing-cf-menu-column{border-left:0;border-top:1px solid #f5f5f5}.marketing-cf-menu-column>a{padding:12px 16px}}
+@media(prefers-reduced-motion:reduce){.marketing-cf-dropdown,.marketing-cf-menu-column>a{animation:none;transition:none}}
+
+@media(max-width:1120px){}
+
+/* Persistent frame + inert exiting content, matching CF popLayout semantics. */
+.marketing-cf-menu-current{position:relative;width:100%;min-width:0}.marketing-cf-menu-exiting{position:absolute;top:8px;left:8px;right:8px;pointer-events:none}
+.marketing-tc-header .pls-nav-list{position:relative}.marketing-tc-nav-item{position:relative;z-index:1}.marketing-cf-nav-indicator{position:absolute;top:13px;bottom:13px;left:0;width:0;opacity:0;pointer-events:none;border:1px solid #ededed;border-radius:6px;background:#fafafa}
+@media(max-width:1120px){.marketing-cf-nav-indicator{display:none}}
+@media(prefers-reduced-motion:reduce){.marketing-cf-dropdown{transition:none}}
+
+.marketing-tc-tools>.marketing-cf-search-trigger{flex-shrink:0;margin-right:24px}.marketing-tc-header .marketing-tc-nav{padding-right:380px}@media(max-width:1280px){.marketing-tc-header .marketing-tc-nav{padding-right:210px}}@media(max-width:1120px){.marketing-tc-tools>.marketing-cf-search-trigger{margin-right:0}.marketing-tc-header .marketing-tc-nav{padding-right:16px}}
+
+@media(max-width:1120px){.marketing-tc-tools{margin-left:auto}}
+
+/* Aliyun public header, observed 2026-11-02: 64px bar, 14px links, 10px menu padding.
+   Scoped marketing exception; does not affect console/admin or the shared footer. */
+.marketing-aliyun-header .marketing-tc-top{height:64px;padding:0;background:rgba(255,255,255,.7);backdrop-filter:blur(20px)}
+.marketing-aliyun-header .pls-nav-mod:before{background:transparent;backdrop-filter:none}
+.marketing-aliyun-header:hover .pls-nav-mod:before{background:transparent}
+.marketing-aliyun-header .marketing-tc-toggle{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:64px;height:64px;padding:20px;border:0;border-right:1px solid #e5e5e5;background:transparent;color:#717171;cursor:pointer}
+.marketing-aliyun-header .marketing-tc-logo{width:100px;height:64px;margin:0 10px 0 20px;color:#ff6a00!important;gap:5px}
+.marketing-aliyun-header .marketing-tc-logo svg{color:#ff6a00;height:22px}
+.marketing-aliyun-header .marketing-tc-logo strong{font-size:17px;font-weight:600}
+.marketing-aliyun-header .marketing-tc-nav{flex:0 1 auto;padding:0;min-width:0}
+.marketing-aliyun-header .pls-nav-list{height:64px;flex-wrap:nowrap}
+.marketing-aliyun-header .pls-nav-item>a,.marketing-aliyun-header .pls-nav-item>button{height:64px;line-height:64px;padding:0 10px;font-weight:400}
+.marketing-aliyun-header .pls-nav-list>.is-model>a{padding:0 10px;line-height:64px}
+.marketing-aliyun-header .pls-nav-list>.is-model>a:after,.marketing-aliyun-header .pls-nav-model-text:after{display:none}
+.marketing-aliyun-header .pls-nav-model-text{background:none;color:inherit;-webkit-text-fill-color:currentColor}
+.marketing-aliyun-header .marketing-tc-tools{position:static;flex:1;min-width:0;height:64px;margin-left:auto;gap:0;padding-left:24px}
+.marketing-ali-search{display:flex;align-items:center;gap:10px;flex:1;min-width:140px;height:40px;margin-right:20px;padding:0 14px;border:1px solid #d0d0d0;border-radius:0;background:#fff;color:#999;text-align:left;cursor:text}
+.marketing-ali-search>svg{color:#8866ff;flex-shrink:0}.marketing-ali-search>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.marketing-ali-search:hover{border-color:#ff6a00}
+.marketing-aliyun-header .marketing-tc-tools>a,.marketing-aliyun-header .marketing-tc-actions>a{font-size:12px;font-weight:400;margin-right:20px;line-height:64px}
+.marketing-aliyun-header .marketing-tc-actions>.marketing-tc-account{width:auto;height:64px;margin:0;padding:0 24px;border:0;border-radius:0;box-shadow:none;background:#ff6a00;color:#fff;font-size:14px}
+.marketing-aliyun-header .marketing-tc-nav-item>a:hover,.marketing-aliyun-header .marketing-tc-nav-item>button:hover{color:#ff6a00}
+.marketing-aliyun-header .marketing-cf-nav-indicator{border:0;border-radius:0;background:#f5f5f5;top:0;bottom:0}
+@media(min-width:1121px){.marketing-aliyun-header .marketing-tc-nav.is-open{position:absolute;top:64px;left:0;width:260px;max-height:calc(100svh - 64px);overflow:auto;background:#fff;border:1px solid #eee}.marketing-aliyun-header .marketing-tc-nav.is-open .pls-nav-list{display:block;height:auto}.marketing-aliyun-header .marketing-tc-nav.is-open .pls-nav-item>a,.marketing-aliyun-header .marketing-tc-nav.is-open .pls-nav-item>button{height:44px;line-height:44px;width:100%;text-align:left}}
+@media(min-width:1121px) and (max-width:1800px){.marketing-aliyun-header .marketing-tc-nav-item:nth-last-child(-n+4){display:none}.marketing-aliyun-header .marketing-tc-nav.is-open .marketing-tc-nav-item{display:block}}
+@media(max-width:1120px){.marketing-aliyun-header .marketing-tc-top,.marketing-aliyun-header .marketing-tc-tools{height:56px}.marketing-aliyun-header .marketing-tc-toggle{width:56px;height:56px;padding:16px}.marketing-aliyun-header .marketing-tc-logo{height:56px;width:auto;margin:0 16px}.marketing-aliyun-header .marketing-tc-tools{padding:0 16px 0 0}.marketing-ali-search{min-width:0;margin:0;height:36px}.marketing-aliyun-header .marketing-tc-nav{padding:8px 16px}.marketing-aliyun-header .pls-nav-list{height:auto;display:block}.marketing-aliyun-header .pls-nav-item>a,.marketing-aliyun-header .pls-nav-item>button{height:44px;line-height:44px}}
+
+/* Motion parameters transcribed from public hmod-aliyun-com-global-nav 0.3.21. */
+.marketing-aliyun-header .marketing-tc-top{transition:background-color .3s ease-in-out}.marketing-aliyun-header:has(.marketing-cf-dropdown[aria-hidden="false"]) .marketing-tc-top,.marketing-aliyun-header:has(.marketing-ali-search-frame.is-raised) .marketing-tc-top{background:#fff}
+.marketing-aliyun-header .marketing-tc-nav-item>a,.marketing-aliyun-header .marketing-tc-nav-item>button{transition:color .3s ease-in-out}
+.marketing-aliyun-header .marketing-tc-nav-item>button:after{content:"";position:absolute;left:50%;top:54px;margin-left:-2.5px;width:3.5px;height:3.5px;border:solid #ff6a00;border-width:1px 1px 0 0;transform:rotate(-45deg);opacity:0;transition:top .3s ease-in-out,opacity .3s ease-in-out}
+.marketing-aliyun-header .marketing-tc-nav-item>button[aria-expanded=true]{color:#ff6a00}.marketing-aliyun-header .marketing-tc-nav-item>button[aria-expanded=true]:after{top:50px;opacity:1}
+.marketing-aliyun-header .marketing-cf-nav-indicator{display:none}
+.marketing-ali-burger{position:relative;width:24px;height:24px;display:block}.marketing-ali-burger:before,.marketing-ali-burger:after,.marketing-ali-burger>span{content:"";position:absolute;left:3px;width:18px;height:2px;background:#717171;transform-origin:center;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.marketing-ali-burger:before{top:5px}.marketing-ali-burger:after{top:17px}.marketing-ali-burger>span{top:11px}
+.marketing-tc-toggle[aria-expanded=true] .marketing-ali-burger:before{top:11px;transform:rotate(45deg)}.marketing-tc-toggle[aria-expanded=true] .marketing-ali-burger:after{top:11px;transform:rotate(-45deg)}.marketing-tc-toggle[aria-expanded=true] .marketing-ali-burger>span{opacity:0;transform:scaleX(0)}
+.marketing-ali-dropdown{position:absolute;left:0;right:0;top:64px;background:#fff;box-shadow:0 10px 15px #0000001a;opacity:0;transform:translateY(-100%);transition:opacity .3s ease-in-out,transform .3s ease-in-out;pointer-events:none;z-index:2;overflow:hidden}
+.marketing-ali-dropdown.is-open{opacity:1;transform:translateY(0);pointer-events:auto}
+.marketing-ali-dropdown-items{position:relative;height:min(472px,calc(100svh - 84px));transition:height .3s ease-in-out;overflow:hidden}
+.marketing-ali-dropdown-item{position:absolute;inset:0;display:flex;padding:40px 48px;opacity:0;pointer-events:none;transition:opacity .3s ease-in-out;overflow:auto;gap:48px}.marketing-ali-dropdown-item.is-current{opacity:1;pointer-events:auto}
+.marketing-ali-dropdown-item>aside{width:220px;flex-shrink:0}.marketing-ali-dropdown-item h2{font-size:24px;font-weight:600;margin:0 0 16px}.marketing-ali-dropdown-item p{color:#717171;margin-bottom:20px}.marketing-ali-dropdown-item aside>a{color:#ff6a00}
+.marketing-ali-dropdown .marketing-cf-menu-grid{flex:1;border:0;border-radius:0;align-content:start}.marketing-ali-dropdown .marketing-cf-menu-column{padding:0;gap:12px}.marketing-ali-dropdown .marketing-cf-menu-column+.marketing-cf-menu-column{border:0}.marketing-ali-dropdown .marketing-cf-menu-column>a{border-radius:0;padding:16px}.marketing-ali-dropdown .marketing-cf-menu-column>a:hover{background:#f7f7f7}.marketing-ali-dropdown .marketing-cf-menu-copy>strong{transition:color .3s ease-in-out}.marketing-ali-dropdown .marketing-cf-menu-column>a:hover strong{color:#ff6a00}
+@media(max-width:1120px){.marketing-ali-dropdown{top:56px}.marketing-ali-dropdown-item{padding:24px;gap:16px;flex-direction:column}.marketing-ali-dropdown-item>aside{width:auto}.marketing-ali-dropdown-items{height:calc(100svh - 76px)}}
+@media(prefers-reduced-motion:reduce){.marketing-aliyun-header *,.marketing-aliyun-header *:before,.marketing-aliyun-header *:after{transition:none!important;animation:none!important}}
+
+/* Approved cloud-only brand: no visible wordmark; accessible home name is retained. */
+.marketing-aliyun-header .marketing-tc-logo{color:#000!important}
+.marketing-aliyun-header .marketing-tc-logo .marketing-cloud-brand-mark{display:block;width:56px;height:34px;flex-shrink:0;color:#000}
+@media(max-width:1120px){.marketing-aliyun-header .marketing-tc-logo .marketing-cloud-brand-mark{width:46px;height:28px}}
+
+/* Aliyun highlight-searchbar: yield nav space to search on downward scroll. */
+.marketing-nav-restore{display:none}
+@media(min-width:1121px){
+ .marketing-aliyun-header.is-search-highlighted .marketing-tc-nav:not(.is-open){flex:0 0 146px;width:146px}
+ .marketing-aliyun-header.is-search-highlighted .marketing-tc-nav:not(.is-open) .pls-nav-list{width:110px}
+ .marketing-aliyun-header.is-search-highlighted .marketing-tc-nav:not(.is-open) .pls-nav-list>li:not(.is-model):not(:nth-child(4)){display:none}
+ .marketing-aliyun-header.is-search-highlighted .marketing-nav-restore{position:absolute;right:0;top:0;display:flex;align-items:center;justify-content:center;width:36px;height:64px;padding:0;border:0;background:transparent;cursor:pointer;color:#181818}
+ .marketing-aliyun-header.is-search-highlighted .marketing-tc-tools{padding-left:0}
+ .marketing-aliyun-header.is-search-highlighted .marketing-ali-search-slot{margin-left:50px;margin-right:60px}
+}
+
+@media(min-width:1121px){.marketing-aliyun-header .marketing-tc-nav:not(.is-open){overflow:hidden}}
+
+/* Fixed search frame owns the single 300ms geometry transition. Its measured
+   placeholder must commit final bounds immediately, never animate those bounds
+   again through ResizeObserver (which would continuously restart the frame). */

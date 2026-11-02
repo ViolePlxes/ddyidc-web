@@ -1,0 +1,159 @@
+/* Five public-homepage modules. Dimensions/treatments follow Aliyun 2025 box,
+ grid, products 0.1.2, ai-solution 0.1.4, link-box 0.1.7 and marquee 0.1.0. */
+.ali-home.ali-home-polished .arm-section{position:relative;isolation:isolate;padding:80px 0;min-height:0;background:#fff;overflow:hidden}
+.arm-width{width:calc(min(1920px,100vw) - 160px);margin:0 auto}
+.arm-section-background{position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('./platform-background.png') center/100% 100% no-repeat;mask-image:linear-gradient(transparent,#000 16%,#000 82%,transparent)}
+.arm-cloud-capabilities .arm-section-background{background-image:url('./rem-experience-bg.png')}
+.arm-products .arm-section-background{background-image:url('./rem-products-bg.png');mask-image:linear-gradient(transparent,#000 10%,#000 90%,transparent)}
+.arm-heading{text-align:center;margin:0 auto 56px;padding-inline:16px}
+.ali-home .arm-heading h2{font-size:44px;line-height:66px;font-weight:600;color:#191c21;margin:0}
+.arm-heading h2 span{opacity:0;filter:blur(20px)}
+.arm-heading>.arm-primary{margin-top:32px}
+.arm-primary{display:inline-flex;height:44px;align-items:center;justify-content:center;gap:8px;padding:0 24px;border-radius:8px;background:url('./hero-primary.png') center/cover;color:#fff!important;font-size:14px;line-height:44px;font-weight:500;box-shadow:inset 0 0 12px -6px #fff9,inset 0 8px 32px -16px #fffc}
+.arm-primary:hover{filter:brightness(1.04)}
+.arm-stage{opacity:0;transform:translateY(48px)}
+.arm-visible .arm-heading h2 span{opacity:1;filter:none;animation:arm-fadein .3s linear backwards}
+.arm-visible .arm-stage{opacity:1;transform:none;animation:arm-rise .3s linear backwards}
+@keyframes arm-fadein{from{opacity:0;filter:blur(20px)}to{opacity:1;filter:blur(0)}}
+@keyframes arm-rise{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:translateY(0)}}
+.ali-home .arm-section h3,.ali-home .arm-section h4{font-size:18px;line-height:28px;font-weight:600;color:#191c21;margin:0}
+.ali-home .arm-section p{font-size:14px;line-height:24px;color:#6c717a;margin:0}
+.arm-soft-action{display:inline-flex;align-items:center;justify-content:center;gap:12px;height:40px;padding:0 24px;background:linear-gradient(253deg,#3700ff0d,#0062ff0d);border-radius:8px;font-size:14px;line-height:40px;color:#191c21}
+.arm-soft-action:hover{background:linear-gradient(253deg,#3700ff18,#0062ff18)}
+.arm-hover-card{position:relative;isolation:isolate;overflow:hidden}
+.arm-hover-card:before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(253deg,#3700ff0d,#0062ff0d);opacity:0;transition:opacity .3s ease-in-out}
+.arm-hover-card:hover:before{opacity:1}
+.arm-capability-panel{padding:12px;border-radius:24px;background:url('./rem-experience-art.png') center top/100% auto no-repeat,linear-gradient(#ffffff66,#ffffff1a);box-shadow:0 3px 12px -2px #0000000d,0 12px 48px -10px #1366ec1c,inset 0 0 28px #ffffff80}
+.arm-capability-top{height:264px;padding:20px 12px}
+.arm-capability-top>div{max-width:55%}
+.arm-capability-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:#fff;color:#1366ec;box-shadow:0 3px 12px #00000008}
+.ali-home .arm-capability-top h3{font-size:26px;line-height:40px;margin-top:20px}
+.ali-home .arm-capability-top p{margin-top:8px;color:#2d3238}
+.arm-capability-top .arm-primary{margin-top:32px}
+.arm-capability-bottom{display:grid;grid-template-columns:1fr 1fr;margin-top:12px;border-radius:16px;overflow:hidden;background:linear-gradient(#ffffffe6,#ffffff66);backdrop-filter:blur(40px);box-shadow:0 6px 12px -4px #00000008,0 24px 32px -16px #1366ec14}
+.arm-capability-bottom>a{padding:24px;min-height:193px}
+.arm-capability-bottom>a+a{border-left:1px solid #e5e7ec}
+.arm-capability-bottom svg{color:#191c21}
+.ali-home .arm-capability-bottom h4{margin-top:12px}
+.ali-home .arm-capability-bottom p{margin-top:8px}
+.arm-capability-bottom a>span{display:inline-flex;align-items:center;gap:8px;margin-top:32px;font-size:14px;line-height:24px}
+.arm-products-layout{display:flex;min-height:602px}
+.arm-products-layout nav{position:relative;width:215px;flex-shrink:0;margin-right:36px;padding:12px 0}
+.arm-products-layout nav button{position:relative;display:block;width:100%;height:52px;margin-top:4px;padding:0 24px;border:0;border-radius:12px;background:none;font-size:18px;line-height:52px;text-align:left;color:#181818;font-weight:400}
+.arm-products-layout nav button[aria-selected=true]{font-weight:600}
+.arm-category-backdrop{position:absolute;top:16px;left:0;right:0;height:52px;border-radius:12px;background:linear-gradient(#ffffff80,#ffffff4d);transition:transform .3s ease-in-out}
+.arm-product-panel{flex:1;min-width:0;padding:12px;border-radius:24px;background:linear-gradient(#ffffff66,#ffffff1a);backdrop-filter:blur(40px);box-shadow:0 3px 12px -2px #0000000d,0 12px 48px -10px #1366ec1c,inset 0 0 28px #ffffff80}
+.arm-prominent{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.arm-prominent article{height:176px;padding:24px;border-radius:16px;background:linear-gradient(#ffffffe6,#ffffff66);backdrop-filter:blur(40px);box-shadow:0 6px 12px -4px #00000008,0 24px 32px -16px #1366ec14,inset 0 0 32px #ffffff80;display:flex;flex-direction:column;min-width:0}
+.ali-home .arm-prominent p{margin-top:8px;color:#999;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.arm-prominent article>div{display:flex;align-items:center;gap:24px;margin-top:auto;font-size:14px;white-space:nowrap}
+.arm-prominent .arm-soft-action{padding:0 20px}
+.arm-normal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,84px);gap:12px 24px;height:390px;margin-top:12px;padding:8px;border-radius:16px;border:1px solid transparent;background:linear-gradient(#fff,#ffffffcc),linear-gradient(#ffffffcc,#ffffff33);background-clip:padding-box,border-box;background-origin:padding-box,border-box;backdrop-filter:blur(40px);box-shadow:0 3px 12px -2px #0000000d,0 12px 48px -10px #1366ec1c,inset 0 0 40px #ffffff4d}
+.arm-normal>a{padding:12px 16px;min-width:0;border-radius:8px;transition:background-color .3s ease-in-out}
+.arm-normal>a:hover{background:#1366ec08}
+.ali-home .arm-normal h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ali-home .arm-normal p{margin-top:8px;color:#999;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.arm-solution-panel{display:flex;height:572px;padding:12px;border-radius:24px;gap:0;position:relative;background:radial-gradient(ellipse at 70% 60%,#91c7ff99,transparent 60%),radial-gradient(ellipse at 66% 25%,#b6a7ff70,transparent 55%),linear-gradient(#ffffff66,#ffffff1a);box-shadow:0 3px 12px -2px #0000000d,0 12px 48px -10px #1366ec1c,inset 0 0 28px #ffffff80}
+.arm-solution-list{width:33.333%;padding-right:12px;flex-shrink:0;display:flex;flex-direction:column;min-width:0;border-radius:12px;overflow:hidden}
+.arm-solution-item{height:64px;flex-shrink:0;position:relative;border-bottom:2px solid #1366ec26;padding:0 24px;overflow:hidden;transition:height .3s ease-out;background:transparent}
+.arm-solution-item:last-child{border:0}
+.arm-solution-item.is-active{height:284px;background:#ffffff99;backdrop-filter:blur(40px);box-shadow:0 3px 12px -2px #0000000d,0 12px 48px -10px #1366ec1c;border-radius:12px 12px 0 0}
+.arm-solution-item>button{width:100%;height:64px;padding:0;border:0;background:none;font-size:18px;line-height:28px;text-align:left;color:#191c21}
+.arm-solution-item.is-active>button{height:auto;min-height:64px;padding-top:24px;font-size:26px;line-height:40px;font-weight:600}
+.arm-solution-detail{opacity:0;transition:opacity .3s ease-out}
+.arm-solution-item.is-active .arm-solution-detail{opacity:1}
+.ali-home .arm-solution-detail p{margin-top:24px}
+.arm-solution-detail>div{display:flex;align-items:center;gap:24px;position:absolute;bottom:24px;left:24px;right:24px;font-size:14px}
+.arm-solution-art{flex:1;display:flex;justify-content:center;align-items:center;padding:32px;min-width:0}
+.arm-preview-button{display:block;position:relative;width:100%;max-width:700px;aspect-ratio:1.6;padding:0;border:0;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 16px 40px #1366ec1c}
+.arm-preview-button>img{width:100%;height:100%;object-fit:cover;animation:arm-fadein .3s linear}
+.arm-preview-button>span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#fff;color:#1366ec;box-shadow:0 8px 24px #00000012;transition:background-color .3s}
+.arm-preview-button:hover>span{background:#eef5ff}
+.arm-dialog-video{display:block;width:100%;max-height:65vh;background:#000}
+.arm-benefit-layout{display:grid;grid-template-columns:calc((100% - 24px)/2) repeat(2,minmax(0,1fr));gap:24px}
+.arm-benefit-group{border-radius:16px;overflow:hidden;background:url('./rem-benefit-wide.png') right top/cover;box-shadow:0 8px 24px -4px #1366ec14}
+.arm-benefit-group.narrow{background-image:url('./rem-benefit-small.png')}
+.arm-benefit-banner{display:block;position:relative;height:128px;padding:24px}
+.ali-home .arm-benefit-banner h3{font-size:28px;line-height:40px}
+.ali-home .arm-benefit-banner p{margin-top:8px;color:#191c21;padding-right:32px}
+.arm-benefit-banner>span,.arm-tile-arrow{position:absolute;top:24px;right:24px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:#ffffff33;transition:background-color .3s}
+.arm-benefit-banner:hover>span,.arm-benefit-tiles a:hover .arm-tile-arrow{background:#ffffff66}
+.arm-benefit-items{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:8px;background:#fff;border-radius:16px}
+.arm-benefit-items>a{padding:16px;min-height:148px;border-radius:16px;transition:box-shadow .3s ease-in-out}
+.arm-benefit-items>a:hover{box-shadow:0 8px 24px #1366ec18}
+.arm-benefit-items svg{color:#191c21}
+.ali-home .arm-benefit-items h4{margin-top:24px}
+.ali-home .arm-benefit-items p{margin-top:12px}
+.arm-benefit-items.single{grid-template-columns:1fr}
+.arm-benefit-tiles{display:grid;grid-template-rows:1fr 1fr;gap:24px;min-height:456px}
+.arm-benefit-tiles>a{display:flex;flex-direction:column;justify-content:end;position:relative;min-height:216px;padding:24px;border-radius:16px;overflow:hidden;color:#fff;background:#1366ec}
+.arm-benefit-tiles .arm-benefit-dark{background:#0c1424 url('./rem-benefit-dark.png') center/cover}
+.arm-benefit-tiles strong{font-size:44px;font-weight:400;line-height:56px;color:#fff}
+.ali-home .arm-benefit-tiles h4{color:#fff;margin-top:4px}
+.ali-home .arm-benefit-tiles p{color:#fff;margin-top:4px}
+.arm-benefit-blue>svg{position:absolute;top:24px;left:24px;color:#fff}
+.ali-home .arm-case-source{max-width:1760px;text-align:center;font-size:12px;margin:-32px auto 32px;color:#6c717a}
+.arm-marquees{margin-bottom:56px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.arm-marquee{overflow:hidden;height:32px;margin-bottom:24px}
+.arm-marquee:last-child{margin-bottom:0}
+.arm-marquee>div{display:flex;width:max-content;animation:arm-marquee 64s linear infinite}
+.arm-marquee-group{display:flex;flex-shrink:0;gap:16px;padding-right:16px}
+.arm-marquee img{width:144px;height:32px;object-fit:contain;filter:grayscale(1);opacity:.65}
+.arm-marquees:hover .arm-marquee>div{animation-play-state:paused}
+@keyframes arm-marquee{to{transform:translateX(-50%)}}
+.arm-case-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;grid-template-rows:repeat(2,minmax(302px,auto))}
+.arm-case-card{padding:24px;border-radius:16px;background:linear-gradient(#ffffffe6,#ffffff66),linear-gradient(#fff 2%,#ffffff00 99%);box-shadow:0 8px 24px -4px #1366ec0d;min-width:0;transition:box-shadow .3s ease-in-out}
+.arm-case-card:hover{box-shadow:0 12px 32px #1366ec1c}
+.arm-case-tag{display:inline-block;padding:2px 8px;border-radius:2px;color:#1366ec;background:#1366ec10;font-size:14px;line-height:20px}
+.arm-case-main{grid-column:span 2;grid-row:span 2;display:flex;flex-direction:column}
+.ali-home .arm-case-main h3{font-size:28px;line-height:40px;font-weight:400;margin-top:20px}
+.ali-home .arm-case-main p{margin-top:56px;margin-bottom:48px}
+.arm-case-main>img{display:block;margin-top:auto;width:100%;border-radius:16px;aspect-ratio:2.847;object-fit:cover}
+.arm-case-car{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.arm-case-car>div{display:flex;flex-direction:column;align-items:flex-start}
+.arm-case-logo{height:48px;max-width:180px;object-fit:contain;object-position:left center;display:block;margin-block:48px}
+.arm-case-car p{margin-top:auto!important}
+.arm-case-photo{width:100%;height:100%;object-fit:cover;border-radius:16px;max-height:254px}
+.arm-case-small .arm-case-logo{height:48px;max-width:220px;margin:64px 0 48px}
+@media(max-width:1280px) and (min-width:1056px){.arm-prominent article{padding:24px 16px}.arm-prominent article>div{gap:12px}.arm-prominent .arm-soft-action{padding:0 12px}.arm-solution-item{padding-inline:16px}.arm-solution-item.is-active>button{font-size:22px;line-height:32px}.arm-solution-detail>div{left:16px;right:16px;gap:12px}.arm-solution-detail .arm-soft-action{padding:0 16px}.arm-benefit-banner h3{font-size:24px!important}.arm-benefit-banner{padding:20px}.arm-case-car{gap:16px}.arm-case-logo{max-width:120px}}
+@media(max-width:1055px){
+ .ali-home.ali-home-polished .arm-section{padding:40px 0}.arm-width{width:calc(100% - 32px)}
+ .arm-heading{margin-bottom:40px}.ali-home .arm-heading h2{font-size:26px;line-height:40px}
+ .arm-heading>.arm-primary{margin-top:24px}
+ .arm-capability-top{height:auto;padding:20px 12px 220px}.arm-capability-top>div{max-width:100%}
+ .arm-capability-panel{background-size:auto 560px;background-position:65% top}.arm-capability-top .arm-primary{margin-top:24px}
+ .arm-capability-bottom{grid-template-columns:1fr}.arm-capability-bottom>a{min-height:176px;padding:20px}.arm-capability-bottom>a+a{border-left:0;border-top:1px solid #e5e7ec}
+ .arm-products-layout{display:block}.arm-products-layout nav{width:100%;margin:0 0 16px;padding:0;display:flex;gap:8px;overflow:auto}.arm-category-backdrop{display:none}
+ .arm-products-layout nav button{width:auto;flex-shrink:0;font-size:14px;padding:0 16px;height:44px;line-height:44px;margin:0}
+ .arm-products-layout nav button[aria-selected=true]{background:#ffffff99}
+ .arm-prominent article{padding:20px;height:176px}.arm-prominent article>div{gap:12px}.arm-prominent article>div>a:last-child{display:none}
+ .arm-prominent .arm-soft-action{padding:0 16px}
+ .arm-normal{grid-template-columns:1fr 1fr;grid-template-rows:none;grid-auto-rows:112px;height:auto;min-height:260px;padding:8px;gap:8px}
+ .arm-normal>a{padding:12px 8px}.ali-home .arm-normal p{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+ .arm-solution-panel{height:auto;display:block;padding:12px}.arm-solution-list{width:100%;padding-right:0}.arm-solution-item.is-active{height:252px}.arm-solution-art{padding:24px 8px}
+ .arm-solution-item.is-active>button{font-size:24px;line-height:36px}.arm-solution-item{padding-inline:16px}.arm-solution-detail>div{left:16px;right:16px}
+ .arm-benefit-layout{grid-template-columns:1fr 1fr}.arm-benefit-group.wide{grid-column:1/-1}.arm-benefit-tiles{min-height:456px}
+ .arm-benefit-banner h3{font-size:24px!important;line-height:36px!important}.arm-benefit-banner{padding:20px}.arm-benefit-banner>span{right:16px;top:16px}
+ .arm-case-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}.arm-case-main{grid-row:auto;min-height:540px}.arm-case-car{grid-column:1/-1;min-height:280px}
+ .arm-case-small .arm-case-logo{max-width:100%;margin-block:40px}
+ .arm-marquee img{width:120px;height:32px}.ali-home .arm-case-main h3{font-size:24px;line-height:36px}
+}
+@media(max-width:600px){
+ .arm-capability-top h3{font-size:24px!important;line-height:36px!important}.arm-capability-top{padding-bottom:200px}.arm-capability-icon{width:40px;height:40px}
+ .arm-prominent{grid-template-columns:1fr}.arm-prominent article{height:164px}.arm-normal{grid-template-columns:1fr;min-height:0}
+ .arm-products-layout{min-height:0}.arm-product-panel{padding:8px}
+ .arm-solution-detail>div{gap:20px}.arm-preview-button>span{width:48px;height:48px}
+ .arm-benefit-layout{grid-template-columns:1fr}.arm-benefit-group.wide{grid-column:auto}.arm-benefit-items{gap:8px;padding:8px}.arm-benefit-items>a{padding:12px;min-height:164px}
+ .arm-benefit-items h4{font-size:16px!important;line-height:24px!important}.arm-benefit-tiles{grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:12px;min-height:216px}
+ .arm-benefit-tiles>a{padding:16px;min-height:240px}.arm-benefit-tiles strong{font-size:36px}.arm-tile-arrow{top:16px;right:16px;width:32px;height:32px}
+ .arm-benefit-blue>svg{left:16px;top:16px;width:40px}.arm-benefit-tiles h4{font-size:16px!important}
+ .arm-case-grid{grid-template-columns:1fr;gap:16px}.arm-case-main,.arm-case-car{grid-column:auto}.arm-case-main{min-height:0}.ali-home .arm-case-main p{margin:32px 0}
+ .arm-case-car{grid-template-columns:1fr}.arm-case-photo{height:auto;max-height:none;aspect-ratio:1.52}.arm-case-logo{margin-block:32px}
+ .arm-case-small .arm-case-logo{max-width:180px;margin-block:32px}.arm-case-card{padding:20px}.arm-marquees{margin-bottom:32px}
+}
+@media(prefers-reduced-motion:reduce){.arm-heading h2 span{opacity:1;filter:none;animation:none!important}.arm-stage{opacity:1;transform:none;animation:none!important}.arm-section *,.arm-section *:before{transition:none!important;animation:none!important}.arm-marquee>div{transform:none}}
+/* Keep business-wide button resets from overriding reference typography. */
+.ali-home .arm-solution-item>button{font-size:18px;line-height:28px}
+.ali-home .arm-solution-item.is-active>button{font-size:26px;line-height:40px}
+.ali-home .arm-case-tag{align-self:flex-start;width:max-content}
+@media(max-width:1056px){.ali-home .arm-solution-item.is-active>button{font-size:24px;line-height:36px}}

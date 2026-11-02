@@ -356,6 +356,7 @@ export interface InstanceEvent {
 
 export interface InstanceDetail extends InstanceListItem {
 	infoSource?: "snapshot" | "upstream";
+	ownershipVersion?: string;
 	queriedAt?: string;
 	readOnly?: boolean;
  username?:string; port?:string; portIsDefault?:boolean; remark?:string; upstreamOrderId?:string; upstreamOrderNo?:string; invoiceId?:string; firstPayment?:string; renewalAmount?:string; autoRenew?:boolean;autoRenewWarning?:string;

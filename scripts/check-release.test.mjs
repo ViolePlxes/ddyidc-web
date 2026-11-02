@@ -19,3 +19,6 @@ test('registered portal manifests and assets pass',()=>{const result=portalPolic
 test('arbitrary portal JSON remains forbidden',()=>{assert.notEqual(portalPolicy(files=>{files['portal/private.json']='{}';}).status,0);});
 test('portal metadata cannot carry unregistered fields',()=>{assert.notEqual(portalPolicy(files=>{const data=JSON.parse(files['portal/themes.json']);data[0].secret='blocked';files['portal/themes.json']=JSON.stringify(data);}).status,0);});
 for(const path of ['/../private.css','/assets/missing.css'])test('unsafe or missing portal asset '+path,()=>{assert.notEqual(portalPolicy(files=>{const data=JSON.parse(files['portal/cloudflare-reference.json']);data.styles=[path];files['portal/cloudflare-reference.json']=JSON.stringify(data);}).status,0);});
+
+test('named marketing video passes',()=>assert.equal(policy('hero-reference-ABcd1234.mp4').status,0));
+for(const name of ['customer-recording-ABcd1234.mp4','hero-reference.mp4'])test('unregistered video rejected '+name,()=>assert.notEqual(policy(name).status,0));
