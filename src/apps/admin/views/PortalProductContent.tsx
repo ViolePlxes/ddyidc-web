@@ -1,0 +1,9 @@
+import {useState} from 'react';
+import {useQuery} from '@tanstack/react-query';
+import {Banner,Button,Select} from '@cloudflare/kumo';
+import {getPortalProducts,blankSEO,type PortalDocument} from '../../../shared/api/portalContent';
+export function PortalProductContent({document,change,onEdit}:{document:PortalDocument;change:(document:PortalDocument)=>void;onEdit:(path:string)=>void}){
+ const products=useQuery({queryKey:['admin','portal-products'],queryFn:getPortalProducts});const [id,setID]=useState('');const selected=products.data?.find(product=>product.id===id);
+ const create=(path:string,title:string,kind:'products'|'product')=>{const existing=document.pages.find(page=>page.path===path);if(!existing){change({...document,pages:[...document.pages,{id:`intro-${crypto.randomUUID()}`,path,title,kind,layout:kind==='products'?'catalog':'service',enabled:false,seo:blankSEO(),updatedAt:'',modules:[{id:`intro-body-${crypto.randomUUID()}`,type:'feature_sections',enabled:true,sort:0,title:'产品介绍',text:''},{id:`intro-faq-${crypto.randomUUID()}`,type:'faq',enabled:true,sort:10,title:'常见问题',text:'',items:[]}]}]})}onEdit(path)};
+ return <div className="grid gap-5"><Banner title="官网产品介绍" description="维护官网文案、图片、FAQ和SEO；价格、库存、配置与支付均读取业务系统，不在这里修改。隐藏官网介绍不改变控制台商品的销售状态。"/><Button disabled={document.pages.length>=500&&!document.pages.some(page=>page.path==='/products')} onClick={()=>create('/products','云产品与服务','products')}>编辑产品目录介绍</Button>{products.isError?<Banner variant="error" title="读取产品失败"/>:<Select label="选择已发布商品" value={id} items={products.data?.map(product=>({value:product.id,label:product.name}))??[]} onValueChange={value=>setID(value??'')}/>}<Button disabled={!selected||!/^\d{1,20}$/.test(id)||document.pages.length>=500&&!document.pages.some(page=>page.path===`/products/${id}`)} onClick={()=>selected&&create(`/products/${id}`,selected.name,'product')}>编辑该商品官网介绍</Button></div>;
+}

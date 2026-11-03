@@ -1,0 +1,18 @@
+{
+  "/about.html": "/about",
+  "/contact.html": "/contact",
+  "/news.html": "/news",
+  "/help.html": "/help",
+  "/document.html": "/help",
+  "/partner-agent.html": "/agency",
+  "/partner-reward.html": "/referral",
+  "/service-guarantee.html": "/service-guarantees",
+  "/cloud.html": "/cloud",
+  "/cdn.html": "/cdn",
+  "/domain.html": "/domain",
+  "/icp.html": "/icp",
+  "/recruit.html": "/recruit",
+  "/privacy.html": "/terms/privacy",
+  "/tos.html": "/terms/service",
+  "/aup.html": "/aup"
+}

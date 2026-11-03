@@ -1,3 +1,4 @@
+import {readPublishedContent,publishedContentKey} from '../shared/api/publicContent';
 import {PageTitle} from '../shared/components/PageTitle';
 import "../shared/utils/retiredLayoutPreferences";
 import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
@@ -17,7 +18,9 @@ const root = document.getElementById("root");
 if (!root) throw new Error("缺少应用挂载节点");
 
 if (!window.__ddyBrowserGuard || window.__ddyBrowserGuard.checkStyles()) {
-createRoot(root).render(
+async function mountPublicPortal(){
+ try{await queryClient.fetchQuery({queryKey:publishedContentKey,queryFn:readPublishedContent})}catch{if(root!.hasChildNodes())return;}
+ createRoot(root!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -27,4 +30,6 @@ createRoot(root).render(
   </StrictMode>,
 );
 window.__ddyBrowserGuard?.ready();
+}
+void mountPublicPortal();
 }

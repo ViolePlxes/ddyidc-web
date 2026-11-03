@@ -1,5 +1,7 @@
+import routeAliases from '../../shared/utils/public-route-aliases.json';
+import {PublishedContentPage} from './components/PublishedContent';
 import { lazy } from "react";
-import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate,Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { readRememberedProfile } from "../../shared/api/refreshSession";
 import { PortalLayout } from "../../layouts/PortalLayout";
 import { SessionBoundary } from "../../shared/router/EntryGuards";
@@ -37,9 +39,6 @@ const PublicProductDetail = lazy(() =>
   routeModules
     .portalPublic()
     .then((module) => ({ default: module.PublicProductDetail })),
-);
-const About = lazy(() =>
-  routeModules.portalPublic().then((module) => ({ default: module.About })),
 );
 const ResetPassword = lazy(() =>
   routeModules
@@ -87,6 +86,7 @@ function UserSessionBoundary() {
 export function PortalApp() {
   return (
     <Routes>
+      {Object.entries(routeAliases).map(([path,target])=><Route key={path} path={path} element={<Navigate to={target} replace/>}/>)}
       <Route path="/auth/social/complete" element={<LazyRoute><SocialComplete /></LazyRoute>} />
       <Route element={<UserSessionBoundary />}>
         <Route element={<PortalLayout />}>
@@ -118,7 +118,7 @@ export function PortalApp() {
             path="/about"
             element={
               <LazyRoute>
-                <About />
+                <PublishedContentPage />
               </LazyRoute>
             }
           />
@@ -195,7 +195,7 @@ export function PortalApp() {
             </LazyRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route element={<PortalLayout />}><Route path="*" element={<PublishedContentPage />} /></Route>
       </Route>
     </Routes>
   );

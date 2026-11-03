@@ -1,0 +1,8 @@
+import {useState} from 'react';
+import type {PortalDocument} from '../../../shared/api/portalContent';
+import {PublicContentOverride} from '../../../shared/api/publicContent';
+import {SiteHeader,SiteFooter} from '../../../shared/components/marketing';
+import {PublishedContentPage} from '../../portal/components/PublishedContent';
+import {PortalHomeContent} from '../../portal/components/PortalHomeContent';
+import {PublicProductCatalog,PublicProductIntroduction} from '../../portal/components/PublicCatalog';
+export function PortalDraftPreview({document,initialPath}:{document:PortalDocument;initialPath:string}){const [path,setPath]=useState(initialPath);const [notice,setNotice]=useState('');const pages=document.pages.filter(page=>page.enabled||page.path===path).map(page=>page.path===path?{...page,enabled:true}:page);const product=path.match(/^\/products\/(\d+)$/)?.[1];return <PublicContentOverride value={{site:document.site,pages,categories:document.categories,revision:document.revision}}><div className="portal-draft-preview" onClick={event=>{const anchor=(event.target as HTMLElement).closest('a');const href=anchor?.getAttribute('href');if(!href||href.startsWith('#'))return;event.preventDefault();if(href.startsWith('/')&&(document.pages.some(page=>page.path===href)||href==='/products')){setPath(href);setNotice('')}else setNotice('此入口通往业务页面，请在正式页面访问。')}}><SiteHeader/><main style={{paddingTop:64}}>{path==='/'?<PortalHomeContent consoleHref="/console"/>:path==='/products'?<PublicProductCatalog/>:product?<PublicProductIntroduction productID={product}/>:<PublishedContentPage previewPath={path}/>}</main><SiteFooter variant="tencent"/>{notice&&<p className="portal-draft-preview-notice" role="status">{notice}</p>}</div></PublicContentOverride>}

@@ -1,18 +1,17 @@
+import {PublicProductCatalog,PublicProductIntroduction} from '../components/PublicCatalog';
 import {PortalHomeContent} from '../components/PortalHomeContent';
 import { IdentityForm } from "./IdentityForm";
 import { LayerCard } from "@cloudflare/kumo";
 
 
-import { ConsoleProducts } from "../../console/views/Products";
-import { ConsoleProductDetail } from "../../console/views/ProductDetail";
 import { PageHeader } from "../../../shared/components/PageHeader";
 
 export function PortalHome() { return <PortalHomeContent consoleHref="/console"/>; }
 export function PublicProducts() {
-  return <ConsoleProducts publicPath />;
+  return <PublicProductCatalog />;
 }
 export function PublicProductDetail() {
-  return <ConsoleProductDetail publicView />;
+  return <PublicProductIntroduction />;
 }
 export function About() {
   return (

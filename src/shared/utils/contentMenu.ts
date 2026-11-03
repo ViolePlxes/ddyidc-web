@@ -39,6 +39,7 @@ export const contentMenuRoots: ContentMenuRoot[] = [
       {
         "label": "基础配置",
         "items": [
+ {"id":"frontend-public-pages","label":"官网页面管理","section":"publicPages"},
           {
             "id": "frontend--1",
             "label": "站务信息",
@@ -149,6 +150,11 @@ export const contentMenuRoots: ContentMenuRoot[] = [
       {
         "label": "页面内容",
         "items": [
+ {"id":"frontend-public-policies","label":"服务协议与隐私","section":"publicPolicies"},
+ {"id":"frontend-product-introductions","label":"官网产品介绍","section":"productIntroductions"},
+          {"id":"frontend-company","label":"企业信息","section":"company"},
+          {"id":"frontend-contact","label":"联系我们","section":"contact"},
+          {"id":"frontend-recruit","label":"人才招聘","section":"recruit"},
           {
             "id": "frontend--15",
             "label": "页面绑定",

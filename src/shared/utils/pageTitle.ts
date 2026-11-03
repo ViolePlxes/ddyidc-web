@@ -1,3 +1,4 @@
+import {publicPageCatalog} from './publicPages';
 import {adminRouteMetadata} from './adminRouteMetadata';
 import {adminBreadcrumbs} from './adminBreadcrumbs';
 import {consoleBreadcrumbs} from './consoleBreadcrumbs';
@@ -17,7 +18,7 @@ export function pageTitle(pathname:string):string {
  const path=pathname.split(/[?#]/)[0]!.replace(/\/$/,'')||'/';
  if(path==='/')return HOME_TITLE;
  const admin=path.match(/^\/dd-admin-[a-z0-9]{24,64}(?=\/|$)/)?.[0];
- let label=publicTitles[path];
+ let label=publicTitles[path]??publicPageCatalog.find(([route])=>route===path)?.[1];
  if(admin){const relative=path.slice(admin.length);label=todoTitles[relative.startsWith('/todos/')?relative.slice(7):'']??adminRouteMetadata.find(([route])=>route===path.slice(admin.length))?.[1]??adminBreadcrumbs(path,admin,[]).at(-1)?.label;if(path===admin)label='管理控制台';if(path===admin+'/login')label='管理后台登录';}
  else if(/^\/console(?:\/|$)/.test(path)||path.startsWith('/wallet/')||path.startsWith('/user/')||path==='/cart'||path==='/order/confirm'){
   label=consoleBreadcrumbs(path,[]).at(-1)?.label;if(path==='/console')label='用户控制台';

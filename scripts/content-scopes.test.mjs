@@ -25,9 +25,9 @@ test('creating scoped pages preserves existing data and starts hidden without pu
   assert.throws(() => addContentPage({ ...doc, pages: Array.from({ length: 500 }, (_, i) => ({ id: String(i), path: `/p${i}` })) }, '新页', '/new', 'x'));
 });
 test('all scope definitions use supported public paths and module types', () => {
-  const types = new Set(['hero', 'banner_carousel', 'announcement_bar', 'feature_sections', 'news_announcements', 'partner_logos', 'final_cta', 'product_solutions']);
-  for (const scope of Object.values(contentScopes)) { assert.equal(validateContentPath(scope.path, []), undefined); assert.ok(scope.title); assert.ok(scope.types.every(type => types.has(type))); }
-  assert.deepEqual(contentScopes.carousel.types, ['banner_carousel']);
+  const types = new Set(['hero', 'banner_carousel', 'announcement_bar', 'feature_sections', 'news_announcements', 'partner_logos', 'final_cta', 'product_solutions', 'faq', 'steps', 'statistics', 'image_gallery', 'contact_cards', 'job_list']);
+  for (const scope of Object.values(contentScopes)) { assert.equal(validateContentPath(scope.path, []), undefined); assert.ok(scope.title); assert.ok((scope.types ?? []).every(type => types.has(type))); if(scope.moduleIDs)assert.ok(scope.moduleIDs.every(id=>/^home-[a-z]+$/.test(id))); }
+  assert.deepEqual(contentScopes.carousel.moduleIDs, ['home-hero']);
   assert.equal(contentScopes.carousel.path, '/');
   assert.notEqual(contentScopes.environment.path, contentScopes.honors.path);
 });
