@@ -1,0 +1,14 @@
+/* User-approved home surface: follow the surrounding canvas in both themes.
+   Keep this scoped to the admin home; do not change other pages or controls. */
+[data-admin-home-layout="firewall"] div.bg-kumo-base,
+[data-admin-home-layout="firewall"] h2.bg-kumo-base {
+  background-color: transparent;
+}
+
+[data-admin-home-layout="firewall"] table th,
+[data-admin-home-layout="firewall"] table tbody > tr:not(:hover),
+[data-admin-home-layout="firewall"] table tbody > tr:not(:hover) > td {
+  background-color: transparent !important;
+  --kumo-table-row-bg: transparent;
+  --color-kumo-canvas: transparent;
+}

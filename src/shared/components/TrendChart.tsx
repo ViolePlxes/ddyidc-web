@@ -56,6 +56,8 @@ export function TrendChart({
   valueSuffix = "",
   series,
   zoomable = false,
+  height = 280,
+  compact = false,
 }: {
   title?: string;
   type?: "line" | "bar";
@@ -65,6 +67,8 @@ export function TrendChart({
   valueSuffix?: string;
   series?: { name: string; data: [number, number][] }[];
   zoomable?: boolean;
+  height?: number;
+  compact?: boolean;
 }) {
   const { theme } = useTheme();
   const times = useMemo(()=>[...new Set((series ? series.flatMap(item=>item.data) : values).map(point=>point[0]).filter(Number.isFinite))].sort((a,b)=>a-b),[series,values]);
@@ -79,13 +83,15 @@ export function TrendChart({
   const visibleSeries=series?.map(item=>({...item,data:item.data.filter(within)}));
   const clock=(index:number,full=false)=>{const timestamp=times[Math.round(index)];return timestamp===undefined?"—":new Date(timestamp).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false,...(full?{month:"2-digit",day:"2-digit"}:{}),hour:"2-digit",minute:"2-digit"})};
   return (
-    <section className="grid gap-3">
+    <section className={compact?"grid min-w-0 overflow-hidden rounded-lg ring ring-kumo-line":"grid gap-3"}>
+      {compact?<h2 className="border-b border-kumo-line bg-kumo-base px-4 py-3 text-sm font-semibold text-kumo-strong">{title}</h2>:
       <h2 className="text-lg font-semibold text-kumo-strong">{title}</h2>
-      <LayerCard className=" px-5 py-4">
+      }
+      <LayerCard className={compact?"rounded-none px-4 py-3 ring-0":" px-5 py-4"}>
         <TimeseriesChart
           echarts={echarts}
           type={type}
-          height={280}
+          height={height}
           isDarkMode={theme === "dark"}
           ariaDescription={title}
           yAxisName={yAxisName}
