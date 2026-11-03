@@ -35,8 +35,10 @@
   };
   guard.ready = function () { guard.mounted = true; w.clearTimeout(timer); };
   var css = w.CSS;
-  var supported = !!(css && css.supports && css.registerProperty && w.Promise && w.fetch && w.AbortController && w.ResizeObserver &&
-    css.supports("color", "oklch(60% 0.2 20)") && css.supports("color", "color-mix(in srgb, red, blue)") && css.supports("selector(:has(*))"));
+  // Hard-block only when the runtime itself is missing. Modern CSS colours
+  // (oklch/color-mix) and :has are optional: older Chromium builds render a
+  // degraded but usable interface, which beats a dead login page.
+  var supported = !!(css && css.supports && w.Promise && w.fetch && w.AbortController && w.ResizeObserver);
   if (!supported) { reason = "unsupported"; guard.blocked = true; }
   d.addEventListener("DOMContentLoaded", function () { if (guard.blocked) show(reason); });
   w.addEventListener("error", function (event) {

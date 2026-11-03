@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../public/browser-guard.js', import.meta.url), 'utf8');
-function boot({ supported = true, styles = true, utilities = true } = {}) {
+function boot({ supported = true, runtime = true, modern = true, styles = true, utilities = true } = {}) {
   const events = {}, timers = new Map(); let reloads = 0;
   function element(tag) {
     return { tagName: tag.toUpperCase(), style: {}, children: [],
@@ -13,8 +13,8 @@ function boot({ supported = true, styles = true, utilities = true } = {}) {
   const root = element('div'), body = element('body'), html = element('html');
   const document = { body, documentElement: html, createElement: element,
     getElementById: () => root, addEventListener: (name,fn) => { events[name]=fn; } };
-  const window = { CSS: { supports: () => supported, registerProperty() {} },
-    Promise, fetch() {}, AbortController, ResizeObserver() {},
+  const window = { CSS: { supports: () => supported, registerProperty:modern?function(){}:undefined },
+    Promise:runtime?Promise:undefined, fetch() {}, AbortController, ResizeObserver() {},
     location: { reload() { reloads++; } },
     getComputedStyle: (e) => e === html ? { getPropertyValue: () => styles ? '1' : '' } :
       { position: utilities ? 'fixed' : 'static', paddingTop: '16px', borderTopLeftRadius: '6px' },
@@ -23,9 +23,10 @@ function boot({ supported = true, styles = true, utilities = true } = {}) {
   vm.runInNewContext(source, { window, document }); events.DOMContentLoaded();
   return { guard: window.__ddyBrowserGuard, body, root, events, timers, reloads: () => reloads };
 }
+const degraded=boot({supported:false,modern:false});assert.equal(degraded.guard.checkStyles(),true);assert.equal(degraded.guard.blocked,false);
 const normal = boot(); assert.equal(normal.guard.checkStyles(),true);
 normal.guard.ready(); assert.equal(normal.timers.size,0); assert.equal(normal.body.children.length,0);
-for (const options of [{supported:false},{styles:false},{utilities:false}]) {
+for (const options of [{runtime:false},{styles:false},{utilities:false}]) {
   const page = boot(options); assert.equal(page.guard.checkStyles(),false);
   assert.equal(page.root.style.display,'none'); assert.equal(page.body.children.length,1);
   page.guard.checkStyles(); assert.equal(page.body.children.length,1);

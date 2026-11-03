@@ -4,7 +4,7 @@
 
 门户、登录、用户中心、后台和销售端的 HTML 在模块脚本之前加载 ES5 `public/browser-guard.js`。Vite 将它输出为带内容哈希的 `/assets/browser-guard-<hash>.js`，进入现有静态资源保留机制，避免在线更新或回滚覆盖旧页面依赖。
 
-检测采用功能判断，不按 User-Agent 猜测：Promise、fetch、AbortController、ResizeObserver、CSS.registerProperty、oklch、color-mix、:has。Tailwind 4 官方支持基线为 Chrome 111、Safari 16.4、Firefox 128；对应 Edge 需使用现代内核。详见 [官方兼容说明](https://tailwindcss.com/docs/compatibility)。低于基线的浏览器显示独立恢复说明，并不承诺旧内核能完整运行 Kumo。
+检测采用功能判断，不按 User-Agent 猜测。硬拦截只针对缺失运行时的浏览器：`Promise`、`fetch`、`AbortController`、`ResizeObserver`、`CSS.supports`。`CSS.registerProperty`、`oklch`、`color-mix`、`:has` 属于可降级能力：缺失时界面颜色和部分透明度会退化，但仍允许登录和使用主要功能，避免旧内核用户被整页挡住。Tailwind 4 官方支持基线为 Chrome 111、Safari 16.4、Firefox 128；对应 Edge 需使用现代内核。详见 [官方兼容说明](https://tailwindcss.com/docs/compatibility)。低于基线的浏览器进入降级模式，不承诺旧内核能完整运行 Kumo。
 
 `src/styles/tailwind.css` 提供 `--ddy-styles-ready: 1`；挂载前额外检查实际 utility 的定位、内边距和圆角。CSS 缺失或不生效时不挂载业务界面，防止隐藏的弹窗和表单变成混排纯文本。模块加载失败、启动超过 30 秒时显示同一恢复面板。面板使用原生元素及系统颜色，不依赖已经失败的应用样式。
 
