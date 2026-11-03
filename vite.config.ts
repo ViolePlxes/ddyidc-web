@@ -128,9 +128,13 @@ function portalContentAssets(): Plugin {
       handler(_options, bundle) {
         const styles = Object.keys(bundle).filter(name => name.startsWith('assets/') && name.endsWith('.css')).map(name => '/' + name);
         if (!styles.length) this.error('门户内容缺少构建样式资源');
-        const runtime = readFileSync(resolve(__dirname, 'src/apps/portal/content-runtime.js'), 'utf8');
+        const fallbackRuntime = readFileSync(resolve(__dirname, 'src/apps/portal/content-runtime.js'), 'utf8');
+        const publicEntry = Object.values(bundle).find(asset => asset.type === 'chunk' && asset.isEntry && asset.name === 'public');
+        if (!publicEntry || publicEntry.type !== 'chunk') this.error('门户公开入口缺失');
+        const runtime = `if(document.getElementById('root')){import(${JSON.stringify('/' + publicEntry.fileName)}).catch(()=>{${fallbackRuntime}})}else{${fallbackRuntime}}`;
         const script = `assets/portal-content-${createHash('sha256').update(runtime).digest('hex').slice(0,16)}.js`;
         this.emitFile({ type: 'asset', fileName: script, source: runtime });
+        this.emitFile({ type: 'asset', fileName: 'portal/routes.json', source: readFileSync(resolve(__dirname, 'src/shared/utils/public-route-aliases.json'), 'utf8') });
         this.emitFile({ type: 'asset', fileName: 'portal/themes.json', source: JSON.stringify([{ id: 'cloudflare-reference', label: '门户内容', version: 1, schemaVersion: 1 }]) });
         this.emitFile({ type: 'asset', fileName: 'portal/cloudflare-reference.json', source: JSON.stringify({ theme: 'cloudflare-reference', version: 1, styles, script: '/' + script }) });
         this.emitFile({ type: 'asset', fileName: 'portal/cloudflare-reference.html', source: readFileSync(resolve(__dirname, 'src/apps/portal/content-document.html'), 'utf8') });

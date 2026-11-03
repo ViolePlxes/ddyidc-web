@@ -22,3 +22,5 @@ for(const path of ['/../private.css','/assets/missing.css'])test('unsafe or miss
 
 test('named marketing video passes',()=>assert.equal(policy('hero-reference-ABcd1234.mp4').status,0));
 for(const name of ['customer-recording-ABcd1234.mp4','hero-reference.mp4'])test('unregistered video rejected '+name,()=>assert.notEqual(policy(name).status,0));
+
+test('public aliases are a finite safe manifest',()=>{assert.equal(portalPolicy(files=>{files['portal/routes.json']=JSON.stringify({'about.html':'https://evil.example'});}).status,1);assert.equal(portalPolicy(files=>{files['portal/routes.json']=JSON.stringify({'/about.html':'/about'});}).status,0);});

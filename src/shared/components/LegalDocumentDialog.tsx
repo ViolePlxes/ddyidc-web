@@ -1,9 +1,9 @@
 import { useId, useRef, useState } from "react";
 import { Button, LayerDialog, TableOfContents, useTableOfContentsActiveId } from "@cloudflare/kumo";
-import legalDocuments from "../../apps/portal/views/legalDocuments.json";
+import {useLegalDocument} from "../hooks/useLegalDocument";
 
 export function LegalDocumentDialog({kind,label}:{kind:"service"|"privacy";label?:string}) {
- const document=legalDocuments[kind];
+ const document=useLegalDocument(kind);
  const id=useId();
  const sections=document.blocks.reduce<{title:string;paragraphs:string[]}[]>((items,block)=>{
   if(block.type==="heading")items.push({title:block.text,paragraphs:[]});

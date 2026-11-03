@@ -1,17 +1,20 @@
-import {type CSSProperties,type MouseEvent} from 'react';
-import {ArrowUpRightIcon,CloudIcon,StackIcon,ShieldCheckIcon,UsersThreeIcon} from '@phosphor-icons/react';
+import {useHomeSectionConfig,homeText,homeHref,homeImage} from '../HomeContent';
+import { type CSSProperties, type MouseEvent } from 'react';
+import { ArrowUpRightIcon, CloudIcon, StackIcon, ShieldCheckIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import heroArt from './owned-hero.svg?url';
 import './aliyun-hero.css';
-
 /** Homepage hero only; source dimensions follow Aliyun banner 0.1.11. */
-export function AliyunHero({productsHref,consoleHref}:{productsHref:string;consoleHref:string}){
- const base=consoleHref.replace(/\/console\/?$/,'');
- const move=(event:MouseEvent<HTMLAnchorElement>)=>{const rect=event.currentTarget.getBoundingClientRect();event.currentTarget.style.setProperty('--mouse-x',`${event.clientX-rect.left}px`);event.currentTarget.style.setProperty('--mouse-y',`${event.clientY-rect.top}px`)};
- const entries=[{title:'云服务器',description:'选择适合网站、应用和开发环境的计算资源，在控制台集中管理。',href:productsHref,icon:CloudIcon},{title:'云服务拼团',description:'查看活动产品与成团规则，选择适合当前业务的配置和周期。',href:`${base}/groupbuy`,icon:UsersThreeIcon},{title:'统一控制台',description:'集中查看实例状态、订单进度及服务周期，让资源管理更清晰。',href:consoleHref,icon:StackIcon},{title:'账户安全',description:'管理登录安全、实名认证和相关记录，关注账户的每一次变化。',href:`${base}/console/security`,icon:ShieldCheckIcon}];
- return <section className="ali-source-hero" aria-label="首页推荐">
-  <div className="ali-source-hero-media" aria-hidden="true"><img src={heroArt} alt=""/><div className="ali-source-hero-edge left"/><div className="ali-source-hero-edge right"/></div>
-  <div className="ali-source-hero-width ali-source-hero-copy"><h1>多多云计算，<strong>按需选配</strong></h1><p>云服务器、域名与内容分发，一站式选择与管理。为网站、应用和开发环境选择合适的云资源，在统一控制台查看实例、订单与账户记录。</p><div className="ali-source-hero-actions"><a className="ali-source-hero-primary" href={productsHref}>探索云产品<ArrowUpRightIcon size={16}/></a><a className="ali-source-hero-secondary" href={`${base}/console/tickets/create`} onMouseMove={move} style={{'--mouse-x':'-100px','--mouse-y':'-100px'} as CSSProperties}>在线咨询</a></div></div>
-  <div className="ali-source-hero-populars"><div className="ali-source-hero-width ali-source-hero-entries">{entries.map(({title,description,href,icon:EntryIcon})=><a href={href} key={title}><EntryIcon size={32} weight="regular" aria-hidden="true"/><div><h3>{title}</h3><p>{description}</p></div></a>)}</div></div>
+export function AliyunHero({ productsHref, consoleHref }: {
+    productsHref: string;
+    consoleHref: string;
+}) {
+    const cmsSection = useHomeSectionConfig("home-hero");
+    const base = consoleHref.replace(/\/console\/?$/, '');
+    const move = (event: MouseEvent<HTMLAnchorElement>) => { const rect = event.currentTarget.getBoundingClientRect(); event.currentTarget.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`); event.currentTarget.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`); };
+    const entries = [{ title: homeText(cmsSection, "\u4E91\u670D\u52A1\u5668"), description: homeText(cmsSection, "\u9009\u62E9\u9002\u5408\u7F51\u7AD9\u3001\u5E94\u7528\u548C\u5F00\u53D1\u73AF\u5883\u7684\u8BA1\u7B97\u8D44\u6E90\uFF0C\u5728\u63A7\u5236\u53F0\u96C6\u4E2D\u7BA1\u7406\u3002"), href: productsHref, icon: CloudIcon }, { title: homeText(cmsSection, "\u4E91\u670D\u52A1\u62FC\u56E2"), description: homeText(cmsSection, "\u67E5\u770B\u6D3B\u52A8\u4EA7\u54C1\u4E0E\u6210\u56E2\u89C4\u5219\uFF0C\u9009\u62E9\u9002\u5408\u5F53\u524D\u4E1A\u52A1\u7684\u914D\u7F6E\u548C\u5468\u671F\u3002"), href: `${base}/groupbuy`, icon: UsersThreeIcon }, { title: homeText(cmsSection, "\u7EDF\u4E00\u63A7\u5236\u53F0"), description: homeText(cmsSection, "\u96C6\u4E2D\u67E5\u770B\u5B9E\u4F8B\u72B6\u6001\u3001\u8BA2\u5355\u8FDB\u5EA6\u53CA\u670D\u52A1\u5468\u671F\uFF0C\u8BA9\u8D44\u6E90\u7BA1\u7406\u66F4\u6E05\u6670\u3002"), href: consoleHref, icon: StackIcon }, { title: homeText(cmsSection, "\u8D26\u6237\u5B89\u5168"), description: homeText(cmsSection, "\u7BA1\u7406\u767B\u5F55\u5B89\u5168\u3001\u5B9E\u540D\u8BA4\u8BC1\u548C\u76F8\u5173\u8BB0\u5F55\uFF0C\u5173\u6CE8\u8D26\u6237\u7684\u6BCF\u4E00\u6B21\u53D8\u5316\u3002"), href: `${base}/console/security`, icon: ShieldCheckIcon }];
+    return <section className="ali-source-hero" aria-label={homeText(cmsSection, "\u9996\u9875\u63A8\u8350")}>
+  <div className="ali-source-hero-media" aria-hidden="true"><img src={homeImage(cmsSection, heroArt, "image-0")} alt=""/><div className="ali-source-hero-edge left"/><div className="ali-source-hero-edge right"/></div>
+  <div className="ali-source-hero-width ali-source-hero-copy"><h1>{cmsSection?.title && cmsSection.title !== '多多云计算，按需选配' ? cmsSection.title : <>{homeText(cmsSection, "\u591A\u591A\u4E91\u8BA1\u7B97\uFF0C")}<strong>{homeText(cmsSection, "\u6309\u9700\u9009\u914D")}</strong></>}</h1><p>{homeText(cmsSection, "\u4E91\u670D\u52A1\u5668\u3001\u57DF\u540D\u4E0E\u5185\u5BB9\u5206\u53D1\uFF0C\u4E00\u7AD9\u5F0F\u9009\u62E9\u4E0E\u7BA1\u7406\u3002\u4E3A\u7F51\u7AD9\u3001\u5E94\u7528\u548C\u5F00\u53D1\u73AF\u5883\u9009\u62E9\u5408\u9002\u7684\u4E91\u8D44\u6E90\uFF0C\u5728\u7EDF\u4E00\u63A7\u5236\u53F0\u67E5\u770B\u5B9E\u4F8B\u3001\u8BA2\u5355\u4E0E\u8D26\u6237\u8BB0\u5F55\u3002")}</p><div className="ali-source-hero-actions"><a className="ali-source-hero-primary" href={homeHref(cmsSection, productsHref, "link-0")}>{homeText(cmsSection, "\u63A2\u7D22\u4E91\u4EA7\u54C1")}<ArrowUpRightIcon size={16}/></a><a className="ali-source-hero-secondary" href={homeHref(cmsSection, `${base}/console/tickets/create`, "link-1")} onMouseMove={move} style={{ '--mouse-x': '-100px', '--mouse-y': '-100px' } as CSSProperties}>{homeText(cmsSection, "\u5728\u7EBF\u54A8\u8BE2")}</a></div></div>
+  <div className="ali-source-hero-populars"><div className="ali-source-hero-width ali-source-hero-entries">{entries.map(({ title, description, href, icon: EntryIcon }) => <a href={homeHref(cmsSection, href, "link-2")} key={title}><EntryIcon size={32} weight="regular" aria-hidden="true"/><div><h3>{title}</h3><p>{description}</p></div></a>)}</div></div>
  </section>;
 }
-

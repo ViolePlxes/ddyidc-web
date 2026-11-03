@@ -23,7 +23,7 @@
 .marketing-tencent-service-icon{position:relative;isolation:isolate;display:grid;place-items:center;width:44px;height:44px;color:#fff;font-size:24px;font-weight:600;background:linear-gradient(135deg,#006eff 0 40%,#cce1ff 41%);border:1px solid #b8d5ff;border-radius:3px;box-shadow:inset -8px -6px 12px #ffffff55}
 .marketing-tencent-assurances>a:nth-child(odd) .marketing-tencent-service-icon{border-radius:50%}
 .marketing-tencent-service-icon:before{content:"";position:absolute;z-index:-1;left:-6px;top:-5px;width:28px;height:28px;border-radius:50%;background:#006eff88}
-.marketing-tencent-main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.85fr;gap:32px;padding:40px 0 38px;border-bottom:1px solid #d2d8e2}
+.marketing-tencent-main{display:grid;grid-template-columns:repeat(var(--marketing-footer-column-count,4),minmax(0,1fr)) 1.85fr;gap:32px;padding:40px 0 38px;border-bottom:1px solid #d2d8e2}
 .marketing-tencent-footer .marketing-tencent-main h2{font-size:14px;line-height:22px;font-weight:400;color:#000;margin:0 0 17px}
 .marketing-tencent-links>.marketing-footer-link,.marketing-tencent-links>.marketing-footer-document{display:block;font-size:12px;line-height:26px;padding:0}
 .marketing-tencent-footer .marketing-footer-document button{font:inherit;color:inherit;padding:0}

@@ -1,23 +1,5 @@
-import { LayerCard, LinkButton } from "@cloudflare/kumo";
-import { useParams } from "react-router-dom";
-import legalDocuments from "./legalDocuments.json";
-
-export function AgreementPlaceholder() {
-  const { kind } = useParams();
-  const document = kind === "privacy" ? legalDocuments.privacy : legalDocuments.service;
-  return (
-    <main className="min-h-svh bg-kumo-recessed p-4 md:p-8">
-      <LayerCard className=" mx-auto grid w-full max-w-3xl gap-6 px-6 py-5 md:p-8">
-        <h1 className="text-2xl font-semibold text-kumo-strong">{document.title}</h1>
-        <article aria-label={document.title} className="grid min-w-0 gap-4 break-words text-base leading-relaxed text-kumo-default">
-          {document.blocks.map((block, index) => block.type === "heading" ? (
-            <h2 key={index} className="mt-2 text-lg font-semibold text-kumo-strong">{block.text}</h2>
-          ) : (
-            <p key={index} className="whitespace-pre-line">{block.text}</p>
-          ))}
-        </article>
-        <LinkButton href="/login" variant="secondary" className="justify-self-start">返回登录</LinkButton>
-      </LayerCard>
-    </main>
-  );
-}
+import {useParams} from 'react-router-dom';
+import {useLegalDocument} from '../../../shared/hooks/useLegalDocument';
+import {SiteHeader,SiteFooter} from '../../../shared/components/marketing';
+import '../components/marketing-content.css';
+export function AgreementPlaceholder(){const {kind}=useParams();const document=useLegalDocument(kind==='privacy'?'privacy':'service');return <div className="ali-home ali-home-polished marketing-content-page" data-layout="document"><SiteHeader/><main className="marketing-legal-page arm-width"><nav className="marketing-content-breadcrumb"><a href="/">首页</a><span>/</span><span>{document.title}</span></nav><h1>{document.title}</h1><article>{document.blocks.map((block,index)=>block.type==='heading'?<h2 key={index} id={`policy-section-${index}`}>{block.text}</h2>:<p key={index}>{block.text}</p>)}</article><a className="arm-soft-action" href="/">返回首页</a></main><SiteFooter variant="tencent"/></div>}

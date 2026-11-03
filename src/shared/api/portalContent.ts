@@ -2,9 +2,9 @@ import { adminRequest, type ApiEnvelope } from './request';
 import type { RichDocument } from '../components/editor/document';
 
 export interface PortalSEO { title: string; keywords: string; description: string; image: string; noIndex: boolean }
-export interface PortalLink { label: string; href: string; children: PortalLink[] | null }
+export interface PortalLink { enabled?: boolean; description?: string; label: string; href: string; children: PortalLink[] | null }
 export interface PortalModule { id: string; type: string; enabled: boolean; sort: number; title: string; text: string; richContent?: RichDocument; [key: string]: unknown }
-export interface PortalPage { id: string; path: string; title: string; kind: string; contentType?: 'news' | 'help'; categoryId?: string; enabled: boolean; seo: PortalSEO; modules: PortalModule[] | null; updatedAt: string }
+export interface PortalPage { layout?: string; id: string; path: string; title: string; kind: string; contentType?: 'news' | 'help'; categoryId?: string; enabled: boolean; seo: PortalSEO; modules: PortalModule[] | null; updatedAt: string }
 export interface PortalCategory { id: string; name: string; kind: 'news' | 'help' }
 export interface PortalDocument {
   categories?: PortalCategory[];
@@ -18,6 +18,7 @@ function unwrap<T>(envelope: ApiEnvelope<T>): T {
   return envelope.data;
 }
 export async function getPortalContent() { return unwrap((await adminRequest.get<ApiEnvelope<PortalDocument>>('/portal/config')).data); }
+export async function prepareFormalPortalContent(document:PortalDocument){return unwrap((await adminRequest.post<ApiEnvelope<PortalDocument>>('/portal/formal-draft',{document})).data);}
 export async function savePortalContent(document: PortalDocument, publish: boolean) { return unwrap((await adminRequest.put<ApiEnvelope<PortalDocument>>('/portal/config', { document, publish })).data); }
 export async function getPortalRevisions() { return unwrap((await adminRequest.get<ApiEnvelope<PortalRevision[]>>('/portal/revisions')).data); }
 export async function rollbackPortalRevision(id: string, expectedRevision: number) { return unwrap((await adminRequest.post<ApiEnvelope<PortalDocument>>(`/portal/revisions/${encodeURIComponent(id)}/rollback`, { expectedRevision })).data); }

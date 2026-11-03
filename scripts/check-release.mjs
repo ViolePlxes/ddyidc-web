@@ -20,7 +20,7 @@ function walk(dir) {
     const backupComponent=/^assets\/backups-[a-z0-9_-]{8,}\.js$/i.test(rel);
     const marketingVideo=/^assets\/(hero-reference|exp-main|exp-[1-6]|platform-preview|rem-solution-video)-[a-z0-9_-]{8}\.mp4$/i.test(rel);
     if (artifact && ((!allowed.has(extname(name)) && !marketingVideo) || /fixture|mock/.test(policyName) || (/backup/.test(policyName) && !backupComponent))) throw new Error(`Unexpected public artifact: ${rel}`);
-    const portalManifest=['portal/themes.json','portal/cloudflare-reference.json'].includes(rel);
+    const portalManifest=['portal/themes.json','portal/cloudflare-reference.json','portal/routes.json'].includes(rel);
     if (artifact && extname(name)==='.json' && !['version.json','wallet-payment-channels.json'].includes(name) && !portalManifest) throw new Error(`Unregistered public data file: ${rel}`);
     if (artifact && ['.js','.html','.json','.txt'].includes(extname(name))) {
       const text = readFileSync(path,'utf8');
@@ -41,6 +41,7 @@ function lstatPortal(){try{return lstatSync(join(root,'portal')).isDirectory();}
 function validatePortal(){
  const json=name=>{const raw=readFileSync(join(root,'portal',name),'utf8');if(Buffer.byteLength(raw)>65536)throw new Error('Oversized portal manifest');return JSON.parse(raw);};
  const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&Object.keys(value).every(key=>keys.includes(key));
+ if(readdirSync(join(root,'portal')).includes('routes.json')){const routes=json('routes.json');if(!routes||typeof routes!=='object'||Array.isArray(routes)||Object.keys(routes).length>100||Object.entries(routes).some(([from,to])=>!/^\/[a-z0-9_-]+\.html$/.test(from)||typeof to!=='string'||!/^\/[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/.test(to)))throw new Error('Invalid public route aliases');}
  const themes=json('themes.json');
  if(!Array.isArray(themes)||themes.length!==1||!exact(themes[0],['id','label','version','schemaVersion'])||themes[0].id!=='cloudflare-reference'||themes[0].version!==1||themes[0].schemaVersion!==1||typeof themes[0].label!=='string'||!themes[0].label.trim()||Buffer.byteLength(themes[0].label)>256)throw new Error('Invalid portal theme registry');
  const manifest=json('cloudflare-reference.json');

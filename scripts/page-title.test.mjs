@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
 const cache=new Map();
-async function moduleURL(file){
+async function moduleURL(file){if(file.pathname.endsWith('.json'))return 'data:text/javascript;base64,'+Buffer.from('export default '+await readFile(file,'utf8')).toString('base64');
  if(cache.has(file.href))return cache.get(file.href);
  let compiled=ts.transpileModule(await readFile(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
- for(const match of [...compiled.matchAll(/from ["'](\.[^"']+)["']/g)]){const url=await moduleURL(new URL(match[1]+'.ts',file));compiled=compiled.replaceAll(match[0],'from '+JSON.stringify(url));}
+ for(const match of [...compiled.matchAll(/from ["'](\.[^"']+)["']/g)]){const url=await moduleURL(new URL(match[1].endsWith('.json')?match[1]:match[1]+'.ts',file));compiled=compiled.replaceAll(match[0],'from '+JSON.stringify(url));}
  const url='data:text/javascript;base64,'+Buffer.from(compiled).toString('base64');cache.set(file.href,url);return url;
 }
 const {pageTitle,HOME_TITLE}=await import(await moduleURL(new URL('../src/shared/utils/pageTitle.ts',import.meta.url)));
