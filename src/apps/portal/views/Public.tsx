@@ -18,7 +18,7 @@ export function About() {
   return (
     <>
       <PageHeader
-        title="关于 DDYIDC"
+        title="关于多多云"
         description="专注于稳定、透明、易管理的云基础设施服务。"
       />
       <LayerCard className=" grid gap-4 px-6 py-5">

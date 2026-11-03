@@ -30,6 +30,7 @@ jobs:
       - run: node --test scripts/admin-recharges.test.mjs scripts/admin-table-copy.test.mjs scripts/table-layout.test.mjs scripts/admin-table-markup.test.mjs
       - run: node --test scripts/admin-breadcrumbs.test.mjs
       - run: node --test scripts/console-breadcrumbs.test.mjs
+      - run: node --test scripts/page-title.test.mjs
       - run: npx tsc -b
       - run: npm run build
         env:

@@ -1,3 +1,4 @@
+import {PageTitle} from '../shared/components/PageTitle';
 import "../shared/utils/retiredLayoutPreferences";
 import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import { adminPath } from "../shared/utils/adminEntry";
@@ -164,7 +165,7 @@ export function createEntry(App: ComponentType, options: { dataRouter?: boolean 
       "view-transitions-supported",
       "startViewTransition" in document,
     );
-    const content = <><ScrollRestoration /><RoutePrefetch /><LinkProvider component={RouterLink}><TooltipProvider><Toasty><VersionRefreshNotice /><RouteErrorBoundary><App /></RouteErrorBoundary></Toasty></TooltipProvider></LinkProvider></>;
+    const content = <><PageTitle /><ScrollRestoration /><RoutePrefetch /><LinkProvider component={RouterLink}><TooltipProvider><Toasty><VersionRefreshNotice /><RouteErrorBoundary><App /></RouteErrorBoundary></Toasty></TooltipProvider></LinkProvider></>;
     if (options.dataRouter && !dataRouter) dataRouter = createBrowserRouter([{ path: '*', element: content }]);
     host.__ddyidcRoot.render(
       <StrictMode>

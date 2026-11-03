@@ -10,7 +10,7 @@ export interface SiteHeaderProps {
  brand?:string;homeHref?:string;tagline?:string;links?:readonly SiteHeaderLink[];action?:ReactNode;logo?:ReactNode;supportLink?:{label:string;href:string};account?:{label:string;href:string};
 }
 /** Shared Aliyun-style public navigation; content remains platform-owned and configurable. */
-export function SiteHeader({brand="DDOIDC",homeHref="/",links=defaultSiteHeaderLinks,action,logo,supportLink={label:"支持",href:"/console/tickets/create"},account={label:"账户",href:"/console"}}:SiteHeaderProps){
+export function SiteHeader({brand="多多云",homeHref="/",links=defaultSiteHeaderLinks,action,logo,supportLink={label:"支持",href:"/console/tickets/create"},account={label:"账户",href:"/console"}}:SiteHeaderProps){
  const [open,setOpen]=useState(false);const [active,setActive]=useState<number|null>(null);const [search,setSearch]=useState(false);
  const [panelLeft,setPanelLeft]=useState(16);
  const [highlightSearch,setHighlightSearch]=useState(()=>window.scrollY>100);

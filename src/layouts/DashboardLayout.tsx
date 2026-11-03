@@ -174,7 +174,7 @@ export function DashboardLayout({
                   className="flex w-full min-w-0 items-center justify-start gap-2 text-left"
                 >
                   <CubeIcon className="size-4 shrink-0 text-kumo-brand" weight="duotone" />
-                  <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">DDOIDC</span>
+                  <span className="flex min-w-0 flex-1 items-center overflow-hidden text-left">多多云</span>
                   <span className="w-4 shrink-0 overflow-hidden transition-[width] duration-(--sidebar-animation-duration) ease-(--sidebar-easing) group-data-[state=collapsed]/sidebar:w-0">
                     <CaretUpDownIcon className="size-4 text-kumo-subtle" />
                   </span>
