@@ -66,7 +66,7 @@ export function StaffLogin({
       <div className="grid w-full max-w-sm gap-4">
         <div className="flex items-center justify-between gap-3">
           <div className="grid gap-0.5">
-            <span className="text-base font-semibold text-kumo-strong">DDYIDC</span>
+            <span className="text-base font-semibold text-kumo-strong">多多云</span>
             <span className="text-base text-kumo-subtle">
               {import.meta.env.VITE_DDYIDC_VERSION || "版本未标记"} · {import.meta.env.PROD ? "发布构建" : "开发构建"}
             </span>

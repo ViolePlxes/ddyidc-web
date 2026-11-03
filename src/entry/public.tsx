@@ -1,3 +1,4 @@
+import {PageTitle} from '../shared/components/PageTitle';
 import "../shared/utils/retiredLayoutPreferences";
 import { VersionRefreshNotice } from "../shared/components/VersionRefreshNotice";
 import "../shared/hooks/useTheme";
@@ -20,7 +21,7 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <TooltipProvider><VersionRefreshNotice /><PublicPortalApp /></TooltipProvider>
+        <TooltipProvider><PageTitle /><VersionRefreshNotice /><PublicPortalApp /></TooltipProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
