@@ -1,3 +1,4 @@
+import {withBillingNavigation} from '../utils/billingNavigation';
 import { contentMenuRoots } from '../utils/contentMenu';
 import { withDomainNavigation } from "../domains/navigation";
 import { adminPath } from "../utils/adminEntry";
@@ -76,7 +77,7 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
    if (!found) adminGroups.push({ label: '前台内容', items: children });
   }
  }
- return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : scope === 'console' ? withDomainNavigation(groups) : groups };
+ return { ...query, groups: scope === 'admin' ? withTodoCounts(adminGroups, todos.data) : scope === 'console' ? withBillingNavigation(withDomainNavigation(groups)) : groups };
 }
 
 function mergeProductNavigation(groups: NavigationGroup[]): NavigationGroup[] {

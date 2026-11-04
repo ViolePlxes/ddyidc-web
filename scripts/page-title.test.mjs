@@ -12,7 +12,7 @@ async function moduleURL(file){if(file.pathname.endsWith('.json'))return 'data:t
 const {pageTitle,HOME_TITLE}=await import(await moduleURL(new URL('../src/shared/utils/pageTitle.ts',import.meta.url)));
 test('formal titles across public, console, admin and sales',()=>{
  const admin='/dd-admin-'+'a'.repeat(24);
- for(const [path,want] of [['/',HOME_TITLE],['/login','用户登录 - 多多云'],['/console','用户控制台 - 多多云'],['/console/orders/123','订单详情 - 多多云'],['/wallet/recharge','账户充值 - 多多云'],[admin,'管理控制台 - 多多云'],[admin+'/customers/123','客户详情 - 多多云'],[admin+'/todos/certifications','实名审核 - 多多云'],['/sales/login','销售登录 - 多多云'],['/terms/privacy','隐私政策 - 多多云']])assert.equal(pageTitle(path),want,path);
+ for(const [path,want] of [['/',HOME_TITLE],['/login','用户登录 - 多多云'],['/console','用户控制台 - 多多云'],['/console/billing','统一账单 - 多多云'],['/billing','统一账单 - 多多云'],['/console/orders/123','订单详情 - 多多云'],['/wallet/recharge','账户充值 - 多多云'],[admin,'管理控制台 - 多多云'],[admin+'/customers/123','客户详情 - 多多云'],[admin+'/todos/certifications','实名审核 - 多多云'],['/sales/login','销售登录 - 多多云'],['/terms/privacy','隐私政策 - 多多云']])assert.equal(pageTitle(path),want,path);
 });
 test('titles never include URL identifiers, query strings or legacy brands',()=>{
  const title=pageTitle('/console/orders/845471548292?token=private-secret#raw');assert.equal(title,'订单详情 - 多多云');assert.doesNotMatch(title,/845471|private|DDYIDC|DDOIDC/);

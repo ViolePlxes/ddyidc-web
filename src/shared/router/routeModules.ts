@@ -103,7 +103,7 @@ const routeLoaders: Array<
     (path) => /^\/console\/instance\/[^/]+\/vnc$/.test(path),
     routeModules.consoleVnc,
   ],
-  [(path) => path === "/console/orders", routeModules.consoleOrders],
+  [(path) => path === "/console/orders" || path === "/console/billing" || path === "/billing", routeModules.consoleOrders],
   [
     (path) => /^\/console\/orders\/[^/]+$/.test(path),
     routeModules.consoleOrderDetail,

@@ -6,7 +6,7 @@ import {consoleBreadcrumbs} from './consoleBreadcrumbs';
 export const SITE_BRAND='多多云';
 export const HOME_TITLE='多多云｜云计算产品与服务';
 const publicTitles:Record<string,string>={
- '/login':'用户登录','/register':'注册账户','/reset-password':'重置密码','/forgot-password':'找回密码','/bind-mobile':'绑定手机号',
+ '/billing':'统一账单', '/login':'用户登录','/register':'注册账户','/reset-password':'重置密码','/forgot-password':'找回密码','/bind-mobile':'绑定手机号',
  '/products':'云产品与服务','/groupbuy':'云服务拼团','/marketplace':'云资源交易市场','/about':'关于多多云',
  '/agreement/service':'服务条款','/agreement/privacy':'隐私政策','/terms':'服务条款','/privacy':'隐私政策',
  '/terms/service':'服务条款','/terms/privacy':'隐私政策','/auth/social/complete':'账户授权',
