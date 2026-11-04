@@ -19,6 +19,7 @@ interface PaymentDialogProps {
   businessId: string;
   amountCents: number;
   disabled?: boolean;
+  allowBalance?: boolean;
   defaultOpen?: boolean;
   triggerLabel?: string;
   onPaid?: () => void | Promise<void>;
@@ -49,6 +50,7 @@ export function PaymentDialog({
   businessId,
   amountCents,
   disabled = false,
+  allowBalance = businessType !== "recharge",
   defaultOpen = false,
   triggerLabel = "在线支付",
   onPaid,
@@ -172,11 +174,11 @@ export function PaymentDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger render={<Button disabled={disabled}>{businessType !== "recharge" && triggerLabel === "在线支付" ? "支付订单" : triggerLabel}</Button>} />
+      <Dialog.Trigger render={<Button disabled={disabled}>{triggerLabel === "在线支付" ? (businessType === "invoice" ? "支付账单" : businessType !== "recharge" ? "支付订单" : triggerLabel) : triggerLabel}</Button>} />
       <Dialog size="lg" className="grid gap-4 p-8">
         <div className="flex justify-between gap-4">
           <div className="grid min-w-0 gap-2">
-            <Dialog.Title className="text-2xl font-semibold">{businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
+            <Dialog.Title className="text-2xl font-semibold">{businessType === "invoice" ? "支付账单" : businessType !== "recharge" ? "支付订单" : "在线支付"}</Dialog.Title>
             <Dialog.Description className="text-kumo-subtle">
               应付 {formatMoney(checkoutAmount)}。支付结果以服务端核对并确认的状态为准。
             </Dialog.Description>
@@ -187,7 +189,7 @@ export function PaymentDialog({
         {!checkout && !balancePaid ? (
           <LayerCard className=" grid gap-2 px-5 py-4">
             <strong className="text-kumo-strong font-medium">选择支付方式</strong>
-            <span className="text-base text-kumo-subtle">{businessType !== "recharge" ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
+            <span className="text-base text-kumo-subtle">{allowBalance ? "可使用账户余额，余额不足时可充值或选择在线支付。" : "支付宝打开官方收银台；微信支付生成扫码付款二维码。未开通的通道会提示不可用。"}</span>
           </LayerCard>
         ) : null}
         {checkout?.wechat && currentState === "pending" && !expired ? (
@@ -221,7 +223,7 @@ export function PaymentDialog({
             ? <Button variant="secondary" loading={close.isPending} onClick={() => close.mutate()}>关闭支付单</Button>
             : null}
           {pollingStopped ? <Button variant="secondary" loading={status.isFetching} onClick={() => void status.refetch()}>刷新支付状态</Button> : null}
-          {!checkout && !balancePaid ? <>{businessType !== "recharge" ? <Button variant="primary" disabled={create.isPending} loading={balancePayment.isPending} onClick={() => balancePayment.mutate()}>确认余额支付 {formatMoney(checkoutAmount)}</Button> : null}<Button disabled={create.isPending || balancePayment.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button disabled={balancePayment.isPending} loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
+          {!checkout && !balancePaid ? <>{allowBalance ? <Button variant="primary" disabled={create.isPending} loading={balancePayment.isPending} onClick={() => balancePayment.mutate()}>确认余额支付 {formatMoney(checkoutAmount)}</Button> : null}<Button disabled={create.isPending || balancePayment.isPending} onClick={() => startPayment("wechat")}>微信扫码支付</Button><Button disabled={balancePayment.isPending} loading={create.isPending} onClick={() => startPayment("alipay")}>确认并前往支付宝</Button></> : null}
           <Dialog.Close render={<Button variant="secondary">{currentState === "paid" || balancePaid ? "完成" : "稍后处理"}</Button>} />
         </div>
       </Dialog>

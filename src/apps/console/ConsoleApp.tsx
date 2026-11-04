@@ -208,7 +208,7 @@ const consoleGroups: NavigationGroup[] = [
     label: "资源与账单",
     items: [
       { label: "产品列表", href: "/user/productList.htm", icon: UsersIcon },
-      { label: "我的订单", href: "/console/orders", icon: ReceiptIcon },
+      { label: "统一账单", href: "/console/billing", icon: ReceiptIcon },
       { label: "财务中心", href: "/console/finance", icon: CreditCardIcon },
       { label: "工单中心", href: "/console/help", icon: ChatsCircleIcon },
       { label: "优惠券", href: "/console/coupons", icon: GiftIcon },
@@ -414,8 +414,10 @@ export function ConsoleApp() {
                 </LazyRoute>
               }
             />
+            <Route path="/console/orders" element={<Navigate to="/console/billing" replace />} />
+            <Route path="/billing" element={<Navigate to="/console/billing" replace />} />
             <Route
-              path="/console/orders"
+              path="/console/billing"
               element={
                 <LazyRoute>
                   <OrderList />
