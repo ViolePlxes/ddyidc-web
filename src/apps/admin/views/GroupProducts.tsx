@@ -114,8 +114,8 @@ export function GroupProducts({ groupId, expanded, blocked, beginSave, endSave, 
               </section>
               <section className="grid gap-3 border-t border-kumo-line pt-5">
                 <div><h3 className="text-sm font-semibold text-kumo-strong">系统支持</h3><p className="text-xs text-kumo-subtle">选择该商品可安装的操作系统类型。</p></div>
-                <Tabs variant="segmented" value={row.osFamily || "linux"} onValueChange={(value) => update("osFamily", value)} tabs={[{ value: "linux", label: "Linux" }, { value: "windows", label: "Windows" }]} />
-                <p className="text-xs text-kumo-subtle">{(row.osFamily || "linux") === "linux" ? "当前展示 Linux 镜像与驱动兼容范围。" : "当前展示 Windows 镜像与驱动兼容范围。"}</p>
+                <Tabs variant="segmented" value={row.osFamily || "all"} onValueChange={(value) => update("osFamily", value)} tabs={[{ value: "all", label: "都支持" }, { value: "linux", label: "仅 Linux" }, { value: "windows", label: "仅 Windows" }]} />
+                <p className="text-xs text-kumo-subtle">{!row.osFamily || row.osFamily === "all" ? "该商品允许安装 Windows 与 Linux 系统。" : row.osFamily === "linux" ? "该商品仅允许安装 Linux 系统。" : "该商品仅允许安装 Windows 系统。"}</p>
               </section>
               <section className="grid gap-3 border-t border-kumo-line pt-5">
                 <div><h3 className="text-sm font-semibold text-kumo-strong">网络与防御</h3><p className="text-xs text-kumo-subtle">带宽与防御能力。</p></div>
