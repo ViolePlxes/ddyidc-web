@@ -129,8 +129,8 @@ export function GroupProducts({ groupId, expanded, blocked, beginSave, endSave, 
                 <div><h3 className="text-sm font-semibold text-kumo-strong">库存与售价</h3><p className="text-xs text-kumo-subtle">库存留空时跟随上游库存。</p></div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Field label="库存数量"><Input type="number" min={0} value={row.stock ?? ""} placeholder="跟随上游" onChange={(event) => update("stock", event.target.value === "" ? null : Number(event.target.value))} /></Field>
-                  <Field label="价格模式"><Select value={row.priceMode} onValueChange={(value) => value && update("priceMode", value as ProductSpec["priceMode"])} items={{ fixed: "固定售价", upstream: "跟随上游代理价" }} /></Field>
-                  <Field label="参考月价（元）"><Input type="number" min={0} step="0.01" value={row.price} disabled={row.priceMode === "upstream"} onChange={(event) => update("price", Number(event.target.value))} /></Field>
+                  <Field label="价格模式"><Select value={row.priceMode || "original"} onValueChange={(value) => value && update("priceMode", value as ProductSpec["priceMode"])} items={{ original: "上游原价（默认）", upstream: "跟随上游代理价", fixed: "固定售价" }} /></Field>
+                  <Field label="参考月价（元）"><Input type="number" min={0} step="0.01" value={row.price} disabled={row.priceMode !== "fixed"} onChange={(event) => update("price", Number(event.target.value))} /></Field>
                 </div>
                 <p className="text-xs text-kumo-subtle">上游库存：{upstreamStock ?? "—"}</p>
               </section>
