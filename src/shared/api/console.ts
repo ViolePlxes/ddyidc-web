@@ -45,7 +45,7 @@ export interface ProductSpec {
   upstreamBandwidth: string;
   downstreamRate: string;
   stock: number | null;
-  priceMode: "fixed" | "upstream";
+  priceMode: "fixed" | "upstream" | "original";
   price: number;
   sort: number;
 }

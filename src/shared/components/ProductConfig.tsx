@@ -237,13 +237,26 @@ export function ProductConfig({
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
     });
-  const imageGroups = useMemo(() => orderPage?.imageGroups?.length
-    ? orderPage.imageGroups
-    : imageOption?.options.length ? [{ name: "全部镜像", child: imageOption.options }] : [], [imageOption, orderPage]);
+  const specOS = (selectedSpec?.osFamily ?? "").toLowerCase();
+  const imageGroups = useMemo(() => {
+    const groups = orderPage?.imageGroups?.length
+      ? orderPage.imageGroups
+      : imageOption?.options.length ? [{ name: "全部镜像", child: imageOption.options }] : [];
+    if (specOS !== "linux" && specOS !== "windows") return groups;
+    return groups
+      .map((group) => ({ ...group, child: group.child.filter((choice) => (/windows/i.test(`${group.name} ${choice.name}`) ? "windows" : "linux") === specOS) }))
+      .filter((group) => group.child.length > 0);
+  }, [imageOption, orderPage, specOS]);
 
   useEffect(() => {
     if (!imageGroups.length) return;
     const selectedImage = imageOption ? selected[imageOption.id] : undefined;
+    const allowed = imageGroups.flatMap((item) => item.child);
+    if (imageOption && !allowed.some((choice) => choice.id === selectedImage)) {
+      setSelected((current) => ({ ...current, [imageOption.id]: allowed[0]!.id }));
+      setImageGroup(imageGroups[0]!.name);
+      return;
+    }
     const group = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
     setImageGroup(group?.name ?? "");
   }, [imageGroups, imageOption, selected]);
@@ -385,7 +398,7 @@ export function ProductConfig({
 
         {imageOption && imageGroups.length ? (
           <LayerCard id={anchor("images")} className="scroll-mt-4 grid gap-4 px-5 py-4">
-            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
+            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">{specOS === "linux" ? "当前规格仅支持 Linux 系统。" : specOS === "windows" ? "当前规格仅支持 Windows 系统。" : specOS === "all" ? "当前规格支持 Windows 与 Linux 系统。" : "请选择需要安装的系统镜像与版本。"}</p></div>
             <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
             {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
               <div key={group.name} className="overflow-x-auto"><Tabs variant="segmented" aria-label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [imageOption.id]: value }))} tabs={group.child.map((choice) => ({ value: choice.id, label: choiceLabel(choice) }))} /></div>
