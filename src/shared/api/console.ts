@@ -38,6 +38,7 @@ export interface ProductSpec {
   name: string;
   vcpu: number;
   memory: string;
+  osFamily?: string;
   processorModel: string;
   processorFrequency: string;
   defense: string;
