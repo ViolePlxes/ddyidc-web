@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { LiveInstanceStatus } from '../components/InstanceLiveStatus';
 import { adminRequest, userRequest, type ApiEnvelope } from './request';
-export interface RenewalOption {cycle:string;label:string;amount:string;duration:number;quoteRevision:string}
+export interface RenewalOption {cycle:string;label:string;amount:string;listAmount?:string;discount?:string;overrideId?:string;duration:number;quoteRevision:string}
 export interface RenewalOrder {id:string;orderId:string;orderNo:string;amount:string;state:string}
 export function instanceManagementApi(id:string,customerId?:string){
  const client=customerId?adminRequest:userRequest;
