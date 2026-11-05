@@ -141,7 +141,13 @@ function CatalogProductRow({ product, selected }: { product: CatalogProduct; sel
       <Table.Cell>{spec?.upstreamBandwidth || "—"}</Table.Cell>
       <Table.Cell>{spec?.downstreamRate || "—"}</Table.Cell>
       <Table.Cell>{stock === null || stock === undefined || stock === "" ? "—" : stock}</Table.Cell>
-      <Table.Cell><div className="flex items-center gap-2 text-kumo-subtle" aria-label="系统类型：Windows、Linux"><span title="Windows"><WindowsLogoIcon size={18} aria-label="Windows" /></span><span title="Linux"><LinuxLogoIcon size={18} aria-label="Linux" /></span></div></Table.Cell>
+      <Table.Cell>{(() => {
+        const family = (spec?.osFamily || "all").toLowerCase();
+        const supportsWindows = family !== "linux";
+        const supportsLinux = family !== "windows";
+        const label = supportsWindows && supportsLinux ? "系统类型：Windows、Linux" : supportsWindows ? "系统类型：Windows" : "系统类型：Linux";
+        return <div className="flex items-center gap-2 text-kumo-subtle" aria-label={label}>{supportsWindows ? <span title="Windows"><WindowsLogoIcon size={18} aria-label="Windows" /></span> : null}{supportsLinux ? <span title="Linux"><LinuxLogoIcon size={18} aria-label="Linux" /></span> : null}</div>;
+      })()}</Table.Cell>
       <Table.Cell>¥{(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)}</Table.Cell>
     </Table.Row>
   );
