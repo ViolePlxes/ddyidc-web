@@ -3,11 +3,11 @@ import { instanceListReturnPath } from '../../../shared/utils/instanceListDispla
 import { adminPath, adminBase } from "../../../shared/utils/adminEntry";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceEdit, InstanceRenewal, InstanceOrder } from '../../../shared/components/InstanceManagement';
-import { Banner, Breadcrumbs, Button, Dialog, Input, LayerCard, Select,  Tabs } from '@cloudflare/kumo';
+import { Badge, Banner, Breadcrumbs, Button, Dialog, Input, LayerCard, Select,  Tabs } from '@cloudflare/kumo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { adminInstanceApi } from '../../../shared/api/adminInstance';
+import { adminInstanceApi, type RenewalPriceView } from '../../../shared/api/adminInstance';
 import { adminInstancesApi } from '../../../shared/api/adminInstances';
 import { customerDetailApi } from '../../../shared/api/customerDetail';
 import type { InstanceActionInput } from '../../../shared/api/console';
@@ -64,6 +64,10 @@ export function CustomerInstance(){
  const needsConfirm=Boolean(item?.upstreamInstanceId);
  const remove=useMutation({mutationFn:()=>api.remove({reason:deleteReason.trim(),confirm:deleteConfirm.trim()||undefined,force:needsConfirm}),onSuccess:async()=>{setDeleteOpen(false);await client.invalidateQueries({queryKey:['admin','customer-records',customerId,'products']});navigate(listPath)}});
  const [syncing,setSyncing]=useState(false);
+  const [priceOpen,setPriceOpen]=useState(false);const [priceView,setPriceView]=useState<RenewalPriceView|null>(null);const [priceLoading,setPriceLoading]=useState(false);const [priceSaving,setPriceSaving]=useState(false);const [priceMode,setPriceMode]=useState<'fixed'|'percent'>('fixed');const [priceValue,setPriceValue]=useState('');const [priceReason,setPriceReason]=useState('');
+  async function openPrice(){setPriceOpen(true);setPriceLoading(true);try{const v=await api.renewalPrice();setPriceView(v);setPriceMode((v.mode as 'fixed'|'percent')||'fixed');setPriceValue(v.mode==='percent'?(v.value??''):(v.amount??''));setPriceReason('');}catch(e){setNotice(e instanceof Error?e.message:'读取续费价格失败');}finally{setPriceLoading(false);}}
+  async function savePrice(){setPriceSaving(true);try{const v=await api.setRenewalPrice({mode:priceMode,value:priceValue.trim(),reason:priceReason.trim()});setPriceView(v);setNotice('续费价格已保存');}catch(e){setNotice(e instanceof Error?e.message:'保存续费价格失败');}finally{setPriceSaving(false);}}
+  async function clearPrice(){setPriceSaving(true);try{await api.clearRenewalPrice();setPriceView((current:RenewalPriceView|null)=>current?{...current,active:false,discount:'0.00',amount:current.baseAmount,mode:undefined,value:undefined,reason:undefined}:current);setNotice('已恢复目录价');}catch(e){setNotice(e instanceof Error?e.message:'恢复目录价失败');}finally{setPriceSaving(false);}}
  const syncUpstream=async()=>{
    if(!item)return;
    setSyncing(true);setNotice('');
@@ -81,7 +85,7 @@ export function CustomerInstance(){
  };
  return <div className="grid gap-5">
   <Breadcrumbs><Breadcrumbs.Link href={adminPath('/admin/customers')}>客户管理</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={`${adminBase}/customers/${customerId}`}>{profile.data?.name||`客户 #${customerId}`}</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Link href={listPath}>产品信息</Breadcrumbs.Link><Breadcrumbs.Separator/><Breadcrumbs.Current>产品管理</Breadcrumbs.Current></Breadcrumbs>
-  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-base text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Button variant="secondary" loading={syncing} disabled={action.isPending||!item} onClick={()=>{void syncUpstream();}}>拉取上游信息</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
+  <div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold">{item?.productName||'产品管理'}</h1><p className="text-base text-kumo-subtle">{item?.name||instanceId}</p></div><div className="flex flex-wrap gap-2"><Select label="切换产品" value={instanceId} items={Object.fromEntries((products.data??[]).map(p=>[p.id,`#${p.number} · ${p.name}`]))} onValueChange={id=>{if(id){setTab('overview');setNotice('');setPassword('');action.reset();navigate(`${adminBase}/customers/${customerId}/instances/${id}`)}}} disabled={action.isPending}/><Button variant="secondary" loading={query.isFetching} disabled={action.isPending} onClick={()=>{void query.refetch();void live.refetch()}}>刷新状态</Button><Button variant="secondary" loading={syncing} disabled={action.isPending||!item} onClick={()=>{void syncUpstream();}}>拉取上游信息</Button><Button variant="secondary" disabled={action.isPending||!item} onClick={()=>{void openPrice();}}>续费价格</Button><Link className="text-kumo-link hover:underline self-center" to={listPath}>返回产品列表</Link></div></div>
   <Tabs value={tab} onValueChange={setTab} variant="underline" tabs={[{value:'overview',label:'产品概览'},{value:'config',label:'产品配置'},{value:'upgrade',label:'产品升级降级'},{value:'security',label:'安全组'},{value:'monitor',label:'监控'},{value:'logs',label:'操作日志'}]}/>
   <PageState loading={query.isLoading} error={query.error?getApiMessage(query.error):null}>
    {item&&<>
@@ -111,6 +115,17 @@ export function CustomerInstance(){
         <Input label="删除原因" value={deleteReason} maxLength={100} onChange={e=>setDeleteReason(e.target.value)} />
         {remove.error?<Banner variant="error" title="删除失败" description={getApiMessage(remove.error)} />:null}
         <div className="flex justify-end gap-2"><Button variant="secondary" disabled={remove.isPending} onClick={()=>setDeleteOpen(false)}>取消</Button><Button variant="destructive" loading={remove.isPending} disabled={deleteReason.trim().length<2||(needsConfirm&&deleteConfirm.trim()!==(item?.name??''))} onClick={()=>remove.mutate()}>确认删除</Button></div>
+      </Dialog>
+    </Dialog.Root>
+    <Dialog.Root open={priceOpen} onOpenChange={open=>{if(!priceSaving)setPriceOpen(open)}}>
+      <Dialog className="grid max-w-lg gap-4 p-6"><Dialog.Title>续费价格</Dialog.Title><Dialog.Description>只影响该实例的续费报价，原价、折扣与调价原因会记录审计。保存后新的续费订单按协议价出账。</Dialog.Description>
+        {priceLoading?<p role="status">正在读取续费价格…</p>:priceView?<div className="grid gap-3">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm"><dt>目录原价</dt><dd>¥{priceView.baseAmount}</dd><dt>当前续费价</dt><dd>¥{priceView.amount} {priceView.active?<Badge variant="success">协议价</Badge>:null}</dd><dt>优惠</dt><dd>{Number(priceView.discount)>0?`-¥${priceView.discount}`:'—'}</dd>{priceView.active?<><dt>生效</dt><dd>{priceView.effectiveFrom}{priceView.effectiveTo?` 至 ${priceView.effectiveTo}`:' 起'}</dd><dt>原因</dt><dd className="break-words">{priceView.reason}</dd></>:null}</dl>
+          <Select label="调价方式" value={priceMode} items={{fixed:'固定价格（元）',percent:'折扣率（%）'}} onValueChange={v=>setPriceMode((v as 'fixed'|'percent')||'fixed')}/>
+          <Input label={priceMode==='fixed'?'续费价格（元）':'折扣率（1-100，90 表示九折）'} value={priceValue} inputMode="decimal" onChange={e=>setPriceValue(e.target.value)}/>
+          <Input label="调价原因" value={priceReason} maxLength={200} onChange={e=>setPriceReason(e.target.value)} description="至少 2 个字，记录到审计日志。" />
+          <div className="flex justify-end gap-2">{priceView.active?<Button variant="destructive" loading={priceSaving} onClick={()=>{void clearPrice();}}>恢复目录价</Button>:null}<Button variant="secondary" disabled={priceSaving} onClick={()=>setPriceOpen(false)}>取消</Button><Button loading={priceSaving} disabled={priceReason.trim().length<2||!priceValue.trim()} onClick={()=>{void savePrice();}}>保存</Button></div>
+        </div>:null}
       </Dialog>
     </Dialog.Root>
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table tableId="apps/admin/views/CustomerInstance.tsx:1"><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
