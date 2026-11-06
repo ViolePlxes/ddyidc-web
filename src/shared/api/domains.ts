@@ -15,6 +15,7 @@ export const domainsApi={
  contracts:async()=>result(await userRequest.get<ApiEnvelope<DomainOperation[]>>('/domains/contracts')),
  assets:async()=>result(await userRequest.get<ApiEnvelope<DomainAsset[]>>('/domains/assets')),
  templates:async()=>result(await userRequest.get<ApiEnvelope<DomainTemplate[]>>('/domains/templates')),
+ syncTemplates:async()=>result(await userRequest.post<ApiEnvelope<DomainTemplate[]>>('/domains/templates/sync',{})),
  records:async()=>result(await userRequest.get<ApiEnvelope<DomainRecord[]>>('/domains/operations')),
  orders:async()=>result(await userRequest.get<ApiEnvelope<DomainOrder[]>>('/domains/orders')),
  execute:async(input:ActionInput)=>result(await userRequest.post<ApiEnvelope<DomainActionResult>>('/domains/actions',input)),
