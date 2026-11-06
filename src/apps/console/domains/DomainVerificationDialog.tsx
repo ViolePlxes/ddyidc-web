@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Banner, Field, Input, LayerDialog, Select, Text } from "@cloudflare/kumo";
 import { domainsApi, type DomainTemplate } from "../../../shared/api/domains";
+import { verificationStatus } from "./verificationStatus";
 import { getApiMessage } from "../../../shared/api/request";
 
 const idTypes = { "1": "身份证", "5": "护照", "6": "港澳居民来往内地通行证", "11": "台湾居民来往大陆通行证", "12": "外国人永久居留身份证", "30": "港澳居民居住证", "31": "台湾居民居住证", "0": "其它" };
@@ -45,7 +46,7 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
       <LayerDialog.Description>{template ? `${template.label} · ${template.id}` : "为信息模板提交实名材料"}</LayerDialog.Description>
       <LayerDialog.Body>
         <div className="grid gap-4">
-          <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-3"><Text as="span" variant="secondary" size="sm">审核状态</Text><Text as="span" size="sm">{status.c_status || template?.status || "—"}</Text></div>
+          <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-3"><Text as="span" variant="secondary" size="sm">审核状态</Text><Text as="span" size="sm">{verificationStatus(status.c_status ?? status.r_status ?? template?.status).text}</Text></div>
           {status.c_reason ? <Banner variant="secondary" title={`审核意见：${status.c_reason}`} /> : null}
           <Field label="实名证件类型" required hideLabel><Select label="实名证件类型" value={idType} items={idTypes} onValueChange={(value) => value && setIdType(value)} /></Field>
           <Field label="证件号码" required><Input value={idNumber} onChange={(event) => setIdNumber(event.target.value)} /></Field>
