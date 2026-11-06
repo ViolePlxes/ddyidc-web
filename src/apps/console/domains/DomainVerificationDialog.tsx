@@ -3,7 +3,7 @@ import { Banner, Field, Input, LayerDialog, Select, Text } from "@cloudflare/kum
 import { domainsApi, type DomainTemplate } from "../../../shared/api/domains";
 import { getApiMessage } from "../../../shared/api/request";
 
-const idTypes = { "1": "身份证", "5": "护照", "12": "外国人永久居留身份证", "30": "港澳台居民居住证" };
+const idTypes = { "1": "身份证", "5": "护照", "6": "港澳居民来往内地通行证", "11": "台湾居民来往大陆通行证", "12": "外国人永久居留身份证", "30": "港澳居民居住证", "31": "台湾居民居住证", "0": "其它" };
 
 export function DomainVerificationDialog({ open, onOpenChange, template, onDone }: { open: boolean; onOpenChange: (open: boolean) => void; template?: DomainTemplate; onDone: () => void }) {
   const [idType, setIdType] = useState("1");
