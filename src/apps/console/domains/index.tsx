@@ -26,7 +26,7 @@ export function Domains(){
  const records=useQuery({queryKey:['domains',user?.id,'records'],queryFn:domainsApi.records,...options});
  const orders=useQuery({queryKey:['domains',user?.id,'orders'],queryFn:domainsApi.orders,...options});
  const refresh=()=>cache.invalidateQueries({queryKey:['domains',user?.id]});const reconcile=useMutation({mutationFn:domainsApi.reconcile,onSettled:refresh});
- if(section?.key==='contacts')return <><DomainTemplatePage templates={templates.data??[]} onChanged={()=>void cache.invalidateQueries({queryKey:['domains']})} domain={new URLSearchParams(location.search).get('domain')??undefined}/></>;
+ if(page?.key==='templates')return <><DomainTemplatePage templates={templates.data??[]} onChanged={()=>void cache.invalidateQueries({queryKey:['domains']})} domain={new URLSearchParams(location.search).get('domain')??undefined}/></>;
  if(overview)return <><DomainSearchHero operation={contracts.data?.find(op=>op.key==='3.1')} onRegister={params=>{setRegisterParams(params);setRegisterOpen(true)}}/><DomainOperationDialog open={registerOpen} operation={contracts.data?.find(op=>op.key==='4.6')??emptyOperation} title="注册域名" assets={assets.data??[]} templates={templates.data??[]} initial={registerParams} onClose={()=>setRegisterOpen(false)}/></>;
  if(!overview&&!sectionLanding&&!page)return <><PageHeader title="页面不存在"/><Link href={domainBase}>返回域名服务</Link></>;
  const error=contracts.error??assets.error??templates.error;const recordRows=records.data?.map(row=>({时间:new Date(row.createdAt).toLocaleString('zh-CN'),域名:row.domain||'信息模板',状态:domainStatus[row.status]??row.status,记录编号:row.id}));
