@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { pinyin } from "pinyin-pro";
 import { Badge, Banner, Button, Input, Radio, Select, Tabs, Text } from "@cloudflare/kumo";
 import { domainsApi, type DomainTemplate } from "../../../shared/api/domains";
@@ -44,6 +44,12 @@ export function DomainTemplatePage({ templates, onChanged, domain }: { templates
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const person = owner === "I";
+  useEffect(() => {
+    const last = Number(localStorage.getItem("ddyidc:template-sync") ?? 0);
+    if (Date.now() - last < 5 * 60 * 1000) return;
+    localStorage.setItem("ddyidc:template-sync", String(Date.now()));
+    void domainsApi.syncTemplates().then(() => onChanged()).catch(() => {});
+  }, [onChanged]);
   const cities = useMemo(() => provinces.find((item) => item.province === province)?.cities ?? [], [province]);
   const districts = useMemo(() => cities.find((item) => item.name === city)?.districts ?? [], [cities, city]);
   const enProvince = useMemo(() => enWords(province), [province]);
