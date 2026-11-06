@@ -7,7 +7,8 @@ import { domainHref, domainSections } from "./catalog";
 export function withDomainNavigation(groups: NavigationGroup[]): NavigationGroup[] {
   return groups.map(group => ({ ...group, items: group.items.map(item => {
     const section = domainSections.find(value => domainHref(value) === item.href);
-    if (!section || section.pages.length < 2) return item;
-    return { ...item, children: section.pages.map(page => ({ label: page.title, href: domainHref(section, page), icon: GlobeIcon })) };
+    if (!section) return item;
+    if (section.pages.length < 2) return { ...item, label: section.title };
+    return { ...item, label: section.title, children: section.pages.map(page => ({ label: page.title, href: domainHref(section, page), icon: GlobeIcon })) };
   }) }));
 }

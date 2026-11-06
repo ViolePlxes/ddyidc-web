@@ -110,7 +110,7 @@ export function DomainTemplatePage({ templates, onChanged, domain }: { templates
     catch (cause) { setError(getApiMessage(cause)); } finally { setBusy(false); }
   };
   return <div className="mx-auto grid w-full max-w-4xl gap-4">
-    <div className="flex flex-wrap items-end justify-between gap-3"><div className="grid gap-1"><Text as="h1" variant="heading" size="lg">信息模板</Text><Text variant="secondary" size="sm">{domain ? `${domain} · 创建后可返回订购使用` : "创建、修改、删除模板，并查看审核状态与详情。"}</Text></div><Button onClick={() => { reset(); setMode("form"); }}>新建模板</Button></div>
+    <div className="flex flex-wrap items-end justify-between gap-3"><div className="grid gap-1"><Text as="h1" variant="heading" size="lg">模板管理</Text><Text variant="secondary" size="sm">{domain ? `${domain} · 创建后可返回订购使用` : "创建、修改、删除模板，并查看审核状态与详情。"}</Text></div><Button onClick={() => { reset(); setMode("form"); }}>新建模板</Button></div>
     <Tabs variant="underline" value={mode} onValueChange={(value) => { setMode(value); setConfirm(undefined); }} tabs={[{ value: "list", label: "选择资料" }, { value: "form", label: "新填资料" }]} />
     {error ? <Banner variant="error" title={error} /> : null}
     {mode === "list" ? <div className="grid gap-2">
