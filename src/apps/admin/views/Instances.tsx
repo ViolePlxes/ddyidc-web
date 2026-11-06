@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { adminInstancesApi, type ManagedInstance, type InstanceSyncSelection } from '../../../shared/api/adminInstances';
+import { instanceAddress } from '../../../shared/utils/instanceAddress';
 import { getApiMessage } from '../../../shared/api/request';
 import { PageState } from '../../../shared/components/PageState';
 import { useAdminAuthStore } from '../../../shared/stores/staffAuth';
@@ -57,7 +58,7 @@ export function AdminInstances(){
   case 'identity':return <div className="grid gap-1"><AdminTableCopyText value={r.id} label="实例 ID"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.id}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.instanceNo} label="实例编号"/></div>;
   case 'product':return <div className="grid gap-1"><AdminTableCopyText value={r.productName} label="商品名"><KumoLink variant="current" render={<Link to={detail(r)}/>}>{r.productName}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.hostname} label="主机名"/></div>;
   case 'customer':return r.customerMissing?<Badge variant="error">客户关联异常 #{r.customerId}</Badge>:<div className="grid gap-1"><AdminTableCopyText value={r.username||r.customerId} label="客户账号"><KumoLink variant="current" render={<Link to={`${adminBase}/customers/${encodeURIComponent(r.customerId)}/profile`}/>}>{r.username||r.customerId}</KumoLink></AdminTableCopyText><AdminTableCopyText value={r.phone||r.email} label="联系方式"/></div>;
-  case 'ip':return <div className="grid gap-1">{r.primaryIp?<CopyableIp ip={r.primaryIp}/>:'—'}{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><CopyableIp key={ip} ip={ip}/>)}</div>;
+  case 'ip':return <div className="grid gap-1">{r.primaryIp?<CopyableIp ip={instanceAddress(r.primaryIp,r.port,r.operatingSystem)??r.primaryIp}/>:'—'}{r.ips.filter(ip=>ip!==r.primaryIp).map(ip=><CopyableIp key={ip} ip={ip}/>)}</div>;
   case 'status':return <div className="grid gap-1"><MachineStatusBadge status={r.status} label={statusNames[r.status]||'未知'}/><div className="flex flex-wrap items-center gap-1"><MachineStatusBadge status={r.powerStatus} label={powerNames[r.powerStatus]||r.powerStatus||'未同步电源状态'}/><span className="text-sm text-kumo-subtle">（缓存）</span></div>{r.errorCount>0&&<Link className="text-sm text-kumo-link" to={detail(r,true)}>失败日志 {r.errorCount}</Link>}</div>;
   case 'expires':return <div className="grid gap-1"><span>{date(r.expiresAt)}</span><span className="text-sm text-kumo-subtle">{expiryRemaining(r.expiresAt,now)}</span></div>;
   case 'amount':return <div className="grid gap-1"><span>{r.renewalAmount===null?'待同步报价':`¥${r.renewalAmount}`}</span><span className="text-sm text-kumo-subtle">{cycleLabels[r.cycle]||r.cycle||'周期待同步'}</span>{r.renewalAmount!==null&&r.renewalStale?<span className="text-sm text-kumo-subtle">最近有效报价 · {date(r.renewalSyncedAt?new Date(r.renewalSyncedAt*1000).toISOString():null)}</span>:null}</div>;
