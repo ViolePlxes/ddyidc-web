@@ -1,4 +1,5 @@
 import { InstanceUpgrade } from '../../../shared/components/InstanceUpgrade';
+import { instanceAddress } from '../../../shared/utils/instanceAddress';
 import { InstanceSecurityGroups } from '../../../shared/components/InstanceSecurityGroups';
 import { Dialog } from "../../../shared/components/Dialog";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
@@ -273,7 +274,7 @@ export function InstanceConsole() {
               { label: "实例状态", value: <InstanceStatusControl live={live} fallback={instance.powerStatus}/> }, { label: "备注信息", value: <InstanceRemark key={instance.id} instance={instance}/> },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
-              { label: "实例 IP", value: <CopyValue value={instance.primaryIp} label="实例 IP" /> },
+              { label: "实例 IP", value: <CopyValue value={instanceAddress(instance.primaryIp, instance.port, instance.operatingSystem) ?? instance.primaryIp} label="实例 IP" /> },
               { label: "用户名", value: instance.username?<CopyValue value={instance.username} label="用户名" />:"服务未提供" },
               { label: "密码", value: <InstanceCredentials key={instance.id} instance={instance}/> },
               { label: instance.portIsDefault ? "端口（默认）" : "端口", value: instance.port?<CopyValue value={instance.port} label="端口" />:"服务未提供有效端口" },
