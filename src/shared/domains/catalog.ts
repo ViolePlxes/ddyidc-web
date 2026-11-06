@@ -40,7 +40,6 @@ export const domainSections: DomainSection[] = [
   ] },
   { key: "contacts", title: "信息模板", description: "分别管理个人和企业注册资料，以及域名实名审核。", pages: [
     { key: "templates", title: "模板管理", description: "创建、查看和维护域名联系人模板，支持查看详情与删除。", capabilities: [capability("创建信息模板", ["4.1"]), capability("修改信息模板", ["4.2"]), capability("删除信息模板", ["4.3"]), capability("查看模板列表和详情", ["4.4", "4.5"])] },
-    { key: "verification", title: "域名实名认证", description: "为注册信息模板提交实名材料，查看审核状态及拒绝原因。", capabilities: [capability("获取实名上传凭证", ["4.9"]), capability("提交实名材料", ["4.10"]), capability("查看实名审核情况", ["4.5", "4.8"], { note: "平台账号实名认证与域名实名是两项独立核验。" })] },
   ] },
   { key: "dns", title: "DNS 管理", description: "区分解析记录、权威 DNS 服务器、自建 DNS 主机和 DNSSEC。", pages: [
     { key: "records", title: "解析记录", description: "管理本人域名的解析记录，展示实际权威 DNS 的托管位置。", capabilities: [capability("查询解析记录", ["3.10"]), capability("添加解析记录", ["3.7"]), capability("修改解析记录", ["3.8"]), capability("删除解析记录", ["3.9"], { note: "修改前提示可能影响网站与邮件；使用第三方 DNS 时明确说明生效位置。" })] },
