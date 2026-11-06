@@ -66,7 +66,7 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
       <LayerDialog.Body>
         <div className="grid gap-4">
           <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-3"><Text as="span" variant="secondary" size="sm">审核状态</Text><Text as="span" size="sm">{loading ? "读取中…" : verificationStatus(status.c_status ?? status.r_status ?? template?.status).text}</Text></div>
-          {status.c_reason ? <Banner variant="secondary" title={`审核意见：${status.c_reason}`} /> : null}
+          {(status.r_failinfo || status.c_failinfo || status.failinfo) ? <Banner variant="error" title={`审核意见：${status.r_failinfo || status.c_failinfo || status.failinfo}`} /> : null}
           <Field label="实名证件类型" required hideLabel><Select label="实名证件类型" value={idType} items={idTypes} onValueChange={(value) => value && setIdType(value)} /></Field>
           <Field label="证件号码" required><Input value={idNumber} onChange={(event) => setIdNumber(event.target.value)} /></Field>
           <div className="grid gap-2"><Text as="span" variant="secondary" size="sm">证件图片</Text><input type="file" accept="image/jpeg,image/png" onChange={(event) => pickFile(event.target.files?.[0])} /><Text variant="secondary" size="sm">{fileName || "支持 JPG / PNG，建议清晰完整的证件照片"}</Text></div>
