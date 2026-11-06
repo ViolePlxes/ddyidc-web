@@ -1,7 +1,7 @@
 {
   "name": "ddyidc-web-react",
   "private": true,
-  "version": "0.1.225",
+  "version": "0.1.226",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3100",
@@ -27,6 +27,7 @@
     "dayjs": "^1.11.18",
     "echarts": "^6.0.0",
     "libphonenumber-js": "^1.13.13",
+    "pinyin-pro": "^3.29.5",
     "qiankun": "^2.10.16",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
