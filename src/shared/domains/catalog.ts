@@ -9,6 +9,7 @@ export interface DomainPage {
   key: string;
   title: string;
   description: string;
+  hidden?: boolean;
   capabilities: DomainCapability[];
 }
 export interface DomainSection {
@@ -39,6 +40,7 @@ export const domainSections: DomainSection[] = [
     { key: "ownership-records", title: "过户记录", description: "查看持有人变更的受理、处理中、成功和失败结果。", capabilities: [capability("查询域名过户状态", ["4.12"])] },
   ] },
   { key: "contacts", title: "模板管理", description: "管理个人和企业域名注册资料，提交并跟踪实名认证。", pages: [
+    { key: "verification", title: "域名实名认证", hidden: true, description: "已并入模板管理，保留契约入口。", capabilities: [capability("提交实名材料", ["4.10"]), capability("查看实名审核情况", ["4.5", "4.8", "4.9"])] },
     { key: "templates", title: "模板管理", description: "创建、查看和维护域名注册信息模板，并提交实名认证。", capabilities: [capability("创建信息模板", ["4.1"]), capability("修改信息模板", ["4.2"]), capability("删除信息模板", ["4.3"]), capability("查看模板列表和详情", ["4.4", "4.5"])] },
   ] },
   { key: "dns", title: "DNS 管理", description: "区分解析记录、权威 DNS 服务器、自建 DNS 主机和 DNSSEC。", pages: [
