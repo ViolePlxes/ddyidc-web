@@ -22,10 +22,10 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
   }, [open, template]);
   const pickFile = (file: File | undefined) => {
     if (!file) { setFileName(""); setFileData(""); return; }
-    if (file.size > 5 * 1024 * 1024) { setError("证件图片不能超过 5MB"); return; }
+    if (file.size > 4 * 1024 * 1024) { setError("请上传4MB以内的证件图片"); return; }
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = () => setFileData(String(reader.result ?? ""));
+    reader.onload = () => { const raw = String(reader.result ?? ""); setFileData(raw.includes(",") ? raw.slice(raw.indexOf(",") + 1) : raw); };
     reader.readAsDataURL(file);
   };
   const submit = async () => {
