@@ -6,7 +6,7 @@ import { domainsApi, type DomainOperation } from "../../../shared/api/domains";
 import { getApiMessage } from "../../../shared/api/request";
 
 const suffixes = [".com", ".cn", ".net", ".org", ".io", ".xyz", ".top"];
-type SearchRow = { suffix: string; name: string; available: boolean; price?: number; renew?: number };
+type SearchRow = { suffix: string; name: string; available: boolean; price?: string; renew?: string };
 
 export function DomainSearchHero({ operation, onRegister }: { operation?: DomainOperation; onRegister: (params: Record<string, string>) => void }) {
   const [prefix, setPrefix] = useState("");
@@ -27,7 +27,7 @@ export function DomainSearchHero({ operation, onRegister }: { operation?: Domain
       const prices = await Promise.all(suffixes.map(async (suffix) => {
         try {
           const result = await domainsApi.execute({ action: "1.1", params: { value: `${query}${suffix}`, year: "1" }, requestId: crypto.randomUUID(), confirmed: true });
-          const data = (result.data ?? {}) as { buyprice?: number; renewprice?: number };
+          const data = (result.data ?? {}) as { amount?: string; renewAmount?: string };
           return [suffix, data] as const;
         } catch { return [suffix, null] as const; }
       }));
@@ -35,7 +35,7 @@ export function DomainSearchHero({ operation, onRegister }: { operation?: Domain
         const name = `${query}${suffix}`;
         const found = items.find((item) => item.name === name);
         const price = prices.find(([value]) => value === suffix)?.[1];
-        return { suffix, name, available: found?.avail === 1, price: price?.buyprice, renew: price?.renewprice };
+        return { suffix, name, available: found?.avail === 1, price: price?.amount, renew: price?.renewAmount };
       }).sort((a, b) => Number(a.available) - Number(b.available));
     },
   });
