@@ -38,8 +38,8 @@ export const domainSections: DomainSection[] = [
     { key: "ownership", title: "持有人过户", description: "选择已核实的目标信息模板，变更域名注册人。", capabilities: [capability("提交模板过户", ["4.11"], { note: "提交前确认持有人变化及相关限制，不能当作平台账号间的实例转让。" })] },
     { key: "ownership-records", title: "过户记录", description: "查看持有人变更的受理、处理中、成功和失败结果。", capabilities: [capability("查询域名过户状态", ["4.12"])] },
   ] },
-  { key: "contacts", title: "信息模板", description: "分别管理个人和企业注册资料，以及域名实名审核。", pages: [
-    { key: "templates", title: "模板管理", description: "创建、查看和维护域名联系人模板，支持查看详情与删除。", capabilities: [capability("创建信息模板", ["4.1"]), capability("修改信息模板", ["4.2"]), capability("删除信息模板", ["4.3"]), capability("查看模板列表和详情", ["4.4", "4.5"])] },
+  { key: "contacts", title: "模板管理", description: "管理个人和企业域名注册资料，提交并跟踪实名认证。", pages: [
+    { key: "templates", title: "模板管理", description: "创建、查看和维护域名注册信息模板，并提交实名认证。", capabilities: [capability("创建信息模板", ["4.1"]), capability("修改信息模板", ["4.2"]), capability("删除信息模板", ["4.3"]), capability("查看模板列表和详情", ["4.4", "4.5"])] },
   ] },
   { key: "dns", title: "DNS 管理", description: "区分解析记录、权威 DNS 服务器、自建 DNS 主机和 DNSSEC。", pages: [
     { key: "records", title: "解析记录", description: "管理本人域名的解析记录，展示实际权威 DNS 的托管位置。", capabilities: [capability("查询解析记录", ["3.10"]), capability("添加解析记录", ["3.7"]), capability("修改解析记录", ["3.8"]), capability("删除解析记录", ["3.9"], { note: "修改前提示可能影响网站与邮件；使用第三方 DNS 时明确说明生效位置。" })] },
