@@ -12,14 +12,32 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
   const [fileName, setFileName] = useState("");
   const [fileData, setFileData] = useState("");
   const [status, setStatus] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!open || !template) return;
-    setError(null); setStatus({});
+    setError(null); setStatus({}); setLoading(true);
+    const raw = localStorage.getItem(`ddyidc:verify:${template.id}`);
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw) as { type?: string; code?: string; fileName?: string };
+        if (saved.type) setIdType(saved.type);
+        if (saved.code) setIdNumber(saved.code);
+        if (saved.fileName) setFileName(saved.fileName);
+      } catch { /* ignore broken cache */ }
+    }
     void domainsApi.execute({ action: "4.5", params: { c_sysid: template.id }, requestId: crypto.randomUUID(), confirmed: true })
-      .then((result) => setStatus((result.data ?? {}) as Record<string, string>))
-      .catch((cause) => setError(getApiMessage(cause)));
+      .then((result) => {
+        const data = (result.data ?? {}) as Record<string, string>;
+        setStatus(data);
+        const type = data.f_type_org || data.c_idtype_gswl;
+        const code = data.f_code_org || data.c_idnum_gswl;
+        if (type) setIdType(type);
+        if (code) setIdNumber(code);
+      })
+      .catch((cause) => setError(getApiMessage(cause)))
+      .finally(() => setLoading(false));
   }, [open, template]);
   const pickFile = (file: File | undefined) => {
     if (!file) { setFileName(""); setFileData(""); return; }
@@ -37,6 +55,7 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
     setBusy(true);
     try {
       await domainsApi.execute({ action: "4.10", params: { c_sysid: template.id, f_type_org: idType, f_code_org: idNumber.trim(), file_org: fileData }, requestId: crypto.randomUUID(), confirmed: true });
+      localStorage.setItem(`ddyidc:verify:${template.id}`, JSON.stringify({ type: idType, code: idNumber.trim(), fileName, time: Date.now() }));
       onDone(); onOpenChange(false);
     } catch (cause) { setError(getApiMessage(cause)); } finally { setBusy(false); }
   };
@@ -46,7 +65,7 @@ export function DomainVerificationDialog({ open, onOpenChange, template, onDone 
       <LayerDialog.Description>{template ? `${template.label} · ${template.id}` : "为信息模板提交实名材料"}</LayerDialog.Description>
       <LayerDialog.Body>
         <div className="grid gap-4">
-          <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-3"><Text as="span" variant="secondary" size="sm">审核状态</Text><Text as="span" size="sm">{verificationStatus(status.c_status ?? status.r_status ?? template?.status).text}</Text></div>
+          <div className="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-3"><Text as="span" variant="secondary" size="sm">审核状态</Text><Text as="span" size="sm">{loading ? "读取中…" : verificationStatus(status.c_status ?? status.r_status ?? template?.status).text}</Text></div>
           {status.c_reason ? <Banner variant="secondary" title={`审核意见：${status.c_reason}`} /> : null}
           <Field label="实名证件类型" required hideLabel><Select label="实名证件类型" value={idType} items={idTypes} onValueChange={(value) => value && setIdType(value)} /></Field>
           <Field label="证件号码" required><Input value={idNumber} onChange={(event) => setIdNumber(event.target.value)} /></Field>

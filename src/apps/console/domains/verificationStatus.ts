@@ -12,6 +12,7 @@ export function verificationStatus(value?: string | number): { text: string; ton
     case "approved":
     case "passed":
     case "success": return { text: "审核通过", tone: "success" };
+    case "submitted":
     case "pending":
     case "auditing":
     case "review":
