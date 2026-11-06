@@ -18,7 +18,7 @@ function PageLink({section,page}:{section:DomainSection;page?:DomainPage}){retur
 export function Domains(){
  const user=useAuthStore(state=>state.user);const cache=useQueryClient();const path=useLocation().pathname.replace(/\/$/,'');
  const section=domainSections.find(v=>path===domainHref(v)||path.startsWith(`${domainHref(v)}/`));const sectionLanding=!!section&&path===domainHref(section);
- const page=section?.pages.find(v=>path===domainHref(section,v))??(sectionLanding&&section?.pages.length===1?section.pages[0]:undefined);const overview=path===domainBase;
+ const page=section?.pages.find(v=>path===domainHref(section,v))??(sectionLanding&&section?.key==='contacts'?section.pages.find(v=>v.key==='templates'):undefined)??(sectionLanding&&section?.pages.length===1?section.pages[0]:undefined);const overview=path===domainBase;
  const [dialogOpen,setDialogOpen]=useState(false);const [selected,setSelected]=useState<{operation:DomainOperation;title:string}>();const [registerOpen,setRegisterOpen]=useState(false);const [registerParams,setRegisterParams]=useState<Record<string,string>>();const options={enabled:!!user?.id,retry:false,staleTime:30_000};
  const contracts=useQuery({queryKey:['domains',user?.id,'contracts'],queryFn:domainsApi.contracts,...options});
  const assets=useQuery({queryKey:['domains',user?.id,'assets'],queryFn:domainsApi.assets,...options});
@@ -36,7 +36,7 @@ export function Domains(){
   <PageHeader title={page?.title??section?.title??'域名服务'} description={page?.description??section?.description??'注册、交易、转入、续费与日常管理。'} actions={<Button variant="secondary" onClick={()=>void refresh()}>刷新</Button>}/>
   {error?<Banner variant="error" title={getApiMessage(error)}/>:null}
 
-  {section&&sectionLanding&&!page?<div className="grid gap-4 md:grid-cols-2">{section.pages.map(v=><PageLink key={v.key} section={section} page={v}/>)}</div>:null}
+  {section&&sectionLanding&&!page?<div className="grid gap-4 md:grid-cols-2">{section.pages.filter(v=>!v.hidden).map(v=><PageLink key={v.key} section={section} page={v}/>)}</div>:null}
   {page?<>
    <div className="grid gap-4 md:grid-cols-2">{page.capabilities.map(cap=>{const refs=cap.refs.filter(ref=>ref!=='4.9'&&contracts.data?.some(op=>op.key===ref));return <LayerCard key={cap.title} className="grid content-start gap-3 px-5 py-4"><div className="flex flex-wrap items-center gap-2"><Text as="h2" variant="heading">{cap.title}</Text>{cap.paid?<Badge>订单支付</Badge>:null}</div>{cap.note?<Text variant="secondary">{cap.note}</Text>:null}<div className="flex flex-wrap gap-2">{refs.map(ref=><Button key={ref} variant="secondary" onClick={()=>{const operation=contracts.data?.find(op=>op.key===ref);if(operation){setSelected({operation,title:cap.title});setDialogOpen(true)}}}>{refs.length>1?(ref==='4.4'?'查看列表':'查看详情'):cap.paid?'获取报价':cap.title}</Button>)}{cap.refs.includes('4.9')?<Text variant="secondary">提交实名材料时，系统会在服务端获取上传凭证。</Text>:null}{cap.refs.some(ref=>['market.full','market.new','market.removed'].includes(ref))?<Text variant="secondary">批量交易清单由管理员维护。输入域名可查询实时售价并购买。</Text>:null}</div></LayerCard>})}</div>
    {section?.key==='list'?<PageState loading={assets.isLoading} error={assets.error?getApiMessage(assets.error):undefined} empty={assets.isSuccess&&!assets.data.length} emptyTitle="暂无域名"><DomainResult value={assets.data?.map(v=>({域名:v.domain,状态:domainStatus[v.status]??v.status,到期时间:v.expiresAt?new Date(v.expiresAt).toLocaleString('zh-CN'):'待确认'}))}/></PageState>:null}
