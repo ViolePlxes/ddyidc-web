@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge, Banner, Button, Input, LayerDialog, Select, Table, Tabs, Text } from "@cloudflare/kumo";
 import { domainsApi, type DomainOperation } from "../../../shared/api/domains";
@@ -10,8 +10,9 @@ type DNSRecord = { id?: string | number; host?: string; type?: string; value?: s
 const recordTypes: Record<string, string> = { A: "A", AAAA: "AAAA", CNAME: "CNAME", MX: "MX", TXT: "TXT", SRV: "SRV", NS: "NS" };
 const ttlOptions: Record<string, string> = { "600": "600 秒", "3600": "1 小时", "86400": "1 天" };
 
-export function DomainManageDialog({ domain, open, onOpenChange, contracts, onOperation }: { domain: string; open: boolean; onOpenChange: (value: boolean) => void; contracts: DomainOperation[]; onOperation: OperationHandler }) {
-  const [tab, setTab] = useState("overview");
+export function DomainManageDialog({ domain, open, initialTab, onOpenChange, contracts, onOperation }: { domain: string; open: boolean; initialTab?: string; onOpenChange: (value: boolean) => void; contracts: DomainOperation[]; onOperation: OperationHandler }) {
+  const [tab, setTab] = useState(initialTab ?? "overview");
+  useEffect(() => { if (open) setTab(initialTab ?? "overview"); }, [open, domain, initialTab]);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<DNSRecord>();
