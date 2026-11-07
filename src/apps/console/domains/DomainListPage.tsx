@@ -41,7 +41,6 @@ export function DomainListPage({ assets, loading, error, contracts, onOperation,
     if (key === "expires") return asset.expiresAt ? new Date(asset.expiresAt).toLocaleString("zh-CN") : "待确认";
     if (key === "actions") return <div className="flex flex-wrap gap-2">
       <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "overview")}>管理</Button>
-      <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "dns")}>解析</Button>
       <Button variant="secondary" size="sm" disabled={!operation("4.8")} onClick={() => { const op = operation("4.8"); if (op) onOperation(op, { domain: asset.domain }); }}>详情</Button>
       <Button variant="secondary" size="sm" disabled={!operation("4.7")} onClick={() => { const op = operation("4.7"); if (op) onOperation(op, { domain: asset.domain }); }}>修改资料</Button>
     </div>;
