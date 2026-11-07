@@ -6,7 +6,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { domainsApi, type DomainOperation } from "../../../shared/api/domains";
 import { getApiMessage } from "../../../shared/api/request";
 
-type DNSRecord = { id: string; host: string; type: string; line: string; value: string; priority: string; ttl: string; updated: string; paused: boolean; isNew?: boolean };
+type DNSRecord = { id: string; host: string; type: string; line: string; value: string; priority: string; ttl: string; remark: string; updated: string; paused: boolean; isNew?: boolean };
 type OperationHandler = (operation: DomainOperation, initial: Record<string, string>) => void;
 const columns: readonly TableColumn[] = [
   { key: "host", label: "主机记录", width: 160, min: 120, required: true },
@@ -15,6 +15,7 @@ const columns: readonly TableColumn[] = [
   { key: "value", label: "记录值", width: 300, min: 180 },
   { key: "priority", label: "优先级", width: 90, min: 80 },
   { key: "ttl", label: "TTL", width: 80, min: 70 },
+  { key: "remark", label: "备注", width: 150, min: 110 },
   { key: "updated", label: "最后操作时间", width: 180, min: 160 },
   { key: "actions", label: "操作", width: 220, min: 180, required: true },
 ];
@@ -33,21 +34,25 @@ export function DomainDNSPage({ domain, onBack, contracts, onOperation }: { doma
   const [busy, setBusy] = useState(false);
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [plan, setPlan] = useState("dns001");
+  const [noteId, setNoteId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
   const [years, setYears] = useState("1");
   const operation = (ref: string) => contracts.find((item) => item.key === ref);
   const records = useQuery({ queryKey: ["domains", "dns", domain], queryFn: () => domainsApi.execute({ action: "3.10", params: { domain }, requestId: crypto.randomUUID(), confirmed: true }) });
   const detail = useQuery({ queryKey: ["domains", "detail", domain], queryFn: () => domainsApi.execute({ action: "4.8", params: { domain }, requestId: crypto.randomUUID(), confirmed: true }) });
   const logs = useQuery({ queryKey: ["domains", "records"], queryFn: domainsApi.records });
+  const notes = useQuery({ queryKey: ["domains", "dns-notes", domain], queryFn: () => domainsApi.dnsNotes(domain) });
   const dnssec = useQuery({ queryKey: ["domains", "dnssec", domain], queryFn: () => domainsApi.execute({ action: "3.31", params: { domain }, requestId: crypto.randomUUID(), confirmed: true }), enabled: tab === "security" });
   const stats = useQuery({ queryKey: ["domains", "stats", domain], queryFn: () => domainsApi.execute({ action: "3.41", params: { domain }, requestId: crypto.randomUUID(), confirmed: true }), enabled: tab === "stats" });
   const price = useQuery({ queryKey: ["domains", "smartdns-price", plan, years], queryFn: () => domainsApi.execute({ action: "3.45", params: { proid: plan, years }, requestId: crypto.randomUUID(), confirmed: true }), enabled: tab === "package" });
   const rawRows = Array.isArray(records.data?.data) ? records.data.data as Record<string, unknown>[] : [];
-  const rows: DNSRecord[] = rawRows.map((item, index) => ({ id: String(item.id ?? index), host: String(item.host ?? "@"), type: String(item.type ?? "A"), line: String(item.line ?? "默认"), value: String(item.value ?? ""), priority: String(item.level ?? "—"), ttl: String(item.ttl ?? "600"), updated: String(item.updated ?? item.update_time ?? "—"), paused: String(item.paused ?? item.pause ?? "") === "1" }));
+  const rows: DNSRecord[] = rawRows.map((item, index) => ({ id: String(item.id ?? index), host: String(item.host ?? "@"), type: String(item.type ?? "A"), line: String(item.line ?? "默认"), value: String(item.value ?? ""), priority: String(item.level ?? "—"), ttl: String(item.ttl ?? "600"), remark: (notes.data ?? {})[String(item.id ?? index)] ?? "—", updated: String(item.updated ?? item.update_time ?? "—"), paused: String(item.paused ?? item.pause ?? "") === "1" }));
   const detailData = (detail.data?.data ?? {}) as Record<string, unknown>;
   const dnsList = Array.isArray(detailData.dns) ? detailData.dns as string[] : [];
   const visible = newSeed && !rows.some((row) => row.id === newSeed.id) ? [newSeed, ...rows] : rows;
+  const saveNote = async (row: DNSRecord) => { const remark = noteDraft.trim(); setNoteId(null); if ((notes.data ?? {})[row.id] === remark) return; try { await domainsApi.setDNSNote({ domain, recordId: row.id, remark }); await notes.refetch(); setNotice("备注已保存"); } catch (cause) { setError(getApiMessage(cause)); } };
   const startEdit = (row: DNSRecord) => { setEditingId(row.id); setForm({ host: row.host, type: row.type, line: row.line, value: row.value, priority: row.priority === "—" ? "" : row.priority, ttl: row.ttl }); };
-  const addRow = () => { const row: DNSRecord = { id: `new-${Date.now()}`, host: "", type: "A", line: "默认", value: "", priority: "", ttl: "600", updated: "", paused: false, isNew: true }; setNewSeed(row); setEditingId(row.id); setForm(emptyForm); };
+  const addRow = () => { const row: DNSRecord = { id: `new-${Date.now()}`, host: "", type: "A", line: "默认", value: "", priority: "", ttl: "600", remark: "—", updated: "", paused: false, isNew: true }; setNewSeed(row); setEditingId(row.id); setForm(emptyForm); };
   const cancel = () => { setEditingId(null); setNewSeed(null); };
   const confirm = async () => {
     setError(""); setNotice("");
@@ -109,6 +114,7 @@ export function DomainDNSPage({ domain, onBack, contracts, onOperation }: { doma
     if (key === "value") return <button type="button" className="w-full cursor-pointer break-all text-left hover:text-[color:var(--color-blue-600)]" onClick={() => startEdit(row)}>{row.value}</button>;
     if (key === "priority") return row.priority;
     if (key === "ttl") return row.ttl;
+    if (key === "remark") return noteId === row.id ? <Input className="w-full" aria-label="记录备注" value={noteDraft} autoFocus onChange={(event) => setNoteDraft(event.target.value)} onBlur={() => void saveNote(row)} onKeyDown={(event) => { if (event.key === "Enter") void saveNote(row); if (event.key === "Escape") setNoteId(null); }} /> : <button type="button" className="w-full cursor-pointer truncate text-left text-[color:var(--color-blue-600)] hover:underline" onClick={() => { setNoteId(row.id); setNoteDraft(row.remark === "—" ? "" : row.remark); }}>{row.remark === "—" ? "添加备注" : row.remark}</button>;
     if (key === "updated") return row.updated;
     if (key === "actions") return <div className="flex gap-2 whitespace-nowrap text-[color:var(--color-blue-600)]"><button type="button" className="cursor-pointer hover:underline" onClick={() => startEdit(row)}>修改</button><button type="button" className="cursor-pointer hover:underline" onClick={() => void pause(row)}>{row.paused ? "启用" : "暂停"}</button><button type="button" className="cursor-pointer hover:underline" onClick={() => void remove(row)}>删除</button></div>;
     return null;
