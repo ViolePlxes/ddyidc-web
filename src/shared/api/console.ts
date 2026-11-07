@@ -356,6 +356,9 @@ export interface InstanceEvent {
   processedAt?: string;
 }
 
+export interface InstanceClientArea { key: string; name: string }
+export interface InstanceSnapshot { id: string; type: string; diskName: string; remarks: string; createTime: string; status: number }
+
 export interface InstanceNATRule { id: string; name: string; external: string; internal: string; protocol: string }
 export interface InstanceNATInput { name: string; external?: string; internal: string; protocol?: string }
 
@@ -382,6 +385,7 @@ export interface InstanceDetail extends InstanceListItem {
   config: InstanceConfigItem[];
   ips: Array<{ address: string; subnetMask?: string; gateway?: string }>;
   capabilities: InstanceCapabilities;
+  clientAreas?: InstanceClientArea[];
   events: InstanceEvent[];
   warning?: string;
 }
@@ -522,6 +526,14 @@ export const consoleApi = {
     unwrap(userRequest.get<ApiEnvelope<InstanceDetail>>(`/instance/${id}`,{timeout:30000})),
   instanceImages: (id: string) =>
     unwrap(userRequest.get<ApiEnvelope<InstanceImages>>(`/instance/${id}/images`,{timeout:30000})),
+  instanceSnapshots: (id: string) =>
+    unwrap(userRequest.get<ApiEnvelope<InstanceSnapshot[]>>(`/instance/${encodeURIComponent(id)}/snapshots`,{timeout:30000})),
+  createInstanceSnapshot: (id: string, name: string) =>
+    unwrap(userRequest.post<ApiEnvelope<{created:boolean}>>(`/instance/${encodeURIComponent(id)}/snapshots`, { name },{timeout:65000})),
+  restoreInstanceSnapshot: (id: string, snapshotId: string) =>
+    unwrap(userRequest.post<ApiEnvelope<{restored:boolean}>>(`/instance/${encodeURIComponent(id)}/snapshots/${encodeURIComponent(snapshotId)}/restore`, {},{timeout:65000})),
+  deleteInstanceSnapshot: (id: string, snapshotId: string) =>
+    unwrap(userRequest.delete<ApiEnvelope<{deleted:boolean}>>(`/instance/${encodeURIComponent(id)}/snapshots/${encodeURIComponent(snapshotId)}`,{timeout:30000})),
   instanceNATRules: (id: string) =>
     unwrap(userRequest.get<ApiEnvelope<InstanceNATRule[]>>(`/instance/${encodeURIComponent(id)}/nat`,{timeout:30000})),
   createInstanceNATRule: (id: string, input: InstanceNATInput) =>
