@@ -6,7 +6,7 @@ import {TableColumnHead,TableColumnPreview} from './TableColumnHead';
 import {TableFieldsDialog} from './TableFieldsDialog';
 import {Button,DropdownMenu,LayerCard,Table} from '@cloudflare/kumo';
 import {DotsThreeVerticalIcon,PencilSimpleIcon} from '@phosphor-icons/react';
-import {useEffect,useRef,useState,type ReactNode,type ComponentProps} from 'react';
+import {Fragment,useEffect,useRef,useState,type ReactNode,type ComponentProps} from 'react';
 import {defaultTableLayout,reorderTableColumns,maxTableColumnWidth,tableColumnWidth,readTableLayout,type TableColumn,type TableLayout} from '../utils/tableLayout';
 
 export interface ConfigurableTableProps<T> {
@@ -24,11 +24,13 @@ export interface ConfigurableTableProps<T> {
  fillHeight?:boolean;
  fieldButtonAfterLabel?:boolean;
  rowProps?:(row:T)=>ComponentProps<typeof Table.Row>;
+ expandedRowKey?:string|null;
+ renderExpandedRow?:(row:T)=>ReactNode;
 }
 export type {TableColumn} from '../utils/tableLayout';
 /** Reusable Kumo table. Pages supply data/columns; styles and interactions stay shared. */
 export function ConfigurableTable<T>(props:ConfigurableTableProps<T>){return <ConfigurableTableInstance key={`${props.storageKey}:${props.columns.map(column=>column.key).join('|')}`} {...props}/>;}
-function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys,label,renderCell,rowKey,loading=false,emptyContent,rowProps,initialHiddenColumns=[],fillHeight=false,fieldButtonAfterLabel=false}:ConfigurableTableProps<T>){
+function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys,label,renderCell,rowKey,loading=false,emptyContent,rowProps,initialHiddenColumns=[],fillHeight=false,fieldButtonAfterLabel=false,expandedRowKey=null,renderExpandedRow}:ConfigurableTableProps<T>){
  const [layout,setLayout]=useState<TableLayout>(()=>{try{const saved=localStorage.getItem(storageKey);const current=readTableLayout(localStorage,storageKey,columns,legacyStorageKeys);return saved?current:{...current,hidden:columns.filter(column=>!column.required&&initialHiddenColumns.includes(column.key)).map(column=>column.key)}}catch{return defaultTableLayout(columns)}});
  const [activeColumn,setActiveColumn]=useState<string|null>(null);
  const sensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:5}}),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
@@ -54,7 +56,7 @@ function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys
      <span className={configurableTableStyles.resizeLine}/>
     </div>:null}
    </TableColumnHead>)}</Table.Row></Table.Header></SortableContext>
-   <Table.Body>{loading?Array.from({length:10},(_,index)=><Table.Row key={`loading-${index}`} aria-hidden="true">{visible.map(c=><Table.Cell key={c.key}><span className="block h-4 w-2/3 animate-pulse rounded-sm bg-kumo-overlay motion-reduce:animate-none"/></Table.Cell>)}</Table.Row>):rows.length?rows.map(row=><Table.Row key={rowKey(row)} {...rowProps?.(row)} className={`group ${rowProps?.(row).className??''}`}>{visible.map(c=><Table.Cell key={c.key} className="min-w-0 overflow-hidden whitespace-nowrap">{renderCell(row,c.key)}</Table.Cell>)}</Table.Row>):<Table.Row><Table.Cell colSpan={visible.length} className="h-32! text-center text-kumo-subtle">{emptyContent??'未找到记录'}</Table.Cell></Table.Row>}</Table.Body>
+   <Table.Body>{loading?Array.from({length:10},(_,index)=><Table.Row key={`loading-${index}`} aria-hidden="true">{visible.map(c=><Table.Cell key={c.key}><span className="block h-4 w-2/3 animate-pulse rounded-sm bg-kumo-overlay motion-reduce:animate-none"/></Table.Cell>)}</Table.Row>):rows.length?rows.map(row=><Fragment key={rowKey(row)}><Table.Row {...rowProps?.(row)} className={`group ${rowProps?.(row).className??''}`}>{visible.map(c=><Table.Cell key={c.key} className="min-w-0 overflow-hidden whitespace-nowrap">{renderCell(row,c.key)}</Table.Cell>)}</Table.Row>{expandedRowKey===rowKey(row)&&renderExpandedRow?<Table.Row><Table.Cell colSpan={visible.length} className="bg-kumo-recessed p-0!">{renderExpandedRow(row)}</Table.Cell></Table.Row>:null}</Fragment>):<Table.Row><Table.Cell colSpan={visible.length} className="h-32! text-center text-kumo-subtle">{emptyContent??'未找到记录'}</Table.Cell></Table.Row>}</Table.Body>
   </Table>
  </div></LayerCard>{createPortal(<DragOverlay dropAnimation={window.matchMedia('(prefers-reduced-motion: reduce)').matches?null:{duration:250,easing:'ease'}}>{activeColumn?<TableColumnPreview label={columns.find(c=>c.key===activeColumn)?.label??''}/>:null}</DragOverlay>,document.body)}</DndContext>;
 }
