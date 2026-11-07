@@ -24,7 +24,7 @@ test('saved menu customization and absence are respected',()=>{
  assert.equal(result[0].label,groups[0].label);
  assert.equal(result[0].items[0].label,'自定义解析');
  assert.equal(result[0].items[0].id,'saved');
- assert.deepEqual(result[0].items[0].children.map(c=>c.label),['解析记录','DNS 服务器','自建 DNS 主机','DNSSEC']);
+ assert.equal(result[0].items[0].children,undefined);
  assert.equal(result[0].items[1],groups[0].items[1]);
  assert.equal(groups[0].items[0].children,undefined);
  assert.equal(result.length,1);

@@ -9,8 +9,9 @@ export function withDomainNavigation(groups: NavigationGroup[]): NavigationGroup
     const section = domainSections.find(value => domainHref(value) === item.href);
     if (!section) return item;
     const visible = section.pages.filter(page => !page.hidden);
+    if (!visible.length) return null;
     const label = item.label === "信息模板" ? section.title : item.label;
     if (visible.length < 2) return { ...item, label };
     return { ...item, label, children: visible.map(page => ({ label: page.title, href: domainHref(section, page), icon: GlobeIcon })) };
-  }) }));
+  }).filter(Boolean) as NavigationGroup["items"] }));
 }
