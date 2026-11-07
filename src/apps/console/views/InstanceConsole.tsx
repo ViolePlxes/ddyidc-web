@@ -6,6 +6,7 @@ import { InstanceStatusControl, useInstanceStatus } from '../../../shared/compon
 import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
+import { InstanceNAT } from "./InstanceNAT";
 import { Banner, Button, Input, LayerCard, Select, Switch, Table, Tabs } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -258,7 +259,7 @@ export function InstanceConsole() {
           </div>
         </header>
         <Tabs variant="underline" aria-label="实例详情导航" value={activeTab} onValueChange={setActiveTab} tabs={[
-          { value: "overview", label: "概要" }, { value: "upgrade", label: "产品升级降级" }, { value: "security", label: "安全组" },
+          { value: "overview", label: "概要" }, { value: "upgrade", label: "产品升级降级" }, { value: "security", label: "安全组" },...(capabilities?.nat ? [{ value: "nat", label: "NAT转发" }] : []),
           { value: "settings", label: "设置" }, { value: "logs", label: "日志" }, { value: "billing", label: "财务" },
         ]} />
         {instance.warning ? <Banner variant="alert" title="实例信息提示" description={instance.warning} /> : null}
@@ -294,6 +295,7 @@ export function InstanceConsole() {
         </div> : null}
         {activeTab === "billing" ? <div className="max-w-2xl"><BillingInfo instance={instance} /></div> : null}
         {activeTab === "security" ? <InstanceSecurityGroups instanceId={instanceId} disabled={instance.productionLocked} /> : null}
+        {activeTab === "nat" ? <InstanceNAT instanceId={instanceId} disabled={instance.productionLocked} /> : null}
         {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
           <LayerCard className="grid gap-3 px-5 py-4"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-base text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
