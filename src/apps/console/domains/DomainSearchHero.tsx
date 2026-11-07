@@ -20,6 +20,7 @@ export function DomainSearchHero({ operation, onRegister }: { operation?: Domain
     const timer = setTimeout(() => setQuery(prefix.trim().toLowerCase().replace(/[^a-z0-9-]/g, "")), 350);
     return () => clearTimeout(timer);
   }, [prefix]);
+  const testName = /^[a-z0-9-]{2,}\.test$/i.test(prefix.trim()) ? prefix.trim().toLowerCase() : "";
   const load = useCallback(async (start: number, term: string, run: number) => {
     const suffixes = catalog.slice(start, start + PAGE_SIZE);
     if (!suffixes.length) return;
@@ -71,6 +72,14 @@ export function DomainSearchHero({ operation, onRegister }: { operation?: Domain
           {prefix ? <button type="button" className="shrink-0 text-xs text-kumo-subtle hover:text-kumo-default" onClick={() => setPrefix("")}>清除</button> : <span className="flex shrink-0 items-center gap-1" aria-hidden="true"><kbd className="border border-kumo-line bg-kumo-canvas px-1 text-xs font-normal text-kumo-subtle">Ctrl</kbd><kbd className="border border-kumo-line bg-kumo-canvas px-1 text-xs font-normal text-kumo-subtle">K</kbd></span>}
         </div>
       </div>
+      {testName ? <div className="mt-3 overflow-hidden rounded-2xl bg-kumo-elevated shadow-lg ring ring-kumo-hairline">
+        <div className="grid grid-cols-[minmax(0,1fr)_9rem_4.5rem] items-center gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-medium text-kumo-strong">{testName}</span><Badge variant="warning">测试域名</Badge></div>
+          <div className="text-right text-xs leading-5 text-kumo-subtle"><span className="block">首年 ¥0.01</span><span className="block">上游不扣费</span></div>
+          <div className="justify-self-end"><Button size="sm" onClick={() => onRegister({ domain: testName, regyear: "1" })}>注册</Button></div>
+        </div>
+        <p className="px-4 pb-3 text-xs text-kumo-subtle">.test 为西部联调域名，注册成功不扣上游费用；平台侧按 0.01 元测试订单支付。</p>
+      </div> : null}
       {query.length >= 2 ? <div className="mt-3 overflow-hidden rounded-2xl bg-kumo-elevated shadow-lg ring ring-kumo-hairline">
         <div className="flex items-center justify-between px-4 py-2.5 text-xs text-kumo-subtle"><span>“{query}” 的匹配结果</span><span>主流优先 · 下滑加载更多</span></div>
         {error ? <div className="px-3 pb-2"><Banner variant="error" title={error} /></div> : null}
