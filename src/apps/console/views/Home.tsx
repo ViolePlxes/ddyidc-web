@@ -45,7 +45,7 @@ export function ConsoleHome() {
   const user = useAuthStore(state => state.user);
   const certification = useQuery({ queryKey: ["console", "home-certification", user?.id], queryFn: certificationApi.info, enabled: !!user, gcTime: 0 });
   const devices = useQuery({ queryKey: ["console", "home-devices", user?.id], queryFn: getLoginDevices, enabled: !!user, gcTime: 0 });
-  const certifiedName = certification.data?.status === 2 ? certification.data.record?.name.trim() : "";
+  const certifiedName = certification.data?.status === 2 ? certification.data?.record?.name?.trim() ?? "" : "";
   const displayName = certifiedName && !certifiedName.startsWith("*") ? Array.from(certifiedName)[0] : user?.account || user?.name || "用户";
   const loginIp = devices.data?.find(device => device.current)?.ip;
   const [days, setDays] = useState("7");
@@ -58,7 +58,7 @@ export function ConsoleHome() {
   const cdnHint = cdnStatus.error || cdn.error ? "流量读取失败，请刷新重试" : cdnStatus.data?.enabled === false ? "CDN 服务尚未启用" : "正在读取流量…";
   const daily = (cdn.data?.dailyTrend ?? []).slice(-Number(days));
   const dailyValues: [number, number][] = daily.map(p => [new Date(p.time).getTime(), p.bytes / 1024 ** 3]);
-  const metricValues = (key: "balance" | "active"): [number, number][] => (overview.data?.series[key] ?? []).map(p => [p.time, p.value]);
+  const metricValues = (key: "balance" | "active"): [number, number][] => (overview.data?.series?.[key] ?? []).map(p => [p.time, p.value]);
   const recentServices=services.data?.items??[];
   const recentTickets=tickets.data?.list??[];
   const metrics = [
