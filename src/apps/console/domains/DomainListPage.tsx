@@ -8,16 +8,17 @@ const columns: readonly TableColumn[] = [
   { key: "domain", label: "域名", width: 240, min: 180, required: true },
   { key: "status", label: "服务状态", width: 140, min: 110 },
   { key: "expires", label: "到期时间", width: 200, min: 160 },
-  { key: "actions", label: "操作", width: 220, min: 180, required: true },
+  { key: "actions", label: "操作", width: 280, min: 220, required: true },
 ];
 const statusLabels: Record<string, string> = { active: "正常", pending: "待处理", executing: "处理中", submitted: "已提交", succeeded: "已完成", failed: "失败", unknown: "待核对", review: "待人工核对", expired: "已过期", cancelled: "已取消" };
 
-export function DomainListPage({ assets, loading, error, contracts, onOperation, onRefresh }: {
+export function DomainListPage({ assets, loading, error, contracts, onOperation, onManage, onRefresh }: {
   assets: DomainAsset[];
   loading: boolean;
   error?: string;
   contracts: DomainOperation[];
   onOperation: (operation: DomainOperation, initial: Record<string, string>) => void;
+  onManage: (domain: string, tab: string) => void;
   onRefresh: () => void;
 }) {
   const [tab, setTab] = useState("all");
@@ -38,7 +39,9 @@ export function DomainListPage({ assets, loading, error, contracts, onOperation,
     if (key === "domain") return <span className="font-medium text-kumo-strong">{asset.domain}</span>;
     if (key === "status") return <Badge variant={/fail|expired/i.test(asset.status) ? "error" : /pending|review/i.test(asset.status) ? "warning" : "success"}>{statusLabels[asset.status] ?? asset.status}</Badge>;
     if (key === "expires") return asset.expiresAt ? new Date(asset.expiresAt).toLocaleString("zh-CN") : "待确认";
-    if (key === "actions") return <div className="flex gap-2">
+    if (key === "actions") return <div className="flex flex-wrap gap-2">
+      <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "overview")}>管理</Button>
+      <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "dns")}>解析</Button>
       <Button variant="secondary" size="sm" disabled={!operation("4.8")} onClick={() => { const op = operation("4.8"); if (op) onOperation(op, { domain: asset.domain }); }}>详情</Button>
       <Button variant="secondary" size="sm" disabled={!operation("4.7")} onClick={() => { const op = operation("4.7"); if (op) onOperation(op, { domain: asset.domain }); }}>修改资料</Button>
     </div>;
