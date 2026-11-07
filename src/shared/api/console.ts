@@ -343,6 +343,7 @@ export interface InstanceCapabilities {
   resetPassword: boolean;
   traffic: boolean;
   remote: boolean;
+  nat?: boolean;
   destroy: boolean;
 }
 
@@ -354,6 +355,9 @@ export interface InstanceEvent {
   createdAt: string;
   processedAt?: string;
 }
+
+export interface InstanceNATRule { id: string; name: string; external: string; internal: string; protocol: string }
+export interface InstanceNATInput { name: string; external?: string; internal: string; protocol?: string }
 
 export interface InstanceDetail extends InstanceListItem {
 	infoSource?: "snapshot" | "upstream";
@@ -518,6 +522,12 @@ export const consoleApi = {
     unwrap(userRequest.get<ApiEnvelope<InstanceDetail>>(`/instance/${id}`,{timeout:30000})),
   instanceImages: (id: string) =>
     unwrap(userRequest.get<ApiEnvelope<InstanceImages>>(`/instance/${id}/images`,{timeout:30000})),
+  instanceNATRules: (id: string) =>
+    unwrap(userRequest.get<ApiEnvelope<InstanceNATRule[]>>(`/instance/${encodeURIComponent(id)}/nat`,{timeout:30000})),
+  createInstanceNATRule: (id: string, input: InstanceNATInput) =>
+    unwrap(userRequest.post<ApiEnvelope<InstanceNATRule>>(`/instance/${encodeURIComponent(id)}/nat`, input,{timeout:30000})),
+  deleteInstanceNATRule: (id: string, ruleId: string) =>
+    unwrap(userRequest.delete<ApiEnvelope<{deleted:boolean}>>(`/instance/${encodeURIComponent(id)}/nat/${encodeURIComponent(ruleId)}`,{timeout:30000})),
   instanceMonitor: (id: string) =>
     unwrap(userRequest.get<ApiEnvelope<InstanceMonitor>>(`/instance/${id}/monitor`,{timeout:30000})),
   instanceAction: (id: string, input: InstanceActionInput) =>
