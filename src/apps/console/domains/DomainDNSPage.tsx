@@ -6,7 +6,7 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { domainsApi, type DomainOperation } from "../../../shared/api/domains";
 import { getApiMessage } from "../../../shared/api/request";
 
-type DNSRecord = { id: string; host: string; type: string; line: string; value: string; weight: string; priority: string; ttl: string; remark: string; updated: string; isNew?: boolean };
+type DNSRecord = { id: string; host: string; type: string; line: string; value: string; weight: string; priority: string; ttl: string; remark: string; updated: string; paused: boolean; isNew?: boolean };
 type OperationHandler = (operation: DomainOperation, initial: Record<string, string>) => void;
 const columns: readonly TableColumn[] = [
   { key: "host", label: "主机记录", width: 160, min: 120, required: true },
@@ -37,13 +37,13 @@ export function DomainDNSPage({ domain, onBack, contracts, onOperation }: { doma
   const detail = useQuery({ queryKey: ["domains", "detail", domain], queryFn: () => domainsApi.execute({ action: "4.8", params: { domain }, requestId: crypto.randomUUID(), confirmed: true }) });
   const logs = useQuery({ queryKey: ["domains", "records"], queryFn: domainsApi.records });
   const rawRows = Array.isArray(records.data?.data) ? records.data.data as Record<string, unknown>[] : [];
-  const rows: DNSRecord[] = rawRows.map((item, index) => ({ id: String(item.id ?? index), host: String(item.host ?? "@"), type: String(item.type ?? "A"), line: String(item.line ?? "默认"), value: String(item.value ?? ""), weight: String(item.weight ?? "—"), priority: String(item.level ?? "—"), ttl: String(item.ttl ?? "600"), remark: String(item.remark ?? "—"), updated: String(item.updated ?? item.update_time ?? "—") }));
+  const rows: DNSRecord[] = rawRows.map((item, index) => ({ id: String(item.id ?? index), host: String(item.host ?? "@"), type: String(item.type ?? "A"), line: String(item.line ?? "默认"), value: String(item.value ?? ""), weight: String(item.weight ?? "—"), priority: String(item.level ?? "—"), ttl: String(item.ttl ?? "600"), remark: String(item.remark ?? "—"), updated: String(item.updated ?? item.update_time ?? "—"), paused: String(item.paused ?? item.pause ?? "") === "1" }));
   const detailData = (detail.data?.data ?? {}) as Record<string, unknown>;
   const dnsList = Array.isArray(detailData.dns) ? detailData.dns as string[] : [];
   const startEdit = (row: DNSRecord) => { setEditingId(row.id); setForm({ host: row.host, type: row.type, line: row.line, value: row.value, weight: row.weight, priority: row.priority === "—" ? "" : row.priority, ttl: row.ttl, remark: row.remark === "—" ? "" : row.remark }); };
   const addRow = () => { const id = `new-${Date.now()}`; setEditingId(id); setForm(emptyForm); setRowsNew(id); };
-  const [newSeed, setNewSeed] = useState<{ id: string; host: string; type: string; line: string; value: string; weight: string; priority: string; ttl: string; remark: string; updated: string; isNew: boolean } | null>(null);
-  function setRowsNew(id: string) { setNewSeed({ id, host: "", type: "A", line: "默认", value: "", weight: "—", priority: "—", ttl: "600", remark: "—", updated: "", isNew: true }); }
+  const [newSeed, setNewSeed] = useState<DNSRecord | null>(null);
+  function setRowsNew(id: string) { setNewSeed({ id, host: "", type: "A", line: "默认", value: "", weight: "—", priority: "—", ttl: "600", remark: "—", updated: "", paused: false, isNew: true }); }
   const visible = newSeed && !rows.some((row) => row.id === newSeed.id) ? [newSeed, ...rows] : rows;
   const cancel = () => { setEditingId(null); setNewSeed(null); };
   const confirm = async () => {
@@ -63,6 +63,12 @@ export function DomainDNSPage({ domain, onBack, contracts, onOperation }: { doma
       }
       setEditingId(null); setNewSeed(null); await records.refetch();
     } catch (cause) { setError(getApiMessage(cause)); } finally { setBusy(false); }
+  };
+  const pause = async (row: DNSRecord) => {
+    if (!window.confirm(`确认${row.paused ? "启用" : "暂停"}解析记录 ${row.host}？`)) return;
+    setBusy(true); setError("");
+    try { await domainsApi.execute({ action: "3.40", params: { domain, id: row.id, val: row.paused ? "1" : "0" }, requestId: crypto.randomUUID(), confirmed: true }); setNotice(row.paused ? "解析已启用" : "解析已暂停"); await records.refetch(); }
+    catch (cause) { setError(getApiMessage(cause)); } finally { setBusy(false); }
   };
   const remove = async (row: DNSRecord) => {
     if (!window.confirm(`确认删除解析记录 ${row.host}？`)) return;
@@ -100,7 +106,7 @@ export function DomainDNSPage({ domain, onBack, contracts, onOperation }: { doma
     if (key === "ttl") return row.ttl;
     if (key === "remark") return row.remark;
     if (key === "updated") return row.updated;
-    if (key === "actions") return <div className="flex gap-2 whitespace-nowrap text-[color:var(--color-blue-600)]"><button type="button" className="cursor-pointer hover:underline" onClick={() => startEdit(row)}>修改</button><button type="button" className="cursor-pointer hover:underline" onClick={() => void remove(row)}>删除</button></div>;
+    if (key === "actions") return <div className="flex gap-2 whitespace-nowrap text-[color:var(--color-blue-600)]"><button type="button" className="cursor-pointer hover:underline" onClick={() => startEdit(row)}>修改</button><button type="button" className="cursor-pointer hover:underline" onClick={() => void pause(row)}>{row.paused ? "启用" : "暂停"}</button><button type="button" className="cursor-pointer hover:underline" onClick={() => void remove(row)}>删除</button></div>;
     return null;
   };
   return <div className="grid gap-3">
