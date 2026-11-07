@@ -2,7 +2,7 @@ import {Badge,Banner,Button,LayerCard,Link,Text} from '@cloudflare/kumo';
 import {ArrowRightIcon,GlobeIcon} from '@phosphor-icons/react';
 import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
-import {useLocation} from 'react-router-dom';
+import {useLocation,useNavigate} from 'react-router-dom';
 import {PageHeader} from '../../../shared/components/PageHeader';
 import {PageState} from '../../../shared/components/PageState';
 import {getApiMessage} from '../../../shared/api/request';
@@ -13,15 +13,15 @@ import {DomainOperationDialog,DomainResult,domainStatus} from './DomainOperation
 import {DomainSearchHero} from './DomainSearchHero';
 import {DomainTemplatePage} from './DomainTemplatePage';
 import {DomainListPage} from './DomainListPage';
-import {DomainManageDialog} from './DomainManageDialog';
+import {DomainDNSPage} from './DomainDNSPage';
 
 const emptyOperation:DomainOperation={key:'',write:false,paid:false,scope:'public',fields:[]};
 function PageLink({section,page}:{section:DomainSection;page?:DomainPage}){return <LayerCard className="grid content-start gap-3 px-5 py-4"><div className="flex items-center justify-between gap-3"><Text as="h2" variant="heading">{page?.title??section.title}</Text><GlobeIcon aria-hidden size={20}/></div><Text variant="secondary">{page?.description??section.description}</Text><Link href={domainHref(section,page)} className="inline-flex items-center gap-1 justify-self-start">进入管理<ArrowRightIcon aria-hidden size={14}/></Link></LayerCard>}
 export function Domains(){
- const user=useAuthStore(state=>state.user);const cache=useQueryClient();const path=useLocation().pathname.replace(/\/$/,'');
+ const user=useAuthStore(state=>state.user);const cache=useQueryClient();const navigate=useNavigate();const path=useLocation().pathname.replace(/\/$/,'');
  const section=domainSections.find(v=>path===domainHref(v)||path.startsWith(`${domainHref(v)}/`));const sectionLanding=!!section&&path===domainHref(section);
  const page=section?.pages.find(v=>path===domainHref(section,v))??(sectionLanding&&section?.key==='contacts'?section.pages.find(v=>v.key==='templates'):undefined)??(sectionLanding&&section?.pages.length===1?section.pages[0]:undefined);const overview=path===domainBase;
- const [dialogOpen,setDialogOpen]=useState(false);const [dialogInitial,setDialogInitial]=useState<Record<string,string>>({});const [manage,setManage]=useState<{domain:string;tab:string}>();const [selected,setSelected]=useState<{operation:DomainOperation;title:string}>();const [registerOpen,setRegisterOpen]=useState(false);const [registerParams,setRegisterParams]=useState<Record<string,string>>();const options={enabled:!!user?.id,retry:false,staleTime:30_000};
+ const [dialogOpen,setDialogOpen]=useState(false);const [dialogInitial,setDialogInitial]=useState<Record<string,string>>({});const [selected,setSelected]=useState<{operation:DomainOperation;title:string}>();const [registerOpen,setRegisterOpen]=useState(false);const [registerParams,setRegisterParams]=useState<Record<string,string>>();const options={enabled:!!user?.id,retry:false,staleTime:30_000};
  const contracts=useQuery({queryKey:['domains',user?.id,'contracts'],queryFn:domainsApi.contracts,...options});
  const assets=useQuery({queryKey:['domains',user?.id,'assets'],queryFn:domainsApi.assets,...options});
  const templates=useQuery({queryKey:['domains',user?.id,'templates'],queryFn:domainsApi.templates,...options});
@@ -29,7 +29,8 @@ export function Domains(){
  const orders=useQuery({queryKey:['domains',user?.id,'orders'],queryFn:domainsApi.orders,...options});
  const refresh=()=>cache.invalidateQueries({queryKey:['domains',user?.id]});const reconcile=useMutation({mutationFn:domainsApi.reconcile,onSettled:refresh});
  if(path.endsWith('/domains/contacts/verification')){location.replace('/console/domains/contacts/templates');return null;}
- if(section?.key==='list')return <><DomainListPage assets={assets.data??[]} loading={assets.isLoading} error={assets.error?getApiMessage(assets.error):undefined} contracts={contracts.data??[]} onOperation={(operation,initial)=>{setSelected({operation,title:operation.key==='4.8'?'域名详情':'修改域名资料'});setDialogInitial(initial);setDialogOpen(true);}} onRefresh={()=>void refresh()} onManage={(domain,tab)=>setManage({domain,tab})}/><DomainManageDialog open={Boolean(manage)} domain={manage?.domain??''} initialTab={manage?.tab} onOpenChange={(value)=>{if(!value)setManage(undefined);}} contracts={contracts.data??[]} onOperation={(operation,initial)=>{setSelected({operation,title:operation.key});setDialogInitial(initial);setDialogOpen(true);}}/><DomainOperationDialog open={dialogOpen} operation={selected?.operation??emptyOperation} title={selected?.title??'域名操作'} assets={assets.data??[]} templates={templates.data??[]} initial={dialogInitial} onClose={()=>setDialogOpen(false)}/></>;
+ if(path==='/console/domains/list/dns'){const domain=new URLSearchParams(location.search).get('domain')??'';return <><DomainDNSPage domain={domain} onBack={()=>navigate('/console/domains/list')} contracts={contracts.data??[]} onOperation={(operation,initial)=>{setSelected({operation,title:operation.key});setDialogInitial(initial);setDialogOpen(true);}}/><DomainOperationDialog open={dialogOpen} operation={selected?.operation??emptyOperation} title={selected?.title??'域名操作'} assets={assets.data??[]} templates={templates.data??[]} initial={dialogInitial} onClose={()=>setDialogOpen(false)}/></>;}
+ if(section?.key==='list')return <DomainListPage assets={assets.data??[]} loading={assets.isLoading} error={assets.error?getApiMessage(assets.error):undefined} onRefresh={()=>void refresh()} onDNS={(domain)=>navigate('/console/domains/list/dns?domain='+encodeURIComponent(domain))}/>;
  if(page?.key==='templates')return <><DomainTemplatePage templates={templates.data??[]} onChanged={()=>void cache.invalidateQueries({queryKey:['domains']})} domain={new URLSearchParams(location.search).get('domain')??undefined}/></>;
  if(overview)return <><DomainSearchHero operation={contracts.data?.find(op=>op.key==='3.1')} onRegister={params=>{setRegisterParams(params);setRegisterOpen(true)}}/><DomainOperationDialog open={registerOpen} operation={contracts.data?.find(op=>op.key==='4.6')??emptyOperation} title="注册域名" assets={assets.data??[]} templates={templates.data??[]} initial={registerParams} onClose={()=>setRegisterOpen(false)}/></>;
  if(!overview&&!sectionLanding&&!page)return <><PageHeader title="页面不存在"/><Link href={domainBase}>返回域名服务</Link></>;

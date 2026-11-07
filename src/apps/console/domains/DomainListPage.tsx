@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Badge, Banner, Button, Input, LayerCard, Select, Tabs, Text } from "@cloudflare/kumo";
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
 import { PageHeader } from "../../../shared/components/PageHeader";
-import type { DomainAsset, DomainOperation } from "../../../shared/api/domains";
+import type { DomainAsset } from "../../../shared/api/domains";
 
 const columns: readonly TableColumn[] = [
   { key: "domain", label: "域名", width: 240, min: 180, required: true },
@@ -12,20 +12,17 @@ const columns: readonly TableColumn[] = [
 ];
 const statusLabels: Record<string, string> = { active: "正常", pending: "待处理", executing: "处理中", submitted: "已提交", succeeded: "已完成", failed: "失败", unknown: "待核对", review: "待人工核对", expired: "已过期", cancelled: "已取消" };
 
-export function DomainListPage({ assets, loading, error, contracts, onOperation, onManage, onRefresh }: {
+export function DomainListPage({ assets, loading, error, onDNS, onRefresh }: {
   assets: DomainAsset[];
   loading: boolean;
   error?: string;
-  contracts: DomainOperation[];
-  onOperation: (operation: DomainOperation, initial: Record<string, string>) => void;
-  onManage: (domain: string, tab: string) => void;
+  onDNS: (domain: string) => void;
   onRefresh: () => void;
 }) {
   const [tab, setTab] = useState("all");
   const [draft, setDraft] = useState("");
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("all");
-  const operation = (ref: string) => contracts.find((item) => item.key === ref);
   const rows = useMemo(() => assets.filter((asset) => {
     if (keyword && !asset.domain.includes(keyword.trim())) return false;
     if (status !== "all" && (status === "expired" ? !/expired/i.test(asset.status) : asset.status !== status)) return false;
@@ -39,12 +36,7 @@ export function DomainListPage({ assets, loading, error, contracts, onOperation,
     if (key === "domain") return <span className="font-medium text-kumo-strong">{asset.domain}</span>;
     if (key === "status") return <Badge variant={/fail|expired/i.test(asset.status) ? "error" : /pending|review/i.test(asset.status) ? "warning" : "success"}>{statusLabels[asset.status] ?? asset.status}</Badge>;
     if (key === "expires") return asset.expiresAt ? new Date(asset.expiresAt).toLocaleString("zh-CN") : "待确认";
-    if (key === "actions") return <div className="flex flex-wrap gap-2">
-      <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "overview")}>管理</Button>
-      <Button variant="secondary" size="sm" onClick={() => onManage(asset.domain, "dns")}>解析</Button>
-      <Button variant="secondary" size="sm" disabled={!operation("4.8")} onClick={() => { const op = operation("4.8"); if (op) onOperation(op, { domain: asset.domain }); }}>详情</Button>
-      <Button variant="secondary" size="sm" disabled={!operation("4.7")} onClick={() => { const op = operation("4.7"); if (op) onOperation(op, { domain: asset.domain }); }}>修改资料</Button>
-    </div>;
+    if (key === "actions") return <Button variant="secondary" size="sm" onClick={() => onDNS(asset.domain)}>解析</Button>;
     return null;
   };
   return <div className="grid gap-3">
