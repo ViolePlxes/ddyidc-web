@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="760" height="440" viewBox="0 35 190 110" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">浜戣绠椾笌涓夋敮涓婂崌绠ご鏍囧織</title>
+  <desc id="logo-description">渚濇嵁鐢ㄦ埛鎻愪緵鐨?90脳190閫忔槑PNG閲嶇粯銆傝摑鑹?2FA7E0锛涚伆鑹?5D5B5D銆備袱鏉″彲缂栬緫闂悎璐濆灏旇矾寰勶紝鏃犱綅鍥俱€佹棤鏂囧瓧銆佹棤鎻忚竟銆傜澶撮棿闅欎负閫忔槑璐熷舰銆?/desc>
+  <metadata>{"source":"logo11.png","colors":{"cloud-blue":"#111111","cloud-gray":"#111111"},"strokeWidth":0,"background":"transparent","font":"none; source contains no text","geometry":"editable cubic Bezier paths"}</metadata>
+  <g id="graphics-layer" inkscape:groupmode="layer" inkscape:label="01 鍥惧舰灞?>
+    <g id="blue-color-layer" inkscape:label="钃濊壊 #111111" fill="#111111">
+      <path id="blue-cloud-and-arrow-cutouts" d="M107 39 C112.8 39 118.5 39.7 124 41 L111 65 H117 V111 C118.2 124.3 113.6 135.7 101 140 H93 C102.8 134.3 107 126.4 107 114 L106 81 H111 L98 58 L85 81 H91 V116 C91 129.1 85.7 138.3 74 140 L70 140 C78 135.1 81 128.6 81 118 V103 H85 L74 83 L62 103 H67 V120 C67 129.7 63 136.3 56 140 H16 C7.7 140 2 133.9 2 125 C2 114 10.3 105.1 22 107 C21.8 88.7 35.7 76.7 55 82 C61.6 57.5 81.6 39.8 107 39 Z"/>
+    </g>
+    <g id="gray-color-layer" inkscape:label="鐏拌壊 #111111" fill="#111111">
+      <path id="gray-cloud-and-arrow-cutout" d="M129 44 C147.7 49.9 161.1 69.8 164 91 C177.5 89.9 189 101.1 189 115 C189 128.9 180.6 140 168 140 H119 C130.9 133.4 135 123.7 135 111 V65 H140 L129 44 Z"/>
+    </g>
+  </g>
+  <g id="text-layer" inkscape:groupmode="layer" inkscape:label="02 鏂囧瓧灞傦紙鍘熷浘鏃犳枃瀛楋級"><desc>绌烘枃瀛楀眰淇濈暀涓哄悗缁紪杈戝叆鍙ｏ紝鍘熷浘鏃犳枃瀛楋紝涓嶉澶栨坊鍔犲瓧鏍囥€?/desc></g>
+  <g id="color-layer" inkscape:groupmode="layer" inkscape:label="03 棰滆壊璇存槑" display="none"><desc>钃濊壊 #111111锛涚伆鑹?#111111銆備慨鏀瑰浘褰㈠眰涓媌lue-color-layer鍜実ray-color-layer鐨刦ill鍗冲彲鏀硅壊銆傛湰灞備笉鍖呭惈鍙鑹插潡銆?/desc></g>
+</svg>
+
