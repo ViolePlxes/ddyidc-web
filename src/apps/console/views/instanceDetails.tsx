@@ -14,12 +14,29 @@ export function CopyValue({ value, label }: { value?: string; label: string }) {
   return value && value !== "—" ? <ClipboardText text={value} size="sm" tooltip={{ text: `复制${label}`, copiedText: "已复制" }} /> : <>—</>;
 }
 
-export function InfoGroup({ title, rows, action, columns = 1 }: { columns?: 1 | 2 | 3; title: string; rows: { label: string; value: ReactNode }[]; action?: ReactNode }) {
+export function InfoGroup({ title, rows, asideRows, action, columns = 1 }: {
+  columns?: 1 | 2 | 3;
+  title: string;
+  rows: { label: string; value: ReactNode }[];
+  /** Extra label/value rows shown to the right of the list, without a heading. */
+  asideRows?: { label: string; value: ReactNode }[];
+  action?: ReactNode;
+}) {
+  const stacked = (items: { label: string; value: ReactNode }[], labelWidth: string) => <dl className="grid min-w-0 content-start gap-3">{items.map((row) => (
+    <div key={row.label} className={`grid min-w-0 ${labelWidth} items-center gap-3`}>
+      <dt className="text-base text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-base">{row.value}</dd>
+    </div>
+  ))}</dl>;
   return <LayerCard className="grid min-w-0 gap-4 px-5 py-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2>{action}</div>
-    <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3" : "grid min-w-0 content-start gap-1"}>
+    {asideRows ? <div className="@container">
+      <div className="grid min-w-0 gap-x-6 gap-y-3 @[32rem]:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]">
+        {stacked(rows, "grid-cols-[6rem_minmax(0,1fr)]")}
+        {stacked(asideRows, "grid-cols-[4.5rem_minmax(0,1fr)]")}
+      </div>
+    </div> : <dl className={columns === 1 ? "grid gap-3" : columns === 2 ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3"}>{rows.map((row) => <div key={row.label} className={columns === 1 ? "grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3" : "grid min-w-0 content-start gap-1"}>
       <dt className="text-base text-kumo-subtle">{row.label}</dt><dd className="min-w-0 break-words text-base">{row.value}</dd>
-    </div>)}</dl>
+    </div>)}</dl>}
   </LayerCard>;
 }
 
