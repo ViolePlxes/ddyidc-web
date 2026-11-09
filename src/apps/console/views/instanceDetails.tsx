@@ -65,6 +65,21 @@ export function monitorPoints(points: MonitorPoint[] = []): [number, number][] {
     .map((p): [number, number] => [p.timestamp * (p.timestamp < 10_000_000_000 ? 1000 : 1), p.value]).sort((a, b) => a[0] - b[0]);
 }
 
+/** Same geometry as a loaded card, so the grid never resizes while monitoring loads. */
+function MonitoringPlaceholder({ title, note }: { title: string; note: string }) {
+  return <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg ring ring-kumo-line">
+    <div className="bg-kumo-base px-4 pt-3 pb-1">
+      <h3 className="truncate text-sm font-semibold text-kumo-strong">{title}</h3>
+      <p className="mt-0.5 truncate text-xs text-kumo-subtle">{note}</p>
+    </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3" aria-hidden="true">
+      <div className="min-h-30 flex-1 rounded bg-kumo-overlay/40" />
+      <div className="h-4 w-2/3 shrink-0 rounded bg-kumo-overlay/40" />
+      <div className="h-7 shrink-0 rounded bg-kumo-overlay/40" />
+    </div>
+  </div>;
+}
+
 export function InstanceMonitoring({ monitor, loading, error }: { monitor?: InstanceMonitor; loading: boolean; error?: string }) {
   const charts = [
     { title: "CPU 使用量", unit: "%", series: [{ name: "CPU", data: monitorPoints(monitor?.cpu) }] },
@@ -72,17 +87,14 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
     { title: "内存用量", unit: "%", series: [{ name: "内存", data: monitorPoints(monitor?.memory) }] },
     { title: "网卡", unit: "bps", series: [{ name: "流入", data: monitorPoints(monitor?.networkIn) }, { name: "流出", data: monitorPoints(monitor?.networkOut) }] },
   ];
-  return <section aria-label="实例监控" className="grid min-w-0 content-start gap-4">
-    <h2 className="text-lg font-semibold">实例监控</h2>
-    <div className="grid min-w-0 content-start gap-5 md:grid-cols-2">{charts.map((chart) => {
+  return <section aria-label="实例监控" className="flex h-full min-w-0 flex-col gap-4">
+    <div className="grid min-w-0 flex-1 gap-5 md:auto-rows-fr md:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;
       const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
-      return <div key={chart.title} aria-label={chart.title} className="min-w-0">
-        {hasData ? <TrendChart compact zoomable height={240} title={chart.title} description={range} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid h-full min-h-48 content-start gap-3 px-5 py-4">
-          <div><h3 className="text-sm font-semibold text-kumo-strong">{chart.title}</h3><p className="mt-0.5 text-xs text-kumo-subtle">{range}</p></div>
-          <p role="status" className="text-base text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
-        </LayerCard>}
+      return <div key={chart.title} aria-label={chart.title} className="grid min-w-0">
+        {hasData ? <TrendChart fill compact zoomable title={chart.title} description={range} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} />
+          : <MonitoringPlaceholder title={chart.title} note={loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"} />}
       </div>;
     })}</div>
   </section>;

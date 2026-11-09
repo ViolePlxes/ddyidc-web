@@ -268,8 +268,8 @@ export function InstanceConsole() {
 		{instance.readOnly ? <Banner variant="secondary" title={instance.infoSource === "upstream" ? "已获取实时实例信息" : "当前显示已保存的实例信息"} description="当前仅开放信息查询，机器操作和自动任务尚未开启。" /> : null}
         {notice ? <Banner title="操作结果" description={notice} /> : null}
         {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
-        {activeTab === "overview" ? <div className="grid items-start gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">
-          <aside aria-label="实例信息面板" className="grid min-w-0 gap-4">
+        {activeTab === "overview" ? <div className="grid gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">
+          <aside aria-label="实例信息面板" className="grid min-w-0 content-start gap-4">
             <InfoGroup title="实例信息" asideRows={[
               { label: "网络类型", value: config(["network"], ["网络类型"]) }, { label: "系统盘", value: config(["system_disk"], ["系统盘"]) },
               { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
