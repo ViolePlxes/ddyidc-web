@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ChartPalette, LayerCard, TimeseriesChart } from "@cloudflare/kumo";
 import { useTheme } from "../hooks/useTheme";
@@ -58,6 +58,7 @@ export function TrendChart({
   zoomable = false,
   height = 280,
   compact = false,
+  description,
 }: {
   title?: string;
   type?: "line" | "bar";
@@ -69,6 +70,8 @@ export function TrendChart({
   zoomable?: boolean;
   height?: number;
   compact?: boolean;
+  /** Secondary line rendered with the title, inside the card. */
+  description?: ReactNode;
 }) {
   const { theme } = useTheme();
   const times = useMemo(()=>[...new Set((series ? series.flatMap(item=>item.data) : values).map(point=>point[0]).filter(Number.isFinite))].sort((a,b)=>a-b),[series,values]);
@@ -84,8 +87,13 @@ export function TrendChart({
   const clock=(index:number,full=false)=>{const timestamp=times[Math.round(index)];return timestamp===undefined?"—":new Date(timestamp).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false,...(full?{month:"2-digit",day:"2-digit"}:{}),hour:"2-digit",minute:"2-digit"})};
   return (
     <section className={compact?"grid min-w-0 overflow-hidden rounded-lg ring ring-kumo-line":"grid gap-3"}>
-      {compact?<h2 className="border-b border-kumo-line bg-kumo-base px-4 py-3 text-sm font-semibold text-kumo-strong">{title}</h2>:
-      <h2 className="text-lg font-semibold text-kumo-strong">{title}</h2>
+      {compact?<div className="bg-kumo-base px-4 pt-3 pb-1">
+        <h2 className="truncate text-sm font-semibold text-kumo-strong">{title}</h2>
+        {description?<p className="mt-0.5 truncate text-xs text-kumo-subtle">{description}</p>:null}
+      </div>:
+      <div className="grid gap-1"><h2 className="text-lg font-semibold text-kumo-strong">{title}</h2>
+        {description?<p className="text-base text-kumo-subtle">{description}</p>:null}
+      </div>
       }
       <LayerCard className={compact?"rounded-none px-4 py-3 ring-0":" px-5 py-4"}>
         <TimeseriesChart
@@ -104,9 +112,9 @@ export function TrendChart({
             },
           ]}
         />
-        {zoomable&&times.length>1?<div className="mt-5 grid min-w-0 gap-3">
+        {zoomable&&times.length>1?<div className="mt-4 grid min-w-0 gap-2">
+          <p className="text-xs text-kumo-subtle" aria-live="polite">显示：{clock(startIndex,true)} – {clock(endIndex,true)} · {endIndex-startIndex+1}/{times.length} 个时间点</p>
           <Slider size="sm" min={0} max={last} step={1} value={[startIndex,endIndex]} getAriaLabel={index=>index===0?"图表起始时间":"图表结束时间"} formatValue={index=>clock(index)} onValueChange={next=>{if(!Array.isArray(next)||next.length!==2)return;let start=Math.max(0,Math.min(last-1,Math.round(next[0]??0)));const end=Math.max(start+1,Math.min(last,Math.round(next[1]??last)));start=Math.min(start,end-1);setWindow([start,end])}} className="w-full min-w-0"/>
-          <p className="text-base text-kumo-subtle" aria-live="polite">显示：{clock(startIndex,true)} – {clock(endIndex,true)} · {endIndex-startIndex+1}/{times.length} 个时间点</p>
         </div>:null}
       </LayerCard>
     </section>

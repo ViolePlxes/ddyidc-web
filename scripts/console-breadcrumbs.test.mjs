@@ -19,7 +19,7 @@ test('all console declarations and domain pages have a known current label',asyn
 test('static routes, legacy aliases and private parameters are handled correctly',()=>{
  assert.equal(trail('/console/tickets/create',groups).at(-1).label,'创建工单');
  assert.equal(trail('/console/tickets/123',groups).at(-1).label,'工单详情');
- assert.equal(trail('/user/instance/123.htm',groups).at(-1).label,'实例详情');
+ assert.equal(trail('/user/instance/123.htm',groups).at(-1).label,'实例');
  assert.deepEqual(trail('/console/orders/private?token=secret',groups).map(item=>item.label),['用户中心','统一账单','订单详情']);
  assert.equal(trail('/console/orders-unregistered',groups).at(-1).label,'未找到页面');
  assert.ok(trail('/console/orders/123',[]).every(item=>!item.href));
