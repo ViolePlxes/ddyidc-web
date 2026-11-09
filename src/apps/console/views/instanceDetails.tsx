@@ -73,17 +73,17 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
     { title: "网卡", unit: "bps", series: [{ name: "流入", data: monitorPoints(monitor?.networkIn) }, { name: "流出", data: monitorPoints(monitor?.networkOut) }] },
   ];
   return <section aria-label="实例监控" className="grid min-w-0 content-start gap-4">
-    <div><h2 className="text-lg font-semibold">实例监控</h2><p className="text-base text-kumo-subtle">最近 24 小时 · 时间范围以实际采样为准</p></div>
-    <div className="grid min-w-0 gap-5 xl:grid-cols-2">{charts.map((chart) => {
+    <h2 className="text-lg font-semibold">实例监控</h2>
+    <div className="grid min-w-0 content-start gap-5 md:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;
       const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
-      return <section key={chart.title} aria-label={chart.title} className="grid min-w-0 content-start gap-2">
-        <p className="text-base text-kumo-subtle">{range}</p>
-        {hasData ? <TrendChart title={chart.title} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid min-h-80 content-start gap-4 px-5 py-4">
-          <h3 className="font-semibold">{chart.title}</h3><p role="status" className="text-base text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
+      return <div key={chart.title} aria-label={chart.title} className="min-w-0">
+        {hasData ? <TrendChart compact zoomable height={240} title={chart.title} description={range} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} /> : <LayerCard className="grid h-full min-h-48 content-start gap-3 px-5 py-4">
+          <div><h3 className="text-sm font-semibold text-kumo-strong">{chart.title}</h3><p className="mt-0.5 text-xs text-kumo-subtle">{range}</p></div>
+          <p role="status" className="text-base text-kumo-subtle">{loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"}</p>
         </LayerCard>}
-      </section>;
+      </div>;
     })}</div>
   </section>;
 }
