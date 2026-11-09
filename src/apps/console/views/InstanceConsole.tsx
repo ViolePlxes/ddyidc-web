@@ -270,10 +270,14 @@ export function InstanceConsole() {
         {action.error ? <Banner variant="error" title="实例操作失败" description={getApiMessage(action.error)} /> : null}
         {activeTab === "overview" ? <div className="grid items-start gap-6 xl:grid-cols-[minmax(20rem,1fr)_minmax(0,2fr)]">
           <aside aria-label="实例信息面板" className="grid min-w-0 gap-4">
-            <InfoGroup title="实例信息" rows={[
+            <InfoGroup title="实例信息" asideRows={[
+              { label: "网络类型", value: config(["network"], ["网络类型"]) }, { label: "系统盘", value: config(["system_disk"], ["系统盘"]) },
+              { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
+              { label: "带宽", value: config(["bandwidth"], ["带宽", "上行带宽", "下行带宽"]) }, { label: "数据盘", value: config(["data_disk"], ["数据盘"]) },
+            ]} rows={[
               { label: "数据中心", value: config(["data_center", "region", "area"], ["数据中心", "地域", "区域"]) },
               { label: "产品名称", value: instance.productName }, { label: "实例 ID", value: instance.id },
-              { label: "资源编号", value: instance.upstreamInstanceId || "—" }, { label: "实例名称", value: instance.name },
+              { label: "实例名称", value: instance.name },
               { label: "实例状态", value: <InstanceStatusControl live={live} fallback={instance.powerStatus}/> }, { label: "备注信息", value: <InstanceRemark key={instance.id} instance={instance}/> },
             ]} />
             <InfoGroup title="登录信息" action={resetPassword} rows={[
@@ -285,11 +289,6 @@ export function InstanceConsole() {
             <InfoGroup title="系统信息" columns={2} action={<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} />} rows={[
               { label: "系统名称", value: instance.currentImageGroup || instance.operatingSystem || "—" },
               { label: "系统版本", value: instance.currentImageName || instance.operatingSystem || "—" },
-            ]} />
-            <InfoGroup title="实例规格" columns={3} rows={[
-              { label: "网络类型", value: config(["network"], ["网络类型"]) }, { label: "系统盘", value: config(["system_disk"], ["系统盘"]) },
-              { label: "CPU", value: config(["cpu"], ["CPU", "vCPU", "处理器核心"]) }, { label: "内存", value: config(["memory"], ["内存"]) },
-              { label: "带宽", value: config(["bandwidth"], ["带宽", "上行带宽", "下行带宽"]) }, { label: "数据盘", value: config(["data_disk"], ["数据盘"]) },
             ]} />
             <BillingInfo instance={instance} />
           </aside>
