@@ -189,9 +189,53 @@ const mapNames: Record<string, string> = {
   塞舌尔: "Madagascar",
 };
 
+/**
+ * The upstream database returns Chinese names inside China and English names
+ * elsewhere. This table aligns the English spellings that differ from the
+ * bundled world map feature names; exact matches pass through unchanged.
+ */
+const englishAliases: Record<string, string> = {
+  "united states": "United States of America",
+  "united states of america": "United States of America",
+  usa: "United States of America",
+  "czech republic": "Czechia",
+  "bosnia and herzegovina": "Bosnia and Herz.",
+  "dominican republic": "Dominican Rep.",
+  "central african republic": "Central African Rep.",
+  "democratic republic of the congo": "Dem. Rep. Congo",
+  "dem. rep. congo": "Dem. Rep. Congo",
+  "republic of the congo": "Congo",
+  "south sudan": "S. Sudan",
+  "western sahara": "W. Sahara",
+  "solomon islands": "Solomon Is.",
+  "north macedonia": "Macedonia",
+  macedonia: "Macedonia",
+  eswatini: "eSwatini",
+  swaziland: "eSwatini",
+  "cote d'ivoire": "Côte d'Ivoire",
+  "ivory coast": "Côte d'Ivoire",
+  "east timor": "Timor-Leste",
+  burma: "Myanmar",
+  "great britain": "United Kingdom",
+  "republic of korea": "South Korea",
+  "korea, republic of": "South Korea",
+  "korea": "South Korea",
+  "democratic people's republic of korea": "North Korea",
+  "equatorial guinea": "Eq. Guinea",
+  "falkland islands": "Falkland Is.",
+  "hong kong": "China",
+  macao: "China",
+  macau: "China",
+  taiwan: "China",
+};
+
+const unknownLabels = new Set(["", "未知", "unknown", "（未知）", "reserved"]);
+
 /** Returns the world map feature name for a stored region label. */
 export function countryMapName(label: string): string {
   const name = label.trim();
-  if (!name || name === "未知" || name === "unknown" || name === "（未知）") return "";
-  return mapNames[name] ?? name;
+  if (unknownLabels.has(name.toLowerCase())) return "";
+  const chinese = mapNames[name];
+  if (chinese) return chinese;
+  return englishAliases[name.toLowerCase()] ?? name;
 }
