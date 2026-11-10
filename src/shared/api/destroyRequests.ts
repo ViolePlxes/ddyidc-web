@@ -27,7 +27,21 @@ export interface DestroyQuote {
   requests: DestroyRequestRow[];
 }
 
+export interface DestroyOption {
+  instanceId: string;
+  instanceNo: string;
+  productName: string;
+  expiresAt?: string;
+  paidAmount: string;
+  refundableAmount: string;
+  eligible: boolean;
+  reason?: string;
+}
+
 export const destroyApi = {
+  async options() {
+    return (await userRequest.get<ApiEnvelope<{ items: DestroyOption[] }>>("/destroy-options")).data.data;
+  },
   async quote(instanceId: string) {
     return (await userRequest.get<ApiEnvelope<DestroyQuote>>(`/instance/${encodeURIComponent(instanceId)}/destroy-quote`)).data.data;
   },
