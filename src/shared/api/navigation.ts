@@ -4,11 +4,12 @@ export type NavigationScope = "console" | "sales" | "admin";
 export interface NavigationNode {
  badge?: string;
  id: string; scope: NavigationScope; parentId: string; name: string; href: string;
- icon: string; gate: string; target: "self" | "blank"; enabled: boolean; sort: number;
+ icon: string; gate: string; category?: string; target: "self" | "blank"; enabled: boolean; sort: number;
  createdAt: string; updatedAt: string;
 }
 export interface NavigationSnapshot { revision: number; nodes: NavigationNode[] }
-export type NavigationInput = Pick<NavigationNode, "parentId" | "name" | "href" | "icon" | "target" | "enabled">;
+export interface NavigationCategory { id: string; name: string; sort: number }
+export type NavigationInput = Pick<NavigationNode, "parentId" | "name" | "href" | "icon" | "target" | "enabled"> & { category?: string };
 export const navigationApi = {
  async list(scope: NavigationScope, manage = false) {
   const client = manage || scope === "admin" ? adminRequest : scope === "sales" ? salesRequest : userRequest;
@@ -26,5 +27,17 @@ export const navigationApi = {
  },
  async sort(scope: NavigationScope, revision: number, parentId: string, ids: string[]) {
   return adminRequest.put(`/navigation-config/${scope}/sort`, { revision, parentId, ids });
+ },
+ async categories() {
+  return (await adminRequest.get<ApiEnvelope<{ categories: NavigationCategory[] }>>("/navigation-categories")).data.data.categories;
+ },
+ async saveCategory(name: string, id?: string) {
+  return id ? adminRequest.put(`/navigation-categories/${id}`, { name }) : adminRequest.post("/navigation-categories", { name });
+ },
+ async removeCategory(id: string) {
+  return adminRequest.delete(`/navigation-categories/${id}`);
+ },
+ async sortCategories(ids: string[]) {
+  return adminRequest.put("/navigation-categories", { ids });
  },
 };
