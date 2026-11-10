@@ -51,7 +51,7 @@ export function useNavigation(scope: NavigationScope, available: NavigationGroup
  const nodes = query.data?.nodes ?? [];
  const todos = useAdminTodos(scope === 'admin' && nodes.some(node => node.badge !== undefined && node.href.startsWith(adminPath('/admin/todos'))));
  const groups: NavigationGroup[] = nodes.filter(node => node.parentId === "0").map(group => ({
-  label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge,
+  label: group.name, id: group.id, icon: navigationIcon(group.icon), badge: group.badge, category: group.category,
   items: nodes.filter(node => node.parentId === group.id && (!node.gate || permitted(node.gate)) && permitted(node.href)).map(node => ({
    id: node.id, label: node.href === "/console/groupbuy" && node.name === "拼团" ? (availableItems.find(item => item.href === node.href)?.label ?? node.name) : node.name,
    href: scope === "console" && pluginPath(node.href).replace(/\/$/, "") === "/console/tickets" ? "/console/help" : node.href, icon: navigationIcon(node.icon), badge: node.badge, target: node.target === "blank" ? "_blank" as const : undefined,

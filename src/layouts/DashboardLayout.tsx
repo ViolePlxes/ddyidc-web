@@ -42,6 +42,7 @@ export interface NavigationItem {
 
 export interface NavigationGroup {
   badge?: string;
+  category?: string;
   id?: string; icon?: typeof HouseIcon;
   label: string;
   items: NavigationItem[];
@@ -119,7 +120,7 @@ export function DashboardLayout({
   for (const group of groups) {
     const items = group.items.filter((item) => !standalonePaths.includes(item.href));
     if (!items.length) continue;
-    const category = navigationCategories[group.label] ?? "更多服务";
+    const category = group.category || navigationCategories[group.label] || "更多服务";
     const last = categorizedGroups.at(-1);
     if (last?.[0] === category) last[1].push({ ...group, items });
     else categorizedGroups.push([category, [{ ...group, items }]]);
