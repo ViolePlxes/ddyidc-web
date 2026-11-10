@@ -13,8 +13,8 @@ import { navigationIcon, navigationIcons } from "../../../shared/utils/navigatio
 
 const UNCATEGORIZED = "未分类";
 
-function CategoryManager({ open, close, categories, reload }: {
- open: boolean; close: () => void; categories: NavigationCategory[]; reload: () => Promise<unknown>;
+function CategoryManager({ open, close, categories, reload, loadError }: {
+ open: boolean; close: () => void; categories: NavigationCategory[]; reload: () => Promise<unknown>; loadError: string | null;
 }) {
  const [name, setName] = useState("");
  const [busy, setBusy] = useState(false);
@@ -47,10 +47,11 @@ function CategoryManager({ open, close, categories, reload }: {
       <Button variant="ghost" shape="square" icon={<ArrowDownIcon />} aria-label={`下移 ${row.name}`} disabled={busy || index === categories.length - 1} onClick={() => move(index, 1)} />
       <Button variant="ghost" shape="square" icon={<TrashIcon />} aria-label={`删除 ${row.name}`} disabled={busy} onClick={() => void run(() => navigationApi.removeCategory(row.id))} />
      </div>)}
-     {!categories.length ? <p className="py-3 text-base text-kumo-subtle">还没有大类，先在下方添加一个。</p> : null}
+     {loadError ? <p role="alert" className="py-3 text-base text-kumo-danger">读取大类失败：{loadError}</p> : null}
+     {!categories.length && !loadError ? <p className="py-3 text-base text-kumo-subtle">还没有大类，先在下方添加一个。</p> : null}
     </div>
     <div className="my-5 h-px bg-kumo-line" />
-    <div className="grid gap-2"><Text variant="heading">新增大类</Text><div className="flex items-end gap-2"><Input className="min-w-0 flex-1" label="名称" maxLength={32} placeholder="例如：服务保障" value={name} disabled={busy} onChange={event => setName(event.target.value)} /><Button loading={busy} disabled={!name.trim()} onClick={() => void run(async () => { await navigationApi.saveCategory(name.trim()); setName(""); })}>添加</Button></div></div>
+    <div className="grid gap-2"><Text variant="heading">新增大类</Text><div className="flex items-end gap-2"><Input className="min-w-0 flex-1" label="名称" maxLength={32} placeholder="例如：服务保障" value={name} disabled={busy} onChange={event => setName(event.target.value)} /><Button loading={busy} disabled={!name.trim() || Boolean(loadError)} onClick={() => void run(async () => { await navigationApi.saveCategory(name.trim()); setName(""); })}>添加</Button></div></div>
     {error ? <p role="alert" className="mt-3 text-sm text-kumo-danger">{error}</p> : null}
    </LayerDialog.Body>
    <LayerDialog.Actions dismissLabel="关闭"><LayerDialog.Action variant="primary" disabled={busy} onClick={close}>完成</LayerDialog.Action></LayerDialog.Actions>
@@ -199,7 +200,7 @@ export function Navigation() {
     </SortableList>
    </div>
   </PageState>
-  <CategoryManager open={managingCategories} close={() => setManagingCategories(false)} categories={categoryRows} reload={() => categoryQuery.refetch()} />
+  <CategoryManager open={managingCategories} close={() => setManagingCategories(false)} categories={categoryRows} reload={() => categoryQuery.refetch()} loadError={categoryQuery.error ? getApiMessage(categoryQuery.error) : null} />
   <DialogPresence>{editing && <Editor key={editing.node?.id ?? editing.parentId} {...editing} busy={busy} error={error} close={() => setEditing(null)} save={value => void submit(() => navigationApi.save(scope, query.data!.revision, value, editing.node?.id))} categoryNames={categoryNames} />}</DialogPresence>
   <Dialog.Root open={Boolean(removing)} onOpenChange={open => { if (!open && !busy) setRemoving(null); }}><Dialog className="grid gap-4 p-8"><Dialog.Title>删除“{removing?.name}”</Dialog.Title><Dialog.Description>{removing?.parentId === "0" ? "分类及其全部菜单项将被移除。" : "该导航入口将被移除。"}实际页面与访问权限不会改变。</Dialog.Description><div className="flex justify-end gap-2"><Button variant="secondary" disabled={busy} onClick={() => setRemoving(null)}>取消</Button><Button variant="destructive" loading={busy} onClick={() => { if (removing) void submit(() => navigationApi.remove(scope, query.data!.revision, removing.id)); }}>删除</Button></div></Dialog></Dialog.Root>
  </>;
