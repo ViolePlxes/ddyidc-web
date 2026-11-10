@@ -107,6 +107,13 @@ export function Navigation() {
  const nodes = query.data?.nodes ?? [];
  const categoryRows = categoryQuery.data ?? [];
  const categoryNames = categoryRows.map(row => row.name);
+ // Sections come from the category table, but a section is never hidden when the
+ // table is unreachable or a group points at a category that no longer exists.
+ const sections = [...categoryNames];
+ for (const group of nodes.filter(node => node.parentId === "0")) {
+  const name = group.category || UNCATEGORIZED;
+  if (!sections.includes(name)) sections.push(name);
+ }
  const children = (parentId: string) => nodes.filter(node => node.parentId === parentId);
  const submit = async (operation: () => Promise<unknown>) => {
   if (lock.current || !query.data) return;
@@ -176,7 +183,7 @@ export function Navigation() {
    <div className="relative grid gap-1 pl-4">
     <span aria-hidden className="absolute top-0 bottom-0 left-0 w-px bg-kumo-line" />
     <SortableList scope="navigation-groups" listId="0" disabled={busy} onDrop={drop => sort("0", drop.targetIds)}>
-     {[...categoryNames, UNCATEGORIZED].map(category => {
+     {sections.map(category => {
       const section = groups.filter(group => (group.category || UNCATEGORIZED) === category);
       if (!section.length) return null;
       return <Fragment key={category}>
