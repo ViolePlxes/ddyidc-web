@@ -6,7 +6,7 @@ export const consoleRoutes: [string, string, string?][] = [
   ['/console/instances','产品列表'], ['/console/instances/:instanceId','实例','/console/instances'], ['/console/instance/:instanceId/vnc','VNC 控制台','/console/instances'],
   ['/user/productList.htm','产品列表'], ['/user/instance/:instanceId.htm','实例','/console/instances'],
   ['/console/billing','统一账单'], ['/billing','统一账单'], ['/console/orders','统一账单'], ['/console/orders/:id','订单详情','/console/billing'], ['/console/payment/result','支付结果','/console/orders'],
-  ['/console/video-bindings','视频绑定'], ['/console/transfers','实例转让'], ['/console/certification','实名认证'], ['/console/profile','个人中心'], ['/console/security','安全中心'],
+  ['/console/video-bindings','视频绑定'], ['/console/transfers','实例转让'], ['/console/destroy','实例销毁申请'], ['/console/certification','实名认证'], ['/console/profile','个人中心'], ['/console/security','安全中心'],
   ['/console/promo','我的推广'], ['/console/coupons','优惠券'], ['/console/tickets','工单中心'], ['/console/tickets/create','创建工单','/console/tickets'], ['/console/tickets/:id','工单详情','/console/tickets'],
   ['/console/invoices','发票管理'], ['/console/invoices/list','发票列表','/console/invoices'], ['/console/invoices/titles','发票抬头','/console/invoices'], ['/console/invoices/addresses','发票地址','/console/invoices'],
   ['/console/transactions','交易记录'], ['/console/logs','操作日志'], ['/console/api','API 管理'], ['/console/help','支持中心'],

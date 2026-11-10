@@ -23,6 +23,7 @@ const Transactions = lazy(() => import("./views/Transactions").then(module => ({
 import { pointsApi } from "../../shared/api/points";
 const VideoBindings = lazy(() => import("../../shared/components/VideoBindings").then(module => ({ default: module.VideoBindings })));
 const TransfersPage = lazy(() => import("../../shared/components/TransfersPage").then(module => ({ default: module.TransfersPage })));
+const DestroyRequests = lazy(() => import("./views/DestroyRequests").then(module => ({ default: module.DestroyRequests })));
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import {
@@ -442,6 +443,7 @@ export function ConsoleApp() {
             />
             <Route path="/console/video-bindings" element={<LazyRoute><PointsGate scope="public"><VideoBindings /></PointsGate></LazyRoute>} />
             <Route path="/console/transfers" element={<LazyRoute><TransfersPage /></LazyRoute>} />
+            <Route path="/console/destroy" element={<LazyRoute><DestroyRequests /></LazyRoute>} />
  <Route
               path="/console/certification" element={<LazyRoute><Certification /></LazyRoute>} />
             <Route path="/console/profile"
