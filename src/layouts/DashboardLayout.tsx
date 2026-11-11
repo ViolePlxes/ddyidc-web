@@ -116,15 +116,18 @@ export function DashboardLayout({
     .filter((item) => standalonePaths.includes(item.href))
 
     ;
-  const categorizedGroups: [string, NavigationGroup[]][] = [];
+  // One block per category in first-seen order: a section moved into a category
+  // joins that block wherever it sits in the sort order, never a second block.
+  const categorized = new Map<string, NavigationGroup[]>();
   for (const group of groups) {
     const items = group.items.filter((item) => !standalonePaths.includes(item.href));
     if (!items.length) continue;
     const category = group.category || navigationCategories[group.label] || "更多服务";
-    const last = categorizedGroups.at(-1);
-    if (last?.[0] === category) last[1].push({ ...group, items });
-    else categorizedGroups.push([category, [{ ...group, items }]]);
+    const bucket = categorized.get(category);
+    if (bucket) bucket.push({ ...group, items });
+    else categorized.set(category, [{ ...group, items }]);
   }
+  const categorizedGroups: [string, NavigationGroup[]][] = [...categorized.entries()];
   const searchItems = groups.flatMap((group) =>
     group.items.flatMap(item=>item.children?.length?item.children:[item]).map((item) => ({
       id: item.id ?? item.href,
