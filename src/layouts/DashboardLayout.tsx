@@ -127,7 +127,11 @@ export function DashboardLayout({
     if (bucket) bucket.push({ ...group, items });
     else categorized.set(category, [{ ...group, items }]);
   }
-  const categorizedGroups: [string, NavigationGroup[]][] = [...categorized.entries()];
+  const categoryOrder = navigation.categoryOrder ?? [];
+  const categorizedGroups: [string, NavigationGroup[]][] = [...categorized.entries()].sort(([a], [b]) => {
+    const left = categoryOrder.indexOf(a), right = categoryOrder.indexOf(b);
+    return (left < 0 ? categoryOrder.length : left) - (right < 0 ? categoryOrder.length : right);
+  });
   const searchItems = groups.flatMap((group) =>
     group.items.flatMap(item=>item.children?.length?item.children:[item]).map((item) => ({
       id: item.id ?? item.href,

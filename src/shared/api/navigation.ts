@@ -7,7 +7,7 @@ export interface NavigationNode {
  icon: string; gate: string; category?: string; target: "self" | "blank"; enabled: boolean; sort: number;
  createdAt: string; updatedAt: string;
 }
-export interface NavigationSnapshot { revision: number; nodes: NavigationNode[] }
+export interface NavigationSnapshot { revision: number; nodes: NavigationNode[]; categories?: NavigationCategory[] }
 export interface NavigationCategory { id: string; name: string; sort: number }
 export type NavigationInput = Pick<NavigationNode, "parentId" | "name" | "href" | "icon" | "target" | "enabled"> & { category?: string };
 export const navigationApi = {
