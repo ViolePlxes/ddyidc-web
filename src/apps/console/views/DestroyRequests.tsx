@@ -1,13 +1,13 @@
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
-import { Button, InlineCopyText, Input, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, InlineCopyText, Input, LayerDialog, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { destroyApi, type DestroyOption, type DestroyRequestRow } from "../../../shared/api/destroyRequests";
 import { instanceManagementApi } from "../../../shared/api/instanceManagement";
 import { getApiMessage } from "../../../shared/api/request";
-import { Dialog } from "../../../shared/components/Dialog";
 import { EmailVerificationFields, useEmailVerification } from "../../../shared/components/EmailVerificationFields";
+import { instanceConfirmationActions } from "../../../shared/components/InstanceConfirmationActions";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { Pagination } from "../../../shared/components/Pagination";
@@ -139,19 +139,18 @@ export function DestroyRequests() {
         <ConfigurableTable<DestroyRequestRow> rows={pagedHistory} columns={requestColumns} storageKey="ddyidc-console-destroy-columns:v2:requests" loading={requests.isLoading} label="我的销毁申请" renderCell={requestCell} rowKey={(row) => row.id} emptyContent="暂无销毁申请" />
       </PageState>}
     {total > PAGE_SIZE ? <div className="flex flex-wrap items-center justify-end gap-3"><Pagination page={current} totalCount={total} perPage={PAGE_SIZE} setPage={setPage} /></div> : null}
-    <Dialog.Root open={Boolean(target)} onOpenChange={(open) => { if (!open && !submit.isPending) { setTarget(undefined); submit.reset(); } }}>
-      <Dialog className="grid gap-4 p-8">
-        <Dialog.Title>申请销毁实例</Dialog.Title>
-        <Dialog.Description>实例 {target?.productName || target?.instanceNo} 销毁后不可恢复，提交后需后台审核。</Dialog.Description>
-        {target ? <p>预计可退：<strong>¥{target.refundableAmount}</strong><span className="text-sm text-kumo-subtle">（提交时核算）</span></p> : null}
-        <Input aria-label="销毁原因" placeholder="请填写销毁原因（必填）" maxLength={200} value={reason} onChange={(event) => setReason(event.target.value)} />
-        {target ? <EmailVerificationFields state={verification} idPrefix={`destroy-email-${target.instanceId}`} onCodeChange={() => submit.reset()} /> : null}
-        {submit.error ? <p role="alert" className="text-sm text-kumo-danger">{getApiMessage(submit.error)}</p> : null}
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" disabled={submit.isPending} onClick={() => setTarget(undefined)}>取消</Button>
-          <Button loading={submit.isPending} disabled={!reason.trim() || !verification.ready} onClick={() => submit.mutate()}>提交销毁申请</Button>
-        </div>
-      </Dialog>
-    </Dialog.Root>
+    <LayerDialog.Root open={Boolean(target)} dismissDisabled={submit.isPending || verification.sending} onOpenChange={(open) => { if (!open && !submit.isPending && !verification.sending) { setTarget(undefined); submit.reset(); } }}>
+      <LayerDialog.Content>
+        <LayerDialog.Title>申请销毁实例</LayerDialog.Title>
+        <LayerDialog.Description>实例 {target?.productName || target?.instanceNo} 销毁后不可恢复，提交后需后台审核。</LayerDialog.Description>
+        <LayerDialog.Body><div className="grid gap-4">
+          {target ? <p>预计可退：<strong>¥{target.refundableAmount}</strong><span className="text-sm text-kumo-subtle">（提交时核算）</span></p> : null}
+          <Input aria-label="销毁原因" placeholder="请填写销毁原因（必填）" maxLength={200} value={reason} onChange={(event) => setReason(event.target.value)} />
+          {target ? <EmailVerificationFields state={verification} idPrefix={`destroy-email-${target.instanceId}`} onCodeChange={() => submit.reset()} /> : null}
+          {submit.error ? <Banner variant="error" title={getApiMessage(submit.error)} /> : null}
+        </div></LayerDialog.Body>
+        {instanceConfirmationActions({ destructive: true, loading: submit.isPending, disabled: verification.sending || !reason.trim() || !verification.ready, onConfirm: () => submit.mutate(), children: "确认申请销毁" })}
+      </LayerDialog.Content>
+    </LayerDialog.Root>
   </div>;
 }
