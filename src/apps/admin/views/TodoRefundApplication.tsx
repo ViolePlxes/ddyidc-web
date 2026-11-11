@@ -10,12 +10,20 @@ import type { TodoEntry } from "../../../shared/api/adminTodos";
 interface Fees { setup: string; installation: string; handling: string; gift: string; traffic: string; valueAdded: string; evidence: string }
 interface Calculation { policy: string; appliedAt: string; paidAmount: string; unusedServiceAmount: string; refundAmount: string; fees: Fees; periods: { instanceId: string; startAt?: string; endAt?: string; unstarted: boolean; totalDays: number; usedDays: number; remainingDays: number; partialDayDeductionDays: number; unusedServiceAmount: string }[] }
 interface Application { id: string; amount: string; reason: string; status: number; updatedAt: string; reviewReason: string; request?: { source: string; snapshot: { paidAmount: string; balancePaid: string; warnings: string[]; minimumSetupAmount: string; minimumHandlingAmount: string; periods?: { instanceId: string; renewalId?: string; unstarted: boolean }[] } }; calculation?: Calculation }
+// A machine application is either an order-level purchase refund or the newer
+// machine-level destruction request; the latter carries every completed renewal.
+function isMachineRefund(request?: Application["request"]) {
+  const periods = request?.snapshot.periods;
+  if (!request || !periods?.length) return false;
+  if (request.source === "instance") return periods.every(period => period.instanceId !== "0" && !period.unstarted);
+  return request.source === "order" && periods.every(period => period.instanceId !== "0" && !period.unstarted && (!period.renewalId || period.renewalId === "0"));
+}
 export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: TodoEntry; onDone: () => void; readOnly?: boolean }) {
   const [amountMode,setAmountMode]=useState<RefundAmountMode>("daily"); const [customAmount,setCustomAmount]=useState("");
  const cache = useQueryClient(); const [reason, setReason] = useState(""); const [confirmLarge, setConfirmLarge] = useState(false); const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
   const review = useMutation({ mutationFn: async (action: string) => adminRequest.post(`/todos/refund-applications/${row.id}/review`, { action, reason, requestId, fees: automaticQuote.data?.fees, expectedAmount: selectedAmount ?? "", amountMode, customAmount: amountMode === "custom" ? customAmount : "", confirmLarge, expectedUpdatedAt: query.data?.updatedAt }), onSuccess: async () => { await Promise.all([cache.invalidateQueries({ queryKey: ["todo-refund-application", row.id] }), cache.invalidateQueries({ queryKey: ["admin-todos"] }), cache.invalidateQueries({ queryKey: ["admin-todo-items"] })]); onDone(); } });
-  const machine = query.data?.request?.source === "order" && Boolean(query.data.request.snapshot.periods?.length) && query.data.request.snapshot.periods!.every(period => period.instanceId !== "0" && !period.unstarted && (!period.renewalId || period.renewalId === "0"));
+  const machine = isMachineRefund(query.data?.request);
   const snapshot = query.data?.request?.snapshot;
   const locked = readOnly || query.data?.status !== 0 || !snapshot || Boolean(snapshot.warnings.length);
   const automaticQuote = useQuery({
@@ -53,7 +61,7 @@ export function PendingRefundActions({ row, onDone }: { row: TodoEntry; onDone: 
   const [open, setOpen] = useState(false);
   const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], retry: false, queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
   const periods = query.data?.request?.snapshot.periods;
-  const machine = query.data?.request?.source === "order" && Boolean(periods?.length) && periods!.every(period => period.instanceId !== "0" && !period.unstarted && (!period.renewalId || period.renewalId === "0"));
+  const machine = isMachineRefund(query.data?.request);
   if (query.isPending) return <p role="status">正在核对退款类型…</p>;
   if (query.isError) return <div className="grid gap-2"><Banner variant="error" title={getApiMessage(query.error)} /><Button variant="secondary" onClick={() => void query.refetch()}>重新核对</Button></div>;
   if (machine) return <><MachineRefundDialog row={row} action="direct_balance" onDone={onDone} /><MachineRefundDialog row={row} action="upstream" onDone={onDone} /></>;
