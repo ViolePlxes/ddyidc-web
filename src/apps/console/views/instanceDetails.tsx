@@ -6,7 +6,9 @@ import { TrendChart } from "../../../shared/components/TrendChart";
 import { cycleLabels, formatDate } from "../../../shared/utils/format";
 
 export function configValue(instance: InstanceDetail, fields: string[], names: string[] = []) {
-  const matches = instance.config.filter((item) => fields.includes((item.field || "").toLowerCase()) || names.includes(item.displayName));
+  // A machine that is still provisioning has no configuration snapshot yet: render the
+  // page with blanks and let the next poll fill it in instead of throwing.
+  const matches = (instance.config ?? []).filter((item) => fields.includes((item.field || "").toLowerCase()) || names.includes(item.displayName));
   return [...new Set(matches.map((item) => item.displayValue).filter(Boolean))].join(" / ") || "—";
 }
 
@@ -61,7 +63,7 @@ export function BillingInfo({ instance }: { instance: InstanceDetail }) {
 }
 
 export function monitorPoints(points: MonitorPoint[] = []): [number, number][] {
-  return points.filter((p) => Number.isFinite(p.timestamp) && Number.isFinite(p.value))
+  return (points ?? []).filter((p) => Number.isFinite(p.timestamp) && Number.isFinite(p.value))
     .map((p): [number, number] => [p.timestamp * (p.timestamp < 10_000_000_000 ? 1000 : 1), p.value]).sort((a, b) => a[0] - b[0]);
 }
 
