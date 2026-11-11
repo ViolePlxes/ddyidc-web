@@ -1,5 +1,5 @@
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
-import { Button, Input, Tabs } from "@cloudflare/kumo";
+import { Button, InlineCopyText, Input, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
@@ -15,9 +15,10 @@ const requestLabels: Record<number, string> = { 0: "待审核", 1: "审核通过
 const PAGE_SIZE = 10;
 
 const optionColumns: readonly TableColumn[] = [
-  { key: "instance", label: "产品 / 实例", width: 280, min: 180, required: true },
+  { key: "instance", label: "产品 / 实例", width: 260, min: 180, required: true },
+  { key: "ip", label: "IP", width: 140, min: 110 },
   { key: "expires", label: "到期时间", width: 140, min: 110 },
-  { key: "refundable", type: "N", label: "预计可退款余额", width: 150, min: 120, required: true },
+  { key: "refundable", type: "N", label: "预计可退款余额", width: 240, min: 180, required: true },
   { key: "note", label: "说明", width: 260, min: 140 },
   { key: "actions", label: "操作", width: 110, min: 90, required: true },
 ];
@@ -64,12 +65,14 @@ export function DestroyRequests() {
     switch (key) {
       case "instance":
         return <div className="grid gap-1"><RouterLink to={`/console/instances/${row.instanceId}`} className="truncate font-medium text-kumo-brand hover:underline">{row.productName || "未命名产品"}</RouterLink><span className="text-sm text-kumo-subtle">{row.instanceNo || row.instanceId}</span></div>;
+      case "ip":
+        return row.ip ? <InlineCopyText className="w-fit leading-[normal]" value={row.ip} labels={{ copyAction: "复制 IP", copied: "已复制" }}>{row.ip}</InlineCopyText> : "—";
       case "expires":
         return row.expiresAt ? row.expiresAt.slice(0, 10) : "—";
       case "refundable":
-        return row.eligible ? `¥${row.refundableAmount}` : "—";
+        return row.eligible ? <div className="flex items-center gap-2"><span>{`¥${row.refundableAmount}`}</span>{row.remaining ? <span className="text-sm text-kumo-subtle">{row.remaining}</span> : null}</div> : "—";
       case "note":
-        return row.eligible ? `已付 ¥${row.paidAmount}` : row.reason || "暂不能核算";
+        return row.eligible ? `实付 ¥${row.paidAmount}` : row.reason || "暂不能核算";
       case "actions":
         return <Button variant="ghost" size="sm" disabled={!row.eligible} onClick={() => { submit.reset(); setReason(""); setTarget(row); }}>申请销毁</Button>;
       default:

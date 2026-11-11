@@ -31,7 +31,9 @@ export interface DestroyOption {
   instanceId: string;
   instanceNo: string;
   productName: string;
+  ip?: string;
   expiresAt?: string;
+  remaining?: string;
   paidAmount: string;
   refundableAmount: string;
   eligible: boolean;
