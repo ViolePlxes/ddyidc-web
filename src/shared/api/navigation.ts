@@ -32,12 +32,12 @@ export const navigationApi = {
   return (await adminRequest.get<ApiEnvelope<{ categories: NavigationCategory[] }>>("/navigation-categories")).data.data.categories;
  },
  async saveCategory(name: string, id?: string) {
-  return id ? adminRequest.put(`/navigation-categories/${id}`, { name }) : adminRequest.post("/navigation-categories", { name });
+  return id ? adminRequest.put("/navigation-categories/rename", { id, name }) : adminRequest.post("/navigation-categories", { name });
  },
  async removeCategory(id: string) {
-  return adminRequest.delete(`/navigation-categories/${id}`);
+  return adminRequest.delete("/navigation-categories/remove", { data: { id } });
  },
  async sortCategories(ids: string[]) {
-  return adminRequest.put("/navigation-categories", { ids });
+  return adminRequest.put("/navigation-categories/sort", { ids });
  },
 };
