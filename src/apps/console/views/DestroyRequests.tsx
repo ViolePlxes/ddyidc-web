@@ -1,13 +1,11 @@
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
-import { Banner, Button, InlineCopyText, Input, LayerDialog, Tabs } from "@cloudflare/kumo";
+import { Button, InlineCopyText, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { destroyApi, type DestroyOption, type DestroyRequestRow } from "../../../shared/api/destroyRequests";
-import { instanceManagementApi } from "../../../shared/api/instanceManagement";
 import { getApiMessage } from "../../../shared/api/request";
-import { EmailVerificationFields, useEmailVerification } from "../../../shared/components/EmailVerificationFields";
-import { instanceConfirmationActions } from "../../../shared/components/InstanceConfirmationActions";
+import { DestroyVerifyDialog } from "../../../shared/components/DestroyVerifyDialog";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { Pagination } from "../../../shared/components/Pagination";
@@ -46,32 +44,12 @@ export function DestroyRequests() {
   const [tab, setTab] = useState("instances");
   const [page, setPage] = useState(1);
   const [target, setTarget] = useState<DestroyOption>();
-  const [reason, setReason] = useState("");
   const options = useQuery({ queryKey: ["destroy-options"], queryFn: destroyApi.options });
   const requests = useQuery({ queryKey: ["destroy-requests"], queryFn: destroyApi.list });
-  const emailStatus = useQuery({
-    queryKey: ["destroy-email-status", target?.instanceId],
-    queryFn: () => instanceManagementApi(String(target?.instanceId)).productionLockEmail("destroy"),
-    enabled: Boolean(target),
-    staleTime: 0,
-    retry: false,
-  });
-  const verification = useEmailVerification({
-    status: emailStatus.data,
-    statusLoading: emailStatus.isLoading,
-    statusError: emailStatus.error ? getApiMessage(emailStatus.error) : undefined,
-    send: email => instanceManagementApi(String(target?.instanceId)).sendProductionLockEmail(false, email, "destroy").then(() => undefined),
-  });
-  useEffect(() => {
-    if (target) verification.reset();
-    // Reset only when the chosen machine changes, not on every verification state update.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target?.instanceId]);
   const submit = useMutation({
-    mutationFn: () => destroyApi.submit(String(target?.instanceId), reason.trim(), requestID(), verification.email.trim(), verification.code.join("")),
+    mutationFn: (input: { reason: string; email: string; code: string }) => destroyApi.submit(String(target?.instanceId), input.reason, requestID(), input.email, input.code),
     onSuccess: async () => {
       setTarget(undefined);
-      setReason("");
       setTab("requests");
       await Promise.all([client.invalidateQueries({ queryKey: ["destroy-requests"] }), client.invalidateQueries({ queryKey: ["destroy-options"] })]);
     },
@@ -99,7 +77,7 @@ export function DestroyRequests() {
           {row.lastRejectReason ? <span className="text-sm text-kumo-danger">上次拒绝原因：{row.lastRejectReason}</span> : null}
         </div>;
       case "actions":
-        return <Button variant="ghost" size="sm" disabled={!row.eligible} onClick={() => { submit.reset(); verification.reset(); setReason(""); setTarget(row); }}>申请销毁</Button>;
+        return <Button variant="ghost" size="sm" disabled={!row.eligible} onClick={() => { submit.reset(); setTarget(row); }}>申请销毁</Button>;
       default:
         return null;
     }
@@ -139,18 +117,13 @@ export function DestroyRequests() {
         <ConfigurableTable<DestroyRequestRow> rows={pagedHistory} columns={requestColumns} storageKey="ddyidc-console-destroy-columns:v2:requests" loading={requests.isLoading} label="我的销毁申请" renderCell={requestCell} rowKey={(row) => row.id} emptyContent="暂无销毁申请" />
       </PageState>}
     {total > PAGE_SIZE ? <div className="flex flex-wrap items-center justify-end gap-3"><Pagination page={current} totalCount={total} perPage={PAGE_SIZE} setPage={setPage} /></div> : null}
-    <LayerDialog.Root open={Boolean(target)} dismissDisabled={submit.isPending || verification.sending} onOpenChange={(open) => { if (!open && !submit.isPending && !verification.sending) { setTarget(undefined); submit.reset(); } }}>
-      <LayerDialog.Content>
-        <LayerDialog.Title>申请销毁实例</LayerDialog.Title>
-        <LayerDialog.Description>实例 {target?.productName || target?.instanceNo} 销毁后不可恢复，提交后需后台审核。</LayerDialog.Description>
-        <LayerDialog.Body><div className="grid gap-4">
-          {target ? <p>预计可退：<strong>¥{target.refundableAmount}</strong><span className="text-sm text-kumo-subtle">（提交时核算）</span></p> : null}
-          <Input aria-label="销毁原因" placeholder="请填写销毁原因（必填）" maxLength={200} value={reason} onChange={(event) => setReason(event.target.value)} />
-          {target ? <EmailVerificationFields state={verification} idPrefix={`destroy-email-${target.instanceId}`} onCodeChange={() => submit.reset()} /> : null}
-          {submit.error ? <Banner variant="error" title={getApiMessage(submit.error)} /> : null}
-        </div></LayerDialog.Body>
-        {instanceConfirmationActions({ destructive: true, loading: submit.isPending, disabled: verification.sending || !reason.trim() || !verification.ready, onConfirm: () => submit.mutate(), children: "确认申请销毁" })}
-      </LayerDialog.Content>
-    </LayerDialog.Root>
+    <DestroyVerifyDialog
+      target={target ? { instanceId: target.instanceId, instanceNo: target.instanceNo, productName: target.productName, refundableAmount: target.refundableAmount } : undefined}
+      open={Boolean(target)}
+      onOpenChange={(open) => { if (!open && !submit.isPending) { setTarget(undefined); submit.reset(); } }}
+      submitting={submit.isPending}
+      error={submit.error}
+      onConfirm={async input => { await submit.mutateAsync(input); }}
+    />
   </div>;
 }
