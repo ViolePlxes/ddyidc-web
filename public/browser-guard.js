@@ -2,11 +2,25 @@
 (function () {
   var w = window, d = document, timer, panel, reason = "";
   var guard = { blocked: false, mounted: false };
+  var reloadKey = "ddy:browser-guard:reloaded";
   w.__ddyBrowserGuard = guard;
   function message(kind) {
     if (kind === "unsupported") return "当前浏览器内核不支持此页面，请升级浏览器或使用最新版 Chrome、Edge、Firefox、Safari 打开。";
     if (kind === "styles") return "页面样式未能正常加载，请检查网络连接后重新加载。";
     return "页面资源加载失败或耗时过长，请检查网络连接后重新加载。";
+  }
+  // A deploy replaces every hashed asset, so an open tab can ask for a file that
+  // no longer exists. One silent reload with a fresh index recovers it; the flag
+  // stops a reload loop when the network, not the bundle, is the problem.
+  function recover() {
+    try {
+      if (w.sessionStorage.getItem(reloadKey) === "1") return false;
+      w.sessionStorage.setItem(reloadKey, "1");
+    } catch (error) {
+      return false;
+    }
+    w.location.reload();
+    return true;
   }
   function show(kind) {
     reason = kind; guard.blocked = true;
@@ -33,7 +47,10 @@
     if (!okay) show("styles");
     return okay;
   };
-  guard.ready = function () { guard.mounted = true; w.clearTimeout(timer); };
+  guard.ready = function () {
+    guard.mounted = true; w.clearTimeout(timer);
+    try { w.sessionStorage.removeItem(reloadKey); } catch (error) { /* private mode */ }
+  };
   var css = w.CSS;
   // Hard-block only when the runtime itself is missing. Modern CSS colours
   // (oklch/color-mix) and :has are optional: older Chromium builds render a
@@ -43,7 +60,19 @@
   d.addEventListener("DOMContentLoaded", function () { if (guard.blocked) show(reason); });
   w.addEventListener("error", function (event) {
     var target = event.target;
-    if (target && ((target.tagName === "LINK" && target.rel === "stylesheet") || (target.tagName === "SCRIPT" && target.type === "module"))) show(target.tagName === "LINK" ? "styles" : "resources");
+    if (!target) return;
+    var stylesheet = target.tagName === "LINK" && target.rel === "stylesheet";
+    var script = target.tagName === "SCRIPT" && (target.type === "module" || /\/assets\/.+\.js/.test(target.src || ""));
+    if (!stylesheet && !script) return;
+    if (recover()) { guard.blocked = true; return; }
+    show(stylesheet ? "styles" : "resources");
   }, true);
-  timer = w.setTimeout(function () { if (!guard.mounted && !guard.blocked) show("resources"); }, 30000);
+  // Lazy route chunks fail through the promise chain, not always a script error.
+  w.addEventListener("unhandledrejection", function (event) {
+    var text = String((event.reason && event.reason.message) || event.reason || "");
+    if (!/dynamically imported module|Importing a module script failed|Failed to fetch|Loading chunk/i.test(text)) return;
+    if (recover()) { guard.blocked = true; return; }
+    show("resources");
+  });
+  timer = w.setTimeout(function () { if (!guard.mounted && !guard.blocked) { if (!recover()) show("resources"); } }, 30000);
 }());
