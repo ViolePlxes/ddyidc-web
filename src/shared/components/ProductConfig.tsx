@@ -328,8 +328,8 @@ export function ProductConfig({
   const effectiveSelection=Object.fromEntries(options.map(o=>[o.id,selected[o.id]??initialValue(o)]));
   const displayedOptions = options
     .filter(option=>configurationVisible(option,effectiveSelection))
-    .filter((option) => product.configMode === "fixed" || isAdjustableOption(option))
-    .filter(option => option.field !== "cpu" || product.configMode === "elastic" || product.configMode === "fixed" || !product.specs.length)
+    .filter(isAdjustableOption)
+    .filter(option => option.field !== "cpu" || product.configMode === "elastic" || !product.specs.length)
     .filter((option) => !isRegionOption(option) && option !== derivedIPGroup && option.field !== "image")
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
@@ -445,7 +445,7 @@ export function ProductConfig({
   const anchor = (name: string) => `product-${product.id}-${name}`;
   const steps = [
     ...(catalogSelection ? [{ id: "catalog-specifications", title: "计算规格" }] : []),
-    ...(regionOption && configurationVisible(regionOption, effectiveSelection) ? [{ id: anchor(`option-${regionOption.id}`), title: optionTitle(regionOption.field, regionOption.name || "区域") }] : []),
+    ...(regionOption && isAdjustableOption(regionOption) && configurationVisible(regionOption, effectiveSelection) ? [{ id: anchor(`option-${regionOption.id}`), title: optionTitle(regionOption.field, regionOption.name || "区域") }] : []),
     ...displayedOptions.map((option) => ({ id: anchor(`option-${option.id}`), title: optionTitle(option.field, option.name || option.field) })),
     ...(imageOption && imageGroups.length ? [{ id: anchor("images"), title: "操作系统" }] : []),
     { id: anchor("purchase"), title: "购买信息" },
@@ -487,7 +487,7 @@ export function ProductConfig({
         className={`${externalBill ? "grid items-start gap-6" : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"}${billLoading ? " pointer-events-none" : ""}`}
       >
         <div className="grid gap-5">
-        {regionOption && configurationVisible(regionOption, effectiveSelection) ? (
+        {regionOption && isAdjustableOption(regionOption) && configurationVisible(regionOption, effectiveSelection) ? (
           <LayerCard id={anchor(`option-${regionOption.id}`)} className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
             <div><h2 className="text-lg font-semibold text-kumo-strong">区域</h2><p className="text-sm text-kumo-subtle">请选择资源所在区域，不同区域可用库存与价格可能不同。</p></div>
             <ProductOptionControl option={regionOption} value={selectedRegionValue} disabled={Boolean(product.readOnly)} onChange={(next) => chooseOption(regionOption, next)} />
