@@ -1,12 +1,12 @@
 import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, Checkbox, LayerCard, Radio, Select, Tabs } from "@cloudflare/kumo";
-import { MinusIcon, PlusIcon, ShoppingCartIcon } from "@phosphor-icons/react";
+import { Banner, Button, Checkbox, DropdownMenu, LayerCard, Radio, Select, Tabs } from "@cloudflare/kumo";
+import { CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { consoleApi } from "../api/console";
 import { getApiMessage } from "../api/request";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import type {
@@ -75,6 +75,46 @@ function matchingIPChoice(region: ConfigOption, regionValue: string, ipGroup: Co
   const regionName = region.options.find((choice) => choice.id === regionValue)?.name ?? "";
   const key = locationKey(regionName);
   return key ? ipGroup.options.find((choice) => locationKey(choice.name) === key) : undefined;
+}
+
+function WindowsMark() {
+  return <span aria-hidden="true" className="grid size-8 shrink-0 grid-cols-2 gap-0.5">
+    <span className="rounded-[1px] bg-[#F25022]" />
+    <span className="rounded-[1px] bg-[#7FBA00]" />
+    <span className="rounded-[1px] bg-[#00A4EF]" />
+    <span className="rounded-[1px] bg-[#FFB900]" />
+  </span>;
+}
+
+const osLogos: Record<string, { slug: string; color: string }> = {
+  CentOS: { slug: "centos", color: "#262577" },
+  Ubuntu: { slug: "ubuntu", color: "#E95420" },
+  Debian: { slug: "debian", color: "#A81D33" },
+  Fedora: { slug: "fedora", color: "#294172" },
+  AlmaLinux: { slug: "almalinux", color: "#0F4266" },
+  Rocky: { slug: "rockylinux", color: "#10B981" },
+};
+
+function ImageFamilyMark({ name }: { name: string }) {
+  if (/windows/i.test(name)) return <WindowsMark />;
+  const logo = Object.entries(osLogos).find(([family]) => name.toLowerCase().includes(family.toLowerCase()))?.[1];
+  if (!logo) return <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-md bg-kumo-tint text-kumo-strong"><LinuxLogoIcon size={20} weight="fill" /></span>;
+  const mask = `url(/os-logos/${logo.slug}.svg)`;
+  return <span
+    aria-hidden="true"
+    className="size-8 shrink-0"
+    style={{
+      backgroundColor: logo.color,
+      maskImage: mask,
+      WebkitMaskImage: mask,
+      maskRepeat: "no-repeat",
+      WebkitMaskRepeat: "no-repeat",
+      maskPosition: "center",
+      WebkitMaskPosition: "center",
+      maskSize: "contain",
+      WebkitMaskSize: "contain",
+    }}
+  />;
 }
 
 const initialValue = configurationInitialValue;
@@ -255,7 +295,10 @@ export function ProductConfig({
 
   const [password, setPassword] = useState(generatePassword);
   const passwordIssues = options.length ? instancePasswordIssues(password) : [];
-  const [imageGroup, setImageGroup] = useState("");
+  const [openImageGroup, setOpenImageGroup] = useState<string | null>(null);
+  const [imageExpanded, setImageExpanded] = useState(false);
+  const [imageCapacity, setImageCapacity] = useState(99);
+  const imageGridRef = useRef<HTMLDivElement>(null);
   const certification = useCertificationGate();
   const addCart = useCartStore((state) => state.add);
 
@@ -296,11 +339,21 @@ export function ProductConfig({
     : imageOption?.options.length ? [{ name: "全部镜像", child: imageOption.options }] : [], [imageOption, orderPage]);
 
   useEffect(() => {
-    if (!imageGroups.length) return;
-    const selectedImage = imageOption ? selected[imageOption.id] : undefined;
-    const group = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
-    setImageGroup(group?.name ?? "");
-  }, [imageGroups, imageOption, selected]);
+    const node = imageGridRef.current;
+    if (!node) return;
+    const measure = () => setImageCapacity(Math.max(1, Math.floor((node.clientWidth + 12) / (190 + 12))));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [imageGroups.length]);
+
+  const selectedImage = imageOption ? selected[imageOption.id] ?? initialValue(imageOption) : "";
+  const selectedImageGroup = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
+  const selectedImageChoice = selectedImageGroup?.child.find((choice) => choice.id === selectedImage);
+  const imageOverflow = imageGroups.length > imageCapacity;
+  const visibleImageGroups = imageExpanded || !imageOverflow ? imageGroups : imageGroups.slice(0, Math.max(0, imageCapacity - 1));
+  const imageSlots = imageExpanded ? visibleImageGroups.length : Math.min(imageCapacity, visibleImageGroups.length + (imageOverflow ? 1 : 0));
 
   const selectSpec = (spec: ProductSpec) => {
     setSelectedSpecId(spec.id);
@@ -458,11 +511,45 @@ export function ProductConfig({
 
         {imageOption && imageGroups.length ? (
           <LayerCard id={anchor("images")} className="scroll-mt-4 grid gap-4 px-5 py-4">
-            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">请选择需要安装的系统镜像与版本。</p></div>
-            <div className="min-w-0 overflow-x-auto"><Tabs variant="segmented" tabs={imageGroups.map((group) => ({ value: group.name, label: group.name }))} value={imageGroup || imageGroups[0]!.name} onValueChange={(value) => { setImageGroup(value); const first = imageGroups.find((group) => group.name === value)?.child[0]; if (first) setSelected((current) => ({ ...current, [imageOption.id]: first.id })); }} /></div>
-            {imageGroups.filter((group) => group.name === (imageGroup || imageGroups[0]!.name)).map((group) => (
-              <div key={group.name} className="overflow-x-auto"><Tabs variant="segmented" aria-label="镜像版本" value={selected[imageOption.id] ?? initialValue(imageOption)} onValueChange={(value) => setSelected((current) => ({ ...current, [imageOption.id]: value }))} tabs={group.child.map((choice) => ({ value: choice.id, label: choiceLabel(choice) }))} /></div>
-            ))}
+            <div><h2 className="text-lg font-semibold text-kumo-strong">操作系统</h2><p className="text-sm text-kumo-subtle">先选择系统家族，再选择需要安装的镜像版本。</p></div>
+            <div ref={imageGridRef} className="grid gap-3" style={imageExpanded
+              ? { gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))" }
+              : { gridTemplateColumns: `repeat(${Math.max(1, imageSlots)}, minmax(0, 1fr))` }}>
+              {visibleImageGroups.map((group) => {
+                const groupSelected = selectedImageGroup?.name === group.name;
+                const active = openImageGroup === group.name || (openImageGroup === null && groupSelected);
+                const version = groupSelected && selectedImageChoice ? choiceLabel(selectedImageChoice) : "请选择版本";
+                const cardClass = `flex h-[88px] w-full items-center gap-3 rounded-md border bg-kumo-base px-4 text-left transition-colors ${active ? "border-kumo-contrast" : "border-kumo-line hover:border-kumo-hairline hover:bg-kumo-elevated"}`;
+                const content = <>
+                  <ImageFamilyMark name={group.name} />
+                  <span className="grid min-w-0 gap-0.5">
+                    <span className="truncate text-base font-medium text-kumo-strong">{group.name}</span>
+                    <span className={`truncate text-sm ${groupSelected ? "text-kumo-strong" : "text-kumo-subtle"}`}>{version}</span>
+                  </span>
+                </>;
+                if (openImageGroup !== group.name) {
+                  return <button key={group.name} type="button" className={cardClass} onPointerDown={(event) => { event.stopPropagation(); setOpenImageGroup(group.name); }} onClick={() => setOpenImageGroup(group.name)}>{content}</button>;
+                }
+                return <DropdownMenu key={group.name} open onOpenChange={(open) => { if (!open) setOpenImageGroup(null); }}>
+                  <DropdownMenu.Trigger render={<button type="button" className={cardClass}>{content}</button>} />
+                  <DropdownMenu.Content className="max-h-80 w-[280px] overflow-y-auto">
+                    <DropdownMenu.Group>
+                      {group.child.map((choice) => <DropdownMenu.Item key={choice.id} className={choice.id === selectedImage ? "bg-kumo-tint" : ""} onClick={() => { setSelected((current) => ({ ...current, [imageOption.id]: choice.id })); setOpenImageGroup(null); }}>
+                        {choiceLabel(choice)}
+                      </DropdownMenu.Item>)}
+                    </DropdownMenu.Group>
+                  </DropdownMenu.Content>
+                </DropdownMenu>;
+              })}
+              {imageOverflow && !imageExpanded ? <button type="button" aria-expanded="false" className="flex h-[88px] w-full items-center gap-3 rounded-md border border-kumo-line bg-kumo-base px-4 text-left transition-colors hover:border-kumo-hairline hover:bg-kumo-elevated" onClick={() => { setImageExpanded(true); setOpenImageGroup(null); }}>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-kumo-tint text-kumo-strong"><SquaresFourIcon size={20} /></span>
+                <span className="grid min-w-0 gap-0.5"><span className="text-base font-medium text-kumo-strong">更多系统</span><span className="text-sm text-kumo-subtle">还有 {imageGroups.length - visibleImageGroups.length} 个</span></span>
+              </button> : null}
+              {imageExpanded && imageOverflow ? <button type="button" aria-expanded="true" className="flex h-[88px] w-full items-center gap-3 rounded-md border border-kumo-line bg-kumo-base px-4 text-left transition-colors hover:border-kumo-hairline hover:bg-kumo-elevated" onClick={() => { setImageExpanded(false); setOpenImageGroup(null); }}>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-kumo-tint text-kumo-strong"><CaretUpIcon size={20} /></span>
+                <span className="grid min-w-0 gap-0.5"><span className="text-base font-medium text-kumo-strong">收起</span><span className="text-sm text-kumo-subtle">只显示一行</span></span>
+              </button> : null}
+            </div>
           </LayerCard>
         ) : null}
 
