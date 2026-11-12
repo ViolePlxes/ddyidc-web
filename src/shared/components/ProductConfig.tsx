@@ -298,6 +298,7 @@ export function ProductConfig({
   const [openImageGroup, setOpenImageGroup] = useState<string | null>(null);
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imageCapacity, setImageCapacity] = useState(99);
+  const [imagePopoverSide, setImagePopoverSide] = useState<"top" | "bottom">("bottom");
   const imageGridRef = useRef<HTMLDivElement>(null);
   const certification = useCertificationGate();
   const addCart = useCartStore((state) => state.add);
@@ -528,11 +529,11 @@ export function ProductConfig({
                   </span>
                 </>;
                 if (openImageGroup !== group.name) {
-                  return <button key={group.name} type="button" className={cardClass} onClick={(event) => { event.currentTarget.scrollIntoView({ block: "center" }); setOpenImageGroup(group.name); }}>{content}</button>;
+                  return <button key={group.name} type="button" className={cardClass} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); setImagePopoverSide(window.innerHeight - rect.bottom < 300 ? "top" : "bottom"); setOpenImageGroup(group.name); }}>{content}</button>;
                 }
                 return <Popover key={group.name} open onOpenChange={(open) => { if (!open) setOpenImageGroup(null); }}>
                   <Popover.Trigger render={<button type="button" className={cardClass}>{content}</button>} />
-                  <Popover.Content side="bottom" sideOffset={4} className="w-[280px] p-2">
+                  <Popover.Content side={imagePopoverSide} sideOffset={4} className="w-[280px] p-2">
                     <div className="grid gap-1">
                       {group.child.map((choice) => <Button key={choice.id} variant="ghost" size="sm" className={`w-full justify-start ${choice.id === selectedImage ? "bg-kumo-tint" : ""}`} onClick={() => { setSelected((current) => ({ ...current, [imageOption.id]: choice.id })); setOpenImageGroup(null); }}>
                         {choiceLabel(choice)}
