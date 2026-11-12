@@ -2,6 +2,8 @@ import type {ReactNode} from 'react';
 export interface TableColumn { key: string; label: string; width: number; min: number; header?:ReactNode; required?: boolean; type?: 'S'|'N'|'A' }
 export interface TableLayout { widths: Record<string,number>; hidden: string[]; order: string[] }
 export const maxTableColumnWidth=800;
+/** One preference key across release suffixes; `:v2:` is metadata, not a new user. */
+export function tablePreferenceKey(key:string){return key.replace(/:v\d+(?=:|$)/g,'');}
 export function tableColumnWidth(value:number,column:TableColumn){return Math.min(maxTableColumnWidth,Math.max(column.min,Number.isFinite(value)?value:column.width));}
 export function defaultTableLayout(columns:readonly TableColumn[]):TableLayout{return {widths:Object.fromEntries(columns.map(c=>[c.key,c.width])),hidden:[],order:columns.map(c=>c.key)};}
 export function readTableLayout(storage:Pick<Storage,'getItem'>,key:string,columns:readonly TableColumn[],legacy?:{shares:string;pixels:string}):TableLayout{

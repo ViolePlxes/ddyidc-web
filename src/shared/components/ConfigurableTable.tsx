@@ -7,7 +7,7 @@ import {TableFieldsDialog} from './TableFieldsDialog';
 import {Button,DropdownMenu,LayerCard,Table} from '@cloudflare/kumo';
 import {DotsThreeVerticalIcon,PencilSimpleIcon} from '@phosphor-icons/react';
 import {Fragment,useEffect,useRef,useState,type ReactNode,type ComponentProps} from 'react';
-import {defaultTableLayout,reorderTableColumns,maxTableColumnWidth,tableColumnWidth,readTableLayout,type TableColumn,type TableLayout} from '../utils/tableLayout';
+import {defaultTableLayout,reorderTableColumns,maxTableColumnWidth,tableColumnWidth,readTableLayout,tablePreferenceKey,type TableColumn,type TableLayout} from '../utils/tableLayout';
 
 export interface ConfigurableTableProps<T> {
  columns:readonly TableColumn[];
@@ -29,15 +29,30 @@ export interface ConfigurableTableProps<T> {
 }
 export type {TableColumn} from '../utils/tableLayout';
 /** Reusable Kumo table. Pages supply data/columns; styles and interactions stay shared. */
-export function ConfigurableTable<T>(props:ConfigurableTableProps<T>){return <ConfigurableTableInstance key={`${props.storageKey}:${props.columns.map(column=>column.key).join('|')}`} {...props}/>;}
+export function ConfigurableTable<T>(props:ConfigurableTableProps<T>){return <ConfigurableTableInstance key={tablePreferenceKey(props.storageKey)} {...props}/>;}
 function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys,label,renderCell,rowKey,loading=false,emptyContent,rowProps,initialHiddenColumns=[],fillHeight=false,fieldButtonAfterLabel=false,expandedRowKey=null,renderExpandedRow}:ConfigurableTableProps<T>){
- const [layout,setLayout]=useState<TableLayout>(()=>{try{const saved=localStorage.getItem(storageKey);const current=readTableLayout(localStorage,storageKey,columns,legacyStorageKeys);return saved?current:{...current,hidden:columns.filter(column=>!column.required&&initialHiddenColumns.includes(column.key)).map(column=>column.key)}}catch{return defaultTableLayout(columns)}});
+ const columnsKey=columns.map(column=>column.key).join('|');
+ const preferenceKey=tablePreferenceKey(storageKey);
+ const [layout,setLayout]=useState<TableLayout>(()=>{try{const saved=localStorage.getItem(preferenceKey)??localStorage.getItem(storageKey);const current=readTableLayout(localStorage,localStorage.getItem(preferenceKey)?preferenceKey:storageKey,columns,legacyStorageKeys);return saved?current:{...current,hidden:columns.filter(column=>!column.required&&initialHiddenColumns.includes(column.key)).map(column=>column.key)}}catch{return defaultTableLayout(columns)}});
  const [activeColumn,setActiveColumn]=useState<string|null>(null);
  const sensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:5}}),useSensor(KeyboardSensor,{coordinateGetter:sortableKeyboardCoordinates}));
  const [fieldsOpen,setFieldsOpen]=useState(false);
  const [resizing,setResizing]=useState(false);
  const drag=useRef<{key:string;x:number;width:number;before:TableLayout}|null>(null);
- useEffect(()=>{if(!resizing)try{localStorage.setItem(storageKey,JSON.stringify(layout))}catch{/* Current page still works. */}},[layout,storageKey,resizing]);
+ const layoutRef=useRef(layout);layoutRef.current=layout;
+ // Merge columns added or removed by a later release without discarding the
+ // user's saved order. The instance is no longer keyed by the column list, so
+ // an update must never remount the table or drop an unsaved preference.
+ useEffect(()=>{setLayout(current=>{const keys=columns.map(column=>column.key);const order=[...current.order.filter(key=>keys.includes(key)),...keys.filter(key=>!current.order.includes(key))];const widths=Object.fromEntries(columns.map(column=>[column.key,current.widths[column.key]??column.width]));const hidden=current.hidden.filter(key=>{const column=columns.find(item=>item.key===key);return Boolean(column&&!column.required)});const same=order.length===current.order.length&&order.every((key,index)=>key===current.order[index])&&hidden.length===current.hidden.length&&columns.every(column=>current.widths[column.key]===widths[column.key]);return same?current:{...current,order,widths,hidden}});
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[columnsKey]);
+ const persist=()=>{try{localStorage.setItem(preferenceKey,JSON.stringify(layoutRef.current))}catch{/* Current page still works. */}};
+ useEffect(()=>{if(!resizing){persist();return}const timer=setTimeout(persist,150);return()=>clearTimeout(timer);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[layout,preferenceKey,resizing]);
+ useEffect(()=>()=>{persist();
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[preferenceKey]);
  const visible=layout.order.map(key=>columns.find(c=>c.key===key)).filter((c):c is TableColumn=>Boolean(c&&(c.required||!layout.hidden.includes(c.key))));
  const resize=(column:TableColumn,value:number)=>setLayout(current=>({...current,widths:{...current.widths,[column.key]:tableColumnWidth(value,column)}}));
  const reset=(column:TableColumn)=>resize(column,column.width);

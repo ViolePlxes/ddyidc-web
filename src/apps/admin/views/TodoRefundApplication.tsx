@@ -5,6 +5,7 @@ import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
 import { MachineRefundDialog } from "./MachineRefundDialog";
 import { Dialog } from "../../../shared/components/Dialog";
+import { RefundRejectionDialog } from "../../../shared/components/RefundRejectionDialog";
 import { DefinitionList } from "../../../shared/components/DataTable";
 import type { TodoEntry } from "../../../shared/api/adminTodos";
 interface Fees { setup: string; installation: string; handling: string; gift: string; traffic: string; valueAdded: string; evidence: string }
@@ -64,7 +65,7 @@ export function PendingRefundActions({ row, onDone }: { row: TodoEntry; onDone: 
   const machine = isMachineRefund(query.data?.request);
   if (query.isPending) return <p role="status">正在核对退款类型…</p>;
   if (query.isError) return <div className="grid gap-2"><Banner variant="error" title={getApiMessage(query.error)} /><Button variant="secondary" onClick={() => void query.refetch()}>重新核对</Button></div>;
-  if (machine) return <><MachineRefundDialog row={row} action="direct_balance" onDone={onDone} /><MachineRefundDialog row={row} action="upstream" onDone={onDone} /></>;
+  if (machine) return <div className="flex flex-wrap gap-2"><MachineRefundDialog row={row} action="direct_balance" onDone={onDone} /><MachineRefundDialog row={row} action="upstream" onDone={onDone} /><RefundRejectionDialog applicationId={row.id} updatedAt={query.data?.updatedAt} onDone={onDone} /></div>;
   const unavailable = periods?.some(period => period.unstarted || period.instanceId === "0") ? "实例尚未开通，没有可申请退款的供应商实例；填写处理原因后可直接退余额。" : "此申请不属于已开通机器退款，系统自动核算金额后退入客户余额。";
   return <div className="grid gap-2"><div className="flex flex-wrap gap-2"><Dialog.Root open={open} onOpenChange={setOpen}><Dialog.Trigger render={<Button variant="secondary" size="sm">直接退余额</Button>} /><Dialog className="grid gap-4 p-8"><Dialog.Title>直接退余额</Dialog.Title><Dialog.Description>{unavailable}</Dialog.Description><TodoRefundApplication row={row} onDone={() => { setOpen(false); onDone(); }} /></Dialog></Dialog.Root><Button variant="secondary" size="sm" disabled title={unavailable}>向上游申请退款</Button></div><p className="text-base text-kumo-subtle">{unavailable}</p></div>;
 }
