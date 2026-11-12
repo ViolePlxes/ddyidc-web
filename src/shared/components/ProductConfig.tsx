@@ -37,6 +37,11 @@ const cycleMonths: Record<string, number> = {
 
 const fieldOrder = ["cpu", "memory", "traffic","storage_mode", "system_disk", "data_disk", "ip_num", "network", "bandwidth", "defense"];
 
+const regionFields = ["data_center", "region", "area", "区域"];
+function isRegionOption(option: ConfigOption) {
+  return regionFields.includes(option.field.trim().toLowerCase());
+}
+
 const initialValue = configurationInitialValue;
 
 function quantityOptionPrice(option: ConfigOption, selectedValue: string): number {
@@ -225,14 +230,14 @@ export function ProductConfig({
   useEffect(() => setCycle(cycles.find(c=>c.billingcycle in cycleMonths)?.billingcycle ?? cycles[0]?.billingcycle ?? "monthly"), [product.id, cycles]);
 
   const selectedSpec = product.specs.find((spec) => spec.id === selectedSpecId) ?? product.specs[0] ?? null;
-  const dataCenterOption = options.find((option) => option.field === "data_center");
+  const regionOption = options.find(isRegionOption);
   const imageOption = options.find((option) => option.field === "image");
   const effectiveSelection=Object.fromEntries(options.map(o=>[o.id,selected[o.id]??initialValue(o)]));
   const displayedOptions = (product.configMode === "fixed" ? [] : options)
     .filter(option=>configurationVisible(option,effectiveSelection))
     .filter(isAdjustableOption)
     .filter(option => option.field !== "cpu" || product.configMode === "elastic" || !product.specs.length)
-    .filter((option) => !["data_center", "区域", "region", "area", "image"].includes(option.field))
+    .filter((option) => !isRegionOption(option) && option.field !== "image")
     .sort((a, b) => {
       const ai = fieldOrder.indexOf(a.field); const bi = fieldOrder.indexOf(b.field);
       return (ai < 0 ? fieldOrder.length : ai) - (bi < 0 ? fieldOrder.length : bi);
@@ -301,7 +306,7 @@ export function ProductConfig({
   const total = dynamicPricing ? Number(liveQuote?.total ?? 0) : unitPrice * quantity;
   const nextRenewal = dynamicPricing ? Number(liveQuote?.renewal ?? 0) : (periodBase + optionPrice * durationMonth) * quantity;
   const monthlyEquivalent = durationMonth > 0 ? nextRenewal / durationMonth : nextRenewal;
-  const selectedRegion = dataCenterOption?.options.find((item) => item.id === selected[dataCenterOption!.id])?.name ?? "默认地域";
+  const selectedRegion = regionOption?.options.find((item) => item.id === (selected[regionOption.id] ?? initialValue(regionOption)))?.name ?? regionOption?.options[0]?.name ?? "默认地域";
   const outOfStock = selectedSpec?.stock !== null && selectedSpec?.stock !== undefined ? selectedSpec.stock <= 0 : product.stock !== null && product.stock <= 0;
   const specsUnavailable = isUpstreamProduct(product) ? !orderPage : product.specs.length === 0;
 
@@ -326,6 +331,7 @@ export function ProductConfig({
   const anchor = (name: string) => `product-${product.id}-${name}`;
   const steps = [
     ...(catalogSelection ? [{ id: "catalog-specifications", title: "计算规格" }] : []),
+    ...(regionOption && configurationVisible(regionOption, effectiveSelection) ? [{ id: anchor(`option-${regionOption.id}`), title: optionTitle(regionOption.field, regionOption.name || "区域") }] : []),
     ...displayedOptions.map((option) => ({ id: anchor(`option-${option.id}`), title: optionTitle(option.field, option.name || option.field) })),
     ...(imageOption && imageGroups.length ? [{ id: anchor("images"), title: "操作系统" }] : []),
     { id: anchor("purchase"), title: "购买信息" },
@@ -367,6 +373,12 @@ export function ProductConfig({
         className={`${externalBill ? "grid items-start gap-6" : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"}${billLoading ? " pointer-events-none" : ""}`}
       >
         <div className="grid gap-5">
+        {regionOption && configurationVisible(regionOption, effectiveSelection) ? (
+          <LayerCard id={anchor(`option-${regionOption.id}`)} className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
+            <div><h2 className="text-lg font-semibold text-kumo-strong">区域</h2><p className="text-sm text-kumo-subtle">请选择资源所在区域，不同区域可用库存与价格可能不同。</p></div>
+            <ProductOptionControl option={regionOption} value={selected[regionOption.id] ?? initialValue(regionOption)} disabled={Boolean(product.readOnly)} onChange={(next) => setSelected((current) => ({ ...current, [regionOption.id]: next }))} />
+          </LayerCard>
+        ) : null}
         {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} referencePrice={isUpstreamProduct(product) ? product.price : undefined} /> : null}
         {!catalogSelection && selectedSpec ? (
           <LayerCard className=" px-5 py-4 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong font-medium">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
