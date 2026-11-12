@@ -411,6 +411,15 @@ export function ProductConfig({
   const monthlyEquivalent = durationMonth > 0 ? nextRenewal / durationMonth : nextRenewal;
   const selectedRegion = regionOption?.options.find((item) => item.id === selectedRegionValue)?.name ?? regionOption?.options[0]?.name ?? "默认地域";
   const selectedIPGroup = regionOption && derivedIPGroup ? matchingIPChoice(regionOption, selectedRegionValue, derivedIPGroup) : undefined;
+  const fixedConfigItems = product.configMode === "fixed"
+    ? options
+      .filter((option) => ["cpu", "memory", "traffic", "storage_mode", "system_disk", "data_disk", "ip_num", "network", "bandwidth", "defense"].includes(option.field))
+      .map((option) => {
+        const value = selected[option.id] ?? initialValue(option);
+        return { key: option.id, label: optionTitle(option.field, option.name || option.field), value: withoutZeroPrice(configurationDisplayValue(option, value)) };
+      })
+      .filter((item) => item.value)
+    : [];
   const chooseOption = (option: ConfigOption, next: string) => {
     setSelected((current) => {
       const updated = { ...current, [option.id]: next };
@@ -497,6 +506,18 @@ export function ProductConfig({
         {!catalogSelection && (product.specs.length || !isUpstreamProduct(product)) ? <SpecTable specs={product.specs} selectedId={selectedSpecId} onSelect={selectSpec} catalogSelection={catalogSelection} referencePrice={isUpstreamProduct(product) ? product.price : undefined} /> : null}
         {!catalogSelection && selectedSpec ? (
           <LayerCard className=" px-5 py-4 text-sm"><span className="text-kumo-subtle">当前所选：</span><strong className="text-kumo-strong font-medium">{selectedRegion} · {selectedSpec.name}｜{selectedSpec.vcpu} vCPU｜{selectedSpec.memory} 内存</strong></LayerCard>
+        ) : null}
+
+        {fixedConfigItems.length ? (
+          <LayerCard className="grid gap-3 px-5 py-4">
+            <div><h2 className="text-lg font-semibold text-kumo-strong">固定配置</h2><p className="text-sm text-kumo-subtle">该商品规格固定，以下配置随规格确定，无需单独选择。</p></div>
+            <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {fixedConfigItems.map((item) => <div key={item.key} className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-kumo-line px-3 py-2 text-sm">
+                <dt className="shrink-0 text-kumo-subtle">{item.label}</dt>
+                <dd className="min-w-0 truncate text-right font-medium text-kumo-strong" title={item.value}>{item.value}</dd>
+              </div>)}
+            </dl>
+          </LayerCard>
         ) : null}
 
         {displayedOptions.map((option) => {
