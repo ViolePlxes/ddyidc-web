@@ -1,6 +1,6 @@
 import { RefundAmountChoice, selectedRefundAmount, type RefundAmountMode } from "./RefundAmountChoice";
 import { Banner, Button, Input, Switch } from "@cloudflare/kumo";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminRequest, type ApiEnvelope, getApiMessage } from "../../../shared/api/request";
 import { MachineRefundDialog } from "./MachineRefundDialog";
@@ -21,7 +21,7 @@ function isMachineRefund(request?: Application["request"]) {
 export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: TodoEntry; onDone: () => void; readOnly?: boolean }) {
   const [amountMode,setAmountMode]=useState<RefundAmountMode>("daily"); const [customAmount,setCustomAmount]=useState("");
  const cache = useQueryClient(); const [reason, setReason] = useState(""); const [confirmLarge, setConfirmLarge] = useState(false); const [requestId, setRequestId] = useState(() => crypto.randomUUID());
-  const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
+  const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data, placeholderData: keepPreviousData });
   const review = useMutation({ mutationFn: async (action: string) => adminRequest.post(`/todos/refund-applications/${row.id}/review`, { action, reason, requestId, fees: automaticQuote.data?.fees, expectedAmount: selectedAmount ?? "", amountMode, customAmount: amountMode === "custom" ? customAmount : "", confirmLarge, expectedUpdatedAt: query.data?.updatedAt }), onSuccess: async () => { await Promise.all([cache.invalidateQueries({ queryKey: ["todo-refund-application", row.id] }), cache.invalidateQueries({ queryKey: ["admin-todos"] }), cache.invalidateQueries({ queryKey: ["admin-todo-items"] })]); onDone(); } });
   const machine = isMachineRefund(query.data?.request);
   const snapshot = query.data?.request?.snapshot;
@@ -59,7 +59,7 @@ export function TodoRefundApplication({ row, onDone, readOnly = false }: { row: 
 // Only delivered, non-renewal machine applications support supplier refunds.
 export function PendingRefundActions({ row, onDone }: { row: TodoEntry; onDone: () => void }) {
   const [open, setOpen] = useState(false);
-  const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], retry: false, queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
+  const query = useQuery({ queryKey: ["todo-refund-application", row.id, row.updatedAt], retry: false, placeholderData: keepPreviousData, queryFn: async () => (await adminRequest.get<ApiEnvelope<Application>>(`/todos/refund-applications/${row.id}`)).data.data });
   const periods = query.data?.request?.snapshot.periods;
   const machine = isMachineRefund(query.data?.request);
   if (query.isPending) return <p role="status">正在核对退款类型…</p>;
