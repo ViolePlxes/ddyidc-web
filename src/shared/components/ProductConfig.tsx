@@ -1,7 +1,7 @@
 import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, Checkbox, LayerCard, Radio, Select, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select, Tabs } from "@cloudflare/kumo";
 import { CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { consoleApi } from "../api/console";
@@ -299,7 +299,6 @@ export function ProductConfig({
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imageCapacity, setImageCapacity] = useState(99);
   const imageGridRef = useRef<HTMLDivElement>(null);
-  const imagePanelRef = useRef<HTMLDivElement>(null);
   const certification = useCertificationGate();
   const addCart = useCartStore((state) => state.add);
 
@@ -349,16 +348,9 @@ export function ProductConfig({
     return () => observer.disconnect();
   }, [imageGroups.length]);
 
-  useEffect(() => {
-    if (!openImageGroup) return;
-    const frame = requestAnimationFrame(() => imagePanelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
-    return () => cancelAnimationFrame(frame);
-  }, [openImageGroup]);
-
   const selectedImage = imageOption ? selected[imageOption.id] ?? initialValue(imageOption) : "";
   const selectedImageGroup = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
   const selectedImageChoice = selectedImageGroup?.child.find((choice) => choice.id === selectedImage);
-  const openImageGroupData = imageGroups.find((item) => item.name === openImageGroup);
   const imageOverflow = imageGroups.length > imageCapacity;
   const visibleImageGroups = imageExpanded || !imageOverflow ? imageGroups : imageGroups.slice(0, Math.max(0, imageCapacity - 1));
   const imageSlots = imageExpanded ? visibleImageGroups.length : Math.min(imageCapacity, visibleImageGroups.length + (imageOverflow ? 1 : 0));
@@ -535,7 +527,19 @@ export function ProductConfig({
                     <span className={`truncate text-sm ${groupSelected ? "text-kumo-strong" : "text-kumo-subtle"}`}>{version}</span>
                   </span>
                 </>;
-                return <button key={group.name} type="button" className={cardClass} onClick={() => setOpenImageGroup((current) => current === group.name ? null : group.name)}>{content}</button>;
+                if (openImageGroup !== group.name) {
+                  return <button key={group.name} type="button" className={cardClass} onClick={(event) => { event.currentTarget.scrollIntoView({ block: "center" }); setOpenImageGroup(group.name); }}>{content}</button>;
+                }
+                return <Popover key={group.name} open onOpenChange={(open) => { if (!open) setOpenImageGroup(null); }}>
+                  <Popover.Trigger render={<button type="button" className={cardClass}>{content}</button>} />
+                  <Popover.Content side="bottom" sideOffset={4} className="w-[280px] p-2">
+                    <div className="grid gap-1">
+                      {group.child.map((choice) => <Button key={choice.id} variant="ghost" size="sm" className={`w-full justify-start ${choice.id === selectedImage ? "bg-kumo-tint" : ""}`} onClick={() => { setSelected((current) => ({ ...current, [imageOption.id]: choice.id })); setOpenImageGroup(null); }}>
+                        {choiceLabel(choice)}
+                      </Button>)}
+                    </div>
+                  </Popover.Content>
+                </Popover>;
               })}
               {imageOverflow && !imageExpanded ? <button type="button" aria-expanded="false" className="flex h-[88px] w-full items-center gap-3 rounded-md border border-kumo-line bg-kumo-base px-4 text-left transition-colors hover:border-kumo-hairline hover:bg-kumo-elevated" onClick={() => { setImageExpanded(true); setOpenImageGroup(null); }}>
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-kumo-tint text-kumo-strong"><SquaresFourIcon size={20} /></span>
@@ -546,17 +550,7 @@ export function ProductConfig({
                 <span className="grid min-w-0 gap-0.5"><span className="text-base font-medium text-kumo-strong">收起</span><span className="text-sm text-kumo-subtle">只显示一行</span></span>
               </button> : null}
             </div>
-            {openImageGroupData ? <div ref={imagePanelRef} className="rounded-md border border-kumo-line bg-kumo-base p-2 shadow-sm">
-              <div className="flex items-center justify-between gap-2 px-2 py-1">
-                <strong className="text-sm font-medium text-kumo-strong">{openImageGroupData.name} 版本</strong>
-                <Button variant="ghost" size="sm" onClick={() => setOpenImageGroup(null)}>收起</Button>
-              </div>
-              <div className="max-h-60 overflow-y-auto">
-                {openImageGroupData.child.map((choice) => <Button key={choice.id} variant="ghost" size="sm" className={`w-full justify-start ${choice.id === selectedImage ? "bg-kumo-tint" : ""}`} onClick={() => { setSelected((current) => ({ ...current, [imageOption.id]: choice.id })); setOpenImageGroup(null); }}>
-                  {choiceLabel(choice)}
-                </Button>)}
-              </div>
-            </div> : null}
+
           </LayerCard>
         ) : null}
 
