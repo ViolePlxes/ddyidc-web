@@ -1,9 +1,9 @@
 import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, LayerCard, Loader,  Radio, Table, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Radio, Tabs } from "@cloudflare/kumo";
 
 import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -15,7 +15,8 @@ import { ProductSteps } from "../../../shared/components/ProductSteps";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
-import { belongsToGroup, catalogColumns, catalogLayout, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
+import { belongsToGroup, catalogLayout, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
+import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
 
 function productSummary(product: ProductSummary) {
   return (product.summary || product.description || "暂无商品简介")
@@ -127,30 +128,57 @@ function PublicProductCatalog() {
   );
 }
 
-function CatalogProductRow({ product, selected }: { product: CatalogProduct; selected: boolean }) {
+export const catalogTableColumns: readonly TableColumn[] = [
+  { key: "name", label: "实例规格", width: 240, min: 180, required: true },
+  { key: "vcpu", label: "vCPU", width: 90, min: 70, type: "N" },
+  { key: "memory", label: "内存", width: 100, min: 80 },
+  { key: "processor", label: "处理器型号", width: 190, min: 140 },
+  { key: "frequency", label: "处理器主频 / 睿频", width: 180, min: 140 },
+  { key: "defense", label: "基础防御", width: 120, min: 90 },
+  { key: "upstream", label: "上行带宽", width: 120, min: 90 },
+  { key: "downstream", label: "下行速率", width: 120, min: 90 },
+  { key: "stock", label: "库存数量", width: 110, min: 90, type: "N" },
+  { key: "system", label: "系统", width: 130, min: 110 },
+  { key: "price", label: "参考价格", width: 120, min: 100, type: "N" },
+];
+
+export function catalogCell(product: CatalogProduct, key: string): ReactNode {
   const spec = product.catalogSpec;
-  const stock = catalogStock(product);
-  return (
-    <Table.Row variant={selected ? "selected" : "default"}>
-      <Table.Cell><Radio.Item value={product.id} label={spec?.name || product.name} disabled={!isAvailable(product)} /></Table.Cell>
-      <Table.Cell>{spec?.vcpu || "—"}</Table.Cell>
-      <Table.Cell>{spec?.memory || "—"}</Table.Cell>
-      <Table.Cell>{spec?.processorModel || "—"}</Table.Cell>
-      <Table.Cell>{spec?.processorFrequency || "—"}</Table.Cell>
-      <Table.Cell>{spec?.defense || "—"}</Table.Cell>
-      <Table.Cell>{spec?.upstreamBandwidth || "—"}</Table.Cell>
-      <Table.Cell>{spec?.downstreamRate || "—"}</Table.Cell>
-      <Table.Cell>{stock === null || stock === undefined || stock === "" ? "—" : stock}</Table.Cell>
-      <Table.Cell>{(() => {
-        const family = (spec?.osFamily || "all").toLowerCase();
-        const supportsWindows = family !== "linux";
-        const supportsLinux = family !== "windows";
-        const label = supportsWindows && supportsLinux ? "系统类型：Windows、Linux" : supportsWindows ? "系统类型：Windows" : "系统类型：Linux";
-        return <div className="flex items-center gap-2 text-kumo-subtle" aria-label={label}>{supportsWindows ? <span title="Windows"><WindowsLogoIcon size={18} aria-label="Windows" /></span> : null}{supportsLinux ? <span title="Linux"><LinuxLogoIcon size={18} aria-label="Linux" /></span> : null}</div>;
-      })()}</Table.Cell>
-      <Table.Cell>¥{(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)}</Table.Cell>
-    </Table.Row>
-  );
+  switch (key) {
+    case "name":
+      return <Radio.Item value={product.id} label={spec?.name || product.name} disabled={!isAvailable(product)} />;
+    case "vcpu":
+      return spec?.vcpu || "—";
+    case "memory":
+      return spec?.memory || "—";
+    case "processor":
+      return spec?.processorModel || "—";
+    case "frequency":
+      return spec?.processorFrequency || "—";
+    case "defense":
+      return spec?.defense || "—";
+    case "upstream":
+      return spec?.upstreamBandwidth || "—";
+    case "downstream":
+      return spec?.downstreamRate || "—";
+    case "stock": {
+      const stock = catalogStock(product);
+      return stock === null || stock === undefined || stock === "" ? "—" : stock;
+    }
+    case "system": {
+      const family = (spec?.osFamily || "all").toLowerCase();
+      const supportsWindows = family !== "linux";
+      const supportsLinux = family !== "windows";
+      const label = supportsWindows && supportsLinux ? "系统类型：Windows、Linux" : supportsWindows ? "系统类型：Windows" : "系统类型：Linux";
+      return <div className="flex items-center gap-2 text-kumo-subtle" aria-label={label}>{supportsWindows ? <span title="Windows"><WindowsLogoIcon size={18} aria-label="Windows" /></span> : null}{supportsLinux ? <span title="Linux"><LinuxLogoIcon size={18} aria-label="Linux" /></span> : null}</div>;
+    }
+    case "price": {
+      const unit = (cycleLabels[product.cycle] ?? "").replace(/付$/, "") || "周期";
+      return `¥${(isUpstreamProduct(product) ? product.price : spec?.price ?? product.price).toFixed(2)}/${unit}`;
+    }
+    default:
+      return null;
+  }
 }
 function IntegratedProductCatalog() {
   const productsQuery = useProducts();
@@ -228,24 +256,31 @@ function IntegratedProductCatalog() {
               onPrimaryChange={value=>{setSelectedGroup(value);setSelectedSecondaryId("");setSelectedProductId("");setPage(1);}}
               onSecondaryChange={value=>{setSelectedSecondaryId(value);setSelectedProductId("");setPage(1);}} />
 
-            <LayerCard id="catalog-specifications" className="scroll-mt-4 grid min-w-0 gap-4 px-5 py-4">
-              <h2>计算规格</h2>
+            <section id="catalog-specifications" className="grid min-w-0 scroll-mt-4 gap-4">
+              <h2 className="text-lg font-semibold text-kumo-strong">计算规格</h2>
               {catalogIssue || categoryIssue || productsQuery.error ? <div className="grid gap-3"><Banner variant="error"
                 title={productsQuery.error ? "商品目录加载失败" : "商品目录暂不可用"}
                 description={"未能确认当前分类的可选商品，请重新加载；仍无法显示时，可将诊断信息提供给客服。" + diagnosticNotice}
                 />
                 <div className="flex flex-wrap gap-2"><Button variant="secondary" loading={productsQuery.isFetching} onClick={retryCatalog}>重新加载</Button><Button variant="secondary" onClick={() => void copyDiagnostic()}>{diagnosticCopied ? "已复制诊断信息" : "复制诊断信息"}</Button></div></div>
-                : productsQuery.isLoading || linkedProducts.length ? <div className="min-w-0 overflow-x-auto"><Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
-                <Table className="whitespace-nowrap">
-                  <Table.Header><Table.Row>{catalogColumns.map((name) => <Table.Head key={name}>{name}</Table.Head>)}</Table.Row></Table.Header>
-                  <Table.Body>{productsQuery.isLoading ? <Table.Row><Table.Cell colSpan={catalogColumns.length}><div role="status" className="flex items-center gap-2"><Loader />正在加载计算规格…</div></Table.Cell></Table.Row> : pageProducts.map((item) => <CatalogProductRow key={item.id} product={item} selected={item.id === product?.id} />)}</Table.Body>
-                </Table>
-              </Radio.Group></div> : <PageState empty
+                : productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
+                <ConfigurableTable<CatalogProduct>
+                  columns={catalogTableColumns}
+                  rows={productsQuery.isLoading ? [] : pageProducts}
+                  storageKey={`ddyidc-console-catalog-specs:${secondary?.id ?? selectedGroup}`}
+                  label="计算规格"
+                  loading={productsQuery.isLoading}
+                  renderCell={catalogCell}
+                  rowKey={(item) => item.id}
+                  rowProps={(item) => ({ variant: item.id === product?.id ? "selected" : "default" })}
+                  emptyContent="当前分类暂无可选规格"
+                />
+              </Radio.Group> : <PageState empty
                 emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
                 emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}
               {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} /> : null}
-            </LayerCard>
+            </section>
 
             {productsQuery.isLoading ? <ProductConfigSkeleton externalBill /> : null}
             {product ? <section aria-label="产品配置">
