@@ -1,7 +1,7 @@
 import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select } from "@cloudflare/kumo";
 import { CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { consoleApi } from "../api/console";
@@ -27,6 +27,7 @@ import { choiceLabel, isQuantityOption, configurationVisible, configurationIniti
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
 import { ProductSteps } from "./ProductSteps";
+import { Tabs } from "./Tabs";
 import { MobileProductSpecs } from "./MobileSpecList";
 import { useCatalogDesktopLayout } from "../hooks/useMediaQuery";
 
@@ -183,9 +184,9 @@ export function ProductOptionControl({
       })
       : option.options.map((choice) => ({ value: choice.id, label: choiceLabel(choice), disabled }));
     return <div className="grid min-w-0 gap-2">
-      <div className={tabs.length <= 6 ? "min-w-0 overflow-x-auto p-1" : "min-w-0 overflow-x-auto"}>{tabs.length <= 6
-        ? <Radio.Group appearance="segmented" aria-label={option.name} value={value} onValueChange={onChange} disabled={disabled}>{tabs.map(choice => <Radio.Item key={choice.value} value={choice.value} label={choice.label} disabled={choice.disabled} />)}</Radio.Group>
-        : <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />}</div>
+      {tabs.length <= 6
+        ? <div className="min-w-0 overflow-x-auto p-1"><Radio.Group appearance="segmented" aria-label={option.name} value={value} onValueChange={onChange} disabled={disabled}>{tabs.map(choice => <Radio.Item key={choice.value} value={choice.value} label={choice.label} disabled={choice.disabled} />)}</Radio.Group></div>
+        : <Tabs aria-label={option.name} variant="segmented" value={value} onValueChange={onChange} tabs={tabs} />}
       {isQuantityOption(option) && quantityCount > pageSize ? <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" size="sm" disabled={disabled || page === 0} onClick={() => setQuantityPage(page - 1)}>上一组</Button>
         <span className="text-sm text-kumo-subtle">当前选择：{value} {option.unit} · 第 {page + 1} / {Math.ceil(quantityCount / pageSize)} 组</span>
@@ -607,7 +608,7 @@ export function ProductConfig({
 
         <LayerCard id={anchor("purchase")} className="scroll-mt-4 grid gap-5 px-5 py-4">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
-<div className="overflow-x-auto"><Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, disabled:dynamicPricing&&!(item.billingcycle in cycleMonths), label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${!dynamicPricing && item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} /></div>
+<Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, disabled:dynamicPricing&&!(item.billingcycle in cycleMonths), label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${!dynamicPricing && item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} />
           {customFieldSchema.length ? <ProductCustomFields fields={customFieldSchema} values={customFields} onChange={setCustomFields}/> : null}
           {options.length || customFieldSchema.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
         </LayerCard>

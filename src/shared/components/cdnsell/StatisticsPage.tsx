@@ -1,11 +1,12 @@
 import {ScopedTable as Table} from '../ScopedTable';
 import { StatisticsPie } from "./StatisticsPie";
-import { Banner, Button, Input, LayerCard, Select, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { DateRangeField } from "../DateField";
 import { PageHeader } from "../PageHeader";
 import { PageState } from "../PageState";
+import { Tabs } from "../Tabs";
 import { TrendChart } from "../TrendChart";
 import { fetchStatistics, type StatisticsInput } from "../../api/cdnStatistics";
 import { cdnsellP2Api, cdnsellP2AdminApi } from "../../api/cdnsellP2";
@@ -48,7 +49,7 @@ export function StatisticsPage({admin=false,initialKind="bandwidth"}:{admin?:boo
  return <><PageHeader title={kinds[kind]} description="按已关联域名查看服务数据；统计可能延迟，计费以账单为准。"/>
 
  <LayerCard className="mt-4"><LayerCard.Secondary>{kinds[kind]}</LayerCard.Secondary><LayerCard.Primary className="grid gap-4 p-5">
- {views[kind]?<div className="overflow-x-auto"><Tabs variant="segmented" tabs={Object.entries(views[kind]!).map(([value,label])=>({value,label}))} value={view} onValueChange={v=>{setView(v);setApplied(undefined);if(kind==="bandwidth"){setSource(v==="origin"?"origin":"edge");setRegion(v==="province_isp"?"CN":"");setProvince("");setISP("");setProtocol("")}}}/></div>:null}
+ {views[kind]?<Tabs variant="segmented" tabs={Object.entries(views[kind]!).map(([value,label])=>({value,label}))} value={view} onValueChange={v=>{setView(v);setApplied(undefined);if(kind==="bandwidth"){setSource(v==="origin"?"origin":"edge");setRegion(v==="province_isp"?"CN":"");setProvince("");setISP("");setProtocol("")}}}/>:null}
  <div className="flex flex-wrap gap-2">{[[1,"今天"],[0,"昨天"],[7,"近7天"],[30,"近30天"]].map(([d,label])=><Button key={label} variant="secondary" size="sm" onClick={()=>preset(Number(d),d===0)}>{label}</Button>)}</div>
  <DateRangeField label="查询时间（北京时间）" from={from} to={to} withTime clearable={false} allowPartial={false} onValueChange={(a,b)=>{setFrom(a);setTo(b)}}/>
  {kind==="comparison"?<DateRangeField label="对比时间（北京时间，留空比较前一等长时段）" from={priorFrom} to={priorTo} withTime allowPartial={false} onValueChange={(a,b)=>{setPriorFrom(a);setPriorTo(b)}}/>:null}

@@ -1,6 +1,6 @@
 import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, LayerCard, Radio, Select, Tabs } from "@cloudflare/kumo";
+import { Banner, Button, LayerCard, Radio } from "@cloudflare/kumo";
 
 import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -15,6 +15,7 @@ import { MobileCatalogSpecs } from "../../../shared/components/MobileSpecList";
 import { useCatalogDesktopLayout } from "../../../shared/hooks/useMediaQuery";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
 import { ProductSteps, scrollToProductStep } from "../../../shared/components/ProductSteps";
+import { Tabs } from "../../../shared/components/Tabs";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
@@ -51,40 +52,26 @@ export function buildPrimaryGroups(products: ProductSummary[], groups: ProductGr
 
 export function ProductCategories({ primaryGroups, selectedGroup, children, secondary, loading, onPrimaryChange, onSecondaryChange }: {
  primaryGroups: Map<string,string>; selectedGroup: string; children: ProductGroupSummary[]; secondary?: ProductGroupSummary; loading: boolean; onPrimaryChange: (value:string)=>void; onSecondaryChange:(value:string)=>void;
-}) { return (<LayerCard className="grid min-w-0 gap-3 px-4 py-3" aria-label="产品分类">
-              <div className="flex min-w-0 items-center gap-3">
-                <strong className="shrink-0 whitespace-nowrap font-medium">一级分类</strong>
-                <div className="min-w-0 overflow-x-auto p-1"><Tabs variant="segmented" listClassName="w-max"
-                  tabs={Array.from(primaryGroups, ([value, label]) => ({ value, label }))}
-                  value={selectedGroup} onValueChange={(value) => { onPrimaryChange(value); }}
-                /></div>
-              </div>
-              <div className="flex min-w-0 items-center gap-3">
-                <strong className="shrink-0 whitespace-nowrap font-medium">二级分类</strong>
-                <div className="min-w-0 overflow-x-auto p-1">{children.length ? <Tabs variant="segmented"
-                  listClassName="w-max"
-                  tabs={children.map((group) => ({ value: group.id, label: group.name, className: "shrink-0 whitespace-nowrap" }))}
-                  value={secondary?.id ?? ""} onValueChange={(value) => { onSecondaryChange(value); }}
-                /> : <span>{loading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>}</div>
-              </div>
-            </LayerCard>); }
-
-/** Mobile category picker: `Select` for the primary level, scrollable chips for the secondary. */
-function MobileProductCategories({ primaryGroups, selectedGroup, children, secondary, loading, onPrimaryChange, onSecondaryChange }: {
- primaryGroups: Map<string,string>; selectedGroup: string; children: ProductGroupSummary[]; secondary?: ProductGroupSummary; loading: boolean; onPrimaryChange: (value:string)=>void; onSecondaryChange:(value:string)=>void;
 }) {
-  const primaryItems = Object.fromEntries(Array.from(primaryGroups, ([value, label]) => [value, label]));
-  return (<LayerCard className="grid min-w-0 gap-3 px-4 py-3" aria-label="产品分类">
-              <Select label="一级分类" value={selectedGroup} items={primaryItems} onValueChange={(value) => { if (value) onPrimaryChange(value); }} />
-              <div className="grid min-w-0 gap-2">
-                <strong className="font-medium">二级分类</strong>
-                <div className="-mx-1 min-w-0 overflow-x-auto p-1">{children.length ? <Tabs variant="segmented"
-                  listClassName="w-max"
-                  tabs={children.map((group) => ({ value: group.id, label: group.name, className: "shrink-0 whitespace-nowrap" }))}
-                  value={secondary?.id ?? ""} onValueChange={(value) => { onSecondaryChange(value); }}
-                /> : <span className="text-sm text-kumo-subtle">{loading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>}</div>
-              </div>
-            </LayerCard>); }
+ // One control for both breakpoints: Kumo's own horizontal overflow (scroll
+ // buttons + drag on desktop, native touch scroll on phones). The wrapper only
+ // constrains width so Kumo can detect the overflow.
+ const rows = [
+  { key: "primary", label: "一级分类", value: selectedGroup, onChange: onPrimaryChange, tabs: Array.from(primaryGroups, ([value, label]) => ({ value, label })) },
+  { key: "secondary", label: "二级分类", value: secondary?.id ?? "", onChange: onSecondaryChange, tabs: children.map((group) => ({ value: group.id, label: group.name })) },
+ ];
+ return (<LayerCard className="grid min-w-0 gap-3 px-4 py-3" aria-label="产品分类">
+  {rows.map((row) => (
+   <div key={row.key} className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-3">
+    <strong className="shrink-0 whitespace-nowrap text-sm font-medium md:text-base">{row.label}</strong>
+    <div className="min-w-0 flex-1">
+     {row.key === "secondary" && !children.length
+      ? <span className="text-sm text-kumo-subtle">{loading ? "正在加载分类…" : "当前一级分类暂无二级分类，请切换其他分类。"}</span>
+      : <Tabs aria-label={row.label} variant="segmented" tabs={row.tabs} value={row.value} onValueChange={row.onChange} />}
+    </div>
+   </div>
+  ))}
+ </LayerCard>); }
 
 function PublicProductCatalog() {
   const query = useProducts();
@@ -290,11 +277,9 @@ function IntegratedProductCatalog() {
             </aside>
           ) : null}
           <div className="grid min-w-0 gap-5">
-            {desktop ? <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
+            <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
               onPrimaryChange={selectPrimary}
-              onSecondaryChange={selectSecondary} /> : <MobileProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
-              onPrimaryChange={selectPrimary}
-              onSecondaryChange={selectSecondary} />}
+              onSecondaryChange={selectSecondary} />
             {desktop ? null : <div ref={setStepsTarget} className="min-w-0" />}
             {desktop || (!configLoading && orderPage && detail) ? null : <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} variant="chips" />}
 
