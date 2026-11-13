@@ -170,7 +170,7 @@ export function DashboardLayout({
       peekable
       className="h-svh max-h-svh overflow-hidden font-sans"
     >
-      <Sidebar aria-label="主导航" className="antialiased bg-kumo-base [--sidebar-bg:var(--ddy-navigation-bg)]">
+      <Sidebar aria-label="主导航" className="antialiased bg-(--ddy-navigation-bg) [--sidebar-bg:var(--ddy-navigation-bg)]">
         <Sidebar.Header className="h-[58px] shrink-0 justify-center border-b border-kumo-line">
           <DropdownMenu>
             <DropdownMenu.Trigger
@@ -264,7 +264,7 @@ export function DashboardLayout({
             </Sidebar.Group>
           ))}
         </Sidebar.Content>
-        <Sidebar.Footer className="h-12 shrink-0 justify-center border-t border-kumo-line bg-(--ddy-navigation-bg)">
+        <Sidebar.Footer className="h-12 shrink-0 border-t border-kumo-line bg-(--ddy-navigation-bg)">
           <Sidebar.Trigger />
         </Sidebar.Footer>
       </Sidebar>
