@@ -117,3 +117,9 @@
 /* Fixed search frame owns the single 300ms geometry transition. Its measured
    placeholder must commit final bounds immediately, never animate those bounds
    again through ResizeObserver (which would continuously restart the frame). */
+
+/* Mobile login entry (Aliyun mobile pattern): the desktop actions block is
+   hidden below 1120px, so the header keeps one plain text entry right of the
+   search trigger. Touch target is the full 56px header row. */
+.marketing-tc-header .marketing-tc-tools>a.marketing-tc-mobile-login{display:none}
+@media(max-width:1120px){.marketing-tc-header .marketing-tc-tools>a.marketing-tc-mobile-login{display:inline-flex;align-items:center;height:56px;margin-left:16px;color:#16181a;font-size:14px;font-weight:500;white-space:nowrap}.marketing-tc-mobile-login:hover{color:#0052d9}.marketing-tc-mobile-login:focus-visible{outline:2px solid #0052d9;outline-offset:-2px}}

@@ -30,6 +30,21 @@
 .marketing-aliyun-header .marketing-ali-search-discover button{font:12px/24px Arial,"Microsoft Yahei",sans-serif}
 .marketing-aliyun-header .marketing-ali-search-results p{font-size:14px;line-height:20px;margin:0;padding:8px;color:#8c8c8c}
 
-/* At the mobile breakpoint pin to the visible viewport immediately; desktop
-   measured left/width may still be transitioning from the previous viewport. */
-@media(max-width:1120px){.marketing-ali-search-frame{left:auto!important;right:16px;max-width:calc(100vw - 32px)}.marketing-ali-search-frame.is-open{right:8px;max-width:calc(100vw - 16px)}}
+/* At the mobile breakpoint the open overlay still pins to the visible viewport,
+   but the collapsed field follows the measured slot so the header can keep a
+   right-side login entry (Aliyun mobile pattern) without overlapping it. */
+@media(max-width:1120px){.marketing-ali-search-frame.is-open{left:auto!important;right:8px;max-width:calc(100vw - 16px)}}
+
+
+/* Mobile collapsed search follows Aliyun's phone header: only the magnifier is
+   visible. The slot keeps its flex growth so the login entry stays pinned to the
+   right edge, and opening restores the field through the existing is-open rules. */
+@media(max-width:1120px){
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-input-container input,
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-border,
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-border-gradient,
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-projection,
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-body{display:none}
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-input-container{height:56px;padding:0}
+ .marketing-ali-search-frame:not(.is-open) .marketing-ali-search-icon{top:0;left:auto;right:0;width:44px;height:56px}
+}
