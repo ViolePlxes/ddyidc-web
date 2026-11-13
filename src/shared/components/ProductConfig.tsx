@@ -27,6 +27,8 @@ import { choiceLabel, isQuantityOption, configurationVisible, configurationIniti
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
 import { ProductSteps } from "./ProductSteps";
+import { MobileProductSpecs } from "./MobileSpecList";
+import { useCatalogDesktopLayout } from "../hooks/useMediaQuery";
 
 const cycleMonths: Record<string, number> = {
   monthly: 1,
@@ -223,13 +225,15 @@ export function ProductOptionControl({
 }
 
 function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePrice }: { specs: ProductSpec[]; selectedId: string; onSelect: (spec: ProductSpec) => void; catalogSelection: boolean; referencePrice?: number }) {
+  // Below `xl` the ten-column table is replaced by the shared mobile spec cards.
+  const desktop = useCatalogDesktopLayout();
   return (
     <LayerCard className=" overflow-hidden p-0">
       <div className="grid gap-1 p-5">
         <h2 className="text-lg font-semibold text-kumo-strong">{catalogSelection ? "销售规格" : "计算规格"}</h2>
         <p className="text-sm text-kumo-subtle">规格与价格以当前商品展示为准。</p>
       </div>
-      {specs.length ? (
+      {specs.length ? (desktop ? (
         <Radio.Group aria-label="计算规格" value={selectedId} onValueChange={(value) => { const spec = specs.find((item) => item.id === value); if (spec) onSelect(spec); }} className="overflow-x-auto">
           <Table tableId="shared/components/ProductConfig.tsx:1">
             <Table.Header variant="compact">
@@ -256,6 +260,10 @@ function SpecTable({ specs, selectedId, onSelect, catalogSelection, referencePri
           </Table>
         </Radio.Group>
       ) : (
+        <div className="px-5 pb-5">
+          <MobileProductSpecs specs={specs} selectedId={selectedId} onSelect={onSelect} referencePrice={referencePrice} />
+        </div>
+      )) : (
         <div className="border-t border-kumo-line p-5 text-sm text-kumo-subtle">规格待配置。运营完成商品规格配置后即可购买。</div>
       )}
     </LayerCard>
@@ -266,16 +274,24 @@ export function ProductConfig({
   product,
   orderPage,
   billTarget,
+  billBar,
   billLoading = false,
   catalogSelection = false,
   stepsTarget,
+  stepsVariant = "list",
+  onShowDetail,
 }: {
   product: ProductDetail;
   orderPage?: OrderPage;
   billTarget?: HTMLElement | null;
+  /** Mobile bottom-bar host. The bar renders this component's own amount and
+   * purchase gate, so no price or checkout logic is duplicated. */
+  billBar?: HTMLElement | null;
   billLoading?: boolean;
   catalogSelection?: boolean;
   stepsTarget?: HTMLElement | null;
+  stepsVariant?: "list" | "chips";
+  onShowDetail?: () => void;
 }) {
   const navigate = useNavigate();
   const customFieldSchema=orderPage?.customFields??[];
@@ -450,6 +466,39 @@ export function ProductConfig({
     ...(imageOption && imageGroups.length ? [{ id: anchor("images"), title: "操作系统" }] : []),
     { id: anchor("purchase"), title: "购买信息" },
   ];
+  // One purchase gate for the desktop bill and the mobile bar.
+  const purchaseDisabled = product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0;
+  const addToCart = () => void certification.run(() => addCart(draft()));
+  const buyNow = () => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); });
+  const updating = billLoading || (dynamicPricing && quoteQuery.isFetching);
+  // The bar must say why it is blocked; the dialog keeps the detailed banners.
+  const barBlockedReason = billLoading ? "正在加载配置"
+    : product.readOnly ? "当前仅开放规格查询，暂不可购买"
+    : outOfStock ? "所选规格库存不足，暂不可购买"
+    : specsUnavailable ? "规格信息暂不可用"
+    : passwordIssues.length ? "请先填写合规的初始密码"
+    : quoteBlocked ? (customFieldsMissing ? "请先填写必填购买信息"
+      : invalidCycle ? "此计费模式暂不可用"
+      : dynamicPricing && quoteQuery.error ? "报价失败，请重新获取报价"
+      : dynamicPricing && (quoteExpired || !liveQuote) ? "正在获取最新报价"
+      : "报价暂不可用")
+    : certification.busy ? "正在校验实名认证"
+    : null;
+  const bar = (
+    <div className="grid gap-1">
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid min-w-0 gap-0.5">
+          <span className="text-sm text-kumo-subtle">当前应付{updating ? " · 正在更新" : ""}</span>
+          <strong className="truncate text-lg font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="secondary" className="min-h-11" disabled={!onShowDetail} onClick={onShowDetail}>查看明细</Button>
+          <Button className="min-h-11" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
+        </div>
+      </div>
+      {barBlockedReason ? <p className="truncate text-sm text-kumo-subtle">{barBlockedReason}</p> : null}
+    </div>
+  );
   const bill = (
     <LayerCard
       aria-busy={billLoading}
@@ -476,8 +525,8 @@ export function ProductConfig({
       {dynamicPricing && quoteQuery.error ? <Banner variant="error" title="报价未完成" description={getApiMessage(quoteQuery.error)} /> : null}
       {dynamicPricing && (quoteQuery.error || quoteExpired) ? <Button variant="secondary" loading={quoteQuery.isFetching} onClick={()=>void quoteQuery.refetch()}>重新获取报价</Button> : null}
       {dynamicPricing && liveQuote ? <span className="text-sm text-kumo-subtle">安装费：¥{liveQuote.setup} · 报价以提交时校验结果为准</span> : null}
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => addCart(draft()))}>加入购物车</Button>
-      <Button disabled={product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0} onClick={() => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); })}>立即购买</Button>
+      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={purchaseDisabled} onClick={addToCart}>加入购物车</Button>
+      <Button disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
     </LayerCard>
   );
   return (
@@ -570,7 +619,8 @@ export function ProductConfig({
         {externalBill ? null : bill}
       </div>
       {billTarget ? createPortal(bill, billTarget) : null}
-      {stepsTarget ? createPortal(<ProductSteps steps={steps} />, stepsTarget) : null}
+      {billBar ? createPortal(bar, billBar) : null}
+      {stepsTarget ? createPortal(<ProductSteps steps={steps} variant={stepsVariant} />, stepsTarget) : null}
     </>
   );
 }
