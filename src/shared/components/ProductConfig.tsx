@@ -370,7 +370,17 @@ export function ProductConfig({
   const selectedImageGroup = imageGroups.find((item) => item.child.some((choice) => choice.id === selectedImage)) ?? imageGroups[0];
   const selectedImageChoice = selectedImageGroup?.child.find((choice) => choice.id === selectedImage);
   const imageOverflow = imageGroups.length > imageCapacity;
-  const visibleImageGroups = imageExpanded || !imageOverflow ? imageGroups : imageGroups.slice(0, Math.max(0, imageCapacity - 1));
+  // The collapsed row always keeps at least one family card; on a phone the
+  // "更多系统" tile used to take the only slot and every family disappeared.
+  // A family picked from the expanded list also stays visible when collapsed.
+  const collapsedImageGroups = (() => {
+    const slots = Math.max(1, imageCapacity - 1);
+    const head = imageGroups.slice(0, slots);
+    return selectedImageGroup && !head.includes(selectedImageGroup)
+      ? [selectedImageGroup, ...head.slice(0, slots - 1)]
+      : head;
+  })();
+  const visibleImageGroups = imageExpanded || !imageOverflow ? imageGroups : collapsedImageGroups;
   const imageSlots = imageExpanded ? visibleImageGroups.length : Math.min(imageCapacity, visibleImageGroups.length + (imageOverflow ? 1 : 0));
 
   const selectSpec = (spec: ProductSpec) => {
