@@ -2,13 +2,11 @@
 @import "@cloudflare/kumo/styles";
 @import "tailwindcss";
 
-/* User-approved navigation surface; do not change the page/card palette.
-   Dark mode uses the content canvas so the left menu matches the right side
-   exactly (oklch(10%) ≈ #030303); light mode already equals the canvas. */
+/* Navigation surface = the same Kumo canvas the content area paints, in both
+   themes (light #fbfbfb, dark #030303). Never hardcode the colour here: the
+   token follows the active Kumo theme, so the left menu and the right-hand
+   background can never drift apart. */
 :root {
-  --ddy-navigation-bg: #fbfbfb;
-}
-:root[data-mode="dark"] {
   --ddy-navigation-bg: var(--color-kumo-canvas);
 }
 
