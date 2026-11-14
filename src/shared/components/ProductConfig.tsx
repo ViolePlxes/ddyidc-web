@@ -1,7 +1,6 @@
 import {ScopedTable as Table} from './ScopedTable';
-import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
-import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, InputGroup, LayerCard, Loader, Popover, Radio, Select } from "@cloudflare/kumo";
 import { CaretDownIcon, CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -27,7 +26,7 @@ import { isUpstreamProduct } from "../utils/productCatalog";
 import { choiceLabel, isQuantityOption, configurationVisible, configurationInitialValue, configurationArray, configurationDisplayValue, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, isResourceOption, optionValueCount, withoutZeroPrice } from "../utils/productOptions";
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
-import { OrderStepsBreadcrumbs } from "./OrderStepsBreadcrumbs";
+import type { ProductStep } from "./ProductSteps";
 import { Tabs } from "./Tabs";
 import { MobileProductSpecs } from "./MobileSpecList";
 import { useCatalogDesktopLayout } from "../hooks/useMediaQuery";
@@ -279,9 +278,12 @@ export function ProductConfig({
   billBar,
   billLoading = false,
   catalogSelection = false,
-  stepsTarget,
+  onSteps,
+  barSnapshotRef,
+  amountsRef,
   onShowDetail,
   detailOpen = false,
+  detailPresentation = "dialog",
 }: {
   product: ProductDetail;
   orderPage?: OrderPage;
@@ -291,12 +293,35 @@ export function ProductConfig({
   billBar?: HTMLElement | null;
   billLoading?: boolean;
   catalogSelection?: boolean;
-  stepsTarget?: HTMLElement | null;
+  /** Reports the step trail upward so the hosting page can keep it mounted
+   * (and unchanged) while the next product's configuration is loading. */
+  onSteps?: (steps: ProductStep[], clipboardText: string) => void;
+  /** Holds the last committed checkout bar. The hosting page renders it (inert)
+   * while the next config loads, so the bar never blanks out on a switch. */
+  barSnapshotRef?: { current: import("react").ReactNode };
+  /** Last confirmed amounts, shared with the page so a newly mounted config can
+   * keep showing a price while its first quote is in flight. */
+  amountsRef?: { current: { total: number; monthly: number; renewal: number; unit: number } };
   onShowDetail?: () => void;
   /** Whether the detail view is currently expanded (label/aria only). */
   detailOpen?: boolean;
+  /** `popover` opens the bill in a compact hover popover (order page);
+   * `dialog` keeps the portal + `MobileBillDock` flow (product detail page). */
+  detailPresentation?: "dialog" | "popover";
 }) {
   const navigate = useNavigate();
+  const desktopLayout = useCatalogDesktopLayout();
+  const [detailPopoverOpen, setDetailPopoverOpen] = useState(false);
+  const detailCloseTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(detailCloseTimer.current), []);
+  const openDetailPopover = () => {
+    window.clearTimeout(detailCloseTimer.current);
+    setDetailPopoverOpen(true);
+  };
+  const scheduleDetailClose = () => {
+    window.clearTimeout(detailCloseTimer.current);
+    detailCloseTimer.current = window.setTimeout(() => setDetailPopoverOpen(false), 150);
+  };
   const customFieldSchema=orderPage?.customFields??[];
   const [customFields,setCustomFields]=useState<Record<string,string>>({});
   useEffect(()=>setCustomFields({}),[product.id]);
@@ -311,6 +336,16 @@ export function ProductConfig({
   const [selectedSpecId, setSelectedSpecId] = useState(product.specs[0]?.id ?? "");
   const [cycle, setCycle] = useState(cycles[0]?.billingcycle ?? "monthly");
   const [quantity, setQuantity] = useState(1);
+  // The quantity is editable in the middle of the stepper (Kumo Pagination
+  // style): a draft string keeps typing natural, and blur/Enter clamps 1–10.
+  const [quantityDraft, setQuantityDraft] = useState("1");
+  useEffect(() => setQuantityDraft(String(quantity)), [quantity]);
+  const commitQuantity = () => {
+    const parsed = Number.parseInt(quantityDraft, 10);
+    const next = Number.isFinite(parsed) ? Math.min(10, Math.max(1, parsed)) : quantity;
+    setQuantity(next);
+    setQuantityDraft(String(next));
+  };
 
   const [password, setPassword] = useState(generatePassword);
   const passwordIssues = options.length ? instancePasswordIssues(password) : [];
@@ -470,7 +505,7 @@ export function ProductConfig({
     password: options.length || customFieldSchema.length ? password : "",
   });
 
-  const externalBill = billTarget !== undefined;
+  const externalBill = billTarget !== undefined || billBar !== undefined;
   const anchor = (name: string) => `product-${product.id}-${name}`;
   const steps = [
     ...(catalogSelection ? [{ id: "catalog-specifications", title: "计算规格" }] : []),
@@ -483,8 +518,22 @@ export function ProductConfig({
   const purchaseDisabled = product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0;
   const addToCart = () => void certification.run(() => addCart(draft()));
   const buyNow = () => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); });
-  const updating = billLoading || (dynamicPricing && quoteQuery.isFetching);
+  const updating = billLoading || (dynamicPricing && !customFieldsMissing && (settledQuoteKey !== quoteKey || quoteQuery.isFetching || quoteQuery.isPending));
+  // While a new quote is in flight `liveQuote` is dropped, so keep the last
+  // confirmed amounts on screen and mark the refresh with a Loader instead of
+  // flashing "—" (or ¥0.00) on every configuration change. The page shares the
+  // ref so a freshly mounted config keeps the price during its first quote too.
+  const localAmounts = useRef({ total: 0, monthly: 0, renewal: 0, unit: 0 });
+  const lastAmounts = amountsRef ?? localAmounts;
+  if (!quoteBlocked) lastAmounts.current = { total, monthly: monthlyEquivalent, renewal: nextRenewal, unit: unitPrice };
+  const stale = quoteBlocked && updating && lastAmounts.current.total > 0;
+  const displayTotal = stale ? lastAmounts.current.total : total;
+  const displayMonthly = stale ? lastAmounts.current.monthly : monthlyEquivalent;
+  const displayRenewal = stale ? lastAmounts.current.renewal : nextRenewal;
+  const displayUnit = stale ? lastAmounts.current.unit : unitPrice;
   // The bar must say why it is blocked; the dialog keeps the detailed banners.
+  // A quote refresh is not a block: it shows the Kumo Loader next to the amount
+  // instead of a message that appears and disappears on every tweak.
   const barBlockedReason = billLoading ? "正在加载配置"
     : product.readOnly ? "当前仅开放规格查询，暂不可购买"
     : outOfStock ? "所选规格库存不足，暂不可购买"
@@ -493,11 +542,10 @@ export function ProductConfig({
     : quoteBlocked ? (customFieldsMissing ? "请先填写必填购买信息"
       : invalidCycle ? "此计费模式暂不可用"
       : dynamicPricing && quoteQuery.error ? "报价失败，请重新获取报价"
-      : dynamicPricing && (quoteExpired || !liveQuote) ? "正在获取最新报价"
+      : dynamicPricing && updating ? null
       : "报价暂不可用")
     : certification.busy ? "正在校验实名认证"
     : null;
-  const summaryLine = [product.name, selectedCycle?.label || cycleLabels[cycle] || cycle, `×${quantity}`].filter(Boolean).join(" · ");
   // Pre-submit summary for Breadcrumbs.Clipboard. Amounts come from the same
   // `total` / `monthlyEquivalent` as the bar; missing pieces drop their line.
   const clipboardSummary = (() => {
@@ -518,37 +566,15 @@ export function ProductConfig({
     lines.push("金额为页面实时报价，以提交时校验结果为准。");
     return lines.join("\n");
   })();
-  const bar = (
-    <div className="grid gap-1">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <div className="grid min-w-0 gap-0.5">
-          <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="text-sm text-kumo-subtle">当前应付</span>
-            <strong className="text-lg font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
-          </div>
-          <span className="truncate text-sm text-kumo-subtle">折合 {quoteBlocked ? "—" : `¥${monthlyEquivalent.toFixed(2)}`}/月{updating ? " · 正在更新" : ""}</span>
-        </div>
-        <p className="hidden min-w-0 flex-1 truncate text-sm text-kumo-subtle xl:block" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>
-        <div className="flex shrink-0 items-center gap-2">
-          {/* Kumo Collapsible trigger look (DefaultTrigger): plain text + caret. */}
-          <button
-            type="button"
-            aria-expanded={detailOpen}
-            disabled={!onShowDetail}
-            onClick={onShowDetail}
-            className="m-0 flex min-h-11 cursor-pointer select-none items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-kumo-default shadow-none disabled:cursor-not-allowed disabled:text-kumo-subtle"
-          >
-            <span>{detailOpen ? "收起明细" : "查看明细"}</span>
-            <span className="inline-grid w-4 shrink-0 place-items-center">
-              <CaretDownIcon aria-hidden size={12} weight="bold" className={`block size-3 origin-center transition-transform duration-100 ease-out ${detailOpen ? "rotate-180" : ""}`} />
-            </span>
-          </button>
-          <Button variant="primary" className="min-h-11" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
-        </div>
-      </div>
-      <p className="truncate text-sm text-kumo-subtle xl:hidden" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>
-    </div>
-  );
+  // Report the trail to the hosting page: it stays mounted (and unchanged)
+  // while the next product's configuration loads, instead of collapsing to a
+  // one-step placeholder and re-expanding.
+  const stepsKey = steps.map((step) => `${step.id}|${step.title}`).join(">");
+  const stepsReport = useRef({ steps, clipboard: clipboardSummary });
+  stepsReport.current = { steps, clipboard: clipboardSummary };
+  useEffect(() => {
+    onSteps?.(stepsReport.current.steps, stepsReport.current.clipboard);
+  }, [stepsKey, clipboardSummary, onSteps]);
   const bill = (
     <LayerCard
       aria-busy={billLoading}
@@ -557,28 +583,137 @@ export function ProductConfig({
       <div className="grid gap-1">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm text-kumo-subtle">当前应付</span>
-          {billLoading || (dynamicPricing && quoteQuery.isFetching) ? <Badge variant="secondary">正在更新</Badge> : null}
+          {updating ? <Loader size="sm" aria-label="正在获取最新报价" /> : null}
         </div>
-        <strong className="text-sm font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
-        <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 {quoteBlocked ? "—" : `¥${unitPrice.toFixed(2)}`}</span>
+        <strong className="text-sm font-semibold text-kumo-strong">{quoteBlocked && !stale ? "—" : `¥${displayTotal.toFixed(2)}`}</strong>
+        <span className="text-sm text-kumo-subtle">{product.name} · 单台本周期 {quoteBlocked && !stale ? "—" : `¥${displayUnit.toFixed(2)}`}</span>
       </div>
       <div className="grid gap-2 border-t border-kumo-line pt-4 text-sm text-kumo-subtle">
         {selectedSpec ? <span>实例规格：{selectedSpec.name}</span> : <span>计算规格：{product.name}</span>}
         {selectedOptions.map((item) => <span key={`${item.id}-${item.field}`}>{item.displayName}：{withoutZeroPrice(item.displayValue)}</span>)}
         <span>购买周期：{selectedCycle?.label || cycleLabels[cycle] || cycle}</span>
-        <span>购买数量：{quantity} 台</span>
-        <span>折合月费：{quoteBlocked ? "—" : `¥${monthlyEquivalent.toFixed(2)}`} / 月</span>
-        <span>下次续费：{quoteBlocked ? "—" : `¥${nextRenewal.toFixed(2)}`}</span>
+        {detailPresentation === "dialog" ? <span>购买数量：{quantity} 台</span> : null}
+        <span>折合月费：{quoteBlocked && !stale ? "—" : `¥${displayMonthly.toFixed(2)}`} / 月</span>
+        <span>下次续费：{quoteBlocked && !stale ? "—" : `¥${displayRenewal.toFixed(2)}`}</span>
       </div>
-          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong font-medium">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
       {dynamicPricing && invalidCycle ? <Banner variant="error" title="此计费模式暂不可用" description="请选择已支持的计费周期，或联系管理员。"/> : null}
       {dynamicPricing && quoteQuery.error ? <Banner variant="error" title="报价未完成" description={getApiMessage(quoteQuery.error)} /> : null}
       {dynamicPricing && (quoteQuery.error || quoteExpired) ? <Button variant="secondary" loading={quoteQuery.isFetching} onClick={()=>void quoteQuery.refetch()}>重新获取报价</Button> : null}
       {dynamicPricing && liveQuote ? <span className="text-sm text-kumo-subtle">安装费：¥{liveQuote.setup} · 报价以提交时校验结果为准</span> : null}
-      <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={purchaseDisabled} onClick={addToCart}>加入购物车</Button>
-      <Button disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
+      {/* The order page moves these controls to the checkout bar; the product
+          detail page keeps them inside its self-contained bill. */}
+      {detailPresentation === "dialog" ? (
+        <>
+          <div className="grid gap-2"><span className="text-sm font-medium text-kumo-strong">购买数量</span><div className="flex items-center gap-3"><Button variant="secondary" shape="square" icon={<MinusIcon />} aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} /><strong className="min-w-20 text-center text-kumo-strong font-medium">{quantity} 台</strong><Button variant="secondary" shape="square" icon={<PlusIcon />} aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} /></div></div>
+          <Button variant="secondary" icon={<ShoppingCartIcon />} disabled={purchaseDisabled} onClick={addToCart}>加入购物车</Button>
+          <Button disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
+        </>
+      ) : null}
     </LayerCard>
   );
+  const quantityControl = (
+    <InputGroup aria-label="订购数量">
+      <InputGroup.Button variant="secondary" aria-label="减少购买数量" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}><MinusIcon size={16} /></InputGroup.Button>
+      <InputGroup.Input
+        aria-label="购买数量"
+        className="text-center"
+        style={{ width: 44 }}
+        value={quantityDraft}
+        onValueChange={(value) => setQuantityDraft(String(value).replace(/[^\d]/g, "").slice(0, 2))}
+        onBlur={commitQuantity}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commitQuantity();
+            event.currentTarget.blur();
+          }
+        }}
+        inputMode="numeric"
+        autoComplete="off"
+        data-1p-ignore
+        data-lpignore="true"
+        data-form-type="other"
+      />
+      <InputGroup.Button variant="secondary" aria-label="增加购买数量" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))}><PlusIcon size={16} /></InputGroup.Button>
+    </InputGroup>
+  );
+  // 订购时长：订购页放在底部栏（紧凑 Select），商品详情页仍在购买信息卡里显示分段选项卡。
+  const cycleTabs = (
+    <Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, disabled: dynamicPricing && !(item.billingcycle in cycleMonths), label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${!dynamicPricing && item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} />
+  );
+  const cycleSelect = (
+    <div className="w-20 shrink-0 [&_button]:h-9 [&_button]:min-h-9">
+      <Select aria-label="订购时长" value={cycle} onValueChange={(value) => { if (value) setCycle(value); }} items={Object.fromEntries(cycles.map((item) => [item.billingcycle, item.label || cycleLabels[item.billingcycle] || item.billingcycle]))} />
+    </div>
+  );
+  // Kumo Collapsible trigger look (DefaultTrigger): plain text + caret.
+  const detailButtonClass = "m-0 flex min-h-11 cursor-pointer select-none items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-kumo-default shadow-none disabled:cursor-not-allowed disabled:text-kumo-subtle";
+  const detailLabel = (open: boolean) => (
+    <>
+      <span>{open ? "收起明细" : "查看明细"}</span>
+      <span className="inline-grid w-4 shrink-0 place-items-center">
+        <CaretDownIcon aria-hidden size={12} weight="bold" className={`block size-3 origin-center transition-transform duration-100 ease-out ${open ? "rotate-180" : ""}`} />
+      </span>
+    </>
+  );
+  const detailLinkClass = "m-0 flex min-h-11 cursor-pointer select-none items-center border-none bg-transparent p-0 text-sm font-medium text-kumo-default underline decoration-kumo-line underline-offset-4 shadow-none hover:decoration-kumo-default disabled:cursor-not-allowed disabled:text-kumo-subtle";
+  const detailTrigger = detailPresentation === "popover" ? (
+    <Popover.Root open={detailPopoverOpen} onOpenChange={setDetailPopoverOpen}>
+      <Popover.Trigger
+        render={
+          <button
+            type="button"
+            onMouseEnter={desktopLayout ? openDetailPopover : undefined}
+            onMouseLeave={desktopLayout ? scheduleDetailClose : undefined}
+            className={detailLinkClass}
+          >当前配置</button>
+        }
+      />
+      <Popover.Content side="top" sideOffset={8} className="max-h-[min(70vh,32rem)] w-[24rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0">
+        <div onMouseEnter={openDetailPopover} onMouseLeave={scheduleDetailClose} className="grid">
+          {bill}
+        </div>
+      </Popover.Content>
+    </Popover.Root>
+  ) : (
+    <button type="button" aria-expanded={detailOpen} disabled={!onShowDetail} onClick={onShowDetail} className={detailButtonClass}>{detailLabel(detailOpen)}</button>
+  );
+  const bar = (
+    <div className="grid gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 xl:gap-x-5">
+        {detailPresentation === "popover" ? (
+          <>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">订购时长</span>
+              {cycleSelect}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">订购数量</span>
+              {quantityControl}
+            </div>
+          </>
+        ) : null}
+        {detailTrigger}
+        <span aria-hidden className="hidden h-8 w-px shrink-0 bg-kumo-line xl:block" />
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">配置费用</span>
+          <strong className="text-2xl font-semibold leading-none text-kumo-danger">{quoteBlocked && !stale ? "—" : `¥${displayTotal.toFixed(2)}`}</strong>
+          <span className="grid size-4 shrink-0 place-items-center">{updating ? <Loader size="sm" aria-label="正在获取最新报价" /> : null}</span>
+          <span className="hidden whitespace-nowrap text-sm text-kumo-subtle 2xl:inline">折合 {quoteBlocked && !stale ? "—" : `¥${displayMonthly.toFixed(2)}`}/月</span>
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {detailPresentation === "popover" ? <Button variant="secondary" shape="square" className="size-9" icon={<ShoppingCartIcon />} aria-label="加入购物车" disabled={purchaseDisabled} onClick={addToCart} /> : null}
+          <Button variant="primary" className="min-h-11 min-w-28 text-base" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
+        </div>
+      </div>
+      {barBlockedReason ? <p className="truncate text-sm text-kumo-danger" title={barBlockedReason}>{barBlockedReason}</p> : null}
+    </div>
+  );
+  // Keep the hosting page's snapshot in sync with the committed bar; it renders
+  // it (inert) while the next product's configuration is still loading.
+  useEffect(() => {
+    if (barSnapshotRef) barSnapshotRef.current = bar;
+  });
   return (
     <>
       <div
@@ -657,7 +792,7 @@ export function ProductConfig({
 
         <LayerCard id={anchor("purchase")} className="scroll-mt-4 grid gap-5 px-5 py-4">
           <h2 className="text-lg font-semibold text-kumo-strong">购买信息</h2>
-<Tabs variant="segmented" aria-label="购买时长" value={cycle} onValueChange={setCycle} tabs={cycles.map((item) => ({ value: item.billingcycle, disabled:dynamicPricing&&!(item.billingcycle in cycleMonths), label: `${item.label || cycleLabels[item.billingcycle] || item.billingcycle}${!dynamicPricing && item.price ? ` ¥${item.price.toFixed(2)}` : ""}` }))} />
+          {detailPresentation === "popover" ? null : cycleTabs}
           {customFieldSchema.length ? <ProductCustomFields fields={customFieldSchema} values={customFields} onChange={setCustomFields}/> : null}
           {options.length || customFieldSchema.length ? <InstancePasswordInput value={password} onChange={setPassword} /> : null}
         </LayerCard>
@@ -670,7 +805,6 @@ export function ProductConfig({
       </div>
       {billTarget ? createPortal(bill, billTarget) : null}
       {billBar ? createPortal(bar, billBar) : null}
-      {stepsTarget ? createPortal(<OrderStepsBreadcrumbs steps={steps} clipboardText={clipboardSummary} />, stepsTarget) : null}
     </>
   );
 }

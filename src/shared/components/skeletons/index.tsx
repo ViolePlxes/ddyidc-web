@@ -1,6 +1,6 @@
 import {ScopedTable as Table} from '../ScopedTable';
 import { LayerCard, Sidebar, SkeletonLine, Surface} from "@cloudflare/kumo";
-import { catalogColumns } from "../../utils/productCatalog";
+import { catalogColumns, catalogContentWidth } from "../../utils/productCatalog";
 
 
 export function PageHeaderSkeleton() {
@@ -88,11 +88,11 @@ export function ProductCatalogSkeleton() {
   return (
     <div className="flex min-w-0 flex-col gap-5" role="status" aria-label="正在加载订购目录">
       <div className="-mx-4 border-b border-kumo-line bg-kumo-canvas md:-mx-6 lg:-mx-8">
-        <div className="mx-auto flex h-[60px] w-full max-w-7xl items-center gap-3 px-4 md:px-6 lg:px-8" aria-hidden="true">
+        <div className={`mx-auto flex h-[60px] w-full ${catalogContentWidth} items-center gap-3 px-4 md:px-6 lg:px-8`} aria-hidden="true">
           {["w-24", "w-12", "w-10", "w-10", "w-14", "w-12"].map((width) => <SkeletonLine key={width} className={`h-4 ${width}`} />)}
         </div>
       </div>
-      <div className="mx-auto grid w-full max-w-7xl gap-5">
+      <div className={`mx-auto grid w-full ${catalogContentWidth} gap-5`}>
         <LayerCard className=" grid gap-4 px-4 py-3">
           {["一级分类", "二级分类"].map((label) => <div key={label} className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
             <strong className="font-medium">{label}</strong><div className="flex min-w-0 gap-2 overflow-hidden" aria-hidden="true">
@@ -104,7 +104,7 @@ export function ProductCatalogSkeleton() {
         <ProductConfigSkeleton externalBill />
       </div>
       <div className="sticky bottom-0 -mx-4 border-t border-kumo-line bg-kumo-base md:-mx-6 lg:-mx-8">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 md:px-6 lg:px-8" aria-hidden="true">
+        <div className={`mx-auto flex h-16 w-full ${catalogContentWidth} items-center justify-between gap-3 px-4 md:px-6 lg:px-8`} aria-hidden="true">
           <SkeletonLine className="h-6 w-40" />
           <div className="flex items-center gap-2"><SkeletonLine className="h-11 w-24" /><SkeletonLine className="h-11 w-24" /></div>
         </div>

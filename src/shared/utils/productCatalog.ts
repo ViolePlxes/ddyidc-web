@@ -2,6 +2,13 @@ import type { CatalogProduct, ProductGroupSummary, ProductSummary } from "../api
 
 export const catalogColumns = ["实例规格", "vCPU", "内存", "处理器型号", "处理器主频 / 睿频", "基础防御", "上行带宽", "下行速率", "库存数量", "系统", "参考价格"];
 
+/**
+ * Order page content width. Wide enough for the full spec table to fit on large
+ * screens (the table then shows every column; the pinned edges only matter when
+ * the viewport cannot fit them).
+ */
+export const catalogContentWidth = "max-w-[100rem]";
+
 type StockProduct = Pick<ProductSummary, "stock"> & Partial<Pick<CatalogProduct, "catalogSpec" | "upstreamStock">>;
 
 // Match the server's local quota precedence. A resource snapshot is only a

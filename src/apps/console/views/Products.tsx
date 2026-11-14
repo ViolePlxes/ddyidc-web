@@ -1,9 +1,9 @@
 import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
-import { Banner, Button, LayerCard, Radio } from "@cloudflare/kumo";
+import { Banner, Button, InputGroup, LayerCard, Radio, Select } from "@cloudflare/kumo";
 
-import { ArrowRightIcon, CaretDownIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ArrowRightIcon, MinusIcon, PackageIcon, PlusIcon, ShoppingCartIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
 import { getApiMessage } from "../../../shared/api/request";
@@ -22,7 +22,7 @@ import { Tabs } from "../../../shared/components/Tabs";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
-import { belongsToGroup, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
+import { belongsToGroup, catalogContentWidth, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
 
 function productSummary(product: ProductSummary) {
@@ -201,10 +201,22 @@ function IntegratedProductCatalog() {
   // Bottom checkout bar hosts: the bar itself and the detail body (desktop panel
   // or phone drawer). Both are portals owned by `ProductConfig`.
   const [billBar, setBillBar] = useState<HTMLDivElement | null>(null);
-  const [billTarget, setBillTarget] = useState<HTMLDivElement | null>(null);
-  const [stepsTarget, setStepsTarget] = useState<HTMLDivElement | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const desktop = useCatalogDesktopLayout();
+  // Last committed checkout bar, rendered inert while the next configuration
+  // loads so the bar never blanks out on a category/spec switch.
+  const barSnapshot = useRef<ReactNode>(null);
+  // Last confirmed amounts, shared with ProductConfig so a freshly mounted
+  // config keeps showing a price (with a loader) instead of flashing "—".
+  const amountsRef = useRef({ total: 0, monthly: 0, renewal: 0, unit: 0 });
+  // The step trail is owned here (not portalled from ProductConfig) so switching
+  // category or spec keeps it mounted and unchanged while the next configuration
+  // loads; only the reported data updates it.
+  const [orderSteps, setOrderSteps] = useState<{ steps: { id: string; title: string }[]; clipboard: string }>({
+    steps: [{ id: "catalog-specifications", title: "计算规格" }],
+    clipboard: "",
+  });
+  const handleOrderSteps = useCallback((steps: { id: string; title: string }[], clipboard: string) => {
+    setOrderSteps((current) => current.steps.length === steps.length && current.steps.every((step, index) => step.id === steps[index]?.id && step.title === steps[index]?.title) && current.clipboard === clipboard ? current : { steps, clipboard });
+  }, []);  const desktop = useCatalogDesktopLayout();
   const specHost = useRef<HTMLDivElement>(null);
   // The page fills the pane, its content scrolls above the fixed checkout bar.
   const pageRoot = useRef<HTMLDivElement>(null);
@@ -265,6 +277,13 @@ function IntegratedProductCatalog() {
   // change or `查看明细` can shrink the page size).
   const selectedProduct = linkedProducts.find((item) => item.id === selectedProductId && isAvailable(item));
   const product = selectedProduct ?? pageProducts.find(isAvailable);
+  // With no SKU selected (first paint, or a category without products) the trail
+  // is just the catalog step; once a SKU is configured the reported trail wins,
+  // so switching category/spec keeps the previous trail until the next arrives.
+  useEffect(() => {
+    if (product) return;
+    setOrderSteps({ steps: [{ id: "catalog-specifications", title: "计算规格" }], clipboard: "" });
+  }, [product]);
   // Only the selected SKU loads purchase details. Never render another SKU's
   // placeholder detail while React Query changes keys.
   const detailQuery = useProduct(product?.id ?? "");
@@ -303,14 +322,11 @@ function IntegratedProductCatalog() {
             data-order-steps
             className="sticky top-0 z-20 -mx-4 mt-5 border-b border-kumo-line bg-kumo-canvas px-4 py-2 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8"
           >
-            <div className="mx-auto w-full max-w-7xl">
-              <div ref={setStepsTarget} />
-              {configLoading || !orderPage || !detail ? (
-                <OrderStepsBreadcrumbs steps={[{ id: "catalog-specifications", title: "计算规格" }]} />
-              ) : null}
+            <div className={`mx-auto w-full ${catalogContentWidth}`}>
+              <OrderStepsBreadcrumbs steps={orderSteps.steps} clipboardText={orderSteps.clipboard || undefined} />
             </div>
           </div>
-          <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pt-5">
+          <div className={`mx-auto flex w-full ${catalogContentWidth} min-w-0 flex-col gap-5 pt-5`}>
             <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
               onPrimaryChange={selectPrimary}
               onSecondaryChange={selectSecondary} />
@@ -361,7 +377,7 @@ function IntegratedProductCatalog() {
             {productsQuery.isLoading ? <ProductConfigSkeleton externalBill /> : null}
             {product ? <section aria-label="产品配置">
               <PageState loading={configLoading} skeleton={<ProductConfigSkeleton externalBill />} error={configError ? getApiMessage(configError) : null}>
-                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} billBar={billBar} stepsTarget={stepsTarget} detailOpen={detailOpen} onShowDetail={() => setDetailOpen((open) => !open)} catalogSelection /> : null}
+                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billBar={billBar} onSteps={handleOrderSteps} barSnapshotRef={barSnapshot} amountsRef={amountsRef} detailPresentation="popover" catalogSelection /> : null}
               </PageState>
               {!configError ? null : <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} />}
             </section> : null}
@@ -369,28 +385,37 @@ function IntegratedProductCatalog() {
         </div>
         <BottomCheckoutBar
           variant="inline"
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
           onBar={setBillBar}
-          onDetail={setBillTarget}
-          desktop={desktop}
-          placeholder={configReady ? null : (
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
-              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                <span className="text-sm text-kumo-subtle">当前应付</span>
-                <strong className="text-lg font-semibold text-kumo-strong">—</strong>
-                <span className="whitespace-nowrap text-sm text-kumo-subtle">· 折合 —/月</span>
+          placeholder={configReady ? null : configLoading && product && !configError && barSnapshot.current ? (
+            <div inert className="pointer-events-none select-none">{barSnapshot.current}</div>
+          ) : (
+            <div className="grid gap-1.5">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 xl:gap-x-8">
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">订购时长</span>
+                  <div className="w-20 shrink-0 [&_button]:h-9 [&_button]:min-h-9"><Select aria-label="订购时长" value="monthly" items={{ monthly: "月付" }} disabled /></div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">订购数量</span>
+                  <InputGroup aria-label="订购数量" disabled>
+                    <InputGroup.Button variant="secondary" aria-label="减少购买数量"><MinusIcon size={16} /></InputGroup.Button>
+                    <InputGroup.Input aria-label="购买数量" className="text-center" style={{ width: 44 }} value="1" />
+                    <InputGroup.Button variant="secondary" aria-label="增加购买数量"><PlusIcon size={16} /></InputGroup.Button>
+                  </InputGroup>
+                </div>
+                <button type="button" disabled className="m-0 flex min-h-11 cursor-not-allowed select-none items-center border-none bg-transparent p-0 text-sm font-medium text-kumo-subtle underline decoration-kumo-line underline-offset-4 shadow-none">当前配置</button>
+                <span aria-hidden className="hidden h-8 w-px shrink-0 bg-kumo-line xl:block" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">配置费用</span>
+                  <strong className="text-2xl font-semibold leading-none text-kumo-danger">—</strong>
+                  <span className="hidden whitespace-nowrap text-sm text-kumo-subtle xl:inline">折合 —/月</span>
+                </div>
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  <Button variant="secondary" shape="square" className="size-9" icon={<ShoppingCartIcon />} aria-label="加入购物车" disabled />
+                  <Button variant="primary" className="min-h-11 min-w-28 text-base" disabled>立即购买</Button>
+                </div>
               </div>
-              <p className="min-w-0 flex-1 truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
-              <div className="flex shrink-0 items-center gap-2">
-                <button type="button" disabled className="m-0 flex min-h-11 cursor-not-allowed select-none items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-kumo-subtle shadow-none">
-                  <span>查看明细</span>
-                  <span className="inline-grid w-4 shrink-0 place-items-center">
-                    <CaretDownIcon aria-hidden size={12} weight="bold" className="block size-3 origin-center transition-transform duration-100 ease-out" />
-                  </span>
-                </button>
-                <Button variant="primary" className="min-h-11" disabled>立即购买</Button>
-              </div>
+              <p className="truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
             </div>
           )}
         />

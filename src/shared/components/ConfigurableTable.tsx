@@ -65,24 +65,63 @@ function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys
   return undefined;
  };
  // A pinned column gets a divider only while the table is actually clipped
- // (not every column fits), so a table that fits keeps the borderless look.
+ // (not every column fits), so a table that fits keeps the borderless look. The
+ // divider also disappears on the edge that no longer hides any content: at the
+ // far left the left line goes away, at the far right the right line does.
  const scrollHost=useRef<HTMLDivElement>(null);
  const [edgesClipped,setEdgesClipped]=useState(false);
+ const edgeState=useRef({start:true,end:false});
+ const [edgeVisible,setEdgeVisible]=useState({start:true,end:false});
  const edgesKey=stickyEdges?`${visible.map(c=>`${c.key}:${layout.widths[c.key]??c.width}`).join("|")}`:"";
- useLayoutEffect(()=>{
+ const measureEdges=()=>{
   const node=scrollHost.current;
-  if(!stickyEdges||!node){setEdgesClipped(false);return}
-  setEdgesClipped(node.scrollWidth>node.clientWidth+1);
+  if(!node)return;
+  const clipped=node.scrollWidth>node.clientWidth+1;
+  const max=Math.max(0,node.scrollWidth-node.clientWidth);
+  const next={start:!clipped||node.scrollLeft<=1,end:!clipped||node.scrollLeft>=max-1};
+  if(edgeState.current.start!==next.start||edgeState.current.end!==next.end){
+   edgeState.current=next;
+   setEdgeVisible(next);
+  }
+  setEdgesClipped(clipped);
+ };
+ useLayoutEffect(()=>{
+  if(!stickyEdges){setEdgesClipped(false);return}
+  measureEdges();
  },[edgesKey,stickyEdges]);
  useEffect(()=>{
   const node=scrollHost.current;
   if(!stickyEdges||!node)return;
-  const measure=()=>setEdgesClipped(node.scrollWidth>node.clientWidth+1);
+  const measure=()=>measureEdges();
   const observer=new ResizeObserver(measure);
   observer.observe(node);
-  return ()=>observer.disconnect();
+  node.addEventListener("scroll",measure,{passive:true});
+  return ()=>{observer.disconnect();node.removeEventListener("scroll",measure)};
  },[stickyEdges]);
- const edgeDivider=(side:"left"|"right"|undefined)=>!edgesClipped||!side?"":side==="left"?"after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-kumo-line":"after:pointer-events-none after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-kumo-line";
+ // Middle columns scroll with a plain mouse wheel: vertical wheel input moves
+ // the table sideways, while the page still scrolls at the horizontal edges.
+ useEffect(()=>{
+  const node=scrollHost.current;
+  if(!stickyEdges||!node)return;
+  const onWheel=(event:WheelEvent)=>{
+   if(event.ctrlKey||event.shiftKey)return;
+   const max=node.scrollWidth-node.clientWidth;
+   if(max<=1||Math.abs(event.deltaY)<=Math.abs(event.deltaX))return;
+   const scale=event.deltaMode===1?16:event.deltaMode===2?node.clientWidth:1;
+   const next=Math.max(0,Math.min(max,node.scrollLeft+event.deltaY*scale));
+   if(next===node.scrollLeft)return;
+   event.preventDefault();
+   node.scrollLeft=next;
+  };
+  node.addEventListener("wheel",onWheel,{passive:false});
+  return ()=>node.removeEventListener("wheel",onWheel);
+ },[stickyEdges]);
+ const edgeDivider=(side:"left"|"right"|undefined)=>{
+  if(!edgesClipped||!side)return "";
+  if(side==="left"&&edgeVisible.start)return "";
+  if(side==="right"&&edgeVisible.end)return "";
+  return side==="left"?"after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-kumo-line":"after:pointer-events-none after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-kumo-line";
+ };
  const resize=(column:TableColumn,value:number)=>setLayout(current=>({...current,widths:{...current.widths,[column.key]:tableColumnWidth(value,column)}}));
  const reset=(column:TableColumn)=>resize(column,column.width);
  const finish=()=>{drag.current=null;setResizing(false)};

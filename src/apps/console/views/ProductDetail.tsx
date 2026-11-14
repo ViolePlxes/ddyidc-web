@@ -53,7 +53,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
           </div>
         ) : null}
       </PageState>
-      {mobileBill ? <BottomCheckoutBar desktop={false} open={detailOpen} onOpenChange={setDetailOpen} onBar={setBillBar} onDetail={setBillTarget} /> : null}
+      {mobileBill ? <BottomCheckoutBar open={detailOpen} onOpenChange={setDetailOpen} onBar={setBillBar} onDetail={setBillTarget} /> : null}
     </>
   );
 }
