@@ -12,6 +12,8 @@ import { fillingRowCount } from "../utils/fillingPageSize";
 export interface FillingPageSizeOptions {
   /** Element whose top edge starts the measured region (table or card list). */
   host: RefObject<HTMLElement | null>;
+  /** Scroll container the rows have to fit into (defaults to the dashboard pane). */
+  paneSelector?: string;
   /** Re-measure when the layout changes (breakpoint, category, tab). */
   resetKey?: string;
   /** Re-measure when the data behind the rows changes. */
@@ -45,7 +47,7 @@ export function useFillingPageSize(options: FillingPageSizeOptions) {
   const selectorsKey = (options.reserveSelectors ?? []).join("|");
 
   useLayoutEffect(() => {
-    const pane = document.querySelector<HTMLElement>(SCROLL_PANE);
+    const pane = document.querySelector<HTMLElement>(latest.current.paneSelector ?? SCROLL_PANE);
     if (!pane) return;
     const measure = () => {
       const {
@@ -99,7 +101,7 @@ export function useFillingPageSize(options: FillingPageSizeOptions) {
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [options.host, options.resetKey, options.dataKey, selectorsKey]);
+  }, [options.host, options.paneSelector, options.resetKey, options.dataKey, selectorsKey]);
 
   return perPage;
 }

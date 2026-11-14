@@ -12,7 +12,9 @@ export function OrderStepsBreadcrumbs({ steps, clipboardText }: { steps: Product
   const [root, setRoot] = useState<Element | null>(null);
   // The trail itself is sticky, so section jumps have to clear its height.
   const [offset, setOffset] = useState(orderStepsOffset);
-  useEffect(() => setRoot(document.querySelector("[data-dashboard-scroll]")), []);
+  // The order page scrolls its own content region above the fixed checkout bar;
+  // other pages fall back to the dashboard pane.
+  useEffect(() => setRoot(document.querySelector("[data-order-scroll]") ?? document.querySelector("[data-dashboard-scroll]")), []);
   useEffect(() => setOffset(orderStepsOffset()), [steps.length]);
   const { activeId, selectSection } = useTableOfContentsActiveId({ ids: steps.map((step) => step.id), root, offset, trackHash: false });
   const trailRef = useRef<HTMLDivElement>(null);

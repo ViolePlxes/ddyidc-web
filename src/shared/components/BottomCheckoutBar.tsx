@@ -3,9 +3,13 @@ import type { ReactNode } from "react";
 
 /**
  * Order checkout bar. It is the single bottom-bar implementation for the order
- * page: always visible, sticky to the bottom of the dashboard pane, and it owns
- * the two detail presentations — an inline panel above the bar on desktop and a
+ * page: always visible at the bottom of the content pane, and it owns the two
+ * detail presentations — an inline panel above the bar on desktop and a
  * `LayerDialog` drawer on phones/tablets.
+ *
+ * `inline` keeps the bar in the page's own layout row (the order page scrolls
+ * its content above it, so nothing passes underneath the bar). `sticky` is the
+ * fallback used by the product detail page, which still scrolls as a whole.
  *
  * Both inner containers are portal hosts, so `ProductConfig` keeps owning the
  * amount, the purchase gate, the cart and the checkout handlers. Nothing about
@@ -18,6 +22,7 @@ export function BottomCheckoutBar({
   onDetail,
   desktop,
   placeholder,
+  variant = "sticky",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,14 +31,15 @@ export function BottomCheckoutBar({
   desktop: boolean;
   /** Placeholder shown while no configuration is loaded yet. */
   placeholder?: ReactNode;
+  variant?: "sticky" | "inline";
 }) {
   return (
     <>
       <div
         data-checkout-bar
-        className="sticky bottom-0 z-30 -mx-4 border-t border-kumo-line bg-kumo-base md:-mx-6 lg:-mx-8"
+        className={`${variant === "inline" ? "shrink-0 px-4 md:px-6 lg:px-8" : "sticky bottom-0 z-30 -mx-4 md:-mx-6 lg:-mx-8"} border-t border-kumo-line bg-kumo-base`}
       >
-        <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className={`mx-auto w-full max-w-7xl ${variant === "inline" ? "" : "px-4 md:px-6 lg:px-8"}`}>
           {desktop && open ? (
             <div className="max-h-[45vh] overflow-y-auto border-b border-kumo-line py-4" data-checkout-detail>
               <div ref={onDetail} />

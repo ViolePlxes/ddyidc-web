@@ -15,6 +15,7 @@ import { OrderStepsBreadcrumbs } from "../../../shared/components/OrderStepsBrea
 import { MobileCatalogSpecs } from "../../../shared/components/MobileSpecList";
 import { useCatalogDesktopLayout } from "../../../shared/hooks/useMediaQuery";
 import { useFillingPageSize } from "../../../shared/hooks/useFillingPageSize";
+import { usePaneFillHeight } from "../../../shared/hooks/usePaneFillHeight";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
 import { scrollToProductStep } from "../../../shared/components/ProductSteps";
 import { Tabs } from "../../../shared/components/Tabs";
@@ -205,6 +206,9 @@ function IntegratedProductCatalog() {
   const [detailOpen, setDetailOpen] = useState(false);
   const desktop = useCatalogDesktopLayout();
   const specHost = useRef<HTMLDivElement>(null);
+  // The page fills the pane, its content scrolls above the fixed checkout bar.
+  const pageRoot = useRef<HTMLDivElement>(null);
+  usePaneFillHeight(pageRoot, `${desktop}`);
   const primaryGroups = useMemo(() => buildPrimaryGroups(products, groups), [groups, products]);
   const selectedGroup = primaryGroups.has(selectedGroupId) ? selectedGroupId : (primaryGroups.keys().next().value ?? "all");
   const children = secondaryGroups(groups, selectedGroup);
@@ -231,9 +235,10 @@ function IntegratedProductCatalog() {
   // spec list never makes the page scroll just to see its own footer.
   const perPage = useFillingPageSize({
     host: specHost,
+    paneSelector: "[data-order-scroll]",
     resetKey: `${desktop}:${selectedGroup}:${secondary?.id ?? ""}`,
     dataKey: `${linkedProducts.length}:${productsQuery.isLoading ? 1 : 0}`,
-    reserveSelectors: ["[data-catalog-pagination]", "[data-checkout-bar]"],
+    reserveSelectors: ["[data-catalog-pagination]"],
     reserve: 20,
     reserveChrome: false,
     headSelector: desktop ? "thead" : undefined,
@@ -275,8 +280,9 @@ function IntegratedProductCatalog() {
   };
   // Category switches clear the selection. When page size changes (breakpoint or
   // the detail panel) the page returns to 1 but the picked SKU stays configured.
+  const orderScroll = () => document.querySelector<HTMLElement>("[data-order-scroll]") ?? document.querySelector<HTMLElement>("[data-dashboard-scroll]");
   const keepSpecsVisible = () => {
-    const pane = document.querySelector("[data-dashboard-scroll]");
+    const pane = orderScroll();
     const target = document.getElementById("catalog-specifications");
     if (!target) return;
     const offset = pane ? target.getBoundingClientRect().top - pane.getBoundingClientRect().top : target.getBoundingClientRect().top;
@@ -284,42 +290,20 @@ function IntegratedProductCatalog() {
   };
   const selectPrimary = (value: string) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); keepSpecsVisible(); };
   const selectSecondary = (value: string) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); keepSpecsVisible(); };
-  // The desktop detail panel opens above the bar. When it would cover the spec
-  // list the pane scrolls the list back above the panel, so expanding the bill
-  // never hides the SKUs the customer is choosing from.
-  const detailAdjusted = useRef(false);
-  useEffect(() => {
-    if (!detailOpen || !desktop) { detailAdjusted.current = false; return; }
-    const pane = document.querySelector("[data-dashboard-scroll]");
-    const panel = document.querySelector("[data-checkout-detail]");
-    const section = document.getElementById("catalog-specifications");
-    if (!pane || !panel || !section) return;
-    const check = () => {
-      if (detailAdjusted.current) return;
-      const panelRect = panel.getBoundingClientRect();
-      const sectionRect = section.getBoundingClientRect();
-      if (sectionRect.bottom <= panelRect.top || sectionRect.top >= panelRect.bottom) return;
-      detailAdjusted.current = true;
-      scrollToProductStep("catalog-specifications", pane);
-    };
-    // The bar grows after its portal content mounts, so wait for the real panel.
-    const frame = requestAnimationFrame(() => requestAnimationFrame(check));
-    const observer = new ResizeObserver(check);
-    observer.observe(panel);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
-  }, [detailOpen, desktop]);
   return (
-    <>
-      <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
-      <PageState loading={productsQuery.isLoading} keepContent>
-        <div className="flex min-w-0 flex-col">
-          {/* The trail sticks to the top of the dashboard pane and stays visible
+    <PageState loading={productsQuery.isLoading} keepContent>
+      {/* The page owns the pane height: the content scrolls in its own region and
+          the checkout bar keeps a real bottom row instead of floating over it. */}
+      <div ref={pageRoot} className="-mx-4 -mb-4 flex min-h-0 min-w-0 flex-col md:-mx-6 md:-mb-6 lg:-mx-8 lg:-mb-8">
+        <div data-order-scroll className="min-h-0 flex-1 overflow-y-auto px-4 md:px-6 lg:px-8">
+          <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
+          {/* The trail sticks to the top of the content region and stays visible
               while the configuration is edited, so the step jump is always reachable. */}
           <div
             data-order-steps
-            className="sticky top-0 z-20 -mx-4 border-b border-kumo-line bg-kumo-canvas py-2 md:-mx-6 lg:-mx-8"
+            className="sticky top-0 z-20 -mx-4 mt-5 border-b border-kumo-line bg-kumo-canvas px-4 py-2 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8"
           >
-            <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-7xl">
               <div ref={setStepsTarget} />
               {configLoading || !orderPage || !detail ? (
                 <OrderStepsBreadcrumbs steps={[{ id: "catalog-specifications", title: "计算规格" }]} />
@@ -381,30 +365,31 @@ function IntegratedProductCatalog() {
               {!configError ? null : <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} />}
             </section> : null}
           </div>
-          <BottomCheckoutBar
-            open={detailOpen}
-            onOpenChange={setDetailOpen}
-            onBar={setBillBar}
-            onDetail={setBillTarget}
-            desktop={desktop}
-            placeholder={configReady ? null : (
-              <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                  <span className="text-sm text-kumo-subtle">当前应付</span>
-                  <strong className="text-lg font-semibold text-kumo-strong">—</strong>
-                  <span className="whitespace-nowrap text-sm text-kumo-subtle">· 折合 —/月</span>
-                </div>
-                <p className="min-w-0 flex-1 truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button variant="secondary" className="min-h-11" disabled>查看明细</Button>
-                  <Button className="min-h-11" disabled>立即购买</Button>
-                </div>
-              </div>
-            )}
-          />
         </div>
-      </PageState>
-    </>
+        <BottomCheckoutBar
+          variant="inline"
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          onBar={setBillBar}
+          onDetail={setBillTarget}
+          desktop={desktop}
+          placeholder={configReady ? null : (
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                <span className="text-sm text-kumo-subtle">当前应付</span>
+                <strong className="text-lg font-semibold text-kumo-strong">—</strong>
+                <span className="whitespace-nowrap text-sm text-kumo-subtle">· 折合 —/月</span>
+              </div>
+              <p className="min-w-0 flex-1 truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button variant="secondary" className="min-h-11" disabled>查看明细</Button>
+                <Button className="min-h-11" disabled>立即购买</Button>
+              </div>
+            </div>
+          )}
+        />
+      </div>
+    </PageState>
   );
 }
 
