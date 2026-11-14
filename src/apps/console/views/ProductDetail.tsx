@@ -15,7 +15,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
   const productQuery = useProduct(id);
   const product = productQuery.data;
   const orderPageQuery = useOrderPage(product?.id ?? "", product?.configurable ?? false);
-  // Below `xl` the self-contained sticky bill moves to the fixed bottom bar and
+  // Below `xl` the self-contained sticky bill moves to the shared bottom bar and
   // the detail dialog; the desktop layout keeps its current behaviour.
   const desktop = useCatalogDesktopLayout();
   const [billTarget, setBillTarget] = useState<HTMLDivElement | null>(null);
@@ -37,7 +37,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
         emptyTitle="商品不存在或已下架"
       >
         {product ? (
-          <div className={desktop ? "grid gap-4" : "grid gap-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))]"}>
+          <div className="grid gap-4">
 			{product.readOnly ? <Banner variant="secondary" title={product.infoSource === "upstream" ? "已获取实时商品信息" : "当前显示已保存的商品信息"} description="当前仅开放规格查询，购买暂未开放。" /> : null}
 			{product.warning ? <Banner variant="alert" title="商品信息提示" description={product.warning} /> : null}
             {product.configurable && orderPageQuery.error ? (
