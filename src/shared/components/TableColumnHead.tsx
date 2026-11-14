@@ -7,9 +7,9 @@ import type {ReactNode} from 'react';
 import type {TableColumn} from '../utils/tableLayout';
 
 /** Kumo handle/preview classes observed in CF Logs table-body.tsx. */
-export function TableColumnHead({column,actions,children,actionsAfterLabel=false,sticky}:{column:TableColumn;actions:ReactNode;children:ReactNode;actionsAfterLabel?:boolean;sticky?:"left"|"right"}){
+export function TableColumnHead({column,actions,children,actionsAfterLabel=false,sticky,edgeClassName=""}:{column:TableColumn;actions:ReactNode;children:ReactNode;actionsAfterLabel?:boolean;sticky?:"left"|"right";edgeClassName?:string}){
  const {attributes,listeners,setNodeRef,setActivatorNodeRef,transform,transition,isDragging}=useSortable({id:column.key});
- return <Table.Head ref={setNodeRef} data-order-column={column.key} sticky={sticky} className={`group/header ${sticky ? "" : "relative"} min-w-0 select-none text-left`}
+ return <Table.Head ref={setNodeRef} data-order-column={column.key} sticky={sticky} className={`group/header ${sticky ? "" : "relative"} min-w-0 select-none text-left ${edgeClassName}`}
   style={{transform:CSS.Transform.toString(transform),transition:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'none':transition,zIndex:isDragging?3:undefined}}>
   {isDragging?<span aria-hidden="true" className="pointer-events-none absolute inset-0 z-1 bg-kumo-info-tint opacity-30"/>:null}
   <div className="relative flex min-h-6 items-center gap-1"><span className="min-w-0 truncate">{column.header??column.label}</span>{actionsAfterLabel?actions:null}

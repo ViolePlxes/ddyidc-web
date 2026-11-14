@@ -2,7 +2,7 @@ import {ScopedTable as Table} from './ScopedTable';
 import { Badge } from "./Badge";
 import { useCertificationGate } from "./CertificationGate";
 import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select } from "@cloudflare/kumo";
-import { CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { consoleApi } from "../api/console";
@@ -530,8 +530,20 @@ export function ProductConfig({
         </div>
         <p className="hidden min-w-0 flex-1 truncate text-sm text-kumo-subtle xl:block" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" className="min-h-11" disabled={!onShowDetail} aria-expanded={detailOpen} onClick={onShowDetail}>{detailOpen ? "收起明细" : "查看明细"}</Button>
-          <Button className="min-h-11" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
+          {/* Kumo Collapsible trigger look (DefaultTrigger): plain text + caret. */}
+          <button
+            type="button"
+            aria-expanded={detailOpen}
+            disabled={!onShowDetail}
+            onClick={onShowDetail}
+            className="m-0 flex min-h-11 cursor-pointer select-none items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-kumo-default shadow-none disabled:cursor-not-allowed disabled:text-kumo-subtle"
+          >
+            <span>{detailOpen ? "收起明细" : "查看明细"}</span>
+            <span className="inline-grid w-4 shrink-0 place-items-center">
+              <CaretDownIcon aria-hidden size={12} weight="bold" className={`block size-3 origin-center transition-transform duration-100 ease-out ${detailOpen ? "rotate-180" : ""}`} />
+            </span>
+          </button>
+          <Button variant="primary" className="min-h-11" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
         </div>
       </div>
       <p className="truncate text-sm text-kumo-subtle xl:hidden" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>

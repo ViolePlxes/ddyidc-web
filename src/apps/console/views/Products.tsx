@@ -2,7 +2,7 @@ import { Pagination } from "../../../shared/components/Pagination";
 import { Badge } from "../../../shared/components/Badge";
 import { Banner, Button, LayerCard, Radio } from "@cloudflare/kumo";
 
-import { ArrowRightIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, CaretDownIcon, PackageIcon, WindowsLogoIcon, LinuxLogoIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } from "../../../shared/api/console";
@@ -383,8 +383,13 @@ function IntegratedProductCatalog() {
               </div>
               <p className="min-w-0 flex-1 truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
               <div className="flex shrink-0 items-center gap-2">
-                <Button variant="secondary" className="min-h-11" disabled>查看明细</Button>
-                <Button className="min-h-11" disabled>立即购买</Button>
+                <button type="button" disabled className="m-0 flex min-h-11 cursor-not-allowed select-none items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-kumo-subtle shadow-none">
+                  <span>查看明细</span>
+                  <span className="inline-grid w-4 shrink-0 place-items-center">
+                    <CaretDownIcon aria-hidden size={12} weight="bold" className="block size-3 origin-center transition-transform duration-100 ease-out" />
+                  </span>
+                </button>
+                <Button variant="primary" className="min-h-11" disabled>立即购买</Button>
               </div>
             </div>
           )}
