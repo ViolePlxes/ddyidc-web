@@ -1,4 +1,4 @@
-# 订购产品页底部结算栏（v0.1.295）
+# 订购产品页底部结算栏（v0.1.296）
 
 ## 范围
 
@@ -12,7 +12,7 @@
 - 单列内容与底栏内容列同用 `max-w-7xl`；底栏底色通栏、内容列居中，和页面内容左边缘对齐（实测 `alignGap = 0`）。
 - 顶部订购步骤用 Kumo `Breadcrumbs`（`size="sm"`、`Breadcrumbs.Clipboard`），吸附在内容滚动区顶部；窄屏保留完整步骤并横向滚动，不折叠为下拉。Kumo 默认在 `sm` 以下折叠、`Clipboard` 只有英文 `title` 且无复制结果回调，已在包装组件里覆盖并接管中文 Toast / 手动复制降级。
 - 步骤跳转与行数测量都让出吸附条高度（`orderStepsOffset()`）；行数按内容滚动区高度实测，预留分页与安全值（`useFillingPageSize` + `fillingRowCount`，3–50 行），保留页码分页。
-- 明细：`≥1280` 为底栏上方展开面板（内部滚动，最高 45vh，展开时占据布局空间）；`<1280` 为 `LayerDialog` 抽屉；两者复用同一份 `bill` portal。`查看明细` 可再次点击收起（`aria-expanded`，文案切换为「收起明细」）。
+- 明细：`≥1280` 为底栏上方展开面板（内部滚动，最高 45vh，展开时占据布局空间）；`<1280` 为 `LayerDialog` 抽屉；两者复用同一份 `bill` portal。「查看明细」用 Kumo `Collapsible.DefaultTrigger` 的外观（纯文字 + 12px 箭头，展开时旋转 180°、文案切为「收起明细」，`aria-expanded` 同步，44px 触控高度）；「立即购买」用 Kumo `Button variant="primary"`（禁用时 50% 透明，阻断原因仍显示在栏内）；明细面板内的旧账单卡保持原样。
 
 ## 计算规格表格固定列
 
@@ -20,6 +20,7 @@
 - 固定列使用 Kumo `Table.Head` / `Table.Cell` 的 `sticky="left"|"right"`（自带不透明行背景、内侧渐变和层级）；隐藏/拖动调整列后按当前可见列重新取首末列。
 - 注意：表头单元格不能再写 `relative`（会覆盖 Kumo 的 `sticky`，固定列会跟着表格滚走），`TableColumnHead` 因此在 `sticky` 时不加 `relative`，列宽拖动条仍以 sticky 单元格为定位父级。
 - 固定列背景必须和整行一致：共享表格样式把行背景统一为 `bg-kumo-base`（悬停为 `bg-kumo-overlay`），因此同时把 Kumo 的 `--kumo-table-row-bg` 覆盖为同一表面（含 `even` 行与悬停态，`!` 优先级压过 Kumo 的斑马/选中变体）。否则固定列会单独出现 `kumo-elevated` / `kumo-tint` 的浅灰，看起来像给列加了颜色。没有新增任何自定义色值，全部沿用 Kumo token。
+- 裁切分界：只有表格确实放不下（`scrollWidth > clientWidth`）时，首列右缘与末列左缘才画 1px `kumo-line` 分界竖线；列全部放得下时隐藏。分界线与表头的列宽拖动线重合——拖动线由居中改为贴列边界（`justify-end`，8px 热区不变），避免出现两条线。
 
 ## 复制摘要
 
