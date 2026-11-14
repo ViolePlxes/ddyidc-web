@@ -1,27 +1,22 @@
-# 订购产品页底部结算栏（v0.1.291）
+# 订购产品页底部结算栏（v0.1.293）
 
 ## 范围
 
-客户控制台「订购产品」页 `/console/products`。商品详情页 `/console/products/:id`、下单确认页、支付页与后台商品管理不在本次范围；详情页仅把共享底栏组件的引用改名，交互不变。
+客户控制台「订购产品」页 `/console/products`。商品详情页 `/console/products/:id`、下单确认页、支付页与后台商品管理不在本次范围；详情页只复用同一个共享底栏组件（`variant="sticky"`），交互不变。
 
-## 布局约定
+## 布局约定：底栏固定，不悬浮
 
-- 单列内容：`mx-auto w-full max-w-7xl`，与底部结算栏内容列同宽、左边缘对齐；`<1280` 铺满并保留 16/24px 内边距。
-- 顶部订购步骤用 Kumo `Breadcrumbs`（`size="sm"`）实现，吸附在 `[data-dashboard-scroll]` 顶部，窄屏自身横向滚动、当前步骤自动滚入视野；当前步骤为 `Breadcrumbs.Current`，其余步骤为可点击的 `Breadcrumbs.Link`，点击只滚动面板并用 `orderStepsOffset()` 让出吸附高度。
-- 步骤数据仍来自 `ProductConfig` 的 `steps` 数组，不另建一份；旧 `ProductSteps` 的 `list` / `chips` 用法已从订购页移除（组件保留给其它页面）。
-- 底部结算栏 `sticky bottom-0`，收起态 64–72px（桌面单行；`<1280` 金额块 + 按钮一行、摘要一行），`padding-bottom` 叠加 `env(safe-area-inset-bottom)`；因底栏在文档流末尾，滚到页面末端时不再覆盖内容。
-- 明细：`≥1280` 为栏上方展开面板（内部滚动，最高 45vh），`<1280` 为 `LayerDialog` 抽屉；两者复用同一份 `bill` portal，金额、数量、优惠、安装费、下次续费不在组件里重算。
-- `查看明细` 可再次点击收起（`aria-expanded`，文案切换为「收起明细」）；展开时面板若覆盖计算规格，面板按需把规格区滚回面板上方。
-
-## 行数自适应
-
-- `src/shared/hooks/useFillingPageSize.ts` 从 `DestroyRequests.tsx` 抽出，销毁页与订购页共用；行数按内容坐标测量（`rect + scrollTop`），滚动不改变行数，`ResizeObserver` 监听面板、宿主、分页与底栏。
-- 订购页把分页条 `[data-catalog-pagination]` 与底栏 `[data-checkout-bar]` 计入预留高度；桌面用 `thead` / `tbody tr` 实测，平板与手机用 `[data-fill-row]` 卡片实测，3–50 行夹取。
-- 保留 `Pagination` 页码分页；分类切换、行数变化时回到第 1 页，已选规格在翻页后仍保持配置与金额。
+- 页面占满 `[data-dashboard-scroll]` 内容面板（`usePaneFillHeight` 实测高度，扣掉平台页脚与页面内边距），整页不再产生外层滚动。
+- 页面内部为「内容滚动区 + 底栏」两行：内容区 `flex-1 min-h-0 overflow-y-auto`（`data-order-scroll`），底栏是文档流里的真实底行（`variant="inline"`），紧贴内容区与平台页脚，中间没有缝隙。
+- 因此滚动只发生在内容区，**没有任何内容从底栏下方穿过**；底栏不吸顶、不悬浮、不遮盖内容。桌面展开明细时底栏变高，内容区同步变矮并重新计算行数。
+- 单列内容与底栏内容列同用 `max-w-7xl`；底栏底色通栏、内容列居中，和页面内容左边缘对齐（实测 `alignGap = 0`）。
+- 顶部订购步骤用 Kumo `Breadcrumbs`（`size="sm"`、`Breadcrumbs.Clipboard`），吸附在内容滚动区顶部；窄屏保留完整步骤并横向滚动，不折叠为下拉。Kumo 默认在 `sm` 以下折叠、`Clipboard` 只有英文 `title` 且无复制结果回调，已在包装组件里覆盖并接管中文 Toast / 手动复制降级。
+- 步骤跳转与行数测量都让出吸附条高度（`orderStepsOffset()`）；行数按内容滚动区高度实测，预留分页与安全值（`useFillingPageSize` + `fillingRowCount`，3–50 行），保留页码分页。
+- 明细：`≥1280` 为底栏上方展开面板（内部滚动，最高 45vh，展开时占据布局空间）；`<1280` 为 `LayerDialog` 抽屉；两者复用同一份 `bill` portal。`查看明细` 可再次点击收起（`aria-expanded`，文案切换为「收起明细」）。
 
 ## 复制摘要
 
-`Breadcrumbs.Clipboard` 复制内容含商品、规格、配置、周期、数量、当前应付（含折合月）与生成时间，末尾固定「金额为页面实时报价，以提交时校验结果为准。」。金额与底部栏同一来源（`total` / `monthlyEquivalent`），缺项整行省略；成功后用 Kumo `Toast` 提示，剪贴板不可用时选中文本并提示手动复制。Kumo 组件只提供英文 `title`，这里在挂载后补中文 `aria-label` / `title`。
+`Breadcrumbs.Clipboard` 复制内容含商品、规格、配置、周期、数量、当前应付（含折合月）与生成时间，末尾固定「金额为页面实时报价，以提交时校验结果为准。」。金额与底部栏同一来源（`total` / `monthlyEquivalent`），缺项整行省略；成功后用 Kumo `Toast` 提示，剪贴板不可用时选中文本并提示手动复制。
 
 ## 复用与边界
 
@@ -31,6 +26,7 @@
 
 ## 验证（本地）
 
-- `npx tsc -b`、`npm run build`、`node scripts/check-release.mjs` 与 `--artifact` 通过；新增 `tests/fillingPageSize.test.mjs` 已纳入 CI。
-- 本地 mock API + 真实 Chromium（Edge headless）在 360×800、390×844、768×1024、1280×900、1600×1000 实测：整页与内容面板横向溢出均为 0（改造前 1280/1600 面板横向溢出 715/395px），行数 1280 为 7、1600 为 9，底栏 65/80px，分页、步骤跳转、明细展开/收起、复制 Toast、禁用原因与分类切换均通过。
-- mock 数据仅用于本地验收，不进入源码、构建产物或生产配置；未执行生产安装，生产验收由管理员在后台更新后按测试矩阵复核。
+- `npx tsc -b`、`npm run build`、`node scripts/check-release.mjs` 与 `--artifact` 通过；`tests/fillingPageSize.test.mjs` 已纳入 CI。
+- 本地 mock API + 真实 Chromium（Edge headless）在 360×800、390×844、768×1024、1280×900、1600×1000 实测：内容面板外层滚动 `0`，内容区内部滚动，底栏底边紧贴平台页脚（间隙 `0`），底栏顶边紧贴内容区（间隙 `0`），左边缘对齐 `0`；1280/1600 行数 6/8，底栏 65/80px；页面与内容区横向溢出均为 0（改造前 1280/1600 面板横向溢出 715/395px）。
+- 交互：步骤跳转与吸附、分页翻页、明细展开/收起（内容区变矮、行数 6→3、无遮挡）、复制摘要（含金额与 Toast）、报价联动、密码不合规禁用与原因、分类切换、空分类、移动端抽屉均通过；1024/853 缩放代理无横向溢出，触控目标 44px。
+- mock 数据仅用于本地验收，不进入源码、构建产物或生产配置；生产安装由管理员在后台执行后按测试矩阵复核。
