@@ -23,6 +23,8 @@ export interface ConfigurableTableProps<T> {
  emptyContent?:ReactNode;
  fillHeight?:boolean;
  fieldButtonAfterLabel?:boolean;
+ /** Pin the first and last visible columns while the middle scrolls sideways. */
+ stickyEdges?:boolean;
  rowProps?:(row:T)=>ComponentProps<typeof Table.Row>;
  expandedRowKey?:string|null;
  renderExpandedRow?:(row:T)=>ReactNode;
@@ -30,7 +32,7 @@ export interface ConfigurableTableProps<T> {
 export type {TableColumn} from '../utils/tableLayout';
 /** Reusable Kumo table. Pages supply data/columns; styles and interactions stay shared. */
 export function ConfigurableTable<T>(props:ConfigurableTableProps<T>){return <ConfigurableTableInstance key={tablePreferenceKey(props.storageKey)} {...props}/>;}
-function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys,label,renderCell,rowKey,loading=false,emptyContent,rowProps,initialHiddenColumns=[],fillHeight=false,fieldButtonAfterLabel=false,expandedRowKey=null,renderExpandedRow}:ConfigurableTableProps<T>){
+function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys,label,renderCell,rowKey,loading=false,emptyContent,rowProps,initialHiddenColumns=[],fillHeight=false,fieldButtonAfterLabel=false,stickyEdges=false,expandedRowKey=null,renderExpandedRow}:ConfigurableTableProps<T>){
  const columnsKey=columns.map(column=>column.key).join('|');
  const preferenceKey=tablePreferenceKey(storageKey);
  const [layout,setLayout]=useState<TableLayout>(()=>{try{const saved=localStorage.getItem(preferenceKey)??localStorage.getItem(storageKey);const current=readTableLayout(localStorage,localStorage.getItem(preferenceKey)?preferenceKey:storageKey,columns,legacyStorageKeys);return saved?current:{...current,hidden:columns.filter(column=>!column.required&&initialHiddenColumns.includes(column.key)).map(column=>column.key)}}catch{return defaultTableLayout(columns)}});
@@ -54,6 +56,14 @@ function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[preferenceKey]);
  const visible=layout.order.map(key=>columns.find(c=>c.key===key)).filter((c):c is TableColumn=>Boolean(c&&(c.required||!layout.hidden.includes(c.key))));
+ // Pin only the outer columns, so a narrow viewport keeps the name and price
+ // visible while the middle columns scroll inside the table container.
+ const pinnedEdge=(index:number):"left"|"right"|undefined=>{
+  if(!stickyEdges||visible.length<2)return undefined;
+  if(index===0)return "left";
+  if(index===visible.length-1)return "right";
+  return undefined;
+ };
  const resize=(column:TableColumn,value:number)=>setLayout(current=>({...current,widths:{...current.widths,[column.key]:tableColumnWidth(value,column)}}));
  const reset=(column:TableColumn)=>resize(column,column.width);
  const finish=()=>{drag.current=null;setResizing(false)};
@@ -61,7 +71,7 @@ function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys
   <Table aria-label={label} layout="fixed" style={{width:visible.reduce((sum,c)=>sum+(layout.widths[c.key]??c.width),0),minWidth:'100%'}}
    className={`${configurableTableStyles.table}${fillHeight?' h-full':''}`}>
    <colgroup>{visible.map(c=><col key={c.key} style={{width:layout.widths[c.key]??c.width}}/>)}</colgroup>
-   <SortableContext items={visible.map(c=>c.key)} strategy={horizontalListSortingStrategy}><Table.Header><Table.Row>{visible.map((column,index)=><TableColumnHead key={column.key} column={column} actionsAfterLabel={index===0&&fieldButtonAfterLabel} actions={index===0?<Button size="xs" variant="secondary" icon={<PencilSimpleIcon/>} aria-haspopup="dialog" aria-expanded={fieldsOpen} onClick={()=>setFieldsOpen(true)}>字段</Button>:<span className="ml-auto inline-flex shrink-0 opacity-0 group-hover/header:opacity-100 group-focus-within/header:opacity-100 has-data-popup-open:opacity-100"><DropdownMenu><DropdownMenu.Trigger render={<Button variant="ghost" size="xs" shape="square" aria-label={`${column.label}字段选项`} icon={<DotsThreeVerticalIcon/>}/>}/><DropdownMenu.Content><DropdownMenu.Item onClick={()=>reset(column)}>恢复本列宽度</DropdownMenu.Item>{!column.required?<DropdownMenu.Item onClick={()=>setLayout(current=>({...current,hidden:[...current.hidden,column.key]}))}>隐藏字段</DropdownMenu.Item>:null}</DropdownMenu.Content></DropdownMenu></span>}>
+   <SortableContext items={visible.map(c=>c.key)} strategy={horizontalListSortingStrategy}><Table.Header><Table.Row>{visible.map((column,index)=><TableColumnHead key={column.key} column={column} sticky={pinnedEdge(index)} actionsAfterLabel={index===0&&fieldButtonAfterLabel} actions={index===0?<Button size="xs" variant="secondary" icon={<PencilSimpleIcon/>} aria-haspopup="dialog" aria-expanded={fieldsOpen} onClick={()=>setFieldsOpen(true)}>字段</Button>:<span className="ml-auto inline-flex shrink-0 opacity-0 group-hover/header:opacity-100 group-focus-within/header:opacity-100 has-data-popup-open:opacity-100"><DropdownMenu><DropdownMenu.Trigger render={<Button variant="ghost" size="xs" shape="square" aria-label={`${column.label}字段选项`} icon={<DotsThreeVerticalIcon/>}/>}/><DropdownMenu.Content><DropdownMenu.Item onClick={()=>reset(column)}>恢复本列宽度</DropdownMenu.Item>{!column.required?<DropdownMenu.Item onClick={()=>setLayout(current=>({...current,hidden:[...current.hidden,column.key]}))}>隐藏字段</DropdownMenu.Item>:null}</DropdownMenu.Content></DropdownMenu></span>}>
     {index<visible.length-1?<div role="separator" aria-orientation="vertical" aria-label={`调整${column.label}列宽`} aria-valuemin={column.min} aria-valuemax={maxTableColumnWidth} aria-valuenow={Math.round(layout.widths[column.key]??column.width)} tabIndex={0}
      className="group/resize absolute inset-y-0 right-0 z-10 flex w-2 cursor-col-resize touch-none select-none items-center justify-center focus-visible:outline-none"
      onPointerDown={event=>{if(event.button!==0)return;event.preventDefault();event.currentTarget.focus();event.currentTarget.setPointerCapture(event.pointerId);const headers=event.currentTarget.closest('tr')?.querySelectorAll('th');const widths={...layout.widths};headers?.forEach(header=>{const key=header.dataset.orderColumn;if(key)widths[key]=header.getBoundingClientRect().width});const before={...layout,widths};drag.current={key:column.key,x:event.clientX,width:widths[column.key]??column.width,before:layout};setLayout(before);setResizing(true)}}
@@ -71,7 +81,7 @@ function ConfigurableTableInstance<T>({columns,rows,storageKey,legacyStorageKeys
      <span className={configurableTableStyles.resizeLine}/>
     </div>:null}
    </TableColumnHead>)}</Table.Row></Table.Header></SortableContext>
-   <Table.Body>{loading?Array.from({length:10},(_,index)=><Table.Row key={`loading-${index}`} aria-hidden="true">{visible.map(c=><Table.Cell key={c.key}><span className="block h-4 w-2/3 animate-pulse rounded-sm bg-kumo-overlay motion-reduce:animate-none"/></Table.Cell>)}</Table.Row>):rows.length?rows.map(row=><Fragment key={rowKey(row)}><Table.Row {...rowProps?.(row)} className={`group ${rowProps?.(row).className??''}`}>{visible.map(c=><Table.Cell key={c.key} className="min-w-0 overflow-hidden whitespace-nowrap">{renderCell(row,c.key)}</Table.Cell>)}</Table.Row>{expandedRowKey===rowKey(row)&&renderExpandedRow?<Table.Row><Table.Cell colSpan={visible.length} className="bg-kumo-recessed p-0!">{renderExpandedRow(row)}</Table.Cell></Table.Row>:null}</Fragment>):<Table.Row><Table.Cell colSpan={visible.length} className="h-32! text-center text-kumo-subtle">{emptyContent??'未找到记录'}</Table.Cell></Table.Row>}</Table.Body>
+   <Table.Body>{loading?Array.from({length:10},(_,index)=><Table.Row key={`loading-${index}`} aria-hidden="true">{visible.map((c,index)=><Table.Cell key={c.key} sticky={pinnedEdge(index)}><span className="block h-4 w-2/3 animate-pulse rounded-sm bg-kumo-overlay motion-reduce:animate-none"/></Table.Cell>)}</Table.Row>):rows.length?rows.map(row=><Fragment key={rowKey(row)}><Table.Row {...rowProps?.(row)} className={`group ${rowProps?.(row).className??''}`}>{visible.map((c,index)=><Table.Cell key={c.key} sticky={pinnedEdge(index)} className="min-w-0 overflow-hidden whitespace-nowrap">{renderCell(row,c.key)}</Table.Cell>)}</Table.Row>{expandedRowKey===rowKey(row)&&renderExpandedRow?<Table.Row><Table.Cell colSpan={visible.length} className="bg-kumo-recessed p-0!">{renderExpandedRow(row)}</Table.Cell></Table.Row>:null}</Fragment>):<Table.Row><Table.Cell colSpan={visible.length} className="h-32! text-center text-kumo-subtle">{emptyContent??'未找到记录'}</Table.Cell></Table.Row>}</Table.Body>
   </Table>
  </div></LayerCard>{createPortal(<DragOverlay dropAnimation={window.matchMedia('(prefers-reduced-motion: reduce)').matches?null:{duration:250,easing:'ease'}}>{activeColumn?<TableColumnPreview label={columns.find(c=>c.key===activeColumn)?.label??''}/>:null}</DragOverlay>,document.body)}</DndContext>;
 }

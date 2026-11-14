@@ -331,6 +331,7 @@ function IntegratedProductCatalog() {
                         storageKey={`ddyidc-console-catalog-specs:${secondary?.id ?? selectedGroup}`}
                         label="计算规格"
                         loading={productsQuery.isLoading}
+                        stickyEdges
                         renderCell={catalogCell}
                         rowKey={(item) => item.id}
                         rowProps={(item) => ({ variant: item.id === product?.id ? "selected" : "default" })}
