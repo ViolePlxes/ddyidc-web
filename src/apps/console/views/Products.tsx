@@ -9,17 +9,19 @@ import { type CatalogProduct, type ProductGroupSummary, type ProductSummary } fr
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
-import { CardSkeleton, ProductBillSkeleton, ProductConfigSkeleton } from "../../../shared/components/skeletons";
-import { MobileBillDock } from "../../../shared/components/MobileBillDock";
+import { CardSkeleton, ProductConfigSkeleton } from "../../../shared/components/skeletons";
+import { BottomCheckoutBar } from "../../../shared/components/BottomCheckoutBar";
+import { OrderStepsBreadcrumbs } from "../../../shared/components/OrderStepsBreadcrumbs";
 import { MobileCatalogSpecs } from "../../../shared/components/MobileSpecList";
 import { useCatalogDesktopLayout } from "../../../shared/hooks/useMediaQuery";
+import { useFillingPageSize } from "../../../shared/hooks/useFillingPageSize";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
-import { ProductSteps, scrollToProductStep } from "../../../shared/components/ProductSteps";
+import { scrollToProductStep } from "../../../shared/components/ProductSteps";
 import { Tabs } from "../../../shared/components/Tabs";
 import { useOrderPage, useProduct, useProducts } from "../../../shared/hooks/useConsoleData";
 import { cycleLabels } from "../../../shared/utils/format";
 
-import { belongsToGroup, catalogLayout, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
+import { belongsToGroup, catalogStock, isCatalogAvailable as isAvailable, isUpstreamProduct, secondaryGroups } from "../../../shared/utils/productCatalog";
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
 
 function productSummary(product: ProductSummary) {
@@ -193,15 +195,16 @@ function IntegratedProductCatalog() {
   const groups = productsQuery.data?.groups ?? [];
   const [selectedGroupId, setSelectedGroup] = useState("");
   const [page, setPage] = useState(1);
-  const perPage = 10;
   const [selectedSecondaryId, setSelectedSecondaryId] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
+  // Bottom checkout bar hosts: the bar itself and the detail body (desktop panel
+  // or phone drawer). Both are portals owned by `ProductConfig`.
+  const [billBar, setBillBar] = useState<HTMLDivElement | null>(null);
   const [billTarget, setBillTarget] = useState<HTMLDivElement | null>(null);
   const [stepsTarget, setStepsTarget] = useState<HTMLDivElement | null>(null);
-  // Mobile hosts: the bottom bar and the body of the 明细 dialog.
-  const [billBar, setBillBar] = useState<HTMLDivElement | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const desktop = useCatalogDesktopLayout();
+  const specHost = useRef<HTMLDivElement>(null);
   const primaryGroups = useMemo(() => buildPrimaryGroups(products, groups), [groups, products]);
   const selectedGroup = primaryGroups.has(selectedGroupId) ? selectedGroupId : (primaryGroups.keys().next().value ?? "all");
   const children = secondaryGroups(groups, selectedGroup);
@@ -224,6 +227,20 @@ function IntegratedProductCatalog() {
       void productsQuery.refetch();
     }
   }, [catalogIssue, productsQuery.isFetching, productsQuery.refetch]);
+  // Rows fill the space above the pagination and the sticky checkout bar, so the
+  // spec list never makes the page scroll just to see its own footer.
+  const perPage = useFillingPageSize({
+    host: specHost,
+    resetKey: `${desktop}:${selectedGroup}:${secondary?.id ?? ""}`,
+    dataKey: `${linkedProducts.length}:${productsQuery.isLoading ? 1 : 0}`,
+    reserveSelectors: ["[data-catalog-pagination]", "[data-checkout-bar]"],
+    reserve: 20,
+    reserveChrome: false,
+    headSelector: desktop ? "thead" : undefined,
+    rowSelector: desktop ? "tbody tr" : "[data-fill-row]",
+    rowGap: desktop ? 0 : 12,
+  });
+  useEffect(() => { setPage(1); }, [perPage]);
   const retryCatalog = () => { void productsQuery.refetch(); };
   const copyDiagnostic = async () => {
     const diagnostic = {
@@ -239,8 +256,10 @@ function IntegratedProductCatalog() {
 
   const currentPage = Math.min(page, Math.max(1, Math.ceil(linkedProducts.length / perPage)));
   const pageProducts = linkedProducts.slice((currentPage - 1) * perPage, currentPage * perPage);
-  const product = pageProducts.find((item) => item.id === selectedProductId && isAvailable(item))
-    ?? pageProducts.find(isAvailable);
+  // Keep a picked SKU configured even when it moves to another page (a height
+  // change or `查看明细` can shrink the page size).
+  const selectedProduct = linkedProducts.find((item) => item.id === selectedProductId && isAvailable(item));
+  const product = selectedProduct ?? pageProducts.find(isAvailable);
   // Only the selected SKU loads purchase details. Never render another SKU's
   // placeholder detail while React Query changes keys.
   const detailQuery = useProduct(product?.id ?? "");
@@ -249,14 +268,14 @@ function IntegratedProductCatalog() {
   const orderPage = orderPageQuery.isPlaceholderData ? undefined : orderPageQuery.data;
   const configError = detailQuery.error ?? (detail ? orderPageQuery.error : null);
   const configLoading = Boolean(product) && !configError && (!detail || orderPageQuery.isPending || orderPageQuery.isPlaceholderData);
+  const configReady = Boolean(product && orderPage && detail) && !configLoading;
   const retryConfig = () => {
     if (!detail || detailQuery.error) void detailQuery.refetch();
     else void orderPageQuery.refetch();
   };
-  // Category switches clear the selection. On mobile also return to the top of
-  // the spec list when it has already scrolled out of view above.
+  // Category switches clear the selection. When page size changes (breakpoint or
+  // the detail panel) the page returns to 1 but the picked SKU stays configured.
   const keepSpecsVisible = () => {
-    if (desktop) return;
     const pane = document.querySelector("[data-dashboard-scroll]");
     const target = document.getElementById("catalog-specifications");
     if (!target) return;
@@ -265,23 +284,52 @@ function IntegratedProductCatalog() {
   };
   const selectPrimary = (value: string) => { setSelectedGroup(value); setSelectedSecondaryId(""); setSelectedProductId(""); setPage(1); keepSpecsVisible(); };
   const selectSecondary = (value: string) => { setSelectedSecondaryId(value); setSelectedProductId(""); setPage(1); keepSpecsVisible(); };
+  // The desktop detail panel opens above the bar. When it would cover the spec
+  // list the pane scrolls the list back above the panel, so expanding the bill
+  // never hides the SKUs the customer is choosing from.
+  const detailAdjusted = useRef(false);
+  useEffect(() => {
+    if (!detailOpen || !desktop) { detailAdjusted.current = false; return; }
+    const pane = document.querySelector("[data-dashboard-scroll]");
+    const panel = document.querySelector("[data-checkout-detail]");
+    const section = document.getElementById("catalog-specifications");
+    if (!pane || !panel || !section) return;
+    const check = () => {
+      if (detailAdjusted.current) return;
+      const panelRect = panel.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      if (sectionRect.bottom <= panelRect.top || sectionRect.top >= panelRect.bottom) return;
+      detailAdjusted.current = true;
+      scrollToProductStep("catalog-specifications", pane);
+    };
+    // The bar grows after its portal content mounts, so wait for the real panel.
+    const frame = requestAnimationFrame(() => requestAnimationFrame(check));
+    const observer = new ResizeObserver(check);
+    observer.observe(panel);
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+  }, [detailOpen, desktop]);
   return (
     <>
       <PageHeader title="订购产品" description="选择分类和计算规格，再配置资源与购买周期。" />
       <PageState loading={productsQuery.isLoading} keepContent>
-        <div className={desktop ? catalogLayout : "grid min-w-0 gap-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))]"}>
-          {desktop ? (
-            <aside className="hidden min-w-0 xl:sticky xl:top-4 xl:flex xl:max-h-[calc(100dvh-12rem)] xl:flex-col xl:overflow-y-auto">
+        <div className="flex min-w-0 flex-col">
+          {/* The trail sticks to the top of the dashboard pane and stays visible
+              while the configuration is edited, so the step jump is always reachable. */}
+          <div
+            data-order-steps
+            className="sticky top-0 z-20 -mx-4 border-b border-kumo-line bg-kumo-canvas py-2 md:-mx-6 lg:-mx-8"
+          >
+            <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
               <div ref={setStepsTarget} />
-              {configLoading || !orderPage || !detail ? <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} /> : null}
-            </aside>
-          ) : null}
-          <div className="grid min-w-0 gap-5">
+              {configLoading || !orderPage || !detail ? (
+                <OrderStepsBreadcrumbs steps={[{ id: "catalog-specifications", title: "计算规格" }]} />
+              ) : null}
+            </div>
+          </div>
+          <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 pt-5">
             <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
               onPrimaryChange={selectPrimary}
               onSecondaryChange={selectSecondary} />
-            {desktop ? null : <div ref={setStepsTarget} className="min-w-0" />}
-            {desktop || (!configLoading && orderPage && detail) ? null : <ProductSteps steps={[{ id: "catalog-specifications", title: "计算规格" }]} variant="chips" />}
 
             <section id="catalog-specifications" className="grid min-w-0 scroll-mt-4 gap-4">
               <h2 className="text-lg font-semibold text-kumo-strong">计算规格</h2>
@@ -290,54 +338,72 @@ function IntegratedProductCatalog() {
                 description={"未能确认当前分类的可选商品，请重新加载；仍无法显示时，可将诊断信息提供给客服。" + diagnosticNotice}
                 />
                 <div className="flex flex-wrap gap-2"><Button variant="secondary" loading={productsQuery.isFetching} onClick={retryCatalog}>重新加载</Button><Button variant="secondary" onClick={() => void copyDiagnostic()}>{diagnosticCopied ? "已复制诊断信息" : "复制诊断信息"}</Button></div></div>)
-                : desktop ? (
-                  productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId}>
-                    <ConfigurableTable<CatalogProduct>
-                      columns={catalogTableColumns}
-                      rows={productsQuery.isLoading ? [] : pageProducts}
-                      storageKey={`ddyidc-console-catalog-specs:${secondary?.id ?? selectedGroup}`}
-                      label="计算规格"
-                      loading={productsQuery.isLoading}
-                      renderCell={catalogCell}
-                      rowKey={(item) => item.id}
-                      rowProps={(item) => ({ variant: item.id === product?.id ? "selected" : "default" })}
-                      emptyContent="当前分类暂无可选规格"
-                    />
-                  </Radio.Group> : <PageState empty
-                    emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
-                    emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>
-                ) : productsQuery.isLoading ? (
-                  <div className="grid gap-3" role="status" aria-label="正在加载计算规格">{[0, 1, 2].map((index) => <CardSkeleton key={index} compact />)}</div>
-                ) : linkedProducts.length ? (
-                  <MobileCatalogSpecs products={pageProducts} value={product?.id ?? ""} onSelect={setSelectedProductId} />
-                ) : (
-                  <PageState empty
-                    emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
-                    emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>
-                )}
+                : <div ref={specHost} className="min-w-0">
+                  {desktop ? (
+                    productsQuery.isLoading || linkedProducts.length ? <Radio.Group aria-label="计算规格" value={product?.id ?? ""} onValueChange={setSelectedProductId} className="min-w-0">
+                      <ConfigurableTable<CatalogProduct>
+                        columns={catalogTableColumns}
+                        rows={productsQuery.isLoading ? [] : pageProducts}
+                        storageKey={`ddyidc-console-catalog-specs:${secondary?.id ?? selectedGroup}`}
+                        label="计算规格"
+                        loading={productsQuery.isLoading}
+                        renderCell={catalogCell}
+                        rowKey={(item) => item.id}
+                        rowProps={(item) => ({ variant: item.id === product?.id ? "selected" : "default" })}
+                        emptyContent="当前分类暂无可选规格"
+                      />
+                    </Radio.Group> : <PageState empty
+                      emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
+                      emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>
+                  ) : productsQuery.isLoading ? (
+                    <div className="grid gap-3" role="status" aria-label="正在加载计算规格">{[0, 1, 2].map((index) => <CardSkeleton key={index} compact />)}</div>
+                  ) : linkedProducts.length ? (
+                    <MobileCatalogSpecs products={pageProducts} value={product?.id ?? ""} onSelect={setSelectedProductId} />
+                  ) : (
+                    <PageState empty
+                      emptyTitle={secondary ? "当前分类暂无可选产品" : "请选择其他分类"}
+                      emptyDescription="请选择其他分类查看可订购商品。"><span /></PageState>
+                  )}
+                </div>}
               {!product && linkedProducts.length ? <Banner title="当前规格暂无库存" description="请选择其他分类的可用规格。" /> : null}
-              {linkedProducts.length > perPage ? <Pagination page={currentPage} setPage={(value) => { setPage(value); setSelectedProductId(""); }} perPage={perPage} totalCount={linkedProducts.length} controls={desktop ? undefined : "simple"} /> : null}
+              {linkedProducts.length > perPage ? (
+                <div data-catalog-pagination className="flex flex-wrap items-center justify-end gap-3">
+                  <Pagination page={currentPage} setPage={setPage} perPage={perPage} totalCount={linkedProducts.length} controls={desktop ? undefined : "simple"} />
+                </div>
+              ) : null}
             </section>
 
             {productsQuery.isLoading ? <ProductConfigSkeleton externalBill /> : null}
             {product ? <section aria-label="产品配置">
               <PageState loading={configLoading} skeleton={<ProductConfigSkeleton externalBill />} error={configError ? getApiMessage(configError) : null}>
-                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} billBar={desktop ? undefined : billBar} stepsTarget={stepsTarget} stepsVariant={desktop ? "list" : "chips"} onShowDetail={() => setDetailOpen(true)} catalogSelection /> : null}
+                {orderPage && detail ? <ProductConfig key={product.id} product={detail} orderPage={orderPage} billTarget={billTarget} billBar={billBar} stepsTarget={stepsTarget} detailOpen={detailOpen} onShowDetail={() => setDetailOpen((open) => !open)} catalogSelection /> : null}
               </PageState>
-              {desktop || !configError ? null : <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} />}
+              {!configError ? null : <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} />}
             </section> : null}
           </div>
-          {desktop ? (
-            <aside className="min-w-0 xl:sticky xl:top-20" aria-label="当前应付账单">
-              <div ref={setBillTarget} />
-              {!product && !productsQuery.isLoading ? <PageState empty emptyTitle="请选择计算规格" emptyDescription="选择有库存的计算规格后显示实时账单。"><span /></PageState> : null}
-              {productsQuery.isLoading || configLoading ? <ProductBillSkeleton /> : null}
-              {product && configError ? <Banner variant="error" title="配置暂不可用" description="重新加载配置后可继续结算。" action={<Button onClick={retryConfig}>重试配置</Button>} /> : null}
-            </aside>
-          ) : null}
+          <BottomCheckoutBar
+            open={detailOpen}
+            onOpenChange={setDetailOpen}
+            onBar={setBillBar}
+            onDetail={setBillTarget}
+            desktop={desktop}
+            placeholder={configReady ? null : (
+              <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                  <span className="text-sm text-kumo-subtle">当前应付</span>
+                  <strong className="text-lg font-semibold text-kumo-strong">—</strong>
+                  <span className="whitespace-nowrap text-sm text-kumo-subtle">· 折合 —/月</span>
+                </div>
+                <p className="min-w-0 flex-1 truncate text-sm text-kumo-subtle">{configError ? "配置暂不可用，请重试" : productsQuery.isLoading ? "正在加载商品目录" : "请选择计算规格后查看价格"}</p>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button variant="secondary" className="min-h-11" disabled>查看明细</Button>
+                  <Button className="min-h-11" disabled>立即购买</Button>
+                </div>
+              </div>
+            )}
+          />
         </div>
       </PageState>
-      {!desktop && product && orderPage && detail ? <MobileBillDock open={detailOpen} onOpenChange={setDetailOpen} onBar={setBillBar} onDetail={setBillTarget} /> : null}
     </>
   );
 }

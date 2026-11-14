@@ -4,6 +4,7 @@ import { useCertificationGate } from "./CertificationGate";
 import { Banner, Button, Checkbox, LayerCard, Popover, Radio, Select } from "@cloudflare/kumo";
 import { CaretUpIcon, LinuxLogoIcon, MinusIcon, PlusIcon, ShoppingCartIcon, SquaresFourIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { consoleApi } from "../api/console";
 import { getApiMessage } from "../api/request";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -26,7 +27,7 @@ import { isUpstreamProduct } from "../utils/productCatalog";
 import { choiceLabel, isQuantityOption, configurationVisible, configurationInitialValue, configurationArray, configurationDisplayValue, isAdjustableOption, optionIndex, optionValueAt, usesResourceSlider, isResourceOption, optionValueCount, withoutZeroPrice } from "../utils/productOptions";
 import { Slider } from "../vendor/kumo-slider/Slider";
 import { ProductCustomFields, customFieldsIncomplete } from "./ProductCustomFields";
-import { ProductSteps } from "./ProductSteps";
+import { OrderStepsBreadcrumbs } from "./OrderStepsBreadcrumbs";
 import { Tabs } from "./Tabs";
 import { MobileProductSpecs } from "./MobileSpecList";
 import { useCatalogDesktopLayout } from "../hooks/useMediaQuery";
@@ -279,20 +280,21 @@ export function ProductConfig({
   billLoading = false,
   catalogSelection = false,
   stepsTarget,
-  stepsVariant = "list",
   onShowDetail,
+  detailOpen = false,
 }: {
   product: ProductDetail;
   orderPage?: OrderPage;
   billTarget?: HTMLElement | null;
-  /** Mobile bottom-bar host. The bar renders this component's own amount and
+  /** Bottom checkout bar host. The bar renders this component's own amount and
    * purchase gate, so no price or checkout logic is duplicated. */
   billBar?: HTMLElement | null;
   billLoading?: boolean;
   catalogSelection?: boolean;
   stepsTarget?: HTMLElement | null;
-  stepsVariant?: "list" | "chips";
   onShowDetail?: () => void;
+  /** Whether the detail view is currently expanded (label/aria only). */
+  detailOpen?: boolean;
 }) {
   const navigate = useNavigate();
   const customFieldSchema=orderPage?.customFields??[];
@@ -477,7 +479,7 @@ export function ProductConfig({
     ...(imageOption && imageGroups.length ? [{ id: anchor("images"), title: "操作系统" }] : []),
     { id: anchor("purchase"), title: "购买信息" },
   ];
-  // One purchase gate for the desktop bill and the mobile bar.
+  // One purchase gate for the desktop bill and the bottom checkout bar.
   const purchaseDisabled = product.readOnly || billLoading || quoteBlocked || outOfStock || specsUnavailable || certification.busy || passwordIssues.length > 0;
   const addToCart = () => void certification.run(() => addCart(draft()));
   const buyNow = () => void certification.run(() => { saveOrderDraft(draft()); if (window.location.pathname.startsWith("/console")) navigate("/order/confirm", { viewTransition: true }); else window.location.assign("/order/confirm"); });
@@ -495,19 +497,44 @@ export function ProductConfig({
       : "报价暂不可用")
     : certification.busy ? "正在校验实名认证"
     : null;
+  const summaryLine = [product.name, selectedCycle?.label || cycleLabels[cycle] || cycle, `×${quantity}`].filter(Boolean).join(" · ");
+  // Pre-submit summary for Breadcrumbs.Clipboard. Amounts come from the same
+  // `total` / `monthlyEquivalent` as the bar; missing pieces drop their line.
+  const clipboardSummary = (() => {
+    const lines = ["【订购产品】下单前核对", `商品：${product.name}`];
+    if (selectedSpec) {
+      const facts = [selectedSpec.vcpu ? `${selectedSpec.vcpu} vCPU` : "", selectedSpec.memory || ""].filter(Boolean).join(" / ");
+      lines.push(`规格：${selectedSpec.name}${facts ? `（${facts}）` : ""}`);
+    }
+    const configuration = selectedOptions
+      .filter((option) => !(selectedSpec && (option.field === "cpu" || option.field === "memory")))
+      .map((option) => ({ name: option.displayName, value: withoutZeroPrice(option.displayValue).trim() }))
+      .filter((option) => option.value.length > 0)
+      .map((option) => `${option.name} ${option.value}`);
+    if (configuration.length) lines.push(`配置：${configuration.join(" · ")}`);
+    lines.push(`周期：${selectedCycle?.label || cycleLabels[cycle] || cycle} ×${quantity}`);
+    if (!quoteBlocked) lines.push(`当前应付：¥${total.toFixed(2)}（折合 ¥${monthlyEquivalent.toFixed(2)}/月）`);
+    lines.push(`生成时间：${dayjs().format("YYYY-MM-DD HH:mm")}`);
+    lines.push("金额为页面实时报价，以提交时校验结果为准。");
+    return lines.join("\n");
+  })();
   const bar = (
     <div className="grid gap-1">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <div className="grid min-w-0 gap-0.5">
-          <span className="text-sm text-kumo-subtle">当前应付{updating ? " · 正在更新" : ""}</span>
-          <strong className="truncate text-lg font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
+          <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+            <span className="text-sm text-kumo-subtle">当前应付</span>
+            <strong className="text-lg font-semibold text-kumo-strong">{quoteBlocked ? "—" : `¥${total.toFixed(2)}`}</strong>
+          </div>
+          <span className="truncate text-sm text-kumo-subtle">折合 {quoteBlocked ? "—" : `¥${monthlyEquivalent.toFixed(2)}`}/月{updating ? " · 正在更新" : ""}</span>
         </div>
+        <p className="hidden min-w-0 flex-1 truncate text-sm text-kumo-subtle xl:block" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" className="min-h-11" disabled={!onShowDetail} onClick={onShowDetail}>查看明细</Button>
+          <Button variant="secondary" className="min-h-11" disabled={!onShowDetail} aria-expanded={detailOpen} onClick={onShowDetail}>{detailOpen ? "收起明细" : "查看明细"}</Button>
           <Button className="min-h-11" disabled={purchaseDisabled} onClick={buyNow}>立即购买</Button>
         </div>
       </div>
-      {barBlockedReason ? <p className="truncate text-sm text-kumo-subtle">{barBlockedReason}</p> : null}
+      <p className="truncate text-sm text-kumo-subtle xl:hidden" title={barBlockedReason ?? summaryLine}>{barBlockedReason ?? summaryLine}</p>
     </div>
   );
   const bill = (
@@ -631,7 +658,7 @@ export function ProductConfig({
       </div>
       {billTarget ? createPortal(bill, billTarget) : null}
       {billBar ? createPortal(bar, billBar) : null}
-      {stepsTarget ? createPortal(<ProductSteps steps={steps} variant={stepsVariant} />, stepsTarget) : null}
+      {stepsTarget ? createPortal(<OrderStepsBreadcrumbs steps={steps} clipboardText={clipboardSummary} />, stepsTarget) : null}
     </>
   );
 }

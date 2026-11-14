@@ -49,6 +49,7 @@ function SpecCard({
   const [open, setOpen] = useState(false);
   return (
     <div
+      data-fill-row
       className={`grid min-w-0 gap-1 overflow-hidden rounded-md border bg-kumo-base transition-colors ${selected ? "border-kumo-contrast" : "border-kumo-line"}${disabled ? " opacity-60" : ""}`}
     >
       <Radio.Item

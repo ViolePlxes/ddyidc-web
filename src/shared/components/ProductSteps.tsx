@@ -3,12 +3,21 @@ import { useEffect, useRef, useState } from "react";
 
 export interface ProductStep { id: string; title: string }
 
+/**
+ * Offset used by the order page so a sticky step trail never hides the target.
+ * `16` is the plain gap; the sticky trail's height is added when it exists.
+ */
+export function orderStepsOffset() {
+  const trail = typeof document === "undefined" ? null : document.querySelector<HTMLElement>("[data-order-steps]");
+  return (trail?.offsetHeight ?? 0) + 16;
+}
+
 /** Scroll only the dashboard pane, not the surrounding app shell. */
-export function scrollToProductStep(id: string, root: Element | null) {
+export function scrollToProductStep(id: string, root: Element | null, offset = orderStepsOffset()) {
   const target = document.getElementById(id);
   if (!target) return;
   const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
-  if (root) root.scrollTo({ top: root.scrollTop + target.getBoundingClientRect().top - root.getBoundingClientRect().top - 16, behavior });
+  if (root) root.scrollTo({ top: root.scrollTop + target.getBoundingClientRect().top - root.getBoundingClientRect().top - offset, behavior });
   else target.scrollIntoView({ behavior, block: "start" });
 }
 

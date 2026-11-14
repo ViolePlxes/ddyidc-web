@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
-import { MobileBillDock } from "../../../shared/components/MobileBillDock";
+import { BottomCheckoutBar } from "../../../shared/components/BottomCheckoutBar";
 import { ProductConfig } from "../../../shared/components/ProductConfig";
 import { ProductConfigSkeleton } from "../../../shared/components/skeletons";
 import { useCatalogDesktopLayout } from "../../../shared/hooks/useMediaQuery";
@@ -53,7 +53,7 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
           </div>
         ) : null}
       </PageState>
-      {mobileBill ? <MobileBillDock open={detailOpen} onOpenChange={setDetailOpen} onBar={setBillBar} onDetail={setBillTarget} /> : null}
+      {mobileBill ? <BottomCheckoutBar desktop={false} open={detailOpen} onOpenChange={setDetailOpen} onBar={setBillBar} onDetail={setBillTarget} /> : null}
     </>
   );
 }

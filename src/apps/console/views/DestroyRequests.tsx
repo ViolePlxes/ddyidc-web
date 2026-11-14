@@ -1,7 +1,7 @@
 import { ConfigurableTable, type TableColumn } from "../../../shared/components/ConfigurableTable";
 import { Button, InlineCopyText, Input, Tabs } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { destroyApi, type DestroyOption, type DestroyRequestRow } from "../../../shared/api/destroyRequests";
 import { getApiMessage } from "../../../shared/api/request";
@@ -9,6 +9,7 @@ import { DestroyVerifyDialog } from "../../../shared/components/DestroyVerifyDia
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { Pagination } from "../../../shared/components/Pagination";
+import { useFillingPageSize } from "../../../shared/hooks/useFillingPageSize";
 import { formatDate } from "../../../shared/utils/format";
 
 const requestLabels: Record<number, string> = { 0: "待审核", 1: "审核通过，处理中", 2: "已拒绝", 4: "已退款" };
@@ -40,41 +41,6 @@ function requestID() {
   return `destroy-${random}`.slice(0, 64);
 }
 
-/** Row count that fills the visible page without making the whole page scroll. */
-function useFillingPageSize(host: React.RefObject<HTMLDivElement | null>, resetKey: string, dataKey: string) {
-  const [perPage, setPerPage] = useState(10);
-  useEffect(() => {
-    const pane = document.querySelector<HTMLElement>("[data-dashboard-scroll]");
-    if (!pane) return;
-    const measure = () => {
-      const node = host.current;
-      if (!node) return;
-      const paneRect = pane.getBoundingClientRect();
-      // The platform footer and the page's bottom padding share the scroll pane,
-      // so both have to be reserved before the table is sized.
-      const footerHeight = document.querySelector<HTMLElement>('[aria-label="平台页脚"]')?.getBoundingClientRect().height ?? 0;
-      let bottomPadding = 0;
-      for (let parent: HTMLElement | null = node; parent && bottomPadding === 0; parent = parent.parentElement) {
-        bottomPadding = Number.parseFloat(getComputedStyle(parent).paddingBottom || "0") || 0;
-      }
-      const paginationHeight = document.querySelector<HTMLElement>("[data-destroy-pagination]")?.getBoundingClientRect().height ?? 36;
-      const limit = paneRect.bottom - footerHeight - bottomPadding - paginationHeight - PAGE_GAP - 8;
-      const available = limit - node.getBoundingClientRect().top;
-      const headHeight = node.querySelector<HTMLElement>("thead")?.getBoundingClientRect().height ?? 44;
-      const rowHeight = node.querySelector<HTMLElement>("tbody tr")?.getBoundingClientRect().height ?? 48;
-      const rows = Math.floor((available - headHeight) / Math.max(28, rowHeight));
-      setPerPage(Math.min(50, Math.max(3, rows)));
-    };
-    measure();
-    // Second pass once the first render has real row heights instead of skeletons.
-    const frame = requestAnimationFrame(measure);
-    const observer = new ResizeObserver(measure);
-    observer.observe(pane);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
-  }, [host, resetKey, dataKey]);
-  return perPage;
-}
-
 export function DestroyRequests() {
   const client = useQueryClient();
   const [tab, setTab] = useState("instances");
@@ -94,7 +60,13 @@ export function DestroyRequests() {
   });
   const rows: DestroyOption[] = options.data?.items ?? [];
   const history: DestroyRequestRow[] = requests.data?.items ?? [];
-  const perPage = useFillingPageSize(tableHost, tab, `${rows.length}:${history.length}`);
+  const perPage = useFillingPageSize({
+    host: tableHost,
+    resetKey: tab,
+    dataKey: `${rows.length}:${history.length}`,
+    reserveSelectors: ["[data-destroy-pagination]"],
+    reserve: PAGE_GAP,
+  });
   const keyword = search.trim().toLowerCase();
   const matches = (values: Array<string | undefined>) => !keyword || values.some((value) => (value ?? "").toLowerCase().includes(keyword));
   const filteredOptions = useMemo(

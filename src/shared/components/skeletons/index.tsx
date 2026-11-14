@@ -1,6 +1,6 @@
 import {ScopedTable as Table} from '../ScopedTable';
 import { LayerCard, Sidebar, SkeletonLine, Surface} from "@cloudflare/kumo";
-import { catalogColumns, catalogLayout } from "../../utils/productCatalog";
+import { catalogColumns } from "../../utils/productCatalog";
 
 
 export function PageHeaderSkeleton() {
@@ -86,12 +86,13 @@ export function ProductSpecTableSkeleton() {
 
 export function ProductCatalogSkeleton() {
   return (
-    <div className={catalogLayout} role="status" aria-label="正在加载订购目录">
-      <div className="hidden min-w-0 gap-3 xl:flex xl:h-[calc(100dvh-12rem)] xl:flex-col xl:justify-center" aria-hidden="true">
-        <SkeletonLine className="h-4 w-24" />
-        {[0, 1, 2, 3].map((index) => <SkeletonLine key={index} className="h-5 w-32" />)}
+    <div className="flex min-w-0 flex-col gap-5" role="status" aria-label="正在加载订购目录">
+      <div className="-mx-4 border-b border-kumo-line bg-kumo-canvas md:-mx-6 lg:-mx-8">
+        <div className="mx-auto flex h-[60px] w-full max-w-7xl items-center gap-3 px-4 md:px-6 lg:px-8" aria-hidden="true">
+          {["w-24", "w-12", "w-10", "w-10", "w-14", "w-12"].map((width) => <SkeletonLine key={width} className={`h-4 ${width}`} />)}
+        </div>
       </div>
-      <div className="grid min-w-0 gap-5">
+      <div className="mx-auto grid w-full max-w-7xl gap-5">
         <LayerCard className=" grid gap-4 px-4 py-3">
           {["一级分类", "二级分类"].map((label) => <div key={label} className="grid min-w-0 gap-3 md:grid-cols-[6rem_minmax(0,1fr)] md:items-center">
             <strong className="font-medium">{label}</strong><div className="flex min-w-0 gap-2 overflow-hidden" aria-hidden="true">
@@ -102,7 +103,12 @@ export function ProductCatalogSkeleton() {
         <ProductSpecTableSkeleton />
         <ProductConfigSkeleton externalBill />
       </div>
-      <aside className="min-w-0 xl:sticky xl:top-20" aria-label="当前应付账单"><ProductBillSkeleton /></aside>
+      <div className="sticky bottom-0 -mx-4 border-t border-kumo-line bg-kumo-base md:-mx-6 lg:-mx-8">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 md:px-6 lg:px-8" aria-hidden="true">
+          <SkeletonLine className="h-6 w-40" />
+          <div className="flex items-center gap-2"><SkeletonLine className="h-11 w-24" /><SkeletonLine className="h-11 w-24" /></div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -153,7 +159,7 @@ export function AppShellSkeleton({ kind = "products" }: { kind?: SkeletonKind })
       </Sidebar>
       <div className="min-w-0 flex-1 overflow-y-auto bg-kumo-canvas" role="status" aria-label="正在恢复会话">
         <Surface className="h-[58px] border-b border-kumo-line bg-kumo-canvas" />
-        <main className={`grid w-full gap-6 p-4 md:p-6 lg:p-8 ${kind === "catalog" ? "" : "mx-auto max-w-7xl"}`}>
+        <main className={`grid w-full gap-6 p-4 md:p-6 lg:p-8 mx-auto max-w-7xl`}>
           <PageHeaderSkeleton />
           <ContentSkeleton kind={kind} />
         </main>
