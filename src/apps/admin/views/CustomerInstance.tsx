@@ -65,9 +65,9 @@ export function CustomerInstance(){
  const needsConfirm=Boolean(item?.upstreamInstanceId);
  const remove=useMutation({mutationFn:()=>api.remove({reason:deleteReason.trim(),confirm:deleteConfirm.trim()||undefined,force:needsConfirm}),onSuccess:async()=>{setDeleteOpen(false);await client.invalidateQueries({queryKey:['admin','customer-records',customerId,'products']});navigate(listPath)}});
  const [syncing,setSyncing]=useState(false);
-  const [priceOpen,setPriceOpen]=useState(false);const [priceView,setPriceView]=useState<RenewalPriceView|null>(null);const [priceLoading,setPriceLoading]=useState(false);const [priceSaving,setPriceSaving]=useState(false);const [priceMode,setPriceMode]=useState<'fixed'|'percent'>('fixed');const [priceValue,setPriceValue]=useState('');const [priceReason,setPriceReason]=useState('');
-  async function openPrice(){setPriceOpen(true);setPriceLoading(true);try{const v=await api.renewalPrice();setPriceView(v);setPriceMode((v.mode as 'fixed'|'percent')||'fixed');setPriceValue(v.mode==='percent'?(v.value??''):(v.amount??''));setPriceReason('');}catch(e){setNotice(getApiMessage(e));}finally{setPriceLoading(false);}}
-  async function savePrice(){setPriceSaving(true);try{const v=await api.setRenewalPrice({mode:priceMode,value:priceValue.trim(),reason:priceReason.trim()});setPriceView(v);setNotice('续费价格已保存');}catch(e){setNotice(getApiMessage(e));}finally{setPriceSaving(false);}}
+  const [priceOpen,setPriceOpen]=useState(false);const [priceView,setPriceView]=useState<RenewalPriceView|null>(null);const [priceLoading,setPriceLoading]=useState(false);const [priceSaving,setPriceSaving]=useState(false);const [priceError,setPriceError]=useState('');const [priceMode,setPriceMode]=useState<'fixed'|'percent'>('fixed');const [priceValue,setPriceValue]=useState('');const [priceReason,setPriceReason]=useState('');
+  async function openPrice(){setPriceOpen(true);setPriceLoading(true);setPriceError('');try{const v=await api.renewalPrice();setPriceView(v);setPriceMode((v.mode as 'fixed'|'percent')||'fixed');setPriceValue(v.mode==='percent'?(v.value??''):(v.amount??''));setPriceReason('');}catch(e){setPriceError(getApiMessage(e));}finally{setPriceLoading(false);}}
+  async function savePrice(){setPriceSaving(true);setPriceError('');try{const v=await api.setRenewalPrice({mode:priceMode,value:priceValue.trim(),reason:priceReason.trim()});setPriceView(v);setNotice('续费价格已保存');}catch(e){setPriceError(getApiMessage(e));}finally{setPriceSaving(false);}}
   async function clearPrice(){setPriceSaving(true);try{await api.clearRenewalPrice();setPriceView((current:RenewalPriceView|null)=>current?{...current,active:false,discount:'0.00',amount:current.baseAmount,mode:undefined,value:undefined,reason:undefined}:current);setNotice('已恢复目录价');}catch(e){setNotice(getApiMessage(e));}finally{setPriceSaving(false);}}
  const syncUpstream=async()=>{
    if(!item)return;
@@ -120,13 +120,21 @@ export function CustomerInstance(){
     </Dialog.Root>
     <Dialog.Root open={priceOpen} onOpenChange={open=>{if(!priceSaving)setPriceOpen(open)}}>
       <Dialog className="grid max-w-lg gap-4 p-6"><Dialog.Title>续费价格</Dialog.Title><Dialog.Description>只影响该实例的续费报价，原价、折扣与调价原因会记录审计。保存后新的续费订单按协议价出账。</Dialog.Description>
-        {priceLoading?<p role="status">正在读取续费价格…</p>:priceView?<div className="grid gap-3">
+        {priceLoading?<p role="status">正在读取续费价格…</p>:priceError&&!priceView?<div className="grid gap-3">
+          <Banner variant="error" title="无法读取续费价格" description={priceError} />
+          <p className="text-sm text-kumo-subtle">续费价格依赖实例当前上游商品的实时续费报价。若这台机器上游做过迁移（换机房/换商品/IP 变更），本地商品关联可能还是旧商品，报价会失败；请先在「编辑实例信息」里点「仅修正商品关联」，再点「拉取上游信息」刷新，然后回到这里重试。</p>
+          <div className="flex justify-end gap-2"><Button variant="secondary" disabled={priceSaving} onClick={()=>setPriceOpen(false)}>关闭</Button><Button loading={priceLoading} onClick={()=>{void openPrice();}}>重试</Button></div>
+        </div>:priceView?<div className="grid gap-3">
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm"><dt>目录原价</dt><dd>¥{priceView.baseAmount}</dd><dt>当前续费价</dt><dd>¥{priceView.amount} {priceView.active?<Badge variant="success">协议价</Badge>:null}</dd><dt>优惠</dt><dd>{Number(priceView.discount)>0?`-¥${priceView.discount}`:'—'}</dd>{priceView.active?<><dt>生效</dt><dd>{priceView.effectiveFrom}{priceView.effectiveTo?` 至 ${priceView.effectiveTo}`:' 起'}</dd><dt>原因</dt><dd className="break-words">{priceView.reason}</dd></>:null}</dl>
           <Select label="调价方式" value={priceMode} items={{fixed:'固定价格（元）',percent:'折扣率（%）'}} onValueChange={v=>setPriceMode((v as 'fixed'|'percent')||'fixed')}/>
           <Input label={priceMode==='fixed'?'续费价格（元）':'折扣率（1-100，90 表示九折）'} value={priceValue} inputMode="decimal" onChange={e=>setPriceValue(e.target.value)}/>
           <Input label="调价原因" value={priceReason} maxLength={200} onChange={e=>setPriceReason(e.target.value)} description="至少 2 个字，记录到审计日志。" />
+          {priceError?<Banner variant="error" title="保存失败" description={priceError} />:null}
           <div className="flex justify-end gap-2">{priceView.active?<Button variant="destructive" loading={priceSaving} onClick={()=>{void clearPrice();}}>恢复目录价</Button>:null}<Button variant="secondary" disabled={priceSaving} onClick={()=>setPriceOpen(false)}>取消</Button><Button loading={priceSaving} disabled={priceReason.trim().length<2||!priceValue.trim()} onClick={()=>{void savePrice();}}>保存</Button></div>
-        </div>:null}
+        </div>:<div className="grid gap-3">
+          <p className="text-sm text-kumo-subtle">没有读取到续费价格数据。</p>
+          <div className="flex justify-end gap-2"><Button variant="secondary" disabled={priceSaving} onClick={()=>setPriceOpen(false)}>关闭</Button><Button loading={priceLoading} onClick={()=>{void openPrice();}}>重试</Button></div>
+        </div>}
       </Dialog>
     </Dialog.Root>
     {tab==='config'&&<LayerCard className="overflow-x-auto p-0"><Table tableId="apps/admin/views/CustomerInstance.tsx:1"><Table.Header><Table.Row><Table.Head>配置项</Table.Head><Table.Head>配置值</Table.Head></Table.Row></Table.Header><Table.Body>{item.config.length?item.config.map(c=><Table.Row key={c.id}><Table.Cell>{c.displayName}</Table.Cell><Table.Cell>{c.displayValue}</Table.Cell></Table.Row>):<Table.Row><Table.Cell colSpan={2}>此产品没有额外选配项</Table.Cell></Table.Row>}</Table.Body></Table></LayerCard>}
