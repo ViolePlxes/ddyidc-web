@@ -130,7 +130,7 @@ export function InstanceRenewalPriceDialog({ customerId, instanceId, open, onOpe
                       <span className="shrink-0 text-xs text-kumo-subtle sm:hidden">目录 ¥{row.base} · 成本 ¥{row.cost}</span>
                       <Input
                         size="sm"
-                        className="min-w-0 flex-1 sm:flex-none"
+                        className="min-w-0 w-full flex-1"
                         aria-label={`${row.label}自定义价`}
                         inputMode="decimal"
                         placeholder={row.base}
