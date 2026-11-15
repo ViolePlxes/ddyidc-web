@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Badge, Banner, Button, Dialog, Input, Switch } from "@cloudflare/kumo";
+import { Badge, Banner, Button, Input, LayerDialog, Switch } from "@cloudflare/kumo";
 import { adminInstanceApi } from "../../../shared/api/adminInstance";
 import { getApiMessage } from "../../../shared/api/request";
 
 type Row = { cycle: string; label: string; base: string; cost: string; active: boolean; enabled: boolean; value: string };
 
-// Every upstream renewal duration can carry its own contract price; an empty
-// input keeps the catalogue price for that cycle.
+// Compact editor: one line per upstream renewal duration on desktop, two lines
+// on narrow screens, with a per-cycle contract price and visibility switch.
 export function InstanceRenewalPriceDialog({ customerId, instanceId, open, onOpenChange, onSaved }: {
   customerId: string;
   instanceId: string;
@@ -52,6 +52,10 @@ export function InstanceRenewalPriceDialog({ customerId, instanceId, open, onOpe
     }
   }, [open, customerId, instanceId]);
 
+  function update(index: number, patch: Partial<Row>) {
+    setRows((current) => current.map((row, position) => position === index ? { ...row, ...patch } : row));
+  }
+
   async function save() {
     setSaving(true);
     setError("");
@@ -86,59 +90,77 @@ export function InstanceRenewalPriceDialog({ customerId, instanceId, open, onOpe
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(value) => { if (!saving) onOpenChange(value); }}>
-      <Dialog className="grid max-w-2xl gap-4 p-6">
-        <Dialog.Title>续费价格</Dialog.Title>
-        <Dialog.Description>按上游每个续费时长分别定价；留空表示按目录价出账，关闭后用户端不再显示该续费时长。保存后新的续费订单按协议价。</Dialog.Description>
-        {loading ? (
-          <p role="status">正在读取续费价格…</p>
-        ) : error && !loaded ? (
-          <div className="grid gap-3">
-            <Banner variant="error" title="无法读取续费价格" description={error} />
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" disabled={saving} onClick={() => onOpenChange(false)}>关闭</Button>
-              <Button loading={loading} onClick={() => void load()}>重试</Button>
-            </div>
-          </div>
-        ) : rows.length ? (
-          <div className="grid gap-3">
-            <div className="grid grid-cols-[minmax(0,1fr)_6rem_6rem_9rem] gap-2 text-sm text-kumo-subtle">
-              <span>续费时长</span><span>目录价</span><span>上游成本</span><span>自定义价（元）</span>
-            </div>
-            {rows.map((row, index) => (
-              <div key={row.cycle} className="grid grid-cols-[minmax(0,1fr)_6rem_6rem_9rem] items-center gap-2">
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className="truncate">{row.label}</span>
-                  <span className="text-xs text-kumo-subtle">{row.cycle}</span>
-                  {row.active ? <Badge variant={row.enabled ? "success" : "neutral"}>{row.enabled ? "协议价" : "已关闭"}</Badge> : row.enabled ? null : <Badge variant="neutral">已关闭</Badge>}
-                </span>
-                <span>¥{row.base}</span>
-                <span>¥{row.cost}</span>
-                <div className="flex items-center gap-2">
-                  <Input
-                    aria-label={`${row.label}自定义价`}
-                    inputMode="decimal"
-                    placeholder={row.base}
-                    value={row.value}
-                    disabled={!row.enabled}
-                    onChange={(event) => setRows((current) => current.map((item, position) => position === index ? { ...item, value: event.target.value } : item))}
-                  />
-                  <Switch label="显示" checked={row.enabled} onCheckedChange={(checked) => setRows((current) => current.map((item, position) => position === index ? { ...item, enabled: checked } : item))} />
-                </div>
+    <LayerDialog.Root open={open} onOpenChange={onOpenChange} dismissDisabled={saving}>
+      <LayerDialog.Content size="xl">
+        <LayerDialog.Title>续费价格</LayerDialog.Title>
+        <LayerDialog.Description>留空按目录价；关闭后用户端不显示该周期。</LayerDialog.Description>
+        <LayerDialog.Body>
+          {loading ? (
+            <p role="status" className="py-4 text-center text-kumo-subtle">正在读取续费价格…</p>
+          ) : error && !loaded ? (
+            <div className="grid gap-3">
+              <Banner variant="error" title="无法读取续费价格" description={error} />
+              <div className="flex justify-end">
+                <Button size="sm" variant="secondary" loading={loading} onClick={() => void load()}>重试</Button>
               </div>
-            ))}
-            <Input label="调价原因" value={reason} maxLength={200} onChange={(event) => setReason(event.target.value)} description="至少 2 个字，记录到审计日志。" />
-            {error ? <Banner variant="error" title="保存失败" description={error} /> : null}
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" disabled={saving} onClick={() => void clear()}>恢复全部目录价</Button>
-              <Button variant="secondary" disabled={saving} onClick={() => onOpenChange(false)}>取消</Button>
-              <Button loading={saving} disabled={reason.trim().length < 2} onClick={() => void save()}>保存</Button>
             </div>
-          </div>
-        ) : (
-          <p className="text-sm text-kumo-subtle">没有读取到续费周期。</p>
-        )}
-      </Dialog>
-    </Dialog.Root>
+          ) : rows.length ? (
+            <div className="grid gap-3">
+              <div className="hidden grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_9rem_3.5rem] items-center gap-3 px-1 text-xs text-kumo-subtle sm:grid">
+                <span>续费时长</span><span>目录价</span><span>上游成本</span><span>自定义价（元）</span><span className="text-right">显示</span>
+              </div>
+              <div className="divide-y divide-kumo-hairline rounded-lg border border-kumo-hairline">
+                {rows.map((row, index) => (
+                  <div key={row.cycle} className="grid gap-x-3 gap-y-1.5 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_9rem_3.5rem] sm:items-center sm:gap-3 sm:py-1.5">
+                    <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-start">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-sm font-medium">{row.label}</span>
+                        <span className="hidden text-xs text-kumo-subtle md:inline">{row.cycle}</span>
+                        {row.active ? (
+                          <Badge variant={row.enabled ? "success" : "neutral"}>{row.enabled ? "协议价" : "已关闭"}</Badge>
+                        ) : row.enabled ? null : <Badge variant="neutral">已关闭</Badge>}
+                      </div>
+                      <div className="sm:hidden">
+                        <Switch aria-label={`${row.label}用户端显示`} checked={row.enabled} onCheckedChange={(checked) => update(index, { enabled: checked })} />
+                      </div>
+                    </div>
+                    <div className="hidden text-sm sm:block">¥{row.base}</div>
+                    <div className="hidden text-sm sm:block">¥{row.cost}</div>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="shrink-0 text-xs text-kumo-subtle sm:hidden">目录 ¥{row.base} · 成本 ¥{row.cost}</span>
+                      <Input
+                        size="sm"
+                        className="min-w-0 flex-1 sm:flex-none"
+                        aria-label={`${row.label}自定义价`}
+                        inputMode="decimal"
+                        placeholder={row.base}
+                        value={row.value}
+                        disabled={!row.enabled}
+                        onChange={(event) => update(index, { value: event.target.value })}
+                      />
+                    </div>
+                    <div className="hidden justify-end sm:flex">
+                      <Switch aria-label={`${row.label}用户端显示`} checked={row.enabled} onCheckedChange={(checked) => update(index, { enabled: checked })} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="min-w-48 flex-1">
+                  <Input size="sm" label="调价原因" placeholder="至少 2 个字，记录到审计日志" value={reason} maxLength={200} onChange={(event) => setReason(event.target.value)} />
+                </div>
+                <Button size="sm" variant="secondary" disabled={saving} onClick={() => void clear()}>恢复全部目录价</Button>
+              </div>
+              {error ? <Banner variant="error" title="保存失败" description={error} /> : null}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-kumo-subtle">没有读取到续费周期。</p>
+          )}
+        </LayerDialog.Body>
+        <LayerDialog.Actions dismissLabel="取消">
+          <LayerDialog.Action loading={saving} disabled={reason.trim().length < 2} onClick={() => void save()}>保存</LayerDialog.Action>
+        </LayerDialog.Actions>
+      </LayerDialog.Content>
+    </LayerDialog.Root>
   );
 }
