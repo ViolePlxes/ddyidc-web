@@ -5,7 +5,8 @@ const unwrap = async <T>(request: Promise<{data: ApiEnvelope<T>}>) => {
   if(data.code!==0) throw new Error(data.message||'读取实例失败');
   return data.data;
 };
-export interface RenewalPriceView{baseAmount:string;amount:string;discount:string;cycle:string;mode?:string;value?:string;effectiveFrom?:string;effectiveTo?:string;reason?:string;active:boolean}
+export interface RenewalPriceCycle{cycle:string;label:string;baseAmount:string;cost:string;amount:string;discount?:string;active:boolean;enabled:boolean;mode?:string;value?:string;effectiveFrom?:string;effectiveTo?:string;reason?:string}
+export interface RenewalPriceView{baseAmount:string;amount:string;discount:string;cycle:string;mode?:string;value?:string;effectiveFrom?:string;effectiveTo?:string;reason?:string;active:boolean;cycles?:RenewalPriceCycle[]}
 export function adminInstanceApi(customerId:string,instanceId:string) {
   const path=`/customers/${encodeURIComponent(customerId)}/instances/${encodeURIComponent(instanceId)}`;
   return {
@@ -16,6 +17,7 @@ export function adminInstanceApi(customerId:string,instanceId:string) {
     remove:(input:{reason:string;confirm?:string;force?:boolean})=>unwrap(adminRequest.delete<ApiEnvelope<{deleted:boolean}>>(path,{data:input,timeout:30000})),
     renewalPrice:()=>unwrap(adminRequest.get<ApiEnvelope<RenewalPriceView>>(`${path}/renewal-price`,{timeout:30000})),
     setRenewalPrice:(input:{mode:'fixed'|'percent';value:string;reason:string;cycle?:string})=>unwrap(adminRequest.put<ApiEnvelope<RenewalPriceView>>(`${path}/renewal-price`,input,{timeout:30000})),
+    setRenewalPrices:(input:{reason:string;items:{cycle:string;enabled?:boolean;mode?:'fixed'|'percent';value?:string}[]})=>unwrap(adminRequest.put<ApiEnvelope<RenewalPriceView>>(`${path}/renewal-prices`,input,{timeout:30000})),
     clearRenewalPrice:()=>unwrap(adminRequest.delete<ApiEnvelope<{cleared:boolean}>>(`${path}/renewal-price`,{timeout:30000})),
   };
 }
