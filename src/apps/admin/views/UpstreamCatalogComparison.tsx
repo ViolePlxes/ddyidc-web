@@ -8,9 +8,9 @@ import { DotsSixVerticalIcon, FolderIcon, SquaresFourIcon } from "@phosphor-icon
 
 export interface ComparisonCategory { id: string; parentId: string; name: string }
 export interface ComparisonProduct { id: string; groupId: string; name: string; price: number | null; mapped: boolean; counterpartName?: string; deletable?: boolean; hidden?: boolean; localId?: string; upstreamId?: string; supplierId?: string }
-interface PaneProps { title: string; categories: ComparisonCategory[]; products: ComparisonProduct[]; upstream: boolean; onAction?: (product: ComparisonProduct) => void; busyId?: string; dragging?: boolean; onProductDragStart?: (event: DragEvent<HTMLTableRowElement>, product: ComparisonProduct) => void; onProductDragEnd?: () => void; onSync?: (product: ComparisonProduct) => void; onProductDrop?: (event: DragEvent<HTMLElement>, groupId: string) => void }
+interface PaneProps { title: string; categories: ComparisonCategory[]; products: ComparisonProduct[]; upstream: boolean; onAction?: (product: ComparisonProduct) => void; busyId?: string; dragging?: boolean; onProductDragStart?: (event: DragEvent<HTMLTableRowElement>, product: ComparisonProduct) => void; onProductDragEnd?: () => void; onSync?: (product: ComparisonProduct) => void; onRename?: (product: ComparisonProduct) => void; onProductDrop?: (event: DragEvent<HTMLElement>, groupId: string) => void }
 
-function CatalogPane({ title, categories, products, upstream, onAction, busyId, dragging, onProductDragStart, onProductDragEnd, onProductDrop, onSync }: PaneProps) {
+function CatalogPane({ title, categories, products, upstream, onAction, busyId, dragging, onProductDragStart, onProductDragEnd, onProductDrop, onSync, onRename }: PaneProps) {
   const [dropTarget, setDropTarget] = useState("");
   const [selected, setSelected] = useState("all");
   const [keyword, setKeyword] = useState("");
@@ -65,7 +65,7 @@ function CatalogPane({ title, categories, products, upstream, onAction, busyId, 
             <Table.Cell><div className="grid gap-1"><span className="flex items-center gap-1 text-base font-medium">{upstream && !item.mapped && onProductDragStart && <DotsSixVerticalIcon aria-hidden="true" className="size-4 shrink-0 text-kumo-subtle"/>}{item.name}</span><span className="text-base text-kumo-subtle">#{item.id}</span>{item.counterpartName && <span className="text-base text-kumo-subtle">{upstream ? "本地：" : "供应商："}{item.counterpartName}</span>}</div></Table.Cell>
             <Table.Cell>{item.price === null ? "—" : `¥${item.price.toFixed(2)}`}</Table.Cell>
             <Table.Cell><Badge variant={item.mapped ? "secondary" : "outline"}>{upstream ? item.mapped ? "已对接" : "—" : item.mapped ? item.hidden ? "已隐藏 · 已对接" : "已对接" : "未对接"}</Badge></Table.Cell>
-            {onAction && <Table.Cell>{upstream ? !item.mapped && <Button size="sm" variant="primary" disabled={Boolean(busyId)} loading={busyId === item.id} onClick={() => onAction(item)}>对接</Button> : item.mapped ? <div className="flex gap-2">{onSync && <Button size="sm" variant="secondary" disabled={Boolean(busyId)} onClick={() => onSync(item)}>同步</Button>}<Button size="sm" variant="secondary" disabled={Boolean(busyId) || Boolean(item.deletable === false && item.hidden)} loading={busyId === item.id} onClick={() => onAction(item)}>{item.deletable === false ? item.hidden ? "已隐藏" : "隐藏" : "取消对接"}</Button></div> : "—"}</Table.Cell>}
+            {onAction && <Table.Cell>{upstream ? !item.mapped && <Button size="sm" variant="primary" disabled={Boolean(busyId)} loading={busyId === item.id} onClick={() => onAction(item)}>对接</Button> : item.mapped ? <div className="flex gap-2">{onRename && <Button size="sm" variant="secondary" disabled={Boolean(busyId)} onClick={() => onRename(item)}>改名</Button>}{onSync && <Button size="sm" variant="secondary" disabled={Boolean(busyId)} onClick={() => onSync(item)}>同步</Button>}<Button size="sm" variant="secondary" disabled={Boolean(busyId) || Boolean(item.deletable === false && item.hidden)} loading={busyId === item.id} onClick={() => onAction(item)}>{item.deletable === false ? item.hidden ? "已隐藏" : "隐藏" : "取消对接"}</Button></div> : "—"}</Table.Cell>}
           </Table.Row>)}</Table.Body>
         </Table>{!visible.length && <p className="p-8 text-center text-base text-kumo-subtle">当前分类暂无匹配商品</p>}</div>
         <div className="flex items-center justify-between gap-2 border-t border-kumo-line p-3"><Button variant="secondary" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>上一页</Button><span className="text-base text-kumo-subtle">{currentPage} / {pageCount}</span><Button variant="secondary" size="sm" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>下一页</Button></div>
@@ -83,6 +83,8 @@ export interface UpstreamCatalogComparisonProps {
   onDisconnect?: (product: ComparisonProduct) => Promise<void>;
   onHide?: (product: ComparisonProduct) => Promise<void>;
   onSync?: (product: ComparisonProduct) => Promise<void>;
+  /** Rename the mapped local product; the supplier keeps the same identity. */
+  onRename?: (product: ComparisonProduct) => void;
   disconnectDescription?: string;
 }
 export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps) {
@@ -148,7 +150,7 @@ export function UpstreamCatalogComparison(props: UpstreamCatalogComparisonProps)
   return <>
     {!action && error && <div className="mb-4"><Banner variant={pendingResult ? "alert" : "error"} title={pendingResult ? "对接结果待确认" : "操作未完成"} description={error}/></div>}
     <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-      <CatalogPane title="上游商品" categories={props.upstreamCategories} products={props.upstreamProducts} upstream onAction={props.onConnect ? openAction : undefined} busyId={busyId} onProductDragStart={props.onConnect ? beginDrag : undefined} onProductDragEnd={() => setDraggedId("")}/>
+      <CatalogPane title="上游商品" categories={props.upstreamCategories} products={props.upstreamProducts} upstream onAction={props.onConnect ? openAction : undefined} busyId={busyId} onProductDragStart={props.onConnect ? beginDrag : undefined} onProductDragEnd={() => setDraggedId("")} onRename={props.onRename}/>
       <CatalogPane title="全部本地商品" categories={props.localCategories} products={props.localProducts} upstream={false} onAction={props.onDisconnect || props.onHide ? openAction : undefined} busyId={busyId} dragging={Boolean(draggedId)} onProductDrop={receiveDrop} onSync={props.onSync ? syncLocal : undefined}/>
     </div>
     <Dialog.Root open={Boolean(action)} onOpenChange={open => { if (!open && !busyId) setAction(null); }}>

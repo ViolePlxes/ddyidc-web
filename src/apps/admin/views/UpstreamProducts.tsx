@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import { connectWithConfirmation } from "../../../shared/utils/upstreamConnect";
 import { useAdminAuthStore } from "../../../shared/stores/staffAuth";
 import { useEffect, useMemo, useState } from "react";
-import { Banner, Button, LayerCard, Select, Switch} from "@cloudflare/kumo";
+import { Banner, Button, Input, LayerCard, Select, Switch} from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { upstreamProductsApi } from "../../../shared/api/upstreamProducts";
 import { adminProductsApi } from "../../../shared/api/adminProducts";
@@ -11,6 +11,7 @@ import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { UpstreamCatalogComparison, type ComparisonProduct } from "./UpstreamCatalogComparison";
+import { Dialog } from "../../../shared/components/Dialog";
 
 export function UpstreamProducts() {
  const adminId=useAdminAuthStore(state=>state.user?.id);
@@ -44,6 +45,22 @@ export function UpstreamProducts() {
  const disconnect=async(p:ComparisonProduct)=>{setNotice("");const m=await findLink(p);if(!m.deletable){await refresh();throw new Error("该商品存在订单或机器关联，禁止删除，请改为隐藏")};try{await upstreamProductsApi.remove([m.id])}catch(e){await refresh();throw e};await refresh()};
  const sync=async(p:ComparisonProduct)=>{setNotice("");const m=await findLink(p);const result=await upstreamProductsApi.sync(m.id);await refresh();setNotice(`同步完成：价格变更 ${result.summary.price}，库存变更 ${result.summary.stock}，规格变更 ${result.summary.specification}。`)};
  const hide=async(p:ComparisonProduct)=>{setNotice("");const m=await findLink(p);await upstreamProductsApi.hidden(m.id,true);await refresh()};
+ const [renaming,setRenaming]=useState<{id:string;name:string;description:string}|null>(null);
+ const [renameBusy,setRenameBusy]=useState(false);
+ const openRename=async(p:ComparisonProduct)=>{setNotice("");try{const m=await findLink(p);setRenaming({id:m.id,name:m.name,description:m.description??""})}catch(e){setNotice(getApiMessage(e))}};
+ const submitRename=async()=>{
+  if(!renaming)return;
+  const m=(mappings.data??[]).find(x=>x.id===renaming.id);
+  if(!m){setNotice("映射已变化，请刷新后重试");return}
+  const name=renaming.name.trim();
+  if(!name){setNotice("商品名称不能为空");return}
+  setRenameBusy(true);
+  try{
+   await upstreamProductsApi.update(m.id,{supplierId:m.supplierId,upstreamProductId:Number(m.upstreamProductId),name,description:renaming.description,productGroupId:m.productGroupId,profitType:m.profitType,profitValue:m.profitValue,renewProfitType:m.renewProfitType,renewProfitValue:m.renewProfitValue,upgradeProfitType:m.upgradeProfitType,upgradeProfitValue:m.upgradeProfitValue,priceBasis:m.priceBasis,mode:m.mode,autoSetup:m.autoSetup});
+   setRenaming(null);await refresh();setNotice("已保存：商品名称与描述已更新，价格与配置不变。");
+  }catch(e){setNotice(getApiMessage(e))}
+  finally{setRenameBusy(false)}
+ };
  const fatal=[suppliers,catalog,mappings,local,groups].find(q=>q.error&&!q.data)?.error;
  return <>
   <PageHeader title="供应商映射" description="左侧查看上游完整商品目录，右侧对比全部本地商品。拖入右侧二级分类可直接对接。" actions={<Button variant="secondary" loading={catalog.isFetching||mappings.isFetching||local.isFetching} onClick={()=>{void Promise.all([catalog.refetch(),refresh()])}}>刷新目录</Button>}/>
@@ -51,10 +68,18 @@ export function UpstreamProducts() {
   {notice&&<div className="mb-4"><Banner title="操作提示" description={notice}/></div>}
   {(catalog.data?.warning||unknown>0)&&<div className="mb-4"><Banner variant="alert" title="部分上游分类信息未返回" description={catalog.data?.warning||`${unknown} 个商品未返回可识别分类层级，仍完整保留在未分组中。`}/></div>}
   <PageState loading={suppliers.isLoading||catalog.isLoading||mappings.isLoading||local.isLoading||groups.isLoading} error={fatal?getApiMessage(fatal):null} empty={!suppliers.isLoading&&!suppliers.data?.length} emptyTitle="请先添加供应商">
-   {supplierId&&<UpstreamCatalogComparison key={supplierId} upstreamCategories={catalog.data?.categories??[]} upstreamProducts={upstreamRows} localCategories={groups.data??[]} localProducts={localRows} onConnect={connect} onDisconnect={disconnect} onHide={hide} onSync={sync}/>}
+   {supplierId&&<UpstreamCatalogComparison key={supplierId} upstreamCategories={catalog.data?.categories??[]} upstreamProducts={upstreamRows} localCategories={groups.data??[]} localProducts={localRows} onConnect={connect} onDisconnect={disconnect} onHide={hide} onSync={sync} onRename={openRename}/>}
   </PageState>
   <div className="mt-4"><Button variant="secondary" onClick={()=>setShowMetrics(v=>!v)}>{showMetrics?"收起访问统计":"访问统计"}</Button></div>
   {showMetrics&&<LayerCard className="mt-3 overflow-auto px-4 py-3"><h2 className="mb-3 font-semibold">上游访问频率</h2>{traffic.error&&<Banner variant="error" title="统计读取失败" description={getApiMessage(traffic.error)}/>}<Table tableId="apps/admin/views/UpstreamProducts.tsx:1"><Table.Header><Table.Row><Table.Head>供应商</Table.Head><Table.Head>最近1分钟</Table.Head><Table.Head>最近5分钟</Table.Head><Table.Head>最近15分钟</Table.Head><Table.Head>平均间隔（秒）</Table.Head></Table.Row></Table.Header><Table.Body>{(traffic.data?.items??[]).map(x=><Table.Row key={x.supplierId}><Table.Cell>{x.name}</Table.Cell><Table.Cell>{x.oneMinute}</Table.Cell><Table.Cell>{x.fiveMinutes}</Table.Cell><Table.Cell>{x.fifteenMinutes}</Table.Cell><Table.Cell>{x.averageInterval?.toFixed(2)??"—"}</Table.Cell></Table.Row>)}</Table.Body></Table></LayerCard>}
+  <Dialog.Root open={Boolean(renaming)} onOpenChange={open=>{if(!open&&!renameBusy)setRenaming(null)}}>
+   <Dialog size="base" className="grid gap-4 p-8">
+    <div><Dialog.Title>修改商品名称</Dialog.Title><Dialog.Description>只改本地展示的名称与描述，供应商编号、价格与配置保持不变。</Dialog.Description></div>
+    <Input label="商品名称" value={renaming?.name??""} maxLength={200} onChange={event=>setRenaming(current=>current?{...current,name:event.target.value}:current)}/>
+    <Input label="商品描述" value={renaming?.description??""} maxLength={2000} onChange={event=>setRenaming(current=>current?{...current,description:event.target.value}:current)}/>
+    <div className="flex justify-end gap-2"><Button variant="secondary" disabled={renameBusy} onClick={()=>setRenaming(null)}>取消</Button><Button loading={renameBusy} disabled={!renaming?.name.trim()} onClick={()=>{void submitRename()}}>保存</Button></div>
+   </Dialog>
+  </Dialog.Root>
 
  </>;
 }

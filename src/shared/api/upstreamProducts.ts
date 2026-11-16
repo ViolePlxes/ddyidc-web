@@ -131,6 +131,7 @@ export const upstreamProductsApi = {
   }, { timeout: 120_000 })),
   remove: (ids: string[]) => unwrap(adminRequest.post<ApiEnvelope<{ deleted: boolean }>>("/upstream/products/batch-delete", { ids })),
   hidden: (id: string, hidden: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ hidden: boolean }>>(`/upstream/products/${id}/hidden`, { hidden })),
+  update: (id: string, input: ProductMappingInput) => unwrap(adminRequest.put<ApiEnvelope<UpstreamProduct>>(`/upstream/products/${id}`, input)),
   sync: (id: string) => unwrap(adminRequest.post<ApiEnvelope<{ status: string; summary: UpstreamChangeSummary }>>(`/upstream/products/${id}/sync`)),
   setLossGuard: (enabled: boolean) => unwrap(adminRequest.put<ApiEnvelope<{ enabled: boolean }>>("/upstream/config/loss-guard", { enabled })),
 };
