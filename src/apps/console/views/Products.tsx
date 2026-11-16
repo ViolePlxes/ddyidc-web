@@ -326,7 +326,7 @@ function IntegratedProductCatalog() {
               <OrderStepsBreadcrumbs steps={orderSteps.steps} clipboardText={orderSteps.clipboard || undefined} />
             </div>
           </div>
-          <div className={`mx-auto flex w-full ${catalogContentWidth} min-w-0 flex-col gap-5 pt-5`}>
+          <div className={`mx-auto flex w-full ${catalogContentWidth} min-w-0 flex-col gap-5 pt-5 pb-6`}>
             <ProductCategories primaryGroups={primaryGroups} selectedGroup={selectedGroup} children={children} secondary={secondary} loading={productsQuery.isLoading}
               onPrimaryChange={selectPrimary}
               onSecondaryChange={selectSecondary} />

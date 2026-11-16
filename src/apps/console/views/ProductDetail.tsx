@@ -37,7 +37,9 @@ export function ConsoleProductDetail({ publicView = false }: { publicView?: bool
         emptyTitle="商品不存在或已下架"
       >
         {product ? (
-          <div className="grid gap-4">
+          // The sticky checkout bar floats over the page below xl, so the last
+          // card (退订规则) needs room to scroll clear of it.
+          <div className={mobileBill ? "grid gap-4 pb-28 xl:pb-0" : "grid gap-4"}>
 			{product.readOnly ? <Banner variant="secondary" title={product.infoSource === "upstream" ? "已获取实时商品信息" : "当前显示已保存的商品信息"} description="当前仅开放规格查询，购买暂未开放。" /> : null}
 			{product.warning ? <Banner variant="alert" title="商品信息提示" description={product.warning} /> : null}
             {product.configurable && orderPageQuery.error ? (
