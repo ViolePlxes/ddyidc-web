@@ -9,7 +9,7 @@ export interface PortalCategory { id: string; name: string; kind: 'news' | 'help
 export interface PortalDocument {
   categories?: PortalCategory[];
   schemaVersion: number; revision: number;
-  site: { brand: string; origin: string; consoleOrigin: string; logo: string; copyright: string; filing: string; filingUrl: string; theme: string; enabled: boolean; headerEnabled: boolean; footerEnabled: boolean; llms: boolean; seo: PortalSEO; navigation: PortalLink[] | null; footer: PortalLink[] | null };
+  site: { brand: string; origin: string; consoleOrigin: string; logo: string; copyright: string; filing: string; filingUrl: string; licenses?: string; theme: string; enabled: boolean; headerEnabled: boolean; footerEnabled: boolean; llms: boolean; seo: PortalSEO; navigation: PortalLink[] | null; footer: PortalLink[] | null };
   pages: PortalPage[];
 }
 export interface PortalRevision { id: string; revision: number; action: string; createdAt: string }
