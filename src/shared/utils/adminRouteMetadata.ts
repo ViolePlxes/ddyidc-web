@@ -25,6 +25,10 @@ export const adminRouteMetadata: [string, string][] = [
     "商品管理"
   ],
   [
+    "/portal",
+    "门户首页配置"
+  ],
+  [
     "/products/groups",
     "商品分组"
   ],
