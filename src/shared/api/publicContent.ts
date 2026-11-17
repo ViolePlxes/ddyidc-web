@@ -3,7 +3,16 @@ import {useQuery} from '@tanstack/react-query';
 import type {PortalDocument,PortalPage,PortalCategory} from './portalContent';
 export interface PublishedContent {site:PortalDocument['site'];pages:PortalPage[];categories?:PortalCategory[];revision:number}
 export const publishedContentKey=['published-portal-content'] as const;
-export const publicContentOrigin=()=>window.location.hostname==='cloud.ddoidc.com'?'https://console.ddoidc.com':'';
+// Only the console host serves /api; the portal, www and the marketing domain
+// are static-only, so anything else must call the API host explicitly. The
+// public content endpoints answer with Access-Control-Allow-Origin: * and never
+// receive credentials.
+const apiHost='https://console.ddoidc.com';
+export const publicContentOrigin=()=>{
+ const host=window.location.hostname;
+ if(host==='console.ddoidc.com'||host==='localhost'||host==='127.0.0.1')return '';
+ return apiHost;
+};
 export async function readPublishedContent():Promise<PublishedContent>{
  const response=await fetch(`${publicContentOrigin()}/api/v1/portal/content`,{credentials:'omit',cache:'no-store',headers:{Accept:'application/json'}});
  if(!response.ok)throw new Error('公开内容暂时无法读取，请稍后重试');
