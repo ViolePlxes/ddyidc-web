@@ -38,7 +38,7 @@ import {
 } from "../../layouts/DashboardLayout";
 import {
   EntryGuard,
-  ForbiddenPage,
+  NotFoundPage,
   SessionBoundary,
 } from "../../shared/router/EntryGuards";
 import { useAdminAuthStore } from "../../shared/stores/staffAuth";
@@ -767,7 +767,8 @@ export function AdminApp() {
             <Route path={adminPath('/admin/cdnsell/config-center')} element={<CdnsellGate scope="admin"><LazyRoute><AdminCdnConfigCenter /></LazyRoute></CdnsellGate>} />
           </Route>
         </Route>
-        <Route path="*" element={<ForbiddenPage loginPath={adminPath('/admin/login')} />} />
+        <Route path={adminPath('/admin/portal')} element={<Navigate to={adminPath('/admin/content/site')} replace />} />
+        <Route path="*" element={<NotFoundPage homePath={adminPath('/admin')} />} />
       </Route>
     </Routes></AdminTableScope>
   );

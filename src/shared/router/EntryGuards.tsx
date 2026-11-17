@@ -70,8 +70,7 @@ export function EntryGuard({
   return <ContentPending />;
 }
 
-export function ForbiddenPage({ loginPath }: { loginPath: string }) {
-  return (
+export function ForbiddenPage({ loginPath }: { loginPath: string }) {  return (
     <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
       <LayerCard className=" grid max-w-md justify-items-center gap-4 p-8 text-center">
         <LockKeyIcon className="size-8 text-kumo-danger" />
@@ -90,4 +89,19 @@ export function ForbiddenPage({ loginPath }: { loginPath: string }) {
 export function ExternalRedirect({ to }: { to: string }) {
   useEffect(() => window.location.replace(to), [to]);
   return null;
+}
+
+/** A route that does not exist must not look like an authorization failure. */
+export function NotFoundPage({ homePath }: { homePath: string }) {
+  return (
+    <main className="grid min-h-svh place-items-center bg-kumo-recessed p-4">
+      <LayerCard className=" grid max-w-md justify-items-center gap-4 p-8 text-center">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold text-kumo-strong">页面不存在</h1>
+          <p className="text-kumo-subtle">该地址没有对应的后台页面，请从左侧菜单进入。</p>
+        </div>
+        <Button onClick={() => window.location.replace(homePath)}>返回控制台</Button>
+      </LayerCard>
+    </main>
+  );
 }
