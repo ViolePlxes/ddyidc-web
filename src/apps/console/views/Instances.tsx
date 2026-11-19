@@ -41,7 +41,7 @@ function ProductSettingLabel({ kind }: { kind: 'lock' | 'auto' }) {
     </Popover.Root>
   </span>;
 }
-const instanceStaleTime = 5 * 60 * 1000;
+const instanceStaleTime = 30 * 1000;
 const instanceCacheTime = 30 * 60 * 1000;
 
 const productCategories = {

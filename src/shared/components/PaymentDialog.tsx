@@ -13,6 +13,7 @@ import {
 } from "../api/payment";
 import { getApiMessage } from "../api/request";
 import { formatMoney } from "../utils/format";
+import { invalidateInstances } from "../utils/instanceCache";
 
 interface PaymentDialogProps {
   businessType: PaymentBusinessType;
@@ -67,6 +68,7 @@ export function PaymentDialog({
         queryClient.invalidateQueries({ queryKey: ["console", "overview"] }),
         queryClient.invalidateQueries({ queryKey: ["orders"] }),
         queryClient.invalidateQueries({ queryKey: ["finance"] }),
+        invalidateInstances(queryClient),
       ]);
       await onPaid?.();
     },
@@ -147,8 +149,9 @@ export function PaymentDialog({
     if (status.data?.status !== "paid" || !checkout || handledPaymentId.current === checkout.paymentId) return;
     handledPaymentId.current = checkout.paymentId;
     window.dispatchEvent(new Event("ddyidc:balance-changed"));
+    void invalidateInstances(queryClient);
     void onPaid?.();
-  }, [checkout, onPaid, status.data?.status]);
+  }, [checkout, onPaid, queryClient, status.data?.status]);
 
   useEffect(() => {
     let active = true;
