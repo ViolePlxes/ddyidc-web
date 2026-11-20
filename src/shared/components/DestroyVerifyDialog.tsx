@@ -17,13 +17,16 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Thin wrapper over the production-lock mailbox verification. It sends and
 // consumes the same credential through the same API; it never owns a second
-// code store or a second verification rule.
-export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, error, onConfirm }: {
+// code store or a second verification rule. requireEmail comes from the admin
+// switch: when it is off the dialog asks for the reason only and the backend
+// accepts the request without a code.
+export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, error, onConfirm, requireEmail = true }: {
   target?: DestroyVerifyTarget;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   submitting: boolean;
   error?: unknown;
+  requireEmail?: boolean;
   onConfirm: (input: { reason: string; email: string; code: string }) => Promise<void>;
 }) {
   const api = instanceManagementApi(String(target?.instanceId));
@@ -35,7 +38,7 @@ export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, er
   const status = useQuery({
     queryKey: ['production-lock-email', 'self', target?.instanceId],
     queryFn: () => api.productionLockEmail(),
-    enabled: open && Boolean(target),
+    enabled: open && Boolean(target) && requireEmail,
     staleTime: 0,
     retry: false,
   });
@@ -63,10 +66,10 @@ export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, er
     // Reset once per opening; mutation state is not a reset trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, target?.instanceId]);
-  const needsBinding = status.data?.hasEmail === false;
-  const canSend = Boolean(status.data) && !status.isFetching && !send.isPending && (!needsBinding || EMAIL_PATTERN.test(email.trim()));
-  const ready = sent && code.length === 6 && code.every(digit => /^\d$/.test(digit));
-  const canConfirm = Boolean(target) && !submitting && !send.isPending && !status.isFetching && Boolean(status.data) && Boolean(reason.trim()) && ready;
+  const needsBinding = requireEmail && status.data?.hasEmail === false;
+  const canSend = requireEmail && Boolean(status.data) && !status.isFetching && !send.isPending && (!needsBinding || EMAIL_PATTERN.test(email.trim()));
+  const emailReady = !requireEmail || (sent && code.length === 6 && code.every(digit => /^\d$/.test(digit)));
+  const canConfirm = Boolean(target) && !submitting && !send.isPending && Boolean(reason.trim()) && emailReady && (!requireEmail || (!status.isFetching && Boolean(status.data)));
   const close = (value: boolean) => {
     if (submitting || send.isPending) return;
     onOpenChange(value);
@@ -74,12 +77,12 @@ export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, er
   return <LayerDialog.Root open={open} dismissDisabled={submitting || send.isPending} onOpenChange={close}>
     <LayerDialog.Content>
       <LayerDialog.Title>申请销毁实例</LayerDialog.Title>
-      <LayerDialog.Description>实例 {target?.productName || target?.instanceNo || target?.instanceId} 销毁后不可恢复，提交后需后台审核；验证码与生产锁共用同一套邮箱凭证。</LayerDialog.Description>
+      <LayerDialog.Description>实例 {target?.productName || target?.instanceNo || target?.instanceId} 销毁后不可恢复，提交后需后台审核；{requireEmail ? '验证码与生产锁共用同一套邮箱凭证。' : '当前已关闭邮箱验证码，提交后由后台审核。'}</LayerDialog.Description>
       <LayerDialog.Body><div className="grid gap-4">
         {target ? <p>预计可退：<strong>¥{target.refundableAmount}</strong><span className="text-sm text-kumo-subtle">（提交时核算）</span></p> : null}
         <Input label="销毁原因（必填）" placeholder="请填写销毁原因" maxLength={200} value={reason} disabled={submitting} onChange={event => setReason(event.target.value)} />
-        {status.isLoading && <p role="status">正在读取邮箱状态…</p>}
-        {status.data && <>
+        {requireEmail && status.isLoading && <p role="status">正在读取邮箱状态…</p>}
+        {requireEmail && status.data && <>
           {needsBinding
             ? <><label htmlFor={`destroy-email-${target?.instanceId ?? ''}`} className="font-medium">邮箱地址</label><Input id={`destroy-email-${target?.instanceId ?? ''}`} type="email" value={email} disabled={sent || send.isPending} placeholder="请输入邮箱地址" onChange={event => setEmail(event.target.value)} /></>
             : <p>验证邮箱：{status.data.emailHint}</p>}

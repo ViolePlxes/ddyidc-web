@@ -1,11 +1,13 @@
 import { ProductionLockEmailDialog } from './ProductionLockEmailDialog';
 import { instanceConfirmationActions } from './InstanceConfirmationActions';
+import { DestroyVerifyDialog } from './DestroyVerifyDialog';
 import { Banner, Button, ButtonGroup, DropdownMenu, LayerDialog, Select, Switch } from '@cloudflare/kumo';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { consoleApi, type InstanceListItem, type InstanceActionInput } from '../api/console';
+import { destroyApi, destroyRequestId } from '../api/destroyRequests';
 import { instanceManagementApi } from '../api/instanceManagement';
 import { getApiMessage } from '../api/request';
 import { transfersApi } from '../api/transfers';
@@ -38,6 +40,47 @@ function AutoRenewSetting({ instance, customerId }: { instance: InstanceListItem
   </LayerDialog.Content>
  </LayerDialog.Root>;
 }
+// The destroy application flow is the existing refund request: this only wires
+// the same dialog and API to two more entry points (list dropdown and console
+// header). No second confirmation flow or code store is introduced.
+function useDestroyApplication(instanceId: string) {
+  const client = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const settings = useQuery({ queryKey: ['destroy-settings'], queryFn: destroyApi.settings, enabled: open, retry: false });
+  const quote = useQuery({ queryKey: ['destroy-quote', instanceId], queryFn: () => destroyApi.quote(instanceId), enabled: open, retry: false, staleTime: 0 });
+  const submit = useMutation({
+    mutationFn: (input: { reason: string; email: string; code: string }) => destroyApi.submit(instanceId, input.reason, destroyRequestId(), input.email, input.code),
+    onSuccess: async () => {
+      setOpen(false);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['destroy-requests'] }),
+        client.invalidateQueries({ queryKey: ['destroy-options'] }),
+        client.invalidateQueries({ queryKey: ['instances'] }),
+      ]);
+    },
+  });
+  const start = () => { submit.reset(); setOpen(true); };
+  const dialog = <DestroyVerifyDialog
+    target={quote.data ? { instanceId, instanceNo: quote.data.instanceNo, productName: quote.data.productName, refundableAmount: quote.data.refundableAmount } : undefined}
+    open={open}
+    onOpenChange={value => { if (!submit.isPending) { setOpen(value); if (!value) submit.reset(); } }}
+    submitting={submit.isPending}
+    error={submit.error ?? quote.error ?? settings.error}
+    requireEmail={settings.data?.requireEmailVerification ?? true}
+    onConfirm={async input => { await submit.mutateAsync(input); }}
+  />;
+  return { open, start, dialog, submit };
+}
+
+/** Red Kumo button for the console header: same request, same dialog. */
+export function DestroyInstanceButton({ instanceId, disabled, label = '销毁实例' }: { instanceId: string; disabled?: boolean; label?: string }) {
+  const destroy = useDestroyApplication(instanceId);
+  return <>
+    <Button variant="destructive" disabled={disabled || destroy.submit.isPending} onClick={destroy.start}>{label}</Button>
+    {destroy.dialog}
+  </>;
+}
+
 const operations=[['transfer','转让实例'],['start','开机'],['stop','关机'],['reboot','重启'],['hard_stop','硬关机'],['hard_reboot','硬重启'],['remote','VNC'],['reinstall','重装系统'],['renew','续费']] as const;
 export function InstanceActions({instance}:{instance:InstanceListItem}) {
  const navigate=useNavigate();const client=useQueryClient();
@@ -46,6 +89,9 @@ export function InstanceActions({instance}:{instance:InstanceListItem}) {
  const remoteWindow=useRef<Window|null>(null);
  const detail=useQuery({queryKey:['instances',instance.id],queryFn:()=>consoleApi.instance(instance.id),enabled:menu,retry:false,staleTime:0});
  const transfer=useQuery({queryKey:['transfers','status',instance.id],queryFn:()=>transfersApi.status(instance.id),enabled:menu,retry:false});
+ const destroy=useDestroyApplication(String(instance.id));
+ const destroyOptions=useQuery({queryKey:['destroy-options'],queryFn:destroyApi.options,enabled:menu,retry:false});
+ const destroyOption=destroyOptions.data?.items.find(row=>row.instanceId===String(instance.id));
  const data=detail.data;
  const locked=instance.productionLocked||data?.productionLocked;
  const cap=data?.capabilities;
@@ -74,8 +120,10 @@ export function InstanceActions({instance}:{instance:InstanceListItem}) {
     if(['transfer','reinstall','renew'].includes(key)){navigate(`/console/instances/${instance.id}?action=${key}`);return;}
     action.reset();setPending(key as InstanceActionInput['action']);
    }}>{label}</DropdownMenu.Item>)}
+   <DropdownMenu.Item disabled={!destroyOption?.eligible} onClick={destroy.start}>{destroyOption && !destroyOption.eligible && destroyOption.reason ? `销毁实例（${destroyOption.reason}）` : '销毁实例'}</DropdownMenu.Item>
   </DropdownMenu.Content></DropdownMenu>
  </ButtonGroup>{notice&&<span role="status" className="text-sm text-kumo-subtle">{notice}</span>}{detail.error&&<span role="alert">{getApiMessage(detail.error)}</span>}
  <LayerDialog.Root open={!!pending} dismissDisabled={action.isPending} onOpenChange={v=>{if(!v&&!action.isPending)setPending(undefined)}}><LayerDialog.Content><LayerDialog.Title>确认{operations.find(([key])=>key===pending)?.[1]}</LayerDialog.Title><LayerDialog.Description>{pending?.startsWith('hard_')?'将强制断电，可能丢失数据或损坏文件系统。请确认可以中断业务。':'请确认可以中断当前业务，然后执行服务器操作。'}</LayerDialog.Description><LayerDialog.Body>{action.error&&<Banner variant="error" title={getApiMessage(action.error)} />}</LayerDialog.Body>{instanceConfirmationActions({disabled:!!locked||!pending,loading:action.isPending,onConfirm:()=>{if(pending)action.mutate({action:pending})},children:'确认执行'})}</LayerDialog.Content></LayerDialog.Root>
+ {destroy.dialog}
  </div>;
 }
