@@ -61,7 +61,7 @@ function useDestroyApplication(instanceId: string) {
   });
   const start = () => { submit.reset(); setOpen(true); };
   const dialog = <DestroyVerifyDialog
-    target={quote.data ? { instanceId, instanceNo: quote.data.instanceNo, productName: quote.data.productName, refundableAmount: quote.data.refundableAmount } : undefined}
+    target={quote.data ? { instanceId, instanceNo: quote.data.instanceNo, name: quote.data.name, productName: quote.data.productName, ip: quote.data.ip, remark: quote.data.remark, refundableAmount: quote.data.refundableAmount } : undefined}
     open={open}
     onOpenChange={value => { if (!submit.isPending) { setOpen(value); if (!value) submit.reset(); } }}
     submitting={submit.isPending}
