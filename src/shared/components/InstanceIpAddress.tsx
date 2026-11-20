@@ -20,7 +20,8 @@ export function InstanceIpAddress({ primaryIp, ips, port, operatingSystem }: Ins
   }
   if (addresses.length === 0) return <span>未获取</span>;
 
-  const primary = instanceAddress(primaryIp ?? addresses[0], port, operatingSystem) ?? addresses[0];
+  const firstAddress = addresses[0] ?? "";
+  const primary = instanceAddress(primaryIp ?? firstAddress, port, operatingSystem) ?? firstAddress;
   if (addresses.length === 1) {
     return (
       <InlineCopyText className="w-fit leading-[normal]" value={primary} labels={{ copyAction: "复制连接地址", copied: "已复制" }}>
