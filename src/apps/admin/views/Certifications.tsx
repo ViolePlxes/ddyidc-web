@@ -22,6 +22,11 @@ const auditLabels: Record<string, string> = {
   alipay_query: "查询支付宝结果",
   alipay_query_failed: "支付宝结果查询失败",
   alipay_auto_pass: "支付宝自动通过",
+  tencent_initialize: "发起腾讯慧眼认证",
+  tencent_initialize_failed: "腾讯慧眼认证发起失败",
+  tencent_query: "查询腾讯慧眼结果",
+  tencent_query_failed: "腾讯慧眼结果查询失败",
+  tencent_auto_pass: "腾讯慧眼自动通过",
   fee_order: "创建认证手续费订单",
   fee_paid: "认证手续费到账",
   submit: "提交认证",
@@ -77,11 +82,15 @@ function Settings() {
             label="认证通道"
             value={value.channel}
             onValueChange={(channel) =>
-              setForm({ ...value, channel: channel as "manual" | "alipay" })
+              setForm({
+                ...value,
+                channel: channel as "manual" | "alipay" | "tencent",
+              })
             }
             items={[
               { value: "manual", label: "人工审核" },
               { value: "alipay", label: "支付宝芝麻信用（自动认证）" },
+              { value: "tencent", label: "腾讯云慧眼人脸核身（自动认证）" },
             ]}
           />
           {value.channel === "alipay" && (
@@ -147,8 +156,70 @@ function Settings() {
               </p>
             </>
           )}
+          {value.channel === "tencent" && (
+            <>
+              <Input
+                label="腾讯云 SecretId（留空保留）"
+                value={value.tencentSecretId}
+                onChange={(e) =>
+                  setForm({ ...value, tencentSecretId: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <p>{value.tencentSecretIdMasked || "尚未配置 SecretId"}</p>
+              <Textarea
+                label="腾讯云 SecretKey（仅写入，留空保留）"
+                value={value.tencentSecretKey ?? ""}
+                onChange={(e) =>
+                  setForm({ ...value, tencentSecretKey: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <p>
+                {value.tencentSecretKeyConfigured
+                  ? "SecretKey 已加密保存，不会回显。"
+                  : "尚未配置 SecretKey"}
+              </p>
+              <Input
+                label="慧眼业务流程 RuleId"
+                value={value.tencentRuleId}
+                onChange={(e) =>
+                  setForm({ ...value, tencentRuleId: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <Input
+                label="比对相似度阈值（1-100）"
+                type="number"
+                min={1}
+                max={100}
+                value={value.simThreshold}
+                onChange={(e) =>
+                  setForm({ ...value, simThreshold: Number(e.target.value) })
+                }
+              />
+              <Input
+                label="免费认证次数"
+                type="number"
+                min={1}
+                max={100}
+                value={value.freeAttempts}
+                onChange={(e) =>
+                  setForm({ ...value, freeAttempts: Number(e.target.value) })
+                }
+              />
+              <Input
+                label="认证手续费（元）"
+                value={value.fee}
+                onChange={(e) => setForm({ ...value, fee: e.target.value })}
+              />
+              <p>
+                慧眼按次计费，密钥与 RuleId 加密保存。判定规则：错误码、活体、比对全部通过且相似度不低于阈值；连续失败3次转人工。
+              </p>
+            </>
+          )}
           <p>
-            人工通道保留原一次机会规则；支付宝通道按配置的免费次数执行。开启“企业认证要求先个人认证”时，企业申请入口将不可用。
+            人工通道保留原一次机会规则；支付宝与腾讯慧眼通道按配置的免费次数执行。开启“企业认证要求先个人认证”时，企业申请入口将不可用。
           </p>
           <Button
             disabled={busy}
@@ -217,7 +288,9 @@ function Detail({
         {record && (
           <>
             <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
-              {record.type === 1 && record.certifyChannel === "alipay" && record.status === 1
+              {record.type === 1 &&
+              ["alipay", "tencent"].includes(record.certifyChannel) &&
+              record.status === 1
                 ? "待认证"
                 : statuses[record.status]}
             </Badge>
@@ -287,7 +360,8 @@ function Detail({
                   </Button>
                 </>
               )}
-              {record.status === 3 && record.certifyChannel !== "alipay" && (
+              {record.status === 3 &&
+                !["alipay", "tencent"].includes(record.certifyChannel) && (
                 <Button variant="secondary" onClick={() => setAction("unlock")}>
                   解除限制
                 </Button>
@@ -485,6 +559,11 @@ export function Certifications() {
                     </Table.Cell>
                     <Table.Cell>
                       {record.type === 1 ? "个人" : "企业"}
+                      {record.certifyChannel === "tencent"
+                        ? " · 腾讯慧眼"
+                        : record.certifyChannel === "alipay"
+                          ? " · 支付宝"
+                          : ""}
                     </Table.Cell>
                     <Table.Cell>
                       {record.type === 1 ? record.name : record.companyName}
@@ -492,7 +571,8 @@ export function Certifications() {
                     <Table.Cell>{record.documentNumber}</Table.Cell>
                     <Table.Cell>
                       <Badge variant={record.status === 2 ? "success" : record.status === 3 ? "error" : "warning"}>
-                        {record.type === 1 && record.certifyChannel === "alipay" &&
+                        {record.type === 1 &&
+                        ["alipay", "tencent"].includes(record.certifyChannel) &&
                         record.status === 1
                           ? "待认证"
                           : statuses[record.status]}
