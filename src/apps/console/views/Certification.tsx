@@ -2,6 +2,7 @@ import { useConsoleUnsaved } from '../../../shared/components/ConsoleDraftBounda
 import { Badge } from "../../../shared/components/Badge";
 import { Dialog } from "../../../shared/components/Dialog";
 import { AlipayCertification } from "../../../shared/components/AlipayCertification";
+import { TencentCertification } from "../../../shared/components/TencentCertification";
 import { Banner, Button, Input, LayerCard, Select } from "@cloudflare/kumo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -121,7 +122,9 @@ export function Certification() {
           <LayerCard className="grid gap-3 px-5 py-4">
             <div>
               <Badge>
-                {data.record?.certifyChannel === "alipay" && data.status === 1
+                {["alipay", "tencent"].includes(
+                  data.record?.certifyChannel ?? "",
+                ) && data.status === 1
                   ? "待认证"
                   : certificationStatuses[data.status]}
               </Badge>
@@ -156,10 +159,15 @@ export function Certification() {
               (data.status === 0 && data.settings.channel === "alipay")) && (
               <AlipayCertification info={data} changed={query.refetch} />
             )}
+          {data.status !== 2 &&
+            (data.record?.certifyChannel === "tencent" ||
+              (data.status === 0 && data.settings.channel === "tencent")) && (
+              <TencentCertification info={data} changed={query.refetch} />
+            )}
           {data.status === 0 && data.settings.enabled && (
             <>
               <div className="grid gap-4 md:grid-cols-2">
-                {data.settings.channel !== "alipay" && (
+                {data.settings.channel === "manual" && (
                   <LayerCard className="grid gap-3 px-5 py-4">
                     <h2>个人认证</h2>
                     <p>提交本人证件资料，由管理员审核。</p>
