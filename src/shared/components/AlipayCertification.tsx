@@ -4,6 +4,7 @@ import type { CountryCode } from "libphonenumber-js";
 import QRCode from "qrcode";
 import {
   certificationApi,
+  channelEnabled,
   type AlipayCertificationResult,
   type CertificationInfo,
   type CertificationInput,
@@ -30,7 +31,7 @@ export function AlipayCertification({
   const [error, setError] = useState("");
   const [polling, setPolling] = useState(false);
   const [message, setMessage] = useState("");
-  const showForm = info.settings.enabled && info.settings.channel === "alipay";
+  const showForm = info.settings.enabled && channelEnabled(info.settings, "alipay");
   const accept = useCallback((next: AlipayCertificationResult) => {
     if (next.url) {
       const url = new URL(next.url);

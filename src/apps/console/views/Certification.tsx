@@ -9,13 +9,22 @@ import { useState } from "react";
 import type { CountryCode } from "libphonenumber-js";
 import {
   certificationApi,
+  certificationChannels,
   certificationStatuses,
+  channelEnabled,
   documentTypes,
+  type CertificationChannel,
   type CertificationInput,
 } from "../../../shared/api/certification";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PhoneCountrySelect } from "../../../shared/components/PhoneCountrySelect";
+
+const channelLabels: Record<CertificationChannel, string> = {
+  manual: "人工审核",
+  alipay: "支付宝认证",
+  tencent: "微信人脸核身",
+};
 
 const empty: CertificationInput = {
   name: "",
@@ -44,10 +53,26 @@ export function Certification() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [preferred, setPreferred] = useState<CertificationChannel | "">("");
   useConsoleUnsaved("certification", busy || Object.entries(form).some(([key, value]) => value !== empty[key as keyof CertificationInput]));
   const update = (key: keyof CertificationInput, value: string | number) =>
     setForm((old) => ({ ...old, [key]: value }));
   const data = query.data;
+  const channels = certificationChannels(data?.settings);
+  const recordChannel = data?.record?.certifyChannel;
+  // A pending record pins its provider until the customer switches explicitly.
+  const pinned = (
+    recordChannel === "alipay" || recordChannel === "tencent"
+      ? recordChannel
+      : ""
+  ) as CertificationChannel | "";
+  const selected: CertificationChannel =
+    preferred && channels.includes(preferred)
+      ? preferred
+      : pinned ||
+        channels.find((value) => value !== "manual") ||
+        channels[0] ||
+        "manual";
   async function upload(
     key: "front" | "back" | "license" | "authorization",
     file?: File,
@@ -154,20 +179,40 @@ export function Certification() {
             )}
             {!data.settings.enabled && <p>实名认证暂未开放。</p>}
           </LayerCard>
+          {data.status !== 2 && data.settings.enabled && channels.length > 1 && (
+            <LayerCard className="grid gap-3 px-5 py-4">
+              <h2>选择认证方式</h2>
+              <div className="flex flex-wrap gap-2">
+                {channels.map((channel) => (
+                  <Button
+                    key={channel}
+                    variant={channel === selected ? "primary" : "secondary"}
+                    disabled={busy}
+                    onClick={() => setPreferred(channel)}
+                  >
+                    {channelLabels[channel]}
+                  </Button>
+                ))}
+              </div>
+              <p>
+                支付宝与微信人脸核身均为自动认证；人工审核由管理员核对资料。已发起的认证可随时查询结果，未通过前可以改用其他方式。
+              </p>
+            </LayerCard>
+          )}
           {data.status !== 2 &&
-            (data.record?.certifyChannel === "alipay" ||
-              (data.status === 0 && data.settings.channel === "alipay")) && (
+            data.status !== 3 &&
+            selected === "alipay" && (
               <AlipayCertification info={data} changed={query.refetch} />
             )}
           {data.status !== 2 &&
-            (data.record?.certifyChannel === "tencent" ||
-              (data.status === 0 && data.settings.channel === "tencent")) && (
+            data.status !== 3 &&
+            selected === "tencent" && (
               <TencentCertification info={data} changed={query.refetch} />
             )}
           {data.status === 0 && data.settings.enabled && (
             <>
               <div className="grid gap-4 md:grid-cols-2">
-                {data.settings.channel === "manual" && (
+                {selected === "manual" && channelEnabled(data.settings, "manual") && (
                   <LayerCard className="grid gap-3 px-5 py-4">
                     <h2>个人认证</h2>
                     <p>提交本人证件资料，由管理员审核。</p>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { CountryCode } from "libphonenumber-js";
 import {
   certificationApi,
+  channelEnabled,
   type CertificationInfo,
   type CertificationInput,
   type TencentCertificationResult,
@@ -37,7 +38,8 @@ export function TencentCertification({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [polling, setPolling] = useState(false);
-  const showForm = info.settings.enabled && info.settings.channel === "tencent";
+  const showForm =
+    info.settings.enabled && channelEnabled(info.settings, "tencent");
   const accept = useCallback((next: TencentCertificationResult) => {
     if (next.url) validatedEntryURL(next.url);
     setResult(next);
