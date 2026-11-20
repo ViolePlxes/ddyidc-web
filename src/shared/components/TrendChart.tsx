@@ -60,6 +60,7 @@ export function TrendChart({
   compact = false,
   description,
   fill = false,
+  loading = false,
 }: {
   title?: string;
   type?: "line" | "bar";
@@ -75,6 +76,8 @@ export function TrendChart({
   description?: ReactNode;
   /** Let the card stretch and grow the chart to the space it is given. */
   fill?: boolean;
+  /** Kumo timeseries loading state; the slider keeps placeholder values so the card never resizes. */
+  loading?: boolean;
 }) {
   const { theme } = useTheme();
   const plotRef = useRef<HTMLDivElement>(null);
@@ -98,7 +101,15 @@ export function TrendChart({
   const within=(point:[number,number])=>!zoomable||(point[0]>=lower&&point[0]<=upper);
   const chartValues = values.filter(within);
   const visibleSeries=series?.map(item=>({...item,data:item.data.filter(within)}));
+  // While loading the slider keeps a 24-point placeholder window so the card
+  // renders at its final size; the values are illustrative, never measured.
+  const dummyTimes=useMemo(()=>{
+    if(!loading)return [] as number[];
+    const end=Date.now();
+    return Array.from({length:24},(_,i)=>end-(23-i)*60*60*1000);
+  },[loading]);
   const clock=(index:number,full=false)=>{const timestamp=times[Math.round(index)];return timestamp===undefined?"—":new Date(timestamp).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false,...(full?{month:"2-digit",day:"2-digit"}:{}),hour:"2-digit",minute:"2-digit"})};
+  const dummyClock=(index:number,full=false)=>{const timestamp=dummyTimes[Math.round(index)];return timestamp===undefined?"—":new Date(timestamp).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false,...(full?{month:"2-digit",day:"2-digit"}:{}),hour:"2-digit",minute:"2-digit"})};
   return (
     <section className={compact?(fill?"flex h-full min-w-0 flex-col overflow-hidden rounded-lg ring ring-kumo-line":"grid min-w-0 overflow-hidden rounded-lg ring ring-kumo-line"):"grid gap-3"}>
       {compact?<div className="bg-kumo-base px-4 pt-3 pb-1">
@@ -114,6 +125,7 @@ export function TrendChart({
           <TimeseriesChart
             echarts={echarts}
             type={type}
+            loading={loading}
             height={fill&&plotHeight?plotHeight:height}
             isDarkMode={theme === "dark"}
             ariaDescription={title}
@@ -128,9 +140,9 @@ export function TrendChart({
             ]}
           />
         </div>
-        {zoomable&&times.length>1?<div className="mt-3 grid min-w-0 shrink-0 gap-2">
-          <p className="text-xs text-kumo-subtle" aria-live="polite">显示：{clock(startIndex,true)} – {clock(endIndex,true)} · {endIndex-startIndex+1}/{times.length} 个时间点</p>
-          <Slider size="sm" min={0} max={last} step={1} value={[startIndex,endIndex]} getAriaLabel={index=>index===0?"图表起始时间":"图表结束时间"} formatValue={index=>clock(index)} onValueChange={next=>{if(!Array.isArray(next)||next.length!==2)return;let start=Math.max(0,Math.min(last-1,Math.round(next[0]??0)));const end=Math.max(start+1,Math.min(last,Math.round(next[1]??last)));start=Math.min(start,end-1);setWindow([start,end])}} className="w-full min-w-0"/>
+        {zoomable&&(loading||times.length>1)?<div className="mt-3 grid min-w-0 shrink-0 gap-2">
+          <p className="text-xs text-kumo-subtle" aria-live="polite">{loading?`显示：${dummyClock(0,true)} – ${dummyClock(23,true)} · 24/24 个时间点`:`显示：${clock(startIndex,true)} – ${clock(endIndex,true)} · ${endIndex-startIndex+1}/${times.length} 个时间点`}</p>
+          <Slider size="sm" disabled={loading} min={0} max={loading?23:last} step={1} value={loading?[0,23]:[startIndex,endIndex]} getAriaLabel={index=>index===0?"图表起始时间":"图表结束时间"} formatValue={index=>loading?dummyClock(index):clock(index)} onValueChange={next=>{if(loading)return;if(!Array.isArray(next)||next.length!==2)return;let start=Math.max(0,Math.min(last-1,Math.round(next[0]??0)));const end=Math.max(start+1,Math.min(last,Math.round(next[1]??last)));start=Math.min(start,end-1);setWindow([start,end])}} className="w-full min-w-0"/>
         </div>:null}
       </LayerCard>
     </section>

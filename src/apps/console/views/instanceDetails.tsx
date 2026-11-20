@@ -67,7 +67,7 @@ export function monitorPoints(points: MonitorPoint[] = []): [number, number][] {
     .map((p): [number, number] => [p.timestamp * (p.timestamp < 10_000_000_000 ? 1000 : 1), p.value]).sort((a, b) => a[0] - b[0]);
 }
 
-/** Same geometry as a loaded card, so the grid never resizes while monitoring loads. */
+/** Same geometry as a loaded card, used only when monitoring is unavailable. */
 function MonitoringPlaceholder({ title, note }: { title: string; note: string }) {
   return <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg ring ring-kumo-line">
     <div className="bg-kumo-base px-4 pt-3 pb-1">
@@ -95,8 +95,10 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
       const hasData = monitor?.available && timestamps.length > 0 && !error;
       const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
       return <div key={chart.title} aria-label={chart.title} className="grid min-w-0">
-        {hasData ? <TrendChart fill compact zoomable title={chart.title} description={range} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} />
-          : <MonitoringPlaceholder title={chart.title} note={loading ? "正在读取监控数据…" : error || monitor?.message || "当前实例暂无监控数据。"} />}
+        {/* Loading uses the Kumo timeseries skeleton; the slider and its window
+            text keep placeholder values so the card geometry never changes. */}
+        {hasData || loading ? <TrendChart fill compact zoomable loading={loading && !hasData} title={chart.title} description={range} values={[]} series={chart.series} yAxisName={chart.unit} valuePrefix="" valueSuffix={` ${chart.unit}`} />
+          : <MonitoringPlaceholder title={chart.title} note={error || monitor?.message || "当前实例暂无监控数据。"} />}
       </div>;
     })}</div>
   </section>;
