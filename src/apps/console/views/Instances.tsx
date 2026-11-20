@@ -1,3 +1,4 @@
+import { InstanceIpAddress } from "../../../shared/components/InstanceIpAddress";
 import { Pagination } from "../../../shared/components/Pagination";
 import { Banner, Button, InlineCopyText, Input, LayerCard, Link, Popover, Tabs, Table, Surface } from "@cloudflare/kumo";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -136,14 +137,13 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
     void client.invalidateQueries({ queryKey: ["instances", instance.id], exact: true, refetchType: "none" });
   }});
   const data = instance;
-  const address = instanceAddress(instance.primaryIp, data.port, data.operatingSystem);
   const system = data.operatingSystem;
   const SystemIcon = /windows/i.test(system ?? "") ? WindowsLogoIcon : /linux|ubuntu|debian|centos|alma|rocky|fedora|arch|suse/i.test(system ?? "") ? LinuxLogoIcon : DesktopIcon;
   const missing = "未同步";
   const cells = [
 <div key="0" className="min-w-0"><div className="grid min-w-0 gap-1"><Link href={`/console/instances/${instance.id}`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><HostnameCopy value={data.hostname || instance.name} /></div></div>,
 <div key="1" className="min-w-0"><StatusBadge status={instanceStatus(instance)} /></div>,
-<div key="2" className="min-w-0">{address ? <InlineCopyText className="w-fit leading-[normal]" value={address} labels={{copyAction:"复制连接地址",copied:"已复制"}}>{address}</InlineCopyText> : "未获取"}</div>,
+<div key="2" className="min-w-0"><InstanceIpAddress primaryIp={instance.primaryIp} ips={instance.ips} port={data.port} operatingSystem={data.operatingSystem} /></div>,
 <div key="3" className="min-w-0"><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-sm text-kumo-subtle">{instance.deliveryPending ? "开通后更新" : expiryLabel(instance.expiresAt)}</span></div></div>,
 <div key="4" className="min-w-0"><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-sm text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></div>,
 <div key="5" className="min-w-0"><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></div>,
@@ -225,7 +225,7 @@ export function InstanceList() {
       if (category && !category.matches(instance.productName)) return false;
       if (!matchesFilter(instance, status)) return false;
       if (!keyword) return true;
-      return [instance.name, instance.hostname, instance.productName, instance.primaryIp, instance.remark]
+      return [instance.name, instance.hostname, instance.productName, instance.primaryIp, ...(instance.ips ?? []), instance.remark]
         .some((value) => value?.toLocaleLowerCase().includes(keyword));
     });
   }, [category, localFilter, listData?.items, search, status]);
@@ -233,7 +233,7 @@ export function InstanceList() {
     const keyword = search.trim().toLocaleLowerCase();
     return (listData?.items ?? []).filter(instance => instance.deliveryPending
       && (!category || category.matches(instance.productName))
-      && (!keyword || [instance.name, instance.hostname, instance.productName, instance.primaryIp, instance.remark].some(value => value?.toLocaleLowerCase().includes(keyword))));
+      && (!keyword || [instance.name, instance.hostname, instance.productName, instance.primaryIp, ...(instance.ips ?? []), instance.remark].some(value => value?.toLocaleLowerCase().includes(keyword))));
   }, [category, listData?.items, search]);
   const instances = localFilter
     ? filteredInstances.slice((page - 1) * instancePageSize, page * instancePageSize)

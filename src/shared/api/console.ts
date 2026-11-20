@@ -317,6 +317,8 @@ export interface InstanceListItem {
   name: string;
   productName: string;
   primaryIp?: string;
+  /** Every address the supplier reported, primary first. */
+  ips?: string[];
   status: number;
   powerStatus?: string;
   billingCycle?: string;
