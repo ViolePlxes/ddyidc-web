@@ -9,7 +9,10 @@ import { instanceConfirmationActions } from './InstanceConfirmationActions';
 export interface DestroyVerifyTarget {
   instanceId: string;
   instanceNo?: string;
+  name?: string;
   productName?: string;
+  ip?: string;
+  remark?: string;
   refundableAmount: string;
 }
 
@@ -79,7 +82,19 @@ export function DestroyVerifyDialog({ target, open, onOpenChange, submitting, er
       <LayerDialog.Title>申请销毁实例</LayerDialog.Title>
       <LayerDialog.Description>实例 {target?.productName || target?.instanceNo || target?.instanceId} 销毁后不可恢复，提交后需后台审核；{requireEmail ? '验证码与生产锁共用同一套邮箱凭证。' : '当前已关闭邮箱验证码，提交后由后台审核。'}</LayerDialog.Description>
       <LayerDialog.Body><div className="grid gap-4">
-        {target ? <p>预计可退：<strong>¥{target.refundableAmount}</strong><span className="text-sm text-kumo-subtle">（提交时核算）</span></p> : null}
+        {target ? <dl className="grid gap-2 rounded-lg border border-kumo-line bg-kumo-recessed px-3 py-2 text-sm">
+          {[
+            ["产品名称", target.productName || "—"],
+            ["实例 ID", target.instanceId],
+            ["实例名称", target.name || target.instanceNo || "—"],
+            ...(target.remark ? [["备注信息", target.remark]] : []),
+            ["实例 IP", target.ip || "未分配"],
+            ["预计可退", `¥${target.refundableAmount}（提交时核算）`],
+          ].map(([label, value]) => <div key={label} className="flex flex-wrap gap-2">
+            <dt className="min-w-16 text-kumo-subtle">{label}</dt>
+            <dd className="min-w-0 break-all">{value}</dd>
+          </div>)}
+        </dl> : null}
         <Input label="销毁原因（必填）" placeholder="请填写销毁原因" maxLength={200} value={reason} disabled={submitting} onChange={event => setReason(event.target.value)} />
         {requireEmail && status.isLoading && <p role="status">正在读取邮箱状态…</p>}
         {requireEmail && status.data && <>

@@ -155,7 +155,7 @@ export function DestroyRequests() {
     </div>
     {total > perPage ? <div className="flex flex-wrap items-center justify-end gap-3" data-destroy-pagination><Pagination page={current} totalCount={total} perPage={perPage} setPage={setPage} /></div> : null}
     <DestroyVerifyDialog
-      target={target ? { instanceId: target.instanceId, instanceNo: target.instanceNo, productName: target.productName, refundableAmount: target.refundableAmount } : undefined}
+      target={target ? { instanceId: target.instanceId, instanceNo: target.instanceNo, name: target.name, productName: target.productName, ip: target.ip, remark: target.remark, refundableAmount: target.refundableAmount } : undefined}
       open={Boolean(target)}
       onOpenChange={(open) => { if (!open && !submit.isPending) { setTarget(undefined); submit.reset(); } }}
       submitting={submit.isPending}

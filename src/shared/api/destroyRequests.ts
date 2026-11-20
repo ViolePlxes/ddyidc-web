@@ -24,7 +24,10 @@ export interface DestroyRequestRow {
 export interface DestroyQuote {
   instanceId: string;
   instanceNo: string;
+  name: string;
   productName: string;
+  ip: string;
+  remark?: string;
   paidAmount: string;
   refundableAmount: string;
   periods: DestroyPeriod[];
@@ -34,8 +37,10 @@ export interface DestroyQuote {
 export interface DestroyOption {
   instanceId: string;
   instanceNo: string;
+  name: string;
   productName: string;
   ip?: string;
+  remark?: string;
   expiresAt?: string;
   remaining?: string;
   paidAmount: string;
