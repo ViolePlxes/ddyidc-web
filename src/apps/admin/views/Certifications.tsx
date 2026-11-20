@@ -9,9 +9,11 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   certificationAdminApi as api,
+  certificationChannels,
   certificationStatuses as statuses,
   documentTypes,
   type CertificationAdminSettings,
+  type CertificationChannel,
 } from "../../../shared/api/certification";
 import { getApiMessage } from "../../../shared/api/request";
 import { PageHeader } from "../../../shared/components/PageHeader";
@@ -52,6 +54,21 @@ function Settings() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const value = form ?? query.data;
+  const channels = value ? certificationChannels(value) : [];
+  const toggleChannel = (channel: CertificationChannel, checked: boolean) => {
+    if (!value) return;
+    const next = checked
+      ? [...channels.filter((item) => item !== channel), channel]
+      : channels.filter((item) => item !== channel);
+    const ordered = (["manual", "alipay", "tencent"] as const).filter((item) =>
+      next.includes(item),
+    );
+    setForm({
+      ...value,
+      channels: ordered,
+      channel: ordered[0] ?? "manual",
+    });
+  };
   return (
     <LayerCard className="grid gap-4 px-4 py-3">
       {query.error && (
@@ -78,22 +95,24 @@ function Settings() {
               }
             />
           ))}
-          <Select
-            label="认证通道"
-            value={value.channel}
-            onValueChange={(channel) =>
-              setForm({
-                ...value,
-                channel: channel as "manual" | "alipay" | "tencent",
-              })
-            }
-            items={[
-              { value: "manual", label: "人工审核" },
-              { value: "alipay", label: "支付宝芝麻信用（自动认证）" },
-              { value: "tencent", label: "腾讯云慧眼人脸核身（自动认证）" },
-            ]}
-          />
-          {value.channel === "alipay" && (
+          <p>
+            可用认证通道（可多选）：用户在前台自行选择认证方式；同一客户在通过前可以改用其他方式，已计次数与已付手续费不重置。
+          </p>
+          {(
+            [
+              { key: "manual", label: "人工审核（客户提交资料，管理员审核）" },
+              { key: "alipay", label: "支付宝芝麻信用（自动认证）" },
+              { key: "tencent", label: "腾讯云慧眼 / 微信人脸核身（自动认证）" },
+            ] as const
+          ).map((item) => (
+            <Switch
+              key={item.key}
+              label={item.label}
+              checked={channels.includes(item.key)}
+              onCheckedChange={(checked) => toggleChannel(item.key, checked)}
+            />
+          ))}
+          {channels.includes("alipay") && (
             <>
               <Input
                 label="支付宝 AppID"
@@ -156,7 +175,7 @@ function Settings() {
               </p>
             </>
           )}
-          {value.channel === "tencent" && (
+          {channels.includes("tencent") && (
             <>
               <Input
                 label="腾讯云 SecretId（留空保留）"

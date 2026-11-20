@@ -1,6 +1,8 @@
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
+export type CertificationChannel = "manual" | "alipay" | "tencent";
 export interface CertificationSettings {
-  channel: "manual" | "alipay" | "tencent";
+  channel: CertificationChannel;
+  channels?: CertificationChannel[];
   bizCode: string;
   freeAttempts: number;
   fee: string;
@@ -8,6 +10,26 @@ export interface CertificationSettings {
   requirePurchase: boolean;
   companyEnabled: boolean;
   companyRequiresPerson: boolean;
+}
+// The backend always returns the resolved channel list; channel stays for
+// backward compatibility and older payloads that only carried one value.
+export function certificationChannels(
+  settings?: Partial<CertificationSettings>,
+): CertificationChannel[] {
+  const list = settings?.channels?.length
+    ? settings.channels
+    : [settings?.channel ?? "manual"];
+  return list.filter(
+    (value, index) =>
+      (value === "manual" || value === "alipay" || value === "tencent") &&
+      list.indexOf(value) === index,
+  );
+}
+export function channelEnabled(
+  settings: Partial<CertificationSettings> | undefined,
+  channel: CertificationChannel,
+) {
+  return certificationChannels(settings).includes(channel);
 }
 export interface CertificationAdminSettings extends CertificationSettings {
   appId: string;
