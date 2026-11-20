@@ -7,11 +7,12 @@ import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadg
 import { Dialog } from "../../../shared/components/Dialog";
 import { localDateTime } from "../../../shared/utils/localDate";
 import { DateRangeField } from "../../../shared/components/DateField";
-import { Banner, Button, Checkbox, Input, LayerCard,  Select, Tabs, InlineCopyText, Link as KumoLink } from "@cloudflare/kumo";
+import { Banner, Button, Checkbox, Input, LayerCard,  Select, Switch, Tabs, InlineCopyText, Link as KumoLink } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { adminInstancesApi, type ManagedInstance, type InstanceSyncSelection } from '../../../shared/api/adminInstances';
+import { destroyAdminApi } from '../../../shared/api/destroyRequests';
 import { instanceAddress } from '../../../shared/utils/instanceAddress';
 import { getApiMessage } from '../../../shared/api/request';
 import { PageState } from '../../../shared/components/PageState';
@@ -28,6 +29,30 @@ const defaults:Column[]=['identity','product','customer','realName','ip','status
 function stored<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}}
 function CopyableIp({ip}:{ip:string}){return <InlineCopyText className="w-fit leading-[normal]" value={ip} labels={{copyAction:"复制 IP",copied:"已复制"}}>{ip}</InlineCopyText>}
 function date(value:string|null|undefined){return value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'—'}
+
+// 销毁申请的唯一后台开关：是否要求客户完成邮箱验证码。关闭后客户只需填写原因。
+function DestroySettingsDialog(){
+ const client=useQueryClient();const [open,setOpen]=useState(false);const [requireEmail,setRequireEmail]=useState(true);const [error,setError]=useState('');
+ const query=useQuery({queryKey:['admin','destroy-settings'],queryFn:destroyAdminApi.settings,enabled:open,retry:false});
+ const save=useMutation({mutationFn:destroyAdminApi.save,onSuccess:async()=>{await Promise.all([client.invalidateQueries({queryKey:['admin','destroy-settings']}),client.invalidateQueries({queryKey:['destroy-settings']})]);setOpen(false)}});
+ useEffect(()=>{if(query.data)setRequireEmail(query.data.requireEmailVerification);if(query.error)setError(getApiMessage(query.error))},[query.data,query.error]);
+ return <>
+  <Button variant="secondary" onClick={()=>{setError('');save.reset();setOpen(true)}}>销毁设置</Button>
+  <Dialog.Root open={open} onOpenChange={value=>{if(!save.isPending)setOpen(value)}}>
+   <Dialog className="grid gap-4 p-8">
+    <Dialog.Title>实例销毁申请设置</Dialog.Title>
+    <Dialog.Description>关闭邮箱验证码后，客户在控制台或实例页提交销毁申请时只需填写原因，仍会进入后台退款审核。</Dialog.Description>
+    <Switch label="销毁申请需要邮箱验证码" checked={requireEmail} onCheckedChange={checked=>setRequireEmail(checked)} />
+    <p className="text-sm text-kumo-subtle">安全建议：保持开启。关闭后任何已登录的客户会话都能直接提交销毁申请，仅剩原因校验与后台审核。</p>
+    {(error||save.error)&&<Banner variant="error" title={error||getApiMessage(save.error)}/>}
+    <div className="flex justify-end gap-2">
+     <Button variant="secondary" disabled={save.isPending} onClick={()=>setOpen(false)}>取消</Button>
+     <Button disabled={save.isPending||query.isFetching} loading={save.isPending} onClick={()=>save.mutate({requireEmailVerification:requireEmail})}>保存设置</Button>
+    </div>
+   </Dialog>
+  </Dialog.Root>
+ </>;
+}
 
 export function AdminInstances(){
  const user=useAdminAuthStore(s=>s.user);const key=`ddyidc:admin-instances:${user?.id||''}`;
@@ -69,7 +94,7 @@ export function AdminInstances(){
  const filterSelect=(label:string,field:string,items:Record<string,string>)=>{const fallback=field==='sort'?'createdAt':field==='direction'?'desc':'';return <Select label={label} value={search.get(field)||fallback} items={fallback?items:{'':'全部',...items}} onValueChange={v=>change(field,v||fallback)}/>};
  const optionItems=(kind:string)=>Object.fromEntries((options.data?.[kind]||[]).map(o=>[o.id,o.name]));
  return <div className="grid min-w-0 grid-cols-1 gap-5">
-  <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">产品列表</h1><p className="text-sm text-kumo-subtle">全部客户已购机器 · 列表读取本地信息 · 北京时间</p><p className="text-sm text-kumo-subtle">最后刷新：{date(list.data?.sampledAt)}</p></div><div className="flex flex-wrap gap-2"><Button variant="secondary" loading={list.isFetching} onClick={()=>void list.refetch()}>刷新列表</Button><Button variant="secondary" disabled={!list.data?.access.export} loading={exporting.isPending} onClick={()=>exporting.mutate()}>导出 CSV</Button></div></div>
+  <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">产品列表</h1><p className="text-sm text-kumo-subtle">全部客户已购机器 · 列表读取本地信息 · 北京时间</p><p className="text-sm text-kumo-subtle">最后刷新：{date(list.data?.sampledAt)}</p></div><div className="flex flex-wrap gap-2"><Button variant="secondary" loading={list.isFetching} onClick={()=>void list.refetch()}>刷新列表</Button><Button variant="secondary" disabled={!list.data?.access.export} loading={exporting.isPending} onClick={()=>exporting.mutate()}>导出 CSV</Button><DestroySettingsDialog/></div></div>
   <Tabs value={view} onValueChange={v=>change('view',v)} variant="underline" tabs={views.map(([value,label])=>({value,label:`${label} ${list.data?.counts[value]??'—'}`}))}/>
   <LayerCard className="grid gap-4 px-4 py-3"><div className="flex flex-wrap items-end gap-3"><div className="min-w-64 flex-1"><Input label="搜索机器或客户" placeholder="实例 ID、编号、商品、IP、客户、备注" value={input} onChange={e=>setInput(e.target.value)}/></div>{filterSelect('供应商','supplierId',optionItems('suppliers'))}{filterSelect('排序字段','sort',{createdAt:'创建时间',expiresAt:'到期时间',activatedAt:'开通时间',renewalAmount:'续费金额',customer:'客户',product:'商品'})}{filterSelect('排序方向','direction',{desc:'降序',asc:'升序'})}<Button variant="secondary" onClick={()=>setAdvanced(v=>!v)}>{advanced?'收起筛选':'高级筛选'}</Button><Button variant="ghost" onClick={()=>{setInput('');setSearch({});setNotice('筛选已清空')}}>清空筛选</Button></div>
   {advanced&&<div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">{filterSelect('客户','customerId',optionItems('customers'))}{filterSelect('商品','productId',optionItems('products'))}{filterSelect('生命周期','status',Object.fromEntries(Object.entries(statusNames)))}{filterSelect('付款周期','cycle',Object.fromEntries((options.data?.cycles||[]).filter(o=>o.id).map(o=>[o.id,cycleLabels[o.id]||o.name])))}{filterSelect('自动续费','autoRenew',{true:'开启',false:'关闭'})}{([['activatedFrom','activatedTo','开通时间范围'],['createdFrom','createdTo','创建时间范围'],['expiresFrom','expiresTo','到期时间范围']] as const).map(([fromKey,toKey,label])=><DateRangeField key={fromKey} label={label} withTime seconds from={localDateTime(search.get(fromKey),true)} to={localDateTime(search.get(toKey),true)} onValueChange={(from,to)=>{const next=new URLSearchParams(search);for(const [key,value] of [[fromKey,from],[toKey,to]] as const){if(value)next.set(key,new Date(value).toISOString());else next.delete(key);}next.delete('page');setSearch(next);}}/>)}<Input label="续费金额下限（元）" type="number" step="0.01" min="0" value={search.get('minAmount')||''} onChange={e=>change('minAmount',e.target.value)}/><Input label="续费金额上限（元）" type="number" step="0.01" min="0" value={search.get('maxAmount')||''} onChange={e=>change('maxAmount',e.target.value)}/></div>}

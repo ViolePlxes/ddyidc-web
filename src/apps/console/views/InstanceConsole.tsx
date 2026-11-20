@@ -5,6 +5,7 @@ import { Dialog } from "../../../shared/components/Dialog";
 import { InstanceStatusControl, useInstanceStatus } from '../../../shared/components/InstanceLiveStatus';
 import { InstanceCredentials, InstanceRemark } from '../../../shared/components/InstanceManagement';
 import { TransferDialog } from "../../../shared/components/TransferDialog";
+import { DestroyInstanceButton } from "../../../shared/components/InstanceProductControls";
 import { BillingInfo, CopyValue, InfoGroup, InstanceMonitoring, configValue } from "./instanceDetails";
 import { InstanceNAT } from "./InstanceNAT";
 import { InstanceSnapshots } from "./InstanceSnapshots";
@@ -258,6 +259,7 @@ export function InstanceConsole() {
             <ActionDialog label="重启" title="确认重启" description="重启期间实例将短暂不可用。" disabled={!capabilities?.reboot || instance.status !== 3} loading={action.isPending} onConfirm={() => submit({ action: "reboot" })} />
             <ActionDialog label="硬关机" title="确认硬关机" description="将强制切断实例电源，未保存的数据可能丢失。仅在正常关机无效时使用。" disabled={!capabilities?.hardStop || live.busy || (live.data?.status ?? instance.status) === 4} loading={action.isPending} onConfirm={() => submit({ action: "hard_stop" })} /><ActionDialog label="硬重启" title="确认硬重启" description="将强制断电并重新启动，可能导致未保存的数据丢失或文件系统损坏。请确认可以中断业务。" disabled={!capabilities?.hardReboot || live.busy} loading={action.isPending} onConfirm={() => submit({ action: "hard_reboot" })} /><RescueDialog disabled={!capabilities?.rescue || live.busy} loading={action.isPending} onConfirm={submit} /><ActionDialog label="退出救援系统" title="确认退出救援系统" description="将重启实例并恢复正常系统启动。请确认救援操作已完成。" disabled={!capabilities?.exitRescue || live.busy} loading={action.isPending} onConfirm={() => submit({ action: "exit_rescue" })} />
             <Button variant="secondary" disabled={!capabilities?.remote || action.isPending} onClick={() => submit({ action: "remote" })}>VNC</Button>
+            <DestroyInstanceButton instanceId={instanceId} disabled={instance.productionLocked || action.isPending} />
           </div>
         </header>
         <Tabs variant="underline" aria-label="实例详情导航" value={activeTab} onValueChange={setActiveTab} tabs={[
@@ -300,7 +302,7 @@ export function InstanceConsole() {
         {activeTab === "snapshots" ? <InstanceSnapshots instanceId={instanceId} disabled={instance.productionLocked} /> : null}
         {activeTab === "upgrade" ? <InstanceUpgrade instance={instance} /> : null}
         {activeTab === "settings" ? <div className="grid gap-4">
-          <LayerCard className="grid gap-3 px-5 py-4"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><Button variant="secondary" disabled>销毁实例（暂不支持）</Button></div><p className="text-base text-kumo-subtle">此实例暂不支持自助销毁，请联系客服。</p></LayerCard>
+          <LayerCard className="grid gap-3 px-5 py-4"><h2 className="text-lg font-semibold">实例设置</h2><div className="flex flex-wrap gap-2">{resetPassword}<ReinstallDialog instanceId={instanceId} currentPort={instance.port} disabled={!capabilities?.reinstall} loading={action.isPending} onConfirm={submit} /><DestroyInstanceButton instanceId={instanceId} disabled={instance.productionLocked || action.isPending} /></div><p className="text-base text-kumo-subtle">销毁实例按整台机器提交退款申请，审核通过后退款退入账户余额，操作不可恢复。</p></LayerCard>
                       <LayerCard className=" overflow-x-auto p-0">
               <div className="p-5">
                 <h2 className="text-lg font-semibold text-kumo-strong">购买配置</h2>

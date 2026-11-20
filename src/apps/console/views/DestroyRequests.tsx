@@ -49,6 +49,7 @@ export function DestroyRequests() {
   const [target, setTarget] = useState<DestroyOption>();
   const tableHost = useRef<HTMLDivElement>(null);
   const options = useQuery({ queryKey: ["destroy-options"], queryFn: destroyApi.options });
+  const settings = useQuery({ queryKey: ["destroy-settings"], queryFn: destroyApi.settings, retry: false });
   const requests = useQuery({ queryKey: ["destroy-requests"], queryFn: destroyApi.list });
   const submit = useMutation({
     mutationFn: (input: { reason: string; email: string; code: string }) => destroyApi.submit(String(target?.instanceId), input.reason, requestID(), input.email, input.code),
@@ -159,6 +160,7 @@ export function DestroyRequests() {
       onOpenChange={(open) => { if (!open && !submit.isPending) { setTarget(undefined); submit.reset(); } }}
       submitting={submit.isPending}
       error={submit.error}
+      requireEmail={settings.data?.requireEmailVerification ?? true}
       onConfirm={async input => { await submit.mutateAsync(input); }}
     />
   </div>;
