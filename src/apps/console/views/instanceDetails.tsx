@@ -2,7 +2,7 @@ import { ClipboardText, LayerCard } from "@cloudflare/kumo";
 import type { ReactNode } from "react";
 import { InstanceOrder, InstanceRenewal } from "../../../shared/components/InstanceManagement";
 import type { InstanceDetail, InstanceMonitor, MonitorPoint } from "../../../shared/api/console";
-import { TrendChart } from "../../../shared/components/TrendChart";
+import { TrendChart, placeholderRangeText } from "../../../shared/components/TrendChart";
 import { cycleLabels, formatDate } from "../../../shared/utils/format";
 
 export function configValue(instance: InstanceDetail, fields: string[], names: string[] = []) {
@@ -93,7 +93,7 @@ export function InstanceMonitoring({ monitor, loading, error }: { monitor?: Inst
     <div className="grid min-w-0 flex-1 gap-5 md:auto-rows-fr md:grid-cols-2">{charts.map((chart) => {
       const timestamps = chart.series.flatMap((s) => s.data.map((p) => p[0]));
       const hasData = monitor?.available && timestamps.length > 0 && !error;
-      const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : "时间范围：—";
+      const range = hasData ? `${new Date(Math.min(...timestamps)).toLocaleString()} — ${new Date(Math.max(...timestamps)).toLocaleString()}` : loading ? placeholderRangeText() : "时间范围：—";
       return <div key={chart.title} aria-label={chart.title} className="grid min-w-0">
         {/* Loading uses the Kumo timeseries skeleton; the slider and its window
             text keep placeholder values so the card geometry never changes. */}
