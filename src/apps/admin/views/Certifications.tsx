@@ -60,13 +60,17 @@ function Settings() {
     const next = checked
       ? [...channels.filter((item) => item !== channel), channel]
       : channels.filter((item) => item !== channel);
+    // At least one channel must stay enabled; ignoring the last uncheck keeps
+    // the form from silently falling back to manual-only.
     const ordered = (["manual", "alipay", "tencent"] as const).filter((item) =>
       next.includes(item),
     );
+    const first = ordered[0];
+    if (!first) return;
     setForm({
       ...value,
       channels: ordered,
-      channel: ordered[0] ?? "manual",
+      channel: first,
     });
   };
   return (
