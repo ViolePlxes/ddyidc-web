@@ -1,6 +1,6 @@
 import { adminRequest, userRequest, type ApiEnvelope } from "./request";
 export interface CertificationSettings {
-  channel: "manual" | "alipay";
+  channel: "manual" | "alipay" | "tencent";
   bizCode: string;
   freeAttempts: number;
   fee: string;
@@ -15,9 +15,23 @@ export interface CertificationAdminSettings extends CertificationSettings {
   privateKey?: string;
   publicKeyMasked: string;
   privateKeyConfigured: boolean;
+  tencentSecretId: string;
+  tencentSecretKey?: string;
+  tencentSecretIdMasked: string;
+  tencentSecretKeyConfigured: boolean;
+  tencentRuleId: string;
+  simThreshold: number;
 }
 export interface AlipayCertificationResult {
   certifyId?: string;
+  url?: string;
+  status: number;
+  paymentRequired: boolean;
+  orderId?: string;
+  amountCents?: number;
+}
+export interface TencentCertificationResult {
+  bizToken?: string;
   url?: string;
   status: number;
   paymentRequired: boolean;
@@ -84,6 +98,25 @@ export const certificationApi = {
     unwrap(
       userRequest.get<ApiEnvelope<AlipayCertificationResult>>(
         "/certification/alipay/status",
+      ),
+    ),
+  tencentInitialize: (input: CertificationInput) =>
+    unwrap(
+      userRequest.post<ApiEnvelope<TencentCertificationResult>>(
+        "/certification/tencent/initialize",
+        input,
+      ),
+    ),
+  tencentCertify: () =>
+    unwrap(
+      userRequest.get<ApiEnvelope<TencentCertificationResult>>(
+        "/certification/tencent/certify",
+      ),
+    ),
+  tencentStatus: () =>
+    unwrap(
+      userRequest.get<ApiEnvelope<TencentCertificationResult>>(
+        "/certification/tencent/status",
       ),
     ),
   info: () =>

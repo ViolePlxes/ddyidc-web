@@ -44,7 +44,7 @@ const sources: Record<string, string> = { order:"待交付订单商品", applica
 const states: Record<string, string> = { upstream_refund_waiting:"等待上游退款审核", refund_submission_pending:"退款提交待核查", upstream_refund_rejected:"上游拒绝或取消", application_pending:"退款申请待审核",approved_refund:"审核通过，处理中", normal:"正常", pending: "待审核", approved: "待汇款", processing: "处理中", unknown: "待核查", review: "待核查", refund_pending: "待审核退款", failed: "处理失败", refunded:"已退款", paid:"已汇款", rejected:"已拒绝", complete:"已完成", completed:"已完成" };
 const kinds = ["tickets", "refunds", "certifications", "withdrawals", "recommendations", "provisioning", "offline-transfers", "manual-products", "expiring"];
 function status(kind: string, value: string, automaticCertification = false) {
-  if (kind === "certifications" && value === "1" && automaticCertification) return "支付宝认证中";
+  if (kind === "certifications" && value === "1" && automaticCertification) return "自动认证中";
   if (kind === "recommendations") return ({"0":"待审核","1":"已启用","2":"已禁用","3":"已驳回"} as Record<string,string>)[value]??"未知状态，请核对";
   if (kind === "certifications") return ({"0":"未提交","1":"待人工审核","2":"已通过","3":"已拒绝"} as Record<string,string>)[value]??"未知状态，请核对";
   if (kind === "provisioning" || kind === "expiring") return ({ "1": "待开通", "2": "开通中", "3": "运行中", "4": "已停机", "5":"异常", "6":"已删除" } as Record<string, string>)[value] ?? value;
