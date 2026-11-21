@@ -15,27 +15,36 @@
     return "页面资源加载失败或耗时过长，请检查网络连接后重新加载。";
   }
 
-  function store(key, value) {
+  /* Without storage we cannot remember that a reload was already attempted, so
+     recovery must not fire blindly: a loop is worse than the error panel. */
+  function markOnce(key) {
     try {
-      if (value === undefined) return w.sessionStorage.getItem(key);
-      w.sessionStorage.setItem(key, value);
-      return value;
-    } catch (error) { return null; }
+      if (w.sessionStorage.getItem(key) === "1") return false;
+      w.sessionStorage.setItem(key, "1");
+      return true;
+    } catch (error) { return false; }
+  }
+  function clearMark(key) {
+    try { w.sessionStorage.removeItem(key); } catch (error) { /* private mode */ }
+  }
+  function reloadFresh() {
+    var href = "";
+    try { href = String(w.location.href || "").replace(/#.*$/, ""); } catch (error) { href = ""; }
+    if (href) {
+      try {
+        w.location.replace(href + (href.indexOf("?") >= 0 ? "&" : "?") + "r=" + new Date().getTime());
+        return;
+      } catch (error) { /* fall back to a plain reload */ }
+    }
+    try { w.location.reload(); } catch (error) { /* nothing else we can do */ }
   }
 
   /* A deploy replaces every hashed asset. One reload with a fresh index (and a
      cache-busting query so proxies cannot replay the broken HTML) recovers an
      open tab; the flag stops a reload loop when the network is the problem. */
   function recover() {
-    if (store(reloadKey) === "1") return false;
-    store(reloadKey, "1");
-    var href = w.location.href.replace(/#.*$/, "");
-    var joiner = href.indexOf("?") >= 0 ? "&" : "?";
-    try {
-      w.location.replace(href + joiner + "r=" + new Date().getTime());
-    } catch (error) {
-      w.location.reload();
-    }
+    if (!markOnce(reloadKey)) return false;
+    reloadFresh();
     return true;
   }
 
@@ -75,10 +84,9 @@
     retry.style.cssText = "margin-right:8px;padding:6px 14px;font:inherit;cursor:pointer";
     retry.onclick = function () {
       retry.disabled = true;
-      store(reloadKey, "");
-      var href = w.location.href.replace(/#.*$/, "");
-      var joiner = href.indexOf("?") >= 0 ? "&" : "?";
-      w.location.replace(href + joiner + "r=" + new Date().getTime());
+      clearMark(reloadKey);
+      clearMark(retryKey);
+      reloadFresh();
     };
     panel.appendChild(retry);
     if (kind === "legacy" || kind === "unsupported") {
@@ -95,11 +103,9 @@
      poisoned cache entry is the common cause of a page that renders without
      any styles, and the browser will happily serve it to a plain reload. */
   function retryStylesheet(link) {
-    var href = link.href || link.getAttribute("href") || "";
+    var href = link.href || (link.getAttribute && link.getAttribute("href")) || "";
     if (!href) return false;
-    var key = retryKey + ":" + href;
-    if (store(key) === "1") return false;
-    store(key, "1");
+    if (!markOnce(retryKey + ":" + href)) return false;
     var base = href.replace(/[?&]r=\d+/, "");
     link.href = base + (base.indexOf("?") >= 0 ? "&" : "?") + "r=" + new Date().getTime();
     return true;
@@ -124,14 +130,14 @@
   guard.ready = function () {
     guard.mounted = true;
     w.clearTimeout(timer);
-    store(reloadKey, "");
+    clearMark(reloadKey);
   };
 
   /* Old browsers cannot run the bundle at all (ES modules, fetch, AbortController).
      Detect that first so they get a readable page instead of a blank one. */
   var probeScript = d.createElement("script");
   var modules = ("noModule" in probeScript);
-  var supported = !!(modules && w.Promise && w.fetch && w.AbortController && w.ResizeObserver && w.CSS && w.CSS.supports);
+  var supported = !!(modules && w.Promise && w.fetch && w.AbortController && w.ResizeObserver);
   if (!supported) {
     guard.legacy = !modules;
     reason = modules ? "unsupported" : "legacy";

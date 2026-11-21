@@ -6,7 +6,9 @@ const source = readFileSync(new URL('../public/browser-guard.js', import.meta.ur
 function boot({ supported = true, runtime = true, modern = true, styles = true, utilities = true } = {}) {
   const events = {}, timers = new Map(); let reloads = 0;
   function element(tag) {
-    return { tagName: tag.toUpperCase(), style: {}, children: [],
+    // `noModule` mirrors a real HTMLScriptElement: the guard uses it to detect
+    // browsers that cannot run ES modules at all.
+    return { tagName: tag.toUpperCase(), style: {}, children: [], noModule: true,
       setAttribute(k,v) { this[k]=v; }, appendChild(e) { this.children.push(e); },
       removeChild(e) { this.children.splice(this.children.indexOf(e),1); } };
   }
