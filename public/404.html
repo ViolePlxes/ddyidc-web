@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 Not Found</title>
+  <style>
+    body { color: #262626; }
+    .info { color: #737373; font-size: 13px; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #030303; color: #FBFBFB; }
+      .info { color: #a3a3a3; }
+    }
+  </style>
+</head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center class="info">nginx</center>
+<center class="info">
+  <p>访问 IP：<!--#echo var="remote_addr" default="-" --></p>
+  <p>X-Forwarded-For：<!--#echo var="http_x_forwarded_for" default="-" --></p>
+  <p>请求地址：<!--#echo var="host" default="-" --><!--#echo var="request_uri" default="-" --></p>
+  <p>请求方法：<!--#echo var="request_method" default="-" --></p>
+  <p>访问时间：<!--#echo var="time_local" default="-" --></p>
+  <p>User-Agent：<!--#echo var="http_user_agent" default="-" --></p>
+  <p>Referer：<!--#echo var="http_referer" default="-" --></p>
+  <p>浏览器指纹：<span id="fingerprint">-</span></p>
+  <p>屏幕 / 时区：<span id="screen">-</span></p>
+  <p>语言 / 平台：<span id="locale">-</span></p>
+</center>
+<script>
+(function () {
+  function canvasSignature() {
+    try {
+      var canvas = document.createElement("canvas");
+      var ctx = canvas.getContext("2d");
+      if (!ctx) return "";
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(2, 2, 60, 16);
+      ctx.fillStyle = "#069";
+      ctx.fillText("ddyidc-404", 4, 4);
+      return canvas.toDataURL();
+    } catch (error) {
+      return "";
+    }
+  }
+  function hex(buffer) {
+    return Array.prototype.map.call(new Uint8Array(buffer), function (byte) {
+      return ("0" + byte.toString(16)).slice(-2);
+    }).join("");
+  }
+  var parts = [
+    navigator.userAgent, navigator.language, navigator.languages ? navigator.languages.join(",") : "",
+    navigator.platform || "", navigator.hardwareConcurrency || "", navigator.deviceMemory || "",
+    screen.width + "x" + screen.height + "@" + (window.devicePixelRatio || 1),
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "", canvasSignature()
+  ];
+  var screenEl = document.getElementById("screen");
+  if (screenEl) screenEl.textContent = parts[6] + " / " + parts[7];
+  var localeEl = document.getElementById("locale");
+  if (localeEl) localeEl.textContent = parts[1] + " / " + parts[3];
+  var target = document.getElementById("fingerprint");
+  if (!target) return;
+  if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(parts.join("|"))).then(function (digest) {
+      target.textContent = hex(digest).slice(0, 24);
+    }).catch(function () { target.textContent = "-"; });
+  }
+})();
+</script>
+</body>
+</html>
