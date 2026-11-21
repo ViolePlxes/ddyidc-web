@@ -33,7 +33,7 @@ import {
 import { PortalLayout } from "../../layouts/PortalLayout";
 import {
   EntryGuard,
-  ForbiddenPage,
+  NotFoundPage,
   SessionBoundary,
 } from "../../shared/router/EntryGuards";
 import { useAuthStore } from "../../shared/stores/auth";
@@ -620,7 +620,7 @@ export function ConsoleApp() {
             </Route>
           </Route>
         </Route>
-        <Route path="*" element={<ForbiddenPage loginPath="/login" />} />
+        <Route path="*" element={<NotFoundPage homePath="/console" homeLabel="控制台" />} />
       </Route>
     </Routes>
   );

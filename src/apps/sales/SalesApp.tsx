@@ -8,7 +8,7 @@ import {
 import { StaffLogin } from "../../shared/components/StaffLogin";
 import {
   EntryGuard,
-  ForbiddenPage,
+  NotFoundPage,
   SessionBoundary,
 } from "../../shared/router/EntryGuards";
 import { useSalesAuthStore } from "../../shared/stores/staffAuth";
@@ -94,7 +94,7 @@ export function SalesApp() {
             <Route path="/sales/customers" element={<LazyRoute><SalesHome /></LazyRoute>} />
           </Route>
         </Route>
-        <Route path="*" element={<ForbiddenPage loginPath="/sales/login" />} />
+        <Route path="*" element={<NotFoundPage homePath="/sales" homeLabel="销售工作台" />} />
       </Route>
     </Routes>
   );
