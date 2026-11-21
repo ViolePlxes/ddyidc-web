@@ -33,6 +33,7 @@
   function canvasSignature() {
     try {
       var canvas = document.createElement("canvas");
+      if (!canvas.getContext) return "";
       var ctx = canvas.getContext("2d");
       if (!ctx) return "";
       ctx.textBaseline = "top";
@@ -42,31 +43,50 @@
       ctx.fillStyle = "#069";
       ctx.fillText("ddyidc-404", 4, 4);
       return canvas.toDataURL();
-    } catch (error) {
-      return "";
-    }
+    } catch (error) { return ""; }
+  }
+  function timezone() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (error) { return ""; }
   }
   function hex(buffer) {
-    return Array.prototype.map.call(new Uint8Array(buffer), function (byte) {
-      return ("0" + byte.toString(16)).slice(-2);
-    }).join("");
+    var out = "";
+    var bytes = new Uint8Array(buffer);
+    for (var i = 0; i < bytes.length; i++) out += ("0" + bytes[i].toString(16)).slice(-2);
+    return out;
+  }
+  // FNV-1a fallback keeps this page informative on browsers without SubtleCrypto.
+  function fnv(text) {
+    var hash = 2166136261;
+    for (var i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i);
+      hash = (hash * 16777619) >>> 0;
+    }
+    return ("0000000" + hash.toString(16)).slice(-8) + ("0000000" + text.length.toString(16)).slice(-8);
   }
   var parts = [
-    navigator.userAgent, navigator.language, navigator.languages ? navigator.languages.join(",") : "",
-    navigator.platform || "", navigator.hardwareConcurrency || "", navigator.deviceMemory || "",
+    navigator.userAgent || "",
+    navigator.language || "",
+    navigator.languages ? navigator.languages.join(",") : "",
+    navigator.platform || "",
+    navigator.hardwareConcurrency || "",
+    navigator.deviceMemory || "",
     screen.width + "x" + screen.height + "@" + (window.devicePixelRatio || 1),
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "", canvasSignature()
+    timezone(),
+    canvasSignature()
   ];
+  var text = parts.join("|");
   var screenEl = document.getElementById("screen");
-  if (screenEl) screenEl.textContent = parts[6] + " / " + parts[7];
+  if (screenEl) screenEl.textContent = parts[6] + " / " + (parts[7] || "-");
   var localeEl = document.getElementById("locale");
-  if (localeEl) localeEl.textContent = parts[1] + " / " + parts[3];
+  if (localeEl) localeEl.textContent = parts[1] + " / " + (parts[3] || "-");
   var target = document.getElementById("fingerprint");
   if (!target) return;
-  if (window.crypto && crypto.subtle && crypto.subtle.digest) {
-    crypto.subtle.digest("SHA-256", new TextEncoder().encode(parts.join("|"))).then(function (digest) {
+  if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+    window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (digest) {
       target.textContent = hex(digest).slice(0, 24);
-    }).catch(function () { target.textContent = "-"; });
+    }, function () { target.textContent = fnv(text); });
+  } else {
+    target.textContent = fnv(text);
   }
 })();
 </script>
