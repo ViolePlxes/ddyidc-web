@@ -17,6 +17,9 @@ export interface UpstreamSupplier {
   currencyCode: string;
   status: number;
   remark: string;
+  rateLimitEnabled: boolean;
+  rateLimitIntervalMs: number;
+  rateLimitQueueMs: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -32,6 +35,9 @@ export interface SupplierInput {
   currencyCode: string;
   status: number;
   remark: string;
+  rateLimitEnabled: boolean;
+  rateLimitIntervalMs: number;
+  rateLimitQueueMs: number;
 }
 
 export interface UpstreamOrderRow {

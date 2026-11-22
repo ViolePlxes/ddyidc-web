@@ -21,6 +21,9 @@ function supplierInput(supplier?: UpstreamSupplier): SupplierInput {
     currencyCode: supplier?.currencyCode || "CNY",
     status: supplier?.status ?? 1,
     remark: supplier?.remark ?? "",
+    rateLimitEnabled: supplier?.rateLimitEnabled ?? true,
+    rateLimitIntervalMs: supplier?.rateLimitIntervalMs ?? 2000,
+    rateLimitQueueMs: supplier?.rateLimitQueueMs ?? 60000,
   };
 }
 
@@ -42,7 +45,7 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
       onClose();
     },
   });
-  const invalid = !form.name.trim() || !form.url.trim() || (!supplier && credentialFields.some(field=>field.required&&!form[field.name as "username"|"token"|"secret"].trim())) || form.rate <= 0;
+  const invalid = !form.name.trim() || !form.url.trim() || (!supplier && credentialFields.some(field=>field.required&&!form[field.name as "username"|"token"|"secret"].trim())) || form.rate <= 0 || (form.rateLimitEnabled && (form.rateLimitIntervalMs < 0 || form.rateLimitIntervalMs > 600000 || form.rateLimitQueueMs < 0 || form.rateLimitQueueMs > 600000));
   const update = <K extends keyof SupplierInput>(key: K, value: SupplierInput[K]) => setForm((current) => ({ ...current, [key]: value }));
 
   return (
@@ -64,6 +67,9 @@ function SupplierDialog({ supplier, onClose }: { supplier?: UpstreamSupplier; on
           <Input label="币种" value={form.currencyCode} onChange={(event) => update("currencyCode", event.target.value.toUpperCase())} />
           <Input className="sm:col-span-2" label="备注" value={form.remark} onChange={(event) => update("remark", event.target.value)} />
           <Switch className="sm:col-span-2" label="启用供应商" checked={form.status === 1} onCheckedChange={(checked) => update("status", checked ? 1 : 2)} />
+          <Switch className="sm:col-span-2" label="启用请求准入限制" checked={form.rateLimitEnabled} onCheckedChange={(checked) => update("rateLimitEnabled", checked)} />
+          <Input label="同主机最小间隔（毫秒）" type="number" min={0} max={600000} disabled={!form.rateLimitEnabled} value={form.rateLimitIntervalMs} onChange={(event) => update("rateLimitIntervalMs", Number(event.target.value))} description="同一供应商主机两次请求的最短间隔，默认 2000 毫秒" />
+          <Input label="排队上限（毫秒）" type="number" min={0} max={600000} disabled={!form.rateLimitEnabled} value={form.rateLimitQueueMs} onChange={(event) => update("rateLimitQueueMs", Number(event.target.value))} description="排不到队时最多等待多久，0 表示不等待；默认 60000 毫秒" />
         </div>
         {modules.error ? <Banner variant="error" title="无法读取对接能力" description={getApiMessage(modules.error)}/> : null}
         {save.error ? <Banner variant="error" title="保存失败" description={getApiMessage(save.error)} /> : null}
