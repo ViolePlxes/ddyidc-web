@@ -12,6 +12,7 @@
     if (kind === "legacy") return "当前浏览器版本过低，无法运行本站的新界面。请使用最新版 Chrome、Edge、Firefox 或 Safari 打开；安卓请使用系统浏览器以外的现代浏览器。";
     if (kind === "unsupported") return "当前浏览器内核缺少必要能力，请升级浏览器后重试。";
     if (kind === "styles") return "页面样式未能正常加载，通常是网络中断或缓存里的文件已损坏。";
+    if (kind === "version") return "页面版本与服务器不一致，通常是更新过程中打开了旧页面。";
     return "页面资源加载失败或耗时过长，请检查网络连接后重新加载。";
   }
 
@@ -31,6 +32,9 @@
     var href = "";
     try { href = String(w.location.href || "").replace(/#.*$/, ""); } catch (error) { href = ""; }
     if (href) {
+      // Replace our own buster instead of appending a new one: a loop would grow
+      // the URL until the request line itself is rejected (HTTP 431).
+      href = href.replace(/([?&])r=\d+&?/g, "$1").replace(/[?&]$/, "");
       try {
         w.location.replace(href + (href.indexOf("?") >= 0 ? "&" : "?") + "r=" + new Date().getTime());
         return;
@@ -111,6 +115,37 @@
     return true;
   }
 
+  /* A deploy can leave an old document pointing at hashed files that no longer
+     exist. The document carries its build id, so compare it with the release
+     manifest before the page is trusted. */
+  function checkVersion() {
+    if (guard.blocked || guard.versionChecked) return;
+    if (!d.querySelector) return;
+    var meta = d.querySelector('meta[name="ddy-build"]');
+    var expected = meta && meta.getAttribute ? meta.getAttribute("content") : "";
+    if (!expected) return;
+    guard.versionChecked = true;
+    var promise;
+    try {
+      promise = w.fetch("/version.json", { cache: "no-store", credentials: "omit" });
+    } catch (error) {
+      return;
+    }
+    if (!promise || !promise.then) return;
+    promise.then(function (response) {
+      return response && response.ok ? response.json() : null;
+    }).then(function (manifest) {
+      if (!manifest || !manifest.version) return;
+      var actual = manifest.version + "@" + String(manifest.commit || "").slice(0, 7);
+      if (actual === expected) return;
+      noteFailure("version", expected + " -> " + actual);
+      // ready() clears the generic reload mark, so a version mismatch needs its
+      // own one-shot key or every reload would re-arm the same mismatch.
+      if (markOnce("ddy:browser-guard:version:" + expected)) reloadFresh();
+      else show("version");
+    }).catch(function () { /* offline: the resource handler reports it */ });
+  }
+
   guard.checkStyles = function () {
     if (guard.blocked) return false;
     if (!d.body) return false;
@@ -161,7 +196,10 @@
   }
 
   if (d.addEventListener) {
-    d.addEventListener("DOMContentLoaded", function () { if (guard.blocked) show(reason); });
+    d.addEventListener("DOMContentLoaded", function () {
+      if (guard.blocked) { show(reason); return; }
+      checkVersion();
+    });
     w.addEventListener("error", onResourceError, true);
     w.addEventListener("unhandledrejection", function (event) {
       var text = String((event.reason && event.reason.message) || event.reason || "");

@@ -108,10 +108,16 @@ function versionAsset(): Plugin {
   const packageVersion = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf8")) as { version?: string };
   const version = process.env.DDYIDC_VERSION || packageVersion.version || "unknown";
   const builtAt = process.env.DDYIDC_BUILD_TIME || new Date().toISOString();
+  const buildId = `${version}@${commit.slice(0, 7)}`;
   return {
     name: "ddyidc-version-asset",
     config() {
       return { define: { "import.meta.env.VITE_DDYIDC_VERSION": JSON.stringify(version) } };
+    },
+    // A deploy can leave an old document next to new hashed assets; the build id
+    // lets the startup guard notice the mix before the page renders broken.
+    transformIndexHtml(html) {
+      return html.replace("<head>", `<head>\n    <meta name="ddy-build" content="${buildId}" />`);
     },
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, commit, branch, builtAt }, null, 2) });
