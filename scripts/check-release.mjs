@@ -33,9 +33,33 @@ walk(root);
 if (artifact) {
   const version = JSON.parse(readFileSync(join(root,'version.json'),'utf8'));
   if (!version.commit || !version.version) throw new Error('Missing release provenance');
+  validateHtmlAssets(version);
   if (lstatPortal()) validatePortal();
 }
 console.log(`Release policy passed: ${count} files (${artifact ? 'artifact' : 'source'}).`);
+
+// An old document next to new hashed assets is what leaves users on a page that
+// cannot load its own bundle: every reference a document makes must exist, and
+// the document must carry the build id of this release.
+function validateHtmlAssets(version) {
+  const expected = `${version.version}@${String(version.commit).slice(0, 7)}`;
+  const documents = readdirSync(root).filter((name) => name.endsWith('.html'));
+  if (!documents.length) throw new Error('Release has no documents');
+  for (const name of documents) {
+    const html = readFileSync(join(root, name), 'utf8');
+    const refs = new Set(html.match(/\/assets\/[A-Za-z0-9_.-]+/g) || []);
+    // 404.html and friends are standalone error documents, not app entries.
+    if (!refs.size && !html.includes('id="root"')) continue;
+    const meta = html.match(/<meta name="ddy-build" content="([^"]+)"/);
+    if (!meta) throw new Error(`${name}: missing build id`);
+    if (meta[1] !== expected) throw new Error(`${name}: build id ${meta[1]} is not ${expected}`);
+    for (const ref of refs) {
+      let exists = true;
+      try { exists = lstatSync(join(root, ref.slice(1))).isFile(); } catch { exists = false; }
+      if (!exists) throw new Error(`${name} references missing asset ${ref}`);
+    }
+  }
+}
 
 function lstatPortal(){try{return lstatSync(join(root,'portal')).isDirectory();}catch(error){if(error.code==='ENOENT')return false;throw error;}}
 function validatePortal(){

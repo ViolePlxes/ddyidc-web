@@ -29,8 +29,18 @@ export function LoginPage() {
   const signIn = useAuthStore((state) => state.signIn);
   const location = useLocation();
   useEffect(() => {
-    const update = () => setQuickProfile(readRememberedProfile());
-    const timer = window.setInterval(update, 1000);
+    // readRememberedProfile() parses JSON, so every call returns a new object.
+    // Compare the fields instead of the reference: a per-second identity change
+    // re-rendered the whole form for nothing.
+    const update = () => setQuickProfile((previous) => {
+      const next = readRememberedProfile();
+      if (!next || !previous) return next === previous ? previous : next;
+      return next.id === previous.id && next.name === previous.name &&
+        next.avatar === previous.avatar && next.expiresAt === previous.expiresAt
+        ? previous
+        : next;
+    });
+    const timer = window.setInterval(update, 5000);
     window.addEventListener("storage", update);
     return () => { window.clearInterval(timer); window.removeEventListener("storage", update); };
   }, []);
