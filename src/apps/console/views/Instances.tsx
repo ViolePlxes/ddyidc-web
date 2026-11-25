@@ -10,7 +10,7 @@ import { PencilSimpleIcon, WindowsLogoIcon, LinuxLogoIcon, DesktopIcon, Question
 import { instanceManagementApi } from "../../../shared/api/instanceManagement";
 import { PageState } from "../../../shared/components/PageState";
 import { StatusBadge, type StatusCode } from "../../../shared/components/StatusBadge";
-import { cycleLabels } from "../../../shared/utils/format";
+import { cycleLabels, formatDate } from "../../../shared/utils/format";
 import { InstanceActions, InstanceSetting } from "../../../shared/components/InstanceProductControls";
 
 const instancePageSize = 10;
@@ -110,13 +110,25 @@ function instanceStatus(instance: InstanceListItem): StatusCode {
 }
 
 const productColumns = "align-middle";
+// 到期时间直接展示精确时刻（YYYY-MM-DD HH:mm），不再用当前时刻换算“几天后到期”。
 function expiryLabel(value?: string) {
   if (!value) return "未设置到期时间";
+  const formatted = formatDate(value);
+  return formatted || value;
+}
+function expiryState(value?: string) {
+  if (!value) return "";
   const time = new Date(value.replace(" ", "T")).getTime();
-  if (!Number.isFinite(time)) return "";
+  return Number.isFinite(time) && time <= Date.now() ? "已到期" : "";
+}
+// 与后台「即将到期产品」同一口径：未来 72 小时内到期视为即将到期，用 Kumo 危险色提示。
+const expiringSoonWindow = 72 * 60 * 60 * 1000;
+function expiringSoon(value?: string) {
+  if (!value) return false;
+  const time = new Date(value.replace(" ", "T")).getTime();
+  if (!Number.isFinite(time)) return false;
   const delta = time - Date.now();
-  if (delta <= 0) return "已到期";
-  return `${Math.ceil(delta / 86400000)}天后到期`;
+  return delta > 0 && delta <= expiringSoonWindow;
 }
 function HostnameCopy({value}:{value:string}) {
   return <InlineCopyText className="w-fit leading-[normal]" value={value} labels={{copyAction:"复制主机名",copied:"已复制"}}>{value}</InlineCopyText>;
@@ -143,7 +155,7 @@ function ProductRow({ instance, card = false }: { instance: InstanceListItem; ca
 <div key="0" className="min-w-0"><div className="grid min-w-0 gap-1"><Link href={`/console/instances/${instance.id}`} variant="plain" className="font-medium">{instance.productName || "未命名产品"}</Link><HostnameCopy value={data.hostname || instance.name} /></div></div>,
 <div key="1" className="min-w-0"><StatusBadge status={instanceStatus(instance)} /></div>,
 <div key="2" className="min-w-0"><InstanceIpAddress primaryIp={instance.primaryIp} ips={instance.ipAddresses} port={data.port} operatingSystem={data.operatingSystem} /></div>,
-<div key="3" className="min-w-0"><div className="grid gap-1"><span>{instance.expiresAt?.slice(0,10) || "—"}</span><span className="text-sm text-kumo-subtle">{instance.deliveryPending ? "开通后更新" : expiryLabel(instance.expiresAt)}</span></div></div>,
+<div key="3" className="min-w-0"><div className="grid gap-1"><span className={expiringSoon(instance.expiresAt) ? "text-kumo-danger" : undefined}>{expiryLabel(instance.expiresAt)}</span><span className="text-sm text-kumo-subtle">{instance.deliveryPending ? "开通后更新" : expiryState(instance.expiresAt)}</span></div></div>,
 <div key="4" className="min-w-0"><div className="grid gap-1"><span>{data?.renewalAmount ? `¥${data.renewalAmount}` : missing}</span><span className="text-sm text-kumo-subtle">{cycleLabels[instance.billingCycle ?? ""] || instance.billingCycle || "—"}</span></div></div>,
 <div key="5" className="min-w-0"><div className="grid gap-1"><span className="flex min-w-0 items-center gap-1 whitespace-nowrap"><SystemIcon size={18} aria-hidden className="shrink-0 text-kumo-subtle" /><span className="truncate" title={system || missing}>{system || missing}</span></span></div></div>,
 <div key="6" className="min-w-0">{editing ? <div className="grid gap-1"><Input autoFocus size="sm" aria-label={`备注 ${instance.name}`} maxLength={1000} value={remark} disabled={save.isPending} onChange={e=>setRemark(e.target.value)} onBlur={()=>{ if(savingRemark.current || save.isPending)return; if(remark.trim()===savedRemark){setEditing(false);return;} save.mutate(); }} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing)e.currentTarget.blur(); if(e.key==="Escape"&&!save.isPending)setEditing(false);}} />{save.isPending && <span role="status" className="text-sm text-kumo-subtle">正在保存…</span>}{save.error && <span role="alert" className="text-sm text-kumo-danger">{getApiMessage(save.error)}</span>}</div> : <Button variant="ghost" size="sm" className="h-auto max-w-full whitespace-normal text-left" disabled={data?.readOnly || data.productionLocked} aria-label={`编辑备注 ${instance.name}`} onClick={()=>{setRemark(savedRemark);save.reset();setEditing(true);}}><span className="break-all">{savedRemark || "添加备注"}</span><PencilSimpleIcon size={14} className="shrink-0" /></Button>}</div>,

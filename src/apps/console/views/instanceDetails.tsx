@@ -42,12 +42,10 @@ export function InfoGroup({ title, rows, asideRows, action, columns = 1 }: {
   </LayerCard>;
 }
 
-export function expiryLabel(expiresAt?: string, now = Date.now()) {
+// 详情页同样只给精确到期时刻，不再附“剩余/已到期 N 天”的换算结果。
+export function expiryLabel(expiresAt?: string) {
   if (!expiresAt) return "—";
-  const expires = Date.parse(expiresAt);
-  if (!Number.isFinite(expires)) return expiresAt;
-  const days = Math.ceil(Math.abs(expires - now) / 86_400_000);
-  return `${formatDate(expiresAt)}（${expires > now ? `剩余 ${days} 天` : `已到期 ${days} 天`}）`;
+  return formatDate(expiresAt) || expiresAt;
 }
 
 export function BillingInfo({ instance }: { instance: InstanceDetail }) {
