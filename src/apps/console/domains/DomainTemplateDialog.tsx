@@ -49,6 +49,9 @@ export function DomainTemplateDialog({ open, onOpenChange, templates, onCreated,
   const [idType, setIdType] = useState("SFZ");
   const [idNumber, setIdNumber] = useState("");
   const [note, setNote] = useState("");
+  const [enProvince, setEnProvince] = useState(provinceEn[province] ?? "");
+  const [enCity, setEnCity] = useState(cityEn[city] ?? "");
+  const [enCompany, setEnCompany] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,19 +64,29 @@ export function DomainTemplateDialog({ open, onOpenChange, templates, onCreated,
     setProvince(value);
     const nextCities = regions.find((item) => item.province === value)?.cities ?? [];
     setCity(nextCities[0] ?? "");
+    setEnProvince(provinceEn[value] ?? "");
+    setEnCity(cityEn[nextCities[0] ?? ""] ?? "");
   };
   const submit = async () => {
     setError(null);
     if (!last || !first || !province || !city || !address || !postcode || !email || !idNumber) { setError("请填写所有必填字段"); return; }
     if ((phoneType === "0" && !phone) || (phoneType === "1" && (!phoneCode || !phoneNumber))) { setError("请填写联系电话"); return; }
+    if (!/^\d{5,8}$/.test(postcode.trim())) { setError("邮编需为 5-8 位数字"); return; }
+    if (idNumber.trim().length < 5) { setError("证件号码至少 5 个字符"); return; }
+    if (!enLast.trim() || !enFirst.trim()) { setError("请填写英文姓名的拼音"); return; }
+    if (enProvince.trim().length < 2 || enProvince.trim().length > 50) { setError("英文省份需 2-50 个字符（拼音，例如 guang dong sheng）"); return; }
+    if (enCity.trim().length < 2 || enCity.trim().length > 50) { setError("英文城市需 2-50 个字符（拼音，例如 shen zhen shi）"); return; }
+    if (enAddress.trim().length < 9 || enAddress.trim().length > 150) { setError("英文地址需 9-150 个字符（拼音）"); return; }
+    if (!person && (company.trim().length < 2 || enCompany.trim().length < 4)) { setError("企业模板需填写中英文单位名称"); return; }
+    if (![enLast, enFirst, enProvince, enCity, enAddress, ...(person ? [] : [enCompany])].every((value) => /^[\x20-\x7e]+$/.test(value.trim()))) { setError("英文信息只能使用英文字母、数字和常用符号，请改用拼音"); return; }
     const params: Record<string, string> = {
       c_regtype: owner, c_co: "CN", cocode: "+86", c_ph_type: phoneType,
       c_ln_m: last, c_fn_m: first, c_st_m: province, c_ct_m: city, c_adr_m: address, c_pc: postcode, c_em: email,
-      c_ln: enLast || enName(last), c_fn: enFirst || enName(first), c_st: provinceEn[province] ?? "", c_ct: cityEn[city] ?? "", c_adr: enAddress,
+      c_ln: enLast || enName(last), c_fn: enFirst || enName(first), c_st: enProvince.trim(), c_ct: enCity.trim(), c_adr: enAddress.trim(),
       c_idtype_gswl: idType, c_idnum_gswl: idNumber, c_keyword: note,
     };
     if (district) params.c_dt_m = district;
-    if (!person) params.c_org_m = company;
+    if (!person) { params.c_org_m = company.trim(); params.c_org = enCompany.trim(); }
     if (phoneType === "0") params.c_ph = phone; else { params.c_ph_code = phoneCode; params.c_ph_num = phoneNumber; }
     setSubmitting(true);
     try {
@@ -104,7 +117,7 @@ export function DomainTemplateDialog({ open, onOpenChange, templates, onCreated,
             <Row name="所属区域"><div className="flex flex-wrap items-center gap-2">
               <Select className="w-28" aria-label="国家/地区" value="CN" items={{ CN: "中国" }} onValueChange={() => {}} />
               <Select className="w-28" aria-label="省份" value={province} items={Object.fromEntries(regions.map((item) => [item.province, item.province]))} onValueChange={changeProvince} />
-              <Select className="w-28" aria-label="城市" value={city} items={Object.fromEntries(cities.map((name) => [name, name]))} onValueChange={(value) => value && setCity(value)} />
+              <Select className="w-28" aria-label="城市" value={city} items={Object.fromEntries(cities.map((name) => [name, name]))} onValueChange={(value) => { if (value) { setCity(value); setEnCity(cityEn[value] ?? ""); } }} />
               <Input className="w-28" aria-label="区县" value={district} onChange={(event) => setDistrict(event.target.value)} />
             </div></Row>
             <Row name="详细地址"><Input className="w-96 max-w-full" value={address} onChange={(event) => setAddress(event.target.value)} /></Row>
@@ -117,8 +130,9 @@ export function DomainTemplateDialog({ open, onOpenChange, templates, onCreated,
             <div className="border-t border-kumo-line pt-3" />
             <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-start gap-4"><span /><div className="text-xs text-kumo-subtle">国际域名的所有者信息以英文为准，请勿缩写或简写。</div></div>
             <Row name="所有者姓名（英文）"><div className="flex items-center gap-2"><Text as="span" variant="secondary" size="sm">姓</Text><Input className="w-36" value={enLast} onChange={(event) => setEnLast(event.target.value)} /><Text as="span" variant="secondary" size="sm">名</Text><Input className="w-36" value={enFirst} onChange={(event) => setEnFirst(event.target.value)} /></div></Row>
-            <Row name="省份（英文）"><Input className="w-96 max-w-full" value={provinceEn[province] ?? ""} onChange={() => {}} /></Row>
-            <Row name="城市（英文）"><Input className="w-96 max-w-full" value={cityEn[city] ?? ""} onChange={() => {}} /></Row>
+            <Row name="省份（英文）"><Input className="w-96 max-w-full" value={enProvince} onChange={(event) => setEnProvince(event.target.value)} /></Row>
+            <Row name="城市（英文）"><Input className="w-96 max-w-full" value={enCity} onChange={(event) => setEnCity(event.target.value)} /></Row>
+            {!person ? <Row name="单位名称（英文）"><Input className="w-96 max-w-full" value={enCompany} onChange={(event) => setEnCompany(event.target.value)} /></Row> : null}
             <Row name="详细地址（英文）"><Input className="w-96 max-w-full" value={enAddress} onChange={(event) => setEnAddress(event.target.value)} /></Row>
             <div className="border-t border-kumo-line pt-3" />
             <Row name="适用后缀"><div className="flex items-center gap-2"><Button variant="secondary" size="sm">常规后缀</Button><Button variant="secondary" size="sm" disabled>hk域名</Button><Button variant="secondary" size="sm" disabled>tw域名</Button><Button variant="secondary" size="sm" disabled>境外</Button></div></Row>
