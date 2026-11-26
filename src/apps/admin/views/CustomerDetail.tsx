@@ -5,6 +5,7 @@ import { Badge } from "../../../shared/components/Badge";
 import { MachineStatusBadge } from "../../../shared/components/MachineStatusBadge";
 import { Dialog, DialogPresence } from "../../../shared/components/Dialog";
 import { ImportInstanceDialog } from "./ImportInstanceDialog";
+import { ProxyOrderDialog } from "./ProxyOrderDialog";
 import { CustomerFinanceDialog, CreditHistory } from "./CustomerFinance";
 import { customerFinanceApi } from "../../../shared/api/customerFinance";
 import { Banner, Breadcrumbs, Button, Input, LayerCard,  Select, Switch, Tabs, Text, Textarea } from "@cloudflare/kumo";
@@ -96,7 +97,7 @@ function RecordList({ id, kind }: { id: string; kind: string }) {
           : ["产品", "订单号", "状态", "金额（元）", "创建时间"];
   return (
     <div className="grid gap-4">
-      {kind === "products" && <div className="flex justify-end"><ImportInstanceDialog customerId={id} /></div>}
+      {kind === "products" && <div className="flex justify-end gap-2"><ProxyOrderDialog customerId={id} /><ImportInstanceDialog customerId={id} /></div>}
       {kind === "products" ? (
         <Tabs
           variant="segmented"
