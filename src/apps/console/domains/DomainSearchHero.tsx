@@ -75,10 +75,10 @@ export function DomainSearchHero({ operation, onRegister }: { operation?: Domain
       {testName ? <div className="mt-3 overflow-hidden rounded-2xl bg-kumo-elevated shadow-lg ring ring-kumo-hairline">
         <div className="grid grid-cols-[minmax(0,1fr)_9rem_4.5rem] items-center gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2"><span className="truncate text-sm font-medium text-kumo-strong">{testName}</span><Badge variant="warning">测试域名</Badge></div>
-          <div className="text-right text-xs leading-5 text-kumo-subtle"><span className="block">首年 ¥0.01</span><span className="block">上游不扣费</span></div>
+          <div className="text-right text-xs leading-5 text-kumo-subtle"><span className="block">首年 ¥0.01</span><span className="block">不产生额外费用</span></div>
           <div className="justify-self-end"><Button size="sm" onClick={() => onRegister({ domain: testName, regyear: "1" })}>注册</Button></div>
         </div>
-        <p className="px-4 pb-3 text-xs text-kumo-subtle">.test 为西部联调域名，注册成功不扣上游费用；平台侧按 0.01 元测试订单支付。</p>
+        <p className="px-4 pb-3 text-xs text-kumo-subtle">.test 为测试域名，注册成功后不产生额外费用；平台侧按 0.01 元测试订单支付。</p>
       </div> : null}
       {query.length >= 2 ? <div className="mt-3 overflow-hidden rounded-2xl bg-kumo-elevated shadow-lg ring ring-kumo-hairline">
         <div className="flex items-center justify-between px-4 py-2.5 text-xs text-kumo-subtle"><span>“{query}” 的匹配结果</span><span>主流优先 · 下滑加载更多</span></div>

@@ -53,7 +53,7 @@ export function InstanceNAT({ instanceId, disabled }: { instanceId: string; disa
     <LayerDialog.Root open={open} onOpenChange={(value) => { if (!create.isPending) setOpen(value); }}>
       <LayerDialog.Content size="sm" closeLabel="关闭">
         <LayerDialog.Title>创建 NAT 转发</LayerDialog.Title>
-        <LayerDialog.Description>外部端口留空时由上游自动分配。</LayerDialog.Description>
+        <LayerDialog.Description>外部端口留空时由平台自动分配。</LayerDialog.Description>
         <LayerDialog.Body><div className="grid gap-3">
           <Input label="名称" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} maxLength={255} />
           <Input label="外部端口" inputMode="numeric" value={form.external} onChange={(event) => setForm({ ...form, external: event.target.value.replace(/\D/g, "") })} description="留空自动分配，范围 1-65535" />

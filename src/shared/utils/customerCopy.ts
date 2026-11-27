@@ -1,6 +1,6 @@
 /** Normalize customer-facing display fields only; never rewrite protocol values or keys. */
 export function neutralCustomerText(text: string): string {
-  return text.replace(/上游供应商/g, '平台').replace(/上游/g, '资源').replace(/供应商/g, '平台').replace(/金山云/g, '平台');
+  return text.replace(/上游供应商/g, '平台').replace(/上游/g, '资源').replace(/供应商/g, '平台').replace(/金山云|西部数码|智简魔方|魔方/g, '平台');
 }
 const displayFields = new Set(['message', 'warning', 'description', 'title', 'label', 'name', 'displayName', 'displayValue', 'productName', 'groupName', 'note', 'reason', 'remark', 'lastError', 'setupMessage', 'capability']);
 export function neutralCustomerResponse<T>(data: T): T {
