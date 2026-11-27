@@ -32,6 +32,8 @@ export interface DestroyQuote {
   refundableAmount: string;
   periods: DestroyPeriod[];
   requests: DestroyRequestRow[];
+  /** 该机器的订单上存在在途退款申请（退款即销毁），用于按钮显示“正在销毁”。 */
+  pendingRefund?: boolean;
 }
 
 export interface DestroyOption {

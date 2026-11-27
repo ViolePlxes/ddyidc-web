@@ -80,12 +80,12 @@ export function DestroyInstanceButton({ instanceId, disabled, label = '销毁实
   // requests, so the submitted state is read from the server rather than only
   // from local mutation state.
   const quote = useQuery({ queryKey: ['destroy-quote', instanceId], queryFn: () => destroyApi.quote(instanceId), retry: false, staleTime: 0 });
-  const pending = (quote.data?.requests ?? []).some(row => row.status === 0 || row.status === 1);
+  const pending = quote.data?.pendingRefund === true;
   const submitted = pending || destroy.submit.isSuccess;
   // Same element, same width, only the label flips: no spinner and no remount,
   // so the button does not flicker while the text changes.
   return <>
-    <Button variant="destructive" disabled={disabled || submitted || destroy.submit.isPending} onClick={destroy.start} aria-live="polite" className="min-w-28 justify-center">{submitted ? '正在销毁' : label}</Button>
+    <Button variant="destructive" disabled={disabled || submitted || destroy.submit.isPending} onClick={destroy.start} aria-live="polite" className="justify-center">{submitted ? '正在销毁' : label}</Button>
     {destroy.dialog}
   </>;
 }
