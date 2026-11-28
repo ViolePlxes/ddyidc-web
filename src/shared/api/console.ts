@@ -191,6 +191,8 @@ export interface Order {
   remark?: string;
   createdAt: string;
   items?: OrderItem[];
+  /** 同一次购买拆出的其他订单（一台机器一张订单）。 */
+  siblings?: Order[];
 }
 
 export interface Recharge {

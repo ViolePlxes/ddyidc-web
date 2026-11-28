@@ -10,6 +10,7 @@ import { DefinitionList } from "../../../shared/components/DataTable";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { PageState } from "../../../shared/components/PageState";
 import { PaymentDialog } from "../../../shared/components/PaymentDialog";
+import { paymentApi } from "../../../shared/api/payment";
 import { clearOrderDraft, loadOrderDraft, saveOrderDraft } from "../../../shared/utils/orderDraft";
 import { ProductCustomFields } from "../../../shared/components/ProductCustomFields";
 import { InstancePasswordInput } from "../../../shared/components/InstancePasswordInput";
@@ -19,9 +20,11 @@ export function OrderConfirm() {
   const certification = useCertificationGate();
   const [draft, setDraft] = useState(loadOrderDraft);
   const passwordIssues = draft?.configOptions.length ? instancePasswordIssues(draft.password) : [];
-  const [couponId, setCouponId] = useState("auto");
+  const [couponId, setCouponId] = useState(() => (loadOrderDraft()?.quantity ?? 1) > 1 ? "none" : "auto");
   const [pointsBusy, setPointsBusy] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order>();
+  const [batchPaying, setBatchPaying] = useState(false);
+  const [batchError, setBatchError] = useState<string | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const coupons = useQuery({
@@ -77,23 +80,68 @@ export function OrderConfirm() {
   );
 
   if (createdOrder) {
+    const batch = [createdOrder, ...(createdOrder.siblings ?? [])];
+    const batchTotal = batch.reduce((sum, order) => sum + order.payAmount, 0);
+    const payAllFromBalance = async () => {
+      setBatchError(null);
+      setBatchPaying(true);
+      try {
+        for (const order of batch) {
+          if (order.status === 0) await paymentApi.payBalance(order.id);
+        }
+        await queryClient.invalidateQueries({ queryKey: ["orders"] });
+        navigate(`/console/orders/${createdOrder.id}`, { replace: true, viewTransition: true });
+      } catch (error) {
+        setBatchError(getApiMessage(error));
+      } finally {
+        setBatchPaying(false);
+      }
+    };
     return (
       <>
-        <PageHeader title="订单已创建" description={`订单 ${createdOrder.orderNo} 正在等待支付。`} />
+        <PageHeader title="订单已创建" description={batch.length > 1 ? `本次购买共 ${batch.length} 张订单（每台一张），合计 ¥${(batchTotal / 100).toFixed(2)}。` : `订单 ${createdOrder.orderNo} 正在等待支付。`} />
         <LayerCard className=" grid gap-5 px-5 py-4">
           <Banner title="请选择支付方式" description="可使用账户余额、支付宝或微信支付。支付成功后系统会处理开通，并跳转至订单详情。" />
+          {batchError ? <Banner variant="error" title="支付未完成" description={batchError} /> : null}
+          {batch.length > 1 ? (
+            <div className="grid gap-2">
+              {batch.map((order) => (
+                <div key={order.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-kumo-elevated px-3 py-2">
+                  <span className="font-medium">{order.orderNo}</span>
+                  <span className="text-kumo-subtle">¥{(order.payAmount / 100).toFixed(2)}</span>
+                  <span className="text-kumo-subtle">{order.status === 0 ? "待支付" : "已支付"}</span>
+                  <LinkButton href={`/console/orders/${order.id}`} variant="secondary" size="sm">订单详情</LinkButton>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="flex flex-wrap justify-end gap-3">
             <LinkButton href={`/console/orders/${createdOrder.id}`} variant="secondary">查看订单详情</LinkButton>
-            <PaymentDialog
-              businessType="order"
-              businessId={createdOrder.id}
-              amountCents={createdOrder.payAmount}
-              defaultOpen
-              onPaid={async () => {
-                await queryClient.invalidateQueries({ queryKey: ["orders"] });
-                navigate(`/console/orders/${createdOrder.id}`, { replace: true, viewTransition: true });
-              }}
-            />
+            {batch.length > 1 ? (
+              <>
+                <Button variant="secondary" loading={batchPaying} onClick={() => void payAllFromBalance()}>余额支付全部</Button>
+                <PaymentDialog
+                  businessType="order"
+                  businessId={createdOrder.id}
+                  amountCents={createdOrder.payAmount}
+                  onPaid={async () => {
+                    await queryClient.invalidateQueries({ queryKey: ["orders"] });
+                    navigate(`/console/orders/${createdOrder.id}`, { replace: true, viewTransition: true });
+                  }}
+                />
+              </>
+            ) : (
+              <PaymentDialog
+                businessType="order"
+                businessId={createdOrder.id}
+                amountCents={createdOrder.payAmount}
+                defaultOpen
+                onPaid={async () => {
+                  await queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  navigate(`/console/orders/${createdOrder.id}`, { replace: true, viewTransition: true });
+                }}
+              />
+            )}
           </div>
         </LayerCard>
       </>
